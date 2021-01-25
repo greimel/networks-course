@@ -1,0 +1,29 @@
+name: Export Pluto notebooks
+on:
+    push:
+        branches:
+            - main
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v2
+
+            - name: Install Julia
+              uses: julia-actions/setup-julia@v1
+              with:
+                  version: 1.5
+            - name: Run Pluto notebooks
+              run: julia -e 'import Pkg;
+                  Pkg.activate(".");
+                  Pkg.instantiate();
+                  import PlutoUtils;
+
+                  PlutoUtils.Export.github_action(; export_dir=".", offer_binder=true, bind_server_url="https://article-test-3.herokuapp.com/");'
+            - name: Deploy to gh-pages
+              uses: JamesIves/github-pages-deploy-action@releases/v3
+              with:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  BRANCH: gh-pages
+                  FOLDER: .
