@@ -15,12 +15,13 @@ jobs:
               with:
                   version: 1.5
             - name: Run Pluto notebooks
-              run: julia -e 'import Pkg;
-                  Pkg.activate(".");
-                  Pkg.instantiate();
+              run: julia -e 'using Pkg;
+                  Pkg.add(PackageSpec(url = "https://github.com/fonsp/PlutoUtils.jl", rev="static-export"));
+                  Pkg.add(PackageSpec(name = "Pluto", rev = "04dce91"));
+                  
                   import PlutoUtils;
 
-                  PlutoUtils.Export.github_action(; export_dir=".", offer_binder=true, bind_server_url="https://article-test-3.herokuapp.com/");'
+                  PlutoUtils.Export.github_action(; export_dir=".", offer_binder=true);'
             - name: Deploy to gh-pages
               uses: JamesIves/github-pages-deploy-action@releases/v3
               with:
