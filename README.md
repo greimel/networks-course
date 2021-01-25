@@ -6,7 +6,7 @@ This repository hosts some of the material for the course "Economic and Financia
 
 For this course we will use the modern programming language [Julia](https://www.julialang.org). It is a very young language that is gaining popularity pretty fast. Here are the reasons why we use it.
 
-* it is as easy to use 
+* it is easy to use 
 * it is suitable for high performance computing [(see this TEDx talk by co-creator and MIT professor Alan Edelman)](https://www.youtube.com/watch?v=qGW0GT1rCvs&list=PLP8iPy9hna6Q2Kr16aWPOKE0dz9OnsnIJ&index=6&t=0s)
 * it features Pluto notebooks, which are an excellent tool for learning and teaching
 
