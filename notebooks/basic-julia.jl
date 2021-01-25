@@ -8,6 +8,7 @@ using InteractiveUtils
 begin
 	import Pkg
 	Pkg.activate(temp = true)
+	
 	Pkg.add("PlutoUI")
 	using PlutoUI
 end
