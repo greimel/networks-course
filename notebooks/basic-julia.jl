@@ -4,38 +4,20 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ eabe56b0-5cf6-11eb-08cd-2156e2ca8163
+# ╔═╡ ddf87b12-5cc5-11eb-0d4f-f3dd09839034
 begin
 	import Pkg
 	Pkg.activate(temp = true)
-	Pkg.add("Plots")
-	
-	using Plots
-	
-	a_ = 1
+	Pkg.add("PlutoUI")
+	using PlutoUI
 end
-
-# ╔═╡ 739ab076-5cc7-11eb-3697-599fcde5954c
-let
-	using Pkg
-	Pkg.add(["LightGraphs", "GraphPlot", "SNAPDatasets", "FreqTables", "StatsBase"])
-	using LightGraphs, GraphPlot, SNAPDatasets, FreqTables, StatsBase
-	
-	a_
-end
-
-# ╔═╡ ddf87b12-5cc5-11eb-0d4f-f3dd09839034
-using PlutoUI
-
-# ╔═╡ f1a2dec2-5cc6-11eb-2308-fb499f4133bc
-md"This notebook is an introduction to the Julia programming language and gives a basic introduction of handling graphs in Julia."
 
 # ╔═╡ 0d3aec92-edeb-11ea-3adb-cd0dc17cbdab
-md"# A basic Julia syntax cheatsheet
+md"# A first glance at the Julia language
 
 This notebook briefly summarizes some of the basic Julia syntax that we will need for the problem sets.
 
-*NOTE:* This part of the notebook is taken from [a notebook](https://github.com/mitmath/18S191/blob/Fall20/lecture_notebooks/Basic%20Julia%20syntax.jl) from the [MIT course Computional Thinking](https://computationalthinking.mit.edu/Fall20/).
+*NOTE:* This notebook is taken from [a notebook](https://github.com/mitmath/18S191/blob/Fall20/lecture_notebooks/Basic%20Julia%20syntax.jl) from the [MIT course Computional Thinking](https://computationalthinking.mit.edu/Fall20/).
 
 "
 
@@ -234,164 +216,9 @@ md"A nice alternative syntax to create matrices following a certain pattern is a
 # ╔═╡ 6348edce-edef-11ea-1ab4-019514eb414f
 [i + j for i in 1:5, j in 1:6]
 
-# ╔═╡ da543aa6-5cf6-11eb-3c03-b170e254f1b7
-md"""
-# Plots with Plots.jl
-"""
-
-# ╔═╡ 427c55aa-5cf7-11eb-214b-0d7713035e83
-scatter(rand(100), rand(100))
-
-# ╔═╡ e9231ac2-5cf9-11eb-3bc2-09f5527e374f
-histogram(randn(1000))
-
-# ╔═╡ 58f5f420-5cc6-11eb-2569-198d8fde52ef
-md"""
-# Graphs with LightGraphs.jl - Basics
-
-In this section we show you how to create networks in Julia and how to visualize them.
-
-1. special named graphs
-2. do it yourself
-3. from a dataset
-
-"""
-
-# ╔═╡ e09d1054-5cce-11eb-3676-4ded6f7a1bed
-md"""
-## Graphs with names
-
-Let us plot our first networks. Below you see *star network* (can you imagine why it is called that way?). You can specify it by
-"""
-
-# ╔═╡ 2a7a4d56-5cca-11eb-2eb9-5ba63fb08f60
-n_nodes = 10
-
-# ╔═╡ 2e06390c-5cc9-11eb-121b-0b62b08045b7
-graph = StarGraph(n_nodes)
-
-# ╔═╡ fd349f66-5cc9-11eb-1c34-9bd978ad8f0a
-gplot(graph)
-
-# ╔═╡ ca78ffee-5cca-11eb-16f0-7d31af21eeb8
-md"
-Play around with this code. You can change the number of nodes and see you the plot will update automatically. 
-
-You can also look at different *special* graphs
-
-* wheel network (`WheelGraph`)
-* circle network (`CycleGraph`)
-* complete network (`CompleteGraph`)
-* path network (`PathGraph`)
-
-Try it and visualize a few graphs!
-
-"
-
-# ╔═╡ 0684a778-5cca-11eb-33ce-9f776f8f822a
-ne(graph) # number of edges
-
-# ╔═╡ 12529414-5cca-11eb-2b7a-8dabda743c6b
-nv(graph) # number of vertices
-
-# ╔═╡ 2bb95670-5cf6-11eb-150f-c9a46823e1c3
-degree_centrality(graph, normalize=false)
-
-# ╔═╡ 3dc235da-5cf6-11eb-3e7f-5f3a0b23c274
-gplot(graph, nodelabel = degree_centrality(graph, normalize=false))
-
-# ╔═╡ 04462bb6-5cd0-11eb-1f11-93893266fdb8
-begin
-	my_network = SimpleGraph(7)
-	add_edge!(my_network, 1, 2)
-	add_edge!(my_network, 2, 3)
-end
-
-# ╔═╡ b705ba38-5ccf-11eb-066b-f740c921de29
-md"""
-## Building a network from scratch
-
-Below you find a template of building a network from scratch. Play with it make it your own! (you can set the number of nodes (currently $(nv(my_network))) and add a few edges (there are currently $(ne(my_network))).
-
-(Can you rebuild one of the named networks from above?)
-
-"""
-
-# ╔═╡ 302e3dbc-5cd1-11eb-0df0-f7c2ac8da01b
-gplot(my_network, layout = random_layout)
-
-# ╔═╡ c3830328-5cf3-11eb-1950-79d3a58ef117
-gplot(my_network, layout = spring_layout)
-
-# ╔═╡ 49683a94-5cd1-11eb-04e1-8587582c0b91
-md"""
-You will probably realize that many graph drawing algorithms are not deterministic. The plot may look different if you re-execute it.
-"""
-
-# ╔═╡ 2552966c-5cd2-11eb-1502-ff44fcc3ebaf
-md"""
-## Giving networks a meaning
-
-There are plenty of network datasets out there. You can check out the *Stanford Large Network Dataset Collection* [[link]](https://snap.stanford.edu/data/index.html). A very small subset of these datasets can be downloaded directly from Julia using the package *SNAPDatasets.jl* [[link]](https://github.com/JuliaGraphs/SNAPDatasets.jl).
-
-Let us have a look at the Facebook dataset, with 4039 nodes and 88234 edges. [[link to description]](https://snap.stanford.edu/data/ego-Facebook.html)
-"""
-
-# ╔═╡ fc5204aa-5cea-11eb-0d51-d783dfa78c11
-big_graph = loadsnap(:facebook_combined)
-
-# ╔═╡ 2e2f9f62-5cf2-11eb-0a91-a5a1f83697d0
-md"Even though the dataset is rather small compared to others from this collection, we already run into problems when we want to visualize the network. 
-
-Don't run the following cell on an old computer. The plot takes around 1 minute on my recent MacBook Pro."
-
-# ╔═╡ b21e4082-5ceb-11eb-261d-438b4b6b6b38
-#gplot(big_graph)
-
-# ╔═╡ 7e8d62ea-5cf3-11eb-2652-19b3fccc556e
-md"""
-Instead, we look for other means to visualize this dataset.
-"""
-
-# ╔═╡ 8bbbe5e2-5cf6-11eb-1c8a-bd7b6c52825d
-md"""
-# Graphs with LightGraphs.jl - Advanced
-
-This a reference for your assignments. Feel free to skip this until we have covered the material in class.
-"""
-
-# ╔═╡ 3ca7a3fa-5ced-11eb-0ac5-d7da2c389767
-degrees = degree_centrality(big_graph, normalize=false)
-
-# ╔═╡ 6058e8a2-5cf7-11eb-3867-bd7af5bc7452
-histogram(degrees)
-
-# ╔═╡ dffa0664-5cf8-11eb-217d-c78e5f933144
-sort(degrees)
-
 # ╔═╡ d373dda4-5cf9-11eb-2980-4be79476cc2c
 md"
 This is a Pareto Plot ?
-"
-
-# ╔═╡ e64ecc02-5cf8-11eb-0d62-f5ce8b9a9375
-plot(x -> log(1 - ecdf(degrees)(x)), 1, 250)
-
-# ╔═╡ 25a09c26-5cf8-11eb-21ad-39f902b55c09
-gdistances(big_graph)
-
-# ╔═╡ 7211dad8-5cf7-11eb-10a2-156104464e93
-is_connected(big_graph)
-
-# ╔═╡ 93220036-5cf7-11eb-3a8a-255048c74ca0
-diameter(big_graph)
-
-# ╔═╡ dfd4e7ae-5cf7-11eb-2408-f39b935b1064
-
-
-# ╔═╡ c5fec2b4-5cf7-11eb-3c38-ab30375084ad
-md"
-This already takes some time.
 "
 
 # ╔═╡ 350c52b0-5cc7-11eb-2655-1541585572d1
@@ -403,7 +230,6 @@ md"""
 TableOfContents()
 
 # ╔═╡ Cell order:
-# ╟─f1a2dec2-5cc6-11eb-2308-fb499f4133bc
 # ╟─0d3aec92-edeb-11ea-3adb-cd0dc17cbdab
 # ╟─3b038ee0-edeb-11ea-0977-97cc30d1c6ff
 # ╠═3e8e0ea0-edeb-11ea-22e0-c58f7c2168ce
@@ -458,42 +284,7 @@ TableOfContents()
 # ╟─4cb33c04-edef-11ea-2b35-1139c246c331
 # ╟─54e47e9e-edef-11ea-2d75-b5f550902528
 # ╠═6348edce-edef-11ea-1ab4-019514eb414f
-# ╟─da543aa6-5cf6-11eb-3c03-b170e254f1b7
-# ╠═eabe56b0-5cf6-11eb-08cd-2156e2ca8163
-# ╠═427c55aa-5cf7-11eb-214b-0d7713035e83
-# ╠═e9231ac2-5cf9-11eb-3bc2-09f5527e374f
-# ╟─58f5f420-5cc6-11eb-2569-198d8fde52ef
-# ╠═739ab076-5cc7-11eb-3697-599fcde5954c
-# ╟─e09d1054-5cce-11eb-3676-4ded6f7a1bed
-# ╠═2a7a4d56-5cca-11eb-2eb9-5ba63fb08f60
-# ╠═2e06390c-5cc9-11eb-121b-0b62b08045b7
-# ╠═fd349f66-5cc9-11eb-1c34-9bd978ad8f0a
-# ╟─ca78ffee-5cca-11eb-16f0-7d31af21eeb8
-# ╠═0684a778-5cca-11eb-33ce-9f776f8f822a
-# ╠═12529414-5cca-11eb-2b7a-8dabda743c6b
-# ╠═2bb95670-5cf6-11eb-150f-c9a46823e1c3
-# ╠═3dc235da-5cf6-11eb-3e7f-5f3a0b23c274
-# ╟─b705ba38-5ccf-11eb-066b-f740c921de29
-# ╠═04462bb6-5cd0-11eb-1f11-93893266fdb8
-# ╠═302e3dbc-5cd1-11eb-0df0-f7c2ac8da01b
-# ╠═c3830328-5cf3-11eb-1950-79d3a58ef117
-# ╟─49683a94-5cd1-11eb-04e1-8587582c0b91
-# ╟─2552966c-5cd2-11eb-1502-ff44fcc3ebaf
-# ╠═fc5204aa-5cea-11eb-0d51-d783dfa78c11
-# ╟─2e2f9f62-5cf2-11eb-0a91-a5a1f83697d0
-# ╠═b21e4082-5ceb-11eb-261d-438b4b6b6b38
-# ╟─7e8d62ea-5cf3-11eb-2652-19b3fccc556e
-# ╟─8bbbe5e2-5cf6-11eb-1c8a-bd7b6c52825d
-# ╠═3ca7a3fa-5ced-11eb-0ac5-d7da2c389767
-# ╠═6058e8a2-5cf7-11eb-3867-bd7af5bc7452
-# ╠═dffa0664-5cf8-11eb-217d-c78e5f933144
 # ╠═d373dda4-5cf9-11eb-2980-4be79476cc2c
-# ╠═e64ecc02-5cf8-11eb-0d62-f5ce8b9a9375
-# ╠═25a09c26-5cf8-11eb-21ad-39f902b55c09
-# ╠═7211dad8-5cf7-11eb-10a2-156104464e93
-# ╠═93220036-5cf7-11eb-3a8a-255048c74ca0
-# ╠═dfd4e7ae-5cf7-11eb-2408-f39b935b1064
-# ╟─c5fec2b4-5cf7-11eb-3c38-ab30375084ad
 # ╟─350c52b0-5cc7-11eb-2655-1541585572d1
 # ╠═ddf87b12-5cc5-11eb-0d4f-f3dd09839034
 # ╠═d608ebb2-5cc5-11eb-23cf-ff1da24b24ca
