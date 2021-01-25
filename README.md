@@ -12,8 +12,11 @@ For this course we will use the modern programming language [Julia](https://www.
 
 ### How you get started
 
-1. You can try it out here. Click [here](https://greimel.github.io/networks-course/notebooks/basic-julia.html) to run a notebook in the browser. No need to install anything.
+1. You can try it out here. Click on one of the links to run a notebook in the browser. No need to install anything. You get an instant preview of the notebook. Making the notebook runnable takes a while.
 
+    *  [basic julia](https://greimel.github.io/networks-course/notebooks/basic-julia.html) (instant preview, 1:30 min until interactivity)
+    *  [first networks](https://greimel.github.io/networks-course/notebooks/basic-julia.html) (instant preview, 7 min until interactivity)
+       
 <details> <summary> details ...  </summary>
 
 * **Step 1: Preview.** After clicking on the link above you will see a preview of the notebook. 
