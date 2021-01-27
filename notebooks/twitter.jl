@@ -8,15 +8,16 @@ using InteractiveUtils
 let
 	import Pkg
 	Pkg.activate(temp = true)
-	Pkg.add(["PyCall", "Conda", "PlutoUI", "CSV", "LightGraphs", "DataFrames", "GraphPlot", "CategoricalArrays", "GraphDataFrameBridge"])
+	Pkg.add(["PyCall", "Conda", "PlutoUI", "CSV", "LightGraphs", "DataFrames", "GraphPlot", "CategoricalArrays", "GraphDataFrameBridge", "FreqTables"])
 	
-	using PlutoUI: TableOfContents
+	using PlutoUI: TableOfContents, with_terminal
 	import CSV
 	using DataFrames: DataFrame, groupby, select, select!, combine, transform, transform!, ByRow
 	using CategoricalArrays: categorical
 	using LightGraphs
 	using GraphPlot
 	using GraphDataFrameBridge
+	using FreqTables
 	
 	import PyCall
 end
@@ -94,6 +95,11 @@ md"Create the graph."
 # ╔═╡ 0b70f90c-60e5-11eb-18da-25e3302a74a8
 md"""
 # Analyzing the network
+"""
+
+# ╔═╡ 4df1e8ae-60ef-11eb-3772-1154f708eecb
+md"""
+## Highlighting some nodes
 """
 
 # ╔═╡ eea5accc-60db-11eb-3889-c992db2ec8ec
@@ -185,6 +191,18 @@ graph = MetaGraph(edge_list, :user1, :user2, weight = :common_hashtags)
 # ╔═╡ 5dacc3c2-60e2-11eb-1352-0ddbe3405aec
 gplot(graph, nodesize=0.1, NODESIZE=0.025)
 
+# ╔═╡ 635a3b24-60ef-11eb-0d2f-51dbfbd705a1
+get_props.(graph, :name, vertices(graph))
+
+# ╔═╡ 5ceea932-60ef-11eb-3c13-37ddf8e09f6f
+let
+	all_hashtags = vcat(df.hashtags...)
+	freqs = freqtable(all_hashtags)
+	
+	df_hashtags = DataFrame(hashtag = names(freqs)[1], freqs = freqs)
+	sort!(df_hashtags, :freqs, rev = true)
+end
+
 # ╔═╡ Cell order:
 # ╟─b201cb56-60e3-11eb-302c-4180510aacf8
 # ╠═5a75f01a-60dc-11eb-3bd1-6f68e4edcd20
@@ -206,6 +224,9 @@ gplot(graph, nodesize=0.1, NODESIZE=0.025)
 # ╟─0b70f90c-60e5-11eb-18da-25e3302a74a8
 # ╠═15ecf0aa-60e2-11eb-1ef4-ebfc215e5ca7
 # ╠═5dacc3c2-60e2-11eb-1352-0ddbe3405aec
+# ╟─4df1e8ae-60ef-11eb-3772-1154f708eecb
+# ╠═5ceea932-60ef-11eb-3c13-37ddf8e09f6f
+# ╠═635a3b24-60ef-11eb-0d2f-51dbfbd705a1
 # ╟─eea5accc-60db-11eb-3889-c992db2ec8ec
 # ╠═400cc04e-4784-11eb-11a2-ff8e245cad27
 # ╠═e5a741e8-60dc-11eb-317e-cfdd650ae5f0
