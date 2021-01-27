@@ -8,14 +8,14 @@ using InteractiveUtils
 let
 	import Pkg
 	Pkg.activate(temp = true)
-	Pkg.add(["PyCall", "Conda", "PlutoUI", "CSV", "LightGraphs", "DataFrames", "GraphPlot", "CategoricalArrays", "GraphDataFrameBridge", "FreqTables"])
+	Pkg.add(["PyCall", "Conda", "PlutoUI", "CSV", "LightGraphs", "DataFrames", "GraphPlot", "CategoricalArrays", "GraphDataFrameBridge", "FreqTables", "Colors"])
 	
 	using PlutoUI: TableOfContents, with_terminal
 	import CSV
-	using DataFrames: DataFrame, groupby, select, select!, combine, transform, transform!, ByRow
+	using DataFrames: DataFrames, DataFrame, groupby, select, select!, combine, transform, transform!, ByRow, leftjoin
 	using CategoricalArrays: categorical
 	using LightGraphs
-	using GraphPlot
+	using GraphPlot, Colors
 	using GraphDataFrameBridge
 	using FreqTables
 	
@@ -188,11 +188,26 @@ end
 # ╔═╡ 15ecf0aa-60e2-11eb-1ef4-ebfc215e5ca7
 graph = MetaGraph(edge_list, :user1, :user2, weight = :common_hashtags)
 
-# ╔═╡ 5dacc3c2-60e2-11eb-1352-0ddbe3405aec
-gplot(graph, nodesize=0.1, NODESIZE=0.025)
+# ╔═╡ 76c50e74-60f3-11eb-1e25-cdcaeae76c38
+begin
+	node_df = DataFrame(
+		username = GraphDataFrameBridge.MetaGraphs.get_prop.(Ref(graph), vertices(graph), :name)
+		)
+	
+	node_df = leftjoin(node_df, df2, on = :username)
+	
+	transform!(node_df, :hashtags_union => ByRow(x -> "covid19" in x) => :talks_covid)
+	
+	transform!(node_df, :talks_covid => ByRow(x -> x ? colorant"red" : colorant"blue") => :talks_covid_c)
+	
+	node_df
+end
 
-# ╔═╡ 635a3b24-60ef-11eb-0d2f-51dbfbd705a1
-get_props.(graph, :name, vertices(graph))
+# ╔═╡ 5dacc3c2-60e2-11eb-1352-0ddbe3405aec
+gplot(graph, nodesize=0.1, NODESIZE=0.025, nodefillc = node_df.talks_covid_c)
+
+# ╔═╡ 91ccdec2-60f3-11eb-2d0e-a59ba5392e65
+sum(node_df.talks_covid)
 
 # ╔═╡ 5ceea932-60ef-11eb-3c13-37ddf8e09f6f
 let
@@ -226,8 +241,9 @@ end
 # ╠═5dacc3c2-60e2-11eb-1352-0ddbe3405aec
 # ╟─4df1e8ae-60ef-11eb-3772-1154f708eecb
 # ╠═5ceea932-60ef-11eb-3c13-37ddf8e09f6f
-# ╠═635a3b24-60ef-11eb-0d2f-51dbfbd705a1
-# ╟─eea5accc-60db-11eb-3889-c992db2ec8ec
+# ╠═76c50e74-60f3-11eb-1e25-cdcaeae76c38
+# ╠═91ccdec2-60f3-11eb-2d0e-a59ba5392e65
+# ╠═eea5accc-60db-11eb-3889-c992db2ec8ec
 # ╠═400cc04e-4784-11eb-11a2-ff8e245cad27
 # ╠═e5a741e8-60dc-11eb-317e-cfdd650ae5f0
 # ╠═87b7bc86-60df-11eb-3f9f-2375449c77f6
