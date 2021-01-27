@@ -11,16 +11,17 @@ jobs:
             - name: Install Julia
               uses: julia-actions/setup-julia@v1
               with:
-                  version: 1.5
+                  version: 1
             - name: Run Pluto notebooks
-              run: - julia -e 'using Pkg;
+              run: julia -e 'using Pkg;
                   Pkg.add(PackageSpec(url = "https://github.com/fonsp/PlutoUtils.jl", rev="static-export"));
                   Pkg.add(PackageSpec(name = "Pluto", rev = "04dce91"));
                   
                   import PlutoUtils;
 
                   PlutoUtils.Export.github_action(; export_dir=".", offer_binder=true);'
-                  - mkdir PR/${{ github.event.number }}
+            - name: make directory
+              run: mkdir PR/${{ github.event.number }}
             - name: Deploy to gh-pages
               uses: JamesIves/github-pages-deploy-action@releases/v3
               with:
