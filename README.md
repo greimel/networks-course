@@ -43,6 +43,6 @@ For this course we will use the modern programming language [Julia](https://www.
 
     * Find a video with instructions [here](https://www.youtube.com/watch?v=OOjKEgbt8AI)
     * Find written instructions [here](https://computationalthinking.mit.edu/Fall20/installation/)
-    * when your done, open Pluto from Julia and paste https://github.com/greimel/networks-course/blob/main/notebooks/basic-julia.jl into the at Pluto welcome page as shown below.
+    * when you're done, open Pluto from Julia and paste https://github.com/greimel/networks-course/blob/main/notebooks/basic-julia.jl into the at Pluto welcome page as shown below.
     
       ![image](https://user-images.githubusercontent.com/6280307/105691049-09dac080-5efd-11eb-964c-8b78b9b86bc7.png)
