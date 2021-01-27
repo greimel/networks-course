@@ -17,6 +17,8 @@ jobs:
                   Pkg.add(PackageSpec(url = "https://github.com/fonsp/PlutoUtils.jl", rev="static-export"));
                   Pkg.add(PackageSpec(name = "Pluto", rev = "04dce91"));
                   
+                  isdir("PR") || mkdir("PR")
+
                   import PlutoUtils;
 
                   PlutoUtils.Export.github_action(; export_dir=".", offer_binder=true);'
