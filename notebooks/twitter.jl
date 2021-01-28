@@ -98,39 +98,14 @@ begin
 	Pkg.add(["PyCall", "Conda"])
 	Pkg.build("PyCall")
 	
-	import PyCall, Conda
+	import Conda
+	run(`$(Conda._pip(Conda.ROOTENV)) install --user --upgrade -e "git+https://github.com/twintproject/twint.git@origin/master#egg=twint"`)
 	
-	_b_ = _a_ + 1 # make sure this is cell #2
-	nothing
-end
-
-# ╔═╡ 28060fda-60db-11eb-3ba8-b36b75523ed6
-begin
-	util = PyCall.pyimport("importlib.util")
-	twint_installed = !isnothing(util.find_spec("twint"))
+	import PyCall
 	
-	_c_ = _b_ + 1 # make sure this is cell #3
-	nothing
-end
-
-# ╔═╡ a50aa4e4-4785-11eb-1b16-739b802ea3cc
-# installing and using Python package "twint" for scraping twitter data
-begin
-	
-	if !twint_installed
-		# install twint from github repo
-		run(`$(Conda._pip(Conda.ROOTENV)) install --user --upgrade -e "git+https://github.com/twintproject/twint.git@origin/master#egg=twint"`)
-	end
-	
-	_d_ = _c_ + 1 # make sure this is cell #4
-	nothing
-end
-
-# ╔═╡ e072a5e8-4785-11eb-0edd-f1c514f46480
-begin
 	twint = PyCall.pyimport("twint")
 	
-	_e_ = _d_ + 1 # make sure this is cell #5
+	_b_ = _a_ + 1 # make sure this is cell #2
 	nothing
 end
 
@@ -276,8 +251,5 @@ end
 # ╠═87b7bc86-60df-11eb-3f9f-2375449c77f6
 # ╟─a1d99d9e-60dc-11eb-391c-b52c2e16aedd
 # ╠═6535e16c-6146-11eb-35c0-31aef62a631c
-# ╠═28060fda-60db-11eb-3ba8-b36b75523ed6
-# ╠═a50aa4e4-4785-11eb-1b16-739b802ea3cc
-# ╠═e072a5e8-4785-11eb-0edd-f1c514f46480
 # ╟─1f927f3c-60e5-11eb-0304-f1639b68468d
 # ╠═620c76e4-60de-11eb-2c82-d364f55fbe4d
