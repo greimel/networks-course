@@ -95,10 +95,10 @@ md"""
 begin
 	# Make sure Python is available - install if necessary
 	ENV["PYTHON"] = ""
-	Pkg.add("PyCall")
+	Pkg.add(["PyCall", "Conda"])
 	Pkg.build("PyCall")
 	
-	import PyCall
+	import PyCall, Conda
 	
 	_b_ = _a_ + 1 # make sure this is cell #2
 	nothing
@@ -117,10 +117,7 @@ end
 # installing and using Python package "twint" for scraping twitter data
 begin
 	
-	
 	if !twint_installed
-		Pkg.add("Conda")
-		import Conda
 		# install twint from github repo
 		run(`$(Conda._pip(Conda.ROOTENV)) install --user --upgrade -e "git+https://github.com/twintproject/twint.git@origin/master#egg=twint"`)
 	end
