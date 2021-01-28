@@ -119,6 +119,7 @@ begin
 	
 	
 	if !twint_installed
+		Pkg.add("Conda")
 		import Conda
 		# install twint from github repo
 		run(`$(Conda._pip(Conda.ROOTENV)) install --user --upgrade -e "git+https://github.com/twintproject/twint.git@origin/master#egg=twint"`)
