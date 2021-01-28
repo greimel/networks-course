@@ -5,21 +5,22 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ 400cc04e-4784-11eb-11a2-ff8e245cad27
-let
+begin
 	import Pkg
 	Pkg.activate(temp = true)
-	Pkg.add(["PyCall", "Conda", "PlutoUI", "CSV", "LightGraphs", "DataFrames", "GraphPlot", "CategoricalArrays", "GraphDataFrameBridge", "FreqTables", "Colors"])
+	Pkg.add(["PlutoUI", "CSV", "LightGraphs", "DataFrames", "GraphPlot", "CategoricalArrays", "GraphDataFrameBridge", "FreqTables", "Colors"])
 	
 	using PlutoUI: TableOfContents, with_terminal
 	import CSV
 	using DataFrames: DataFrames, DataFrame, groupby, select, select!, combine, transform, transform!, ByRow, leftjoin
-	using CategoricalArrays: categorical
+	using CategoricalArrays: CategoricalArrays, categorical
 	using LightGraphs
 	using GraphPlot, Colors
 	using GraphDataFrameBridge
 	using FreqTables
-	
-	import PyCall
+
+	_a_ = 1 # make sure that this is cell #1
+	nothing
 end
 
 # ╔═╡ b201cb56-60e3-11eb-302c-4180510aacf8
@@ -35,40 +36,10 @@ md"""
 First we specify what data we want to have.
 """
 
-# ╔═╡ 85838053-8aa3-4e56-ae9d-17293937fe4f
-c = let
-	# Configure
-	c = twint.Config()
-	c.Search = "#econtwitter"
-	#c.Lang = "dutch"
-	#c.Geo = "52.377956,4.897070,5km"
-	c.Limit = 500
-	c.Output = file_name
-	c.Store_csv = true
-	c.Min_likes = 2
-	c
-end
-
-# ╔═╡ fb0aabb5-72ea-48a9-ac83-ebd593d4a2e5
-begin
-	_x_ = 1
-	rm(file_name)
-	twint.run.Search(c)
-end
-
 # ╔═╡ 04e5ec1a-60e4-11eb-0d45-fd8291a674f9
 md"""
 # A first glance at the data
 """
-
-# ╔═╡ 14e6dece-60dc-11eb-2d5a-275b8c9e382d
-begin
-	_x_
-	df0 = CSV.File(file_name) |> DataFrame
-end
-
-# ╔═╡ 1635940c-60e4-11eb-1b33-5b8faaf933d8
-names(df0)
 
 # ╔═╡ f998e4fc-60e3-11eb-0533-1717bea29668
 md"""
@@ -111,31 +82,89 @@ md"""
 TableOfContents()
 
 # ╔═╡ 87b7bc86-60df-11eb-3f9f-2375449c77f6
-Base.show(io::IO, ::MIME"text/html", x::CategoricalArrays.CategoricalValue) = print(io, get(x))
+begin
+	Base.show(io::IO, ::MIME"text/html", x::CategoricalArrays.CategoricalValue) = print(io, get(x))
+end
 
 # ╔═╡ a1d99d9e-60dc-11eb-391c-b52c2e16aedd
 md"""
-## Install Python package `twint`
+## Install Python and the package `twint`
 """
 
+# ╔═╡ 6535e16c-6146-11eb-35c0-31aef62a631c
+begin
+	# Make sure Python is available - install if necessary
+	ENV["PYTHON"] = ""
+	Pkg.add("PyCall")
+	Pkg.build("PyCall")
+	
+	import PyCall
+	
+	_b_ = _a_ + 1 # make sure this is cell #2
+	nothing
+end
+
 # ╔═╡ 28060fda-60db-11eb-3ba8-b36b75523ed6
-twint_installed = let
+begin
 	util = PyCall.pyimport("importlib.util")
 	twint_installed = !isnothing(util.find_spec("twint"))
+	
+	_c_ = _b_ + 1 # make sure this is cell #3
+	nothing
 end
 
 # ╔═╡ a50aa4e4-4785-11eb-1b16-739b802ea3cc
 # installing and using Python package "twint" for scraping twitter data
 begin
+	
+	
 	if !twint_installed
 		import Conda
 		# install twint from github repo
 		run(`$(Conda._pip(Conda.ROOTENV)) install --user --upgrade -e "git+https://github.com/twintproject/twint.git@origin/master#egg=twint"`)
 	end
+	
+	_d_ = _c_ + 1 # make sure this is cell #4
+	nothing
 end
 
 # ╔═╡ e072a5e8-4785-11eb-0edd-f1c514f46480
-PyCall.@pyimport twint as twint
+begin
+	twint = PyCall.pyimport("twint")
+	
+	_e_ = _d_ + 1 # make sure this is cell #5
+	nothing
+end
+
+# ╔═╡ 85838053-8aa3-4e56-ae9d-17293937fe4f
+c = let
+	# Configure
+	c = twint.Config()
+	c.Search = "#econtwitter"
+	#c.Lang = "dutch"
+	#c.Geo = "52.377956,4.897070,5km"
+	c.Limit = 500
+	c.Output = file_name
+	c.Store_csv = true
+	c.Min_likes = 2
+	c
+end
+
+# ╔═╡ fb0aabb5-72ea-48a9-ac83-ebd593d4a2e5
+begin
+	_x_ = 1
+	isfile(file_name) && rm(file_name)
+	twint.run.Search(c)
+end
+
+# ╔═╡ 14e6dece-60dc-11eb-2d5a-275b8c9e382d
+begin
+	_x_ # make sure that this cell is run after the CSV is created
+	df0 = CSV.File(file_name) |> DataFrame
+end
+
+# ╔═╡ 1635940c-60e4-11eb-1b33-5b8faaf933d8
+names(df0)
 
 # ╔═╡ 1f927f3c-60e5-11eb-0304-f1639b68468d
 md"""
@@ -243,11 +272,12 @@ end
 # ╠═5ceea932-60ef-11eb-3c13-37ddf8e09f6f
 # ╠═76c50e74-60f3-11eb-1e25-cdcaeae76c38
 # ╠═91ccdec2-60f3-11eb-2d0e-a59ba5392e65
-# ╠═eea5accc-60db-11eb-3889-c992db2ec8ec
+# ╟─eea5accc-60db-11eb-3889-c992db2ec8ec
 # ╠═400cc04e-4784-11eb-11a2-ff8e245cad27
 # ╠═e5a741e8-60dc-11eb-317e-cfdd650ae5f0
 # ╠═87b7bc86-60df-11eb-3f9f-2375449c77f6
 # ╟─a1d99d9e-60dc-11eb-391c-b52c2e16aedd
+# ╠═6535e16c-6146-11eb-35c0-31aef62a631c
 # ╠═28060fda-60db-11eb-3ba8-b36b75523ed6
 # ╠═a50aa4e4-4785-11eb-1b16-739b802ea3cc
 # ╠═e072a5e8-4785-11eb-0edd-f1c514f46480
