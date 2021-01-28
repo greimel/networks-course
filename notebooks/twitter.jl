@@ -23,6 +23,14 @@ begin
 	nothing
 end
 
+# ╔═╡ 8c5a33dc-6174-11eb-397a-43d67c7773e0
+
+
+# ╔═╡ 3a1438f0-6173-11eb-10ca-b31c57aa97a2
+md"""
+# Put your answers here
+"""
+
 # ╔═╡ b201cb56-60e3-11eb-302c-4180510aacf8
 md"""
 # Getting twitter data with `twint`
@@ -190,6 +198,9 @@ end
 # ╔═╡ 15ecf0aa-60e2-11eb-1ef4-ebfc215e5ca7
 graph = MetaGraph(edge_list, :user1, :user2, weight = :common_hashtags)
 
+# ╔═╡ 41f4f6cc-6173-11eb-104f-69c755afd266
+gplot(graph)
+
 # ╔═╡ 76c50e74-60f3-11eb-1e25-cdcaeae76c38
 begin
 	node_df = DataFrame(
@@ -221,6 +232,9 @@ let
 end
 
 # ╔═╡ Cell order:
+# ╠═8c5a33dc-6174-11eb-397a-43d67c7773e0
+# ╠═3a1438f0-6173-11eb-10ca-b31c57aa97a2
+# ╠═41f4f6cc-6173-11eb-104f-69c755afd266
 # ╟─b201cb56-60e3-11eb-302c-4180510aacf8
 # ╠═5a75f01a-60dc-11eb-3bd1-6f68e4edcd20
 # ╟─e4dcc0a6-60e3-11eb-2717-5347187c73c0
