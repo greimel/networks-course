@@ -23,12 +23,86 @@ begin
 	nothing
 end
 
-# ╔═╡ 8c5a33dc-6174-11eb-397a-43d67c7773e0
-
-
-# ╔═╡ 3a1438f0-6173-11eb-10ca-b31c57aa97a2
+# ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"""
-# Put your answers here
+!!! danger "Preliminary version"
+	Nice that you've found this notebook on github. We appreciate your engagement. Feel free to have look. Please note that the assignment notebook is subject to change until it is uploaded to *Canvas*.
+"""
+
+# ╔═╡ 235bcd50-6183-11eb-1272-65c61cfbf961
+group_number = 99
+
+# ╔═╡ f021cb3e-6177-11eb-20f6-b5f9c69ed186
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Maeve", 		lastname = "Reed"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]);
+
+# ╔═╡ 849cd5bc-617b-11eb-12eb-a7f0907fc718
+if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
+	md"""
+!!! danger "Note!"
+    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in the top cell.
+	"""
+end
+
+# ╔═╡ 39feff38-617d-11eb-0682-874b2f747ff8
+md"""
+Now, it's your turn. Think of an interesting keyword or hashtag. And insert your keyword below. You will see that the graph above will update as soon as you evaluate the new keyword.
+"""
+
+# ╔═╡ 8c5a33dc-6174-11eb-397a-43d67c7773e0
+keyword = "#econtwitter"
+
+# ╔═╡ 574747d4-617e-11eb-20e7-5760a3a3f3e9
+md"""
+#### Task 1: Explain your choice
+
+👉 Describe in <150 words why *$(keyword)* is an interesting keyword to search for.
+"""
+
+# ╔═╡ cc8bb4e6-617c-11eb-10ed-a316641c78f7
+answer1 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ b2975790-617f-11eb-3dad-ab030c5213ec
+md"""
+#### Task 2: Analyze the network
+👉 
+
+You can look at the section *Analyzing the network* for some inspiration.
+
+"""
+
+# ╔═╡ 82b31aea-6180-11eb-0281-c512bdd2f667
+
+
+# ╔═╡ 840f84aa-6180-11eb-03bb-71fa9a6e9d17
+md"""
+#### Task 3: Look under the hood
+
+Now look at sections **A first glance at the data** and **Making a network** of this notebook. Make sure you understand what data are available to us and how we created the network from the data. 
+
+👉 We want to read your critical thoughts in <150 words. You might tell us about an idea how to generate a different network from the data. Or what twist you would add to our network to make it more interesting. 
+"""
+
+# ╔═╡ e96b54dc-6180-11eb-027f-a9db3a83aa99
+answer3 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 3fcf627c-6182-11eb-3a6c-851a6f96bd4a
+md"""
+#### Before you submit ...
+
+👉 Make sure you have added your names and your group nummber at the top.
+
+👉 Make sure that that **all group members proofread** your submission (especially your little essays).
+
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. In addition, **upload the source code** of the notebook (the .jl file).
 """
 
 # ╔═╡ b201cb56-60e3-11eb-302c-4180510aacf8
@@ -231,10 +305,103 @@ let
 	sort!(df_hashtags, :freqs, rev = true)
 end
 
+# ╔═╡ eeb99bfe-6178-11eb-04f7-bf04d3c10eeb
+members = let
+	str = ""
+	for (first, last) in group_members
+		str *= str == "" ? "" : ", "
+		str *= first * " " * last
+	end
+	str
+end
+
+# ╔═╡ da51e362-6176-11eb-15b2-b7bcebc2cbb6
+md"""
+# Assignment 1: A Twitter Network
+
+*submitted by* **$members** (*group $(group_number)*)
+
+In this assignment you will download a set of *tweets* from social network *Twitter* that share a common keyword. For a start let's use the keyword **$(keyword)**. 
+
+This network consists of twitter users that have used the keyword *$(keyword)* in on of their recent tweets. Two nodes (users) are connected if they have used another hashtag in common. See the plot below.
+"""
+
+# ╔═╡ 40b2c2c6-617b-11eb-3a05-bdab1ba79ad4
+hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
+
+# ╔═╡ 496b1990-617b-11eb-17ba-9725950334f2
+almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
+
+# ╔═╡ 50d3b41c-617b-11eb-3555-1126c30932d5
+still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
+
+# ╔═╡ 59833e0c-617b-11eb-36f8-3371b7483ba6
+keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
+
+# ╔═╡ 5f434c54-617b-11eb-0dc3-650499285995
+yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
+
+# ╔═╡ 873ad282-617c-11eb-2b60-6782461922fe
+correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
+
+# ╔═╡ 09d66db0-617c-11eb-1b92-b3ed2e5f68f6
+if keyword == "#econtwitter"
+	keep_working(md""" *#econtwitter* is a bit boring. Replace it with a keyword of your choice.""")
+else
+	correct(md"Go and analyse the tweets on *$(keyword)*!")
+end
+
+# ╔═╡ c97c33c8-617e-11eb-31a8-e3fec23ace37
+function wordcount(text)
+    words=split(string(text), (' ','\n','\t','-','.',',',':','_','"',';','!'))
+    length(words)
+end
+
+# ╔═╡ d7046f24-617e-11eb-0571-ebcacb3a39e9
+md" ~ $(wordcount(answer1)) words"
+
+# ╔═╡ a36f6492-617f-11eb-2bb8-1ded14d9f438
+if answer1 == md"Your answer goes here ..."
+	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
+elseif wordcount(answer1) > 150
+	almost(md"Try to shorten your text a bit, to get below 150 words.")
+else
+	correct(md"Great, we are looking forward to reading your answer!")
+end
+
+# ╔═╡ 0cbb406e-6181-11eb-015d-d582e3a9b175
+md" ~ $(wordcount(answer3)) words"
+
+# ╔═╡ f1c8a53a-6180-11eb-2e05-179bfab97223
+if answer3 == md"Your answer goes here ..."
+	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
+elseif wordcount(answer3) > 150
+	almost(md"Try to shorten your text a bit, to get below 150 words.")
+else
+	correct(md"Great, we are looking forward to reading your answer!")
+end
+
 # ╔═╡ Cell order:
-# ╠═8c5a33dc-6174-11eb-397a-43d67c7773e0
-# ╠═3a1438f0-6173-11eb-10ca-b31c57aa97a2
+# ╟─8493134e-6183-11eb-0059-6d6ecf0f17bf
+# ╠═235bcd50-6183-11eb-1272-65c61cfbf961
+# ╠═f021cb3e-6177-11eb-20f6-b5f9c69ed186
+# ╟─849cd5bc-617b-11eb-12eb-a7f0907fc718
+# ╟─da51e362-6176-11eb-15b2-b7bcebc2cbb6
 # ╠═41f4f6cc-6173-11eb-104f-69c755afd266
+# ╟─39feff38-617d-11eb-0682-874b2f747ff8
+# ╠═8c5a33dc-6174-11eb-397a-43d67c7773e0
+# ╟─09d66db0-617c-11eb-1b92-b3ed2e5f68f6
+# ╟─574747d4-617e-11eb-20e7-5760a3a3f3e9
+# ╠═cc8bb4e6-617c-11eb-10ed-a316641c78f7
+# ╟─d7046f24-617e-11eb-0571-ebcacb3a39e9
+# ╟─a36f6492-617f-11eb-2bb8-1ded14d9f438
+# ╟─b2975790-617f-11eb-3dad-ab030c5213ec
+# ╠═82b31aea-6180-11eb-0281-c512bdd2f667
+# ╟─840f84aa-6180-11eb-03bb-71fa9a6e9d17
+# ╠═e96b54dc-6180-11eb-027f-a9db3a83aa99
+# ╟─0cbb406e-6181-11eb-015d-d582e3a9b175
+# ╟─f1c8a53a-6180-11eb-2e05-179bfab97223
+# ╟─3fcf627c-6182-11eb-3a6c-851a6f96bd4a
 # ╟─b201cb56-60e3-11eb-302c-4180510aacf8
 # ╠═5a75f01a-60dc-11eb-3bd1-6f68e4edcd20
 # ╟─e4dcc0a6-60e3-11eb-2717-5347187c73c0
@@ -267,3 +434,11 @@ end
 # ╠═6535e16c-6146-11eb-35c0-31aef62a631c
 # ╟─1f927f3c-60e5-11eb-0304-f1639b68468d
 # ╠═620c76e4-60de-11eb-2c82-d364f55fbe4d
+# ╠═eeb99bfe-6178-11eb-04f7-bf04d3c10eeb
+# ╠═40b2c2c6-617b-11eb-3a05-bdab1ba79ad4
+# ╠═496b1990-617b-11eb-17ba-9725950334f2
+# ╠═50d3b41c-617b-11eb-3555-1126c30932d5
+# ╠═59833e0c-617b-11eb-36f8-3371b7483ba6
+# ╠═5f434c54-617b-11eb-0dc3-650499285995
+# ╠═873ad282-617c-11eb-2b60-6782461922fe
+# ╠═c97c33c8-617e-11eb-31a8-e3fec23ace37
