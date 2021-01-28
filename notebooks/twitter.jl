@@ -26,7 +26,7 @@ end
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"""
 !!! danger "Preliminary version"
-	Nice that you've found this notebook on github. We appreciate your engagement. Feel free to have look. Please note that the assignment notebook is subject to change until it is uploaded to *Canvas*.
+	Nice that you've found this notebook on github. We appreciate your engagement. Feel free to have a look. Please note that the assignment notebook is subject to change until it is uploaded to *Canvas*.
 """
 
 # ╔═╡ 235bcd50-6183-11eb-1272-65c61cfbf961
