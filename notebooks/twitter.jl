@@ -195,7 +195,7 @@ end
 c = let
 	# Configure
 	c = twint.Config()
-	c.Search = "#econtwitter"
+	c.Search = keyword
 	#c.Lang = "dutch"
 	#c.Geo = "52.377956,4.897070,5km"
 	c.Limit = 500
