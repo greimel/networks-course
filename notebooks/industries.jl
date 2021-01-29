@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.19
+# v0.12.20
 
 using Markdown
 using InteractiveUtils
@@ -13,35 +13,114 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 2a132386-2b1f-11eb-1853-e3c32009e50c
+# ╔═╡ 0d416c6a-6218-11eb-2f4b-594b9e7bf8a6
 begin
-	using Pkg
+	import Pkg
 	Pkg.activate(temp = true)
-	Pkg.add("PlutoUI")
 	
-	Pkg.add(["XLSX", "DataFrames", "LightGraphs", "Plots", "Underscores", "NamedArrays", "MetaGraphs", "SimpleWeightedGraphs", "GraphPlot"])
+	Pkg.add("CairoMakie")
+	#Pkg.add(["WGLMakie", "JSServe"])
+	Pkg.add(["GeometryBasics", "NetworkLayout"])
+	#using WGLMakie, JSServe
+	using CairoMakie
+	using GeometryBasics, NetworkLayout
+	CairoMakie.activate!(type = "png")
+	#Page(exportable = true)
+	
+	_a_ = 1 # make sure this is run as cell #1
+end
+
+# ╔═╡ 0f429ed0-6218-11eb-1486-d508f430df6e
+begin
+	Pkg.add("PlutoUI")
+	Pkg.add(["XLSX", "DataFrames", "LightGraphs", "Plots", "Underscores", "NamedArrays", "MetaGraphs", "SimpleWeightedGraphs", "GraphPlot", "Colors"])
 	Pkg.add("GraphDataFrameBridge")
 
 	# Working with tabular data
 	using DataFrames, NamedArrays
 	using Underscores # piping
 	# Working with graphs
-	using LightGraphs, MetaGraphs, GraphDataFrameBridge#, SimpleWeightedGraphs
+	using LightGraphs, MetaGraphs, GraphDataFrameBridge, SimpleWeightedGraphs
 	# Visualization
-	using Plots, GraphPlot
+	using GraphPlot, Colors#, Plots
 	# Reading Excel-Files
 	using XLSX
 	using SparseArrays
 	using PlutoUI
+	using PlutoUI: Slider
+	
+	#using PooledArrays
+	# using TabularMakie
+	
+	_a_ # make sure this is run as cell #2
 end
 
 # ╔═╡ 73521002-2b1f-11eb-14fa-8f445d00fd91
 using Downloads
 
-# ╔═╡ a29f0d46-614b-11eb-2d1b-717ef1c9dcff
-TableOfContents()
+# ╔═╡ 35389b9e-6213-11eb-3886-01ddddc5ade2
+md"""
+# Production Networks: Overview
+
+We will spend two lectures and one tutorial (Assignment 4) on production networks. Here is what we will be covering.
+
+1. Input-Output Networks
+    - Depicting an economy in one picture
+    - Finding the central industries of an economy
+
+2. Propagation of Shocks
+    - Simulating the dynamic model of Long & Plosser (198X)
+    - Deriving some analytical results of Acemoglu et al (201X)
+"""
 
 # ╔═╡ c1e9325a-616f-11eb-1bc2-991abde9ff86
+md"""
+## The Economy at a Glance: The Input-Output-Network
+"""
+
+# ╔═╡ ce86b610-6237-11eb-3977-07c18c2dd4a9
+5
+
+# ╔═╡ 0fab2ff8-6241-11eb-37ab-eb45c9977781
+
+
+# ╔═╡ f53bd8ee-6212-11eb-160b-83d1bdef6bfc
+#gplot(swg, nodesize = nodes_df1.centrality)
+
+# ╔═╡ c85b82c6-623e-11eb-28d1-456c1d45504d
+function edges_as_points(edges, node_positions;
+			    		 weights = missing, min_wgt = -Inf, max_wgt = Inf)
+	edges_as_pts = Point2f0[]
+
+	for e in edges
+		if ismissing(weights) || (min_wgt < weights[e.src, e.dst] < max_wgt)
+			push!(edges_as_pts, node_positions[e.src])
+    	    push!(edges_as_pts, node_positions[e.dst])
+        	push!(edges_as_pts, Point2f0(NaN, NaN))
+		end
+    end
+	
+	edges_as_pts
+end
+
+# ╔═╡ 11a5c61a-6219-11eb-0ce4-0f0d2812cb0e
+function nodes_edges(matrix, edges, node_positions = NetworkLayout.Spectral.layout(matrix); kwargs...)
+	
+	# generate a list of points that can be used to plot the graph
+	edges_as_pts = edges_as_points(edges, node_positions; kwargs...)
+	
+	(; node_positions, edges_as_pts)
+end
+
+# ╔═╡ 68d455ce-623b-11eb-0ddf-cfa57c60851d
+adj_nodes_edges(graph; kwargs...) = nodes_edges(adjacency_matrix(graph), edges(graph); kwargs...)
+
+# ╔═╡ 473b706e-6213-11eb-02c8-97cfa38d0347
+md"""
+## A Recession Emerges: Propagation of Shocks
+"""
+
+# ╔═╡ 2b22880e-6213-11eb-274e-0b917e59c77d
 
 
 # ╔═╡ 321055b6-2b49-11eb-2ee6-d15ddc531d8e
@@ -74,6 +153,14 @@ md"""
 # ╔═╡ c2938920-2b4f-11eb-31f9-8d892db28f88
 md"The distribution of centralities looks bell-shaped."
 
+# ╔═╡ 206c0ab4-6215-11eb-3bf1-6338a3f9877f
+md"""
+# Propagation of Shocks: Simulating a dynamic multi-sector model
+"""
+
+# ╔═╡ 6a738b14-6215-11eb-0821-11a7a78a9d59
+
+
 # ╔═╡ be66082e-2b28-11eb-37b2-b5261b9413b2
 md"""
 # Appendix
@@ -83,9 +170,6 @@ md"""
 md"""
 ## Setting up the package environment
 """
-
-# ╔═╡ 42fa0922-614c-11eb-1a00-c1cff7b8bcf4
-
 
 # ╔═╡ 254c8fd2-614c-11eb-0698-51291ee0533d
 md"""
@@ -222,10 +306,31 @@ graph_ana = MetaDiGraph(io_edges(0.0), :input, :output,
                        weight=:value)
 
 # ╔═╡ d8866898-2b3a-11eb-2654-e3599b73a296
-W = adjacency_matrix(graph_ana)
+W = adjacency_matrix(graph_ana) .* weights(graph_ana)
 
-# ╔═╡ 630bee26-2b4b-11eb-1506-652b4ae431a6
-nnz(W) / prod(size(W))
+# ╔═╡ a3bacef0-6215-11eb-1869-b375caf7c8e4
+swg = SimpleWeightedDiGraph(W)
+
+# ╔═╡ 022ed772-623e-11eb-2bc1-45fbdbccdb3d
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], title = "The Distribution of Input-Output Links")
+	
+	hist!(ax, log10.(filter(!=(0), weights(swg))), color = :lightblue)
+	
+	ax.xtickformat[] = "10^{:.1f}"
+	
+	fig
+end
+
+# ╔═╡ 3a7e6cf2-623e-11eb-16e8-0555386fccc0
+nnz(parent(weights(swg)))
+
+# ╔═╡ 6d8a3cbe-6245-11eb-1ee0-c52defc3c9f7
+extrema(weights(swg))
+
+# ╔═╡ 22069258-6216-11eb-3e83-7154e6e5e09b
+eigenvector_centrality(swg)
 
 # ╔═╡ 52821b38-2b4e-11eb-0258-672b1e609ac0
 list_nodes(graph) = [(i = i, node_name = props(graph, i)[:name]) for i in 1:nv(graph)] |> DataFrame
@@ -236,8 +341,56 @@ nodes_df = leftjoin(list_nodes(graph_ana), df_all, on = :node_name => :code);
 # ╔═╡ 71720af4-2b4b-11eb-3c36-377f4dda5905
 begin
 	nodes_df1 = deepcopy(nodes_df)
-	nodes_df1[!,:centrality] = eigenvector_centrality(graph_ana)
+	nodes_df1[!,:centrality] = eigenvector_centrality(swg)
 end;
+
+# ╔═╡ 7ac0e4c2-623c-11eb-1097-635550667caa
+begin
+	wgt = Matrix(weights(swg))
+	
+	#lwgt = [w == 0 ? 0.0 : log(w) .- log(minimum(filter(>(0), wgt))) for w in wgt]
+	
+	# the Stress layout also works
+	
+	node_positions = NetworkLayout.Spectral.layout(wgt, node_weights = nodes_df1.centrality .* 100)
+	
+	#node_positions = NetworkLayout.Stress.layout(wgt)
+		
+	cutoffs = [0.001,0.01,0.05,0.15,0.4,1.0]
+	
+	minmax = zip(cutoffs[1:end-1], cutoffs[2:end])
+	#node_positions = NetworkLayout.Stress.layout(wgt + wgt')
+	xane = map(minmax) do (min, max) 
+		x = min + max
+		
+		ane = nodes_edges(wgt,
+					  edges(SimpleGraph(wgt .+ wgt')),
+					  node_positions, weights=wgt, min_wgt = min, max_wgt = max)
+		
+		(; x, ane)
+	end
+	
+	ane = (; node_positions, xane)
+end
+
+# ╔═╡ d6c78332-621b-11eb-372d-9d322b577cd0
+begin
+	fig = Figure()
+	
+	ax = Axis(fig[1,1], spinewidth = 0, title = "The US Input-Output Network")
+	
+	hidedecorations!(ax)
+	#edges_as_points(swg)
+
+
+	for (x, ane) in ane.xane
+		x > 0.0 && lines!(ax, ane.edges_as_pts, color = (:blue, min(1, 2 * √x)), linewidth = 0.05)
+	end
+	scatter!(ax, ane.node_positions, markersize = 100 .* nodes_df1.centrality)
+	#weights(swg)
+	fig
+	
+end
 
 # ╔═╡ 96a16f86-2b4b-11eb-33d4-c548ec069343
 Plots.histogram(nodes_df1.centrality)
@@ -245,19 +398,30 @@ Plots.histogram(nodes_df1.centrality)
 # ╔═╡ 8d00e92a-2b4b-11eb-06f5-fdcb9b0c5d12
 sort(nodes_df1, :centrality, rev=true)
 
-# ╔═╡ d4ba17ca-2b44-11eb-1501-3b03b4859c57
-#gplot(graph, nodesize = nodes_df1.centrality)
+# ╔═╡ d370caa2-6218-11eb-02b4-5da6bc763265
+md"""
+## Utilities for plotting graphs with Makie.jl
+"""
 
-# ╔═╡ d63ee986-2b44-11eb-1efe-f54faea6dbca
-#gplot(graph, nodefillc = [RGBA(1,0,0,min(0.1 + 5 * c, 1.0)) for c in nodes_df1.centrality])
-
-# ╔═╡ 0d2ec2cc-2b45-11eb-2b8a-c30d8b769089
-#gplot(graph, nodefillc = [RGBA(1,0,0,min(0.1 + 5 * c, 1.0)) for c in nodes_df1.centrality])
+# ╔═╡ a29f0d46-614b-11eb-2d1b-717ef1c9dcff
+TableOfContents()
 
 # ╔═╡ Cell order:
-# ╠═a29f0d46-614b-11eb-2d1b-717ef1c9dcff
-# ╠═2a132386-2b1f-11eb-1853-e3c32009e50c
-# ╠═c1e9325a-616f-11eb-1bc2-991abde9ff86
+# ╟─35389b9e-6213-11eb-3886-01ddddc5ade2
+# ╟─c1e9325a-616f-11eb-1bc2-991abde9ff86
+# ╠═ce86b610-6237-11eb-3977-07c18c2dd4a9
+# ╠═0fab2ff8-6241-11eb-37ab-eb45c9977781
+# ╠═7ac0e4c2-623c-11eb-1097-635550667caa
+# ╠═022ed772-623e-11eb-2bc1-45fbdbccdb3d
+# ╠═3a7e6cf2-623e-11eb-16e8-0555386fccc0
+# ╠═6d8a3cbe-6245-11eb-1ee0-c52defc3c9f7
+# ╠═d6c78332-621b-11eb-372d-9d322b577cd0
+# ╠═68d455ce-623b-11eb-0ddf-cfa57c60851d
+# ╠═11a5c61a-6219-11eb-0ce4-0f0d2812cb0e
+# ╠═f53bd8ee-6212-11eb-160b-83d1bdef6bfc
+# ╠═c85b82c6-623e-11eb-28d1-456c1d45504d
+# ╟─473b706e-6213-11eb-02c8-97cfa38d0347
+# ╠═2b22880e-6213-11eb-274e-0b917e59c77d
 # ╟─321055b6-2b49-11eb-2ee6-d15ddc531d8e
 # ╠═80751dbe-2b4d-11eb-0b68-f55bb8b677cb
 # ╠═57c040be-2b4c-11eb-02ca-a78d0ba2d886
@@ -266,19 +430,23 @@ sort(nodes_df1, :centrality, rev=true)
 # ╠═b0f69646-2b4c-11eb-0220-050432bc8118
 # ╠═58226916-2b34-11eb-1788-3da0d8047aab
 # ╟─b074a7f4-2b4e-11eb-2dcf-0f23b99b1dbd
-# ╟─26203d20-2b4e-11eb-2c8a-0f7b0394730e
+# ╠═26203d20-2b4e-11eb-2c8a-0f7b0394730e
 # ╠═c451acc8-2b4d-11eb-3d90-29b2c2da2a44
 # ╠═5a4e8994-2b4e-11eb-0ea8-c9d4ff48e57d
 # ╠═d8866898-2b3a-11eb-2654-e3599b73a296
-# ╠═630bee26-2b4b-11eb-1506-652b4ae431a6
+# ╠═a3bacef0-6215-11eb-1869-b375caf7c8e4
+# ╠═22069258-6216-11eb-3e83-7154e6e5e09b
 # ╟─6881cac8-2b4f-11eb-376a-b746b0741df6
 # ╠═71720af4-2b4b-11eb-3c36-377f4dda5905
 # ╟─c2938920-2b4f-11eb-31f9-8d892db28f88
 # ╠═96a16f86-2b4b-11eb-33d4-c548ec069343
 # ╠═8d00e92a-2b4b-11eb-06f5-fdcb9b0c5d12
+# ╟─206c0ab4-6215-11eb-3bf1-6338a3f9877f
+# ╠═6a738b14-6215-11eb-0821-11a7a78a9d59
 # ╟─be66082e-2b28-11eb-37b2-b5261b9413b2
 # ╟─348e2384-614c-11eb-310b-5928a0e9b5b0
-# ╠═42fa0922-614c-11eb-1a00-c1cff7b8bcf4
+# ╠═0d416c6a-6218-11eb-2f4b-594b9e7bf8a6
+# ╠═0f429ed0-6218-11eb-1486-d508f430df6e
 # ╟─254c8fd2-614c-11eb-0698-51291ee0533d
 # ╠═73521002-2b1f-11eb-14fa-8f445d00fd91
 # ╠═b8da4972-2b1e-11eb-0227-67843f0cb6ac
@@ -301,6 +469,5 @@ sort(nodes_df1, :centrality, rev=true)
 # ╟─0723e2c8-2b49-11eb-11ca-f10351d92f45
 # ╠═b5c00db6-2b49-11eb-35e9-bd811fbe2a3f
 # ╠═52821b38-2b4e-11eb-0258-672b1e609ac0
-# ╠═d4ba17ca-2b44-11eb-1501-3b03b4859c57
-# ╠═d63ee986-2b44-11eb-1efe-f54faea6dbca
-# ╠═0d2ec2cc-2b45-11eb-2b8a-c30d8b769089
+# ╟─d370caa2-6218-11eb-02b4-5da6bc763265
+# ╠═a29f0d46-614b-11eb-2d1b-717ef1c9dcff
