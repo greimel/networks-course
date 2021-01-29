@@ -8,9 +8,11 @@ using InteractiveUtils
 begin
 	using Pkg
 	Pkg.activate(temp = true)
-	Pkg.add(["LightGraphs", "Plots", "UnPack", "OffsetArrays"])
+	Pkg.add(["LightGraphs", "CairoMakie", "UnPack", "OffsetArrays"])
 	
-	using Plots
+	using CairoMakie
+	
+	CairoMakie.activate!(type = "png")
 	using OffsetArrays
 	using LightGraphs
 	using LinearAlgebra, SparseArrays
@@ -21,9 +23,9 @@ end
 # ╔═╡ 42009620-6249-11eb-076b-957a526b3731
 A = let
 	N = 10
-	graph = CompleteGraph(N)
+	graph = StarGraph(N)
 	A = adjacency_matrix(graph)
-	#A = Diagonal(1 ./ dropdims(sum(A, dims=2), dims=2)) * A
+	
 	A = A ./ dropdims(sum(A, dims=2), dims=2)
 	A
 end	
@@ -81,23 +83,23 @@ y₀(A, param) = (I - param.α * A) \ κ(A, param)
 y_next(y, ε, A, param) = κ(A, param) + param.α * A * y + ε
 
 # ╔═╡ 8d1dd157-c464-4e0f-b570-b04dac7e4782
-function impulse_response(T, A, param, shocked_node, ε₀, T₀=3)
+function impulse_response(T, A, param, shocked_nodes, ε₀; T_shock = 0, T₀=3)
 	y = y₀(A, param)
 	N = size(A, 2)
 	
 	x_axis = -T₀:T
 	
 	out = OffsetArray(zeros(T₀ + T + 1), x_axis)
-	out[-T₀:0] .= welfare(y, param)
+	out[-T₀] = welfare(y, param)
 	
-	ε = zeros(N)
-	ε[shocked_node] = ε₀
-	
-	y = y_next(y, ε, A, param)
-	
-	for i in 1:T
-		y = y_next(y, zeros(10), A, param)
-		out[i] = welfare(y, param)
+	for t in (-T₀+1):T
+		ε = zeros(N)
+		if t ∈ T_shock 
+			ε[shocked_nodes] = ε₀
+		end
+		y = y_next(y, ε, A, param)
+		
+		out[t] = welfare(y, param)
 	end
 	
 	out ./ -out[-T₀] .+ 1
@@ -107,13 +109,20 @@ end
 let
 	nodes = 1:10
 	
-	plt = plot()
+	fig = Figure()
+	
+	col = CairoMakie.Colors.distinguishable_colors(10)
+	
+	ax = Axis(fig[1,1])
 	
 	for node in nodes
-		plot!(impulse_response(10, A, param, node, -0.3))
+		output = impulse_response(10, A, param, node, -0.3, T_shock = 0:0)
+		lines!(ax, parent(output), color = col[node], label = "node $node")
 	end
 	
-	plt
+	Legend(fig[1,2], ax)
+
+	fig
 end
 
 # ╔═╡ Cell order:
