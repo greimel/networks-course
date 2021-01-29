@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.19
+# v0.12.20
 
 using Markdown
 using InteractiveUtils
@@ -110,17 +110,20 @@ md"""
 # Getting twitter data with `twint`
 """
 
-# ╔═╡ 5a75f01a-60dc-11eb-3bd1-6f68e4edcd20
-file_name = joinpath(".", "twitter-data.csv")
-
 # ╔═╡ e4dcc0a6-60e3-11eb-2717-5347187c73c0
 md"""
 First we specify what data we want to have.
 """
 
-# ╔═╡ 04e5ec1a-60e4-11eb-0d45-fd8291a674f9
+# ╔═╡ ea8bc558-620d-11eb-24e8-57cd8d41e912
 md"""
-# A first glance at the data
+!!! note "Note"
+	If you want to change the parameters of your query you can specify some optional keyword arguments in the cell above. E.g. `tweet_df0 = twitter_data(keyword, language = "dutch")` or `tweet_df0 = twitter_data(keyword, n_tweets = 1000)`.
+"""
+
+# ╔═╡ c76895aa-620e-11eb-3da2-b572953e6d34
+md"""
+If you are curious how the data are downloaded, look at the following function. You shouldn't change these two functions below unless you are absolutely sure what you are doing. The underlying Python package `twint` is very fragile and might hang forever if you don't specify the inputs correctly.
 """
 
 # ╔═╡ f998e4fc-60e3-11eb-0533-1717bea29668
@@ -160,9 +163,6 @@ md"""
 # Appendix
 """
 
-# ╔═╡ e5a741e8-60dc-11eb-317e-cfdd650ae5f0
-TableOfContents()
-
 # ╔═╡ 87b7bc86-60df-11eb-3f9f-2375449c77f6
 begin
 	Base.show(io::IO, ::MIME"text/html", x::CategoricalArrays.CategoricalValue) = print(io, get(x))
@@ -192,34 +192,45 @@ begin
 end
 
 # ╔═╡ 85838053-8aa3-4e56-ae9d-17293937fe4f
-c = let
-	# Configure
+"Download tweets that contain `keyword` and save to csv file `filename`"
+function download_twitter_data(keyword::String;
+							   filename = joinpath(".", "twitter-data.csv"),
+							   n_tweets::Int = 500,
+							   language = missing,
+							   min_likes = 2
+							   )
+	# Configure twint query object
 	c = twint.Config()
 	c.Search = keyword
-	#c.Lang = "dutch"
+	if !ismissing(language)
+		@assert language isa String
+		c.Lang = language
+	end
 	#c.Geo = "52.377956,4.897070,5km"
-	c.Limit = 500
-	c.Output = file_name
+	c.Limit = n_tweets
+	c.Output = filename
 	c.Store_csv = true
-	c.Min_likes = 2
-	c
+	c.Min_likes = min_likes
+	
+	# if file exists, overwrite it
+	isfile(filename) && rm(filename)
+	twint.run.Search(c)
+	
+	filename
 end
 
-# ╔═╡ fb0aabb5-72ea-48a9-ac83-ebd593d4a2e5
-begin
-	_x_ = 1
-	isfile(file_name) && rm(file_name)
-	twint.run.Search(c)
+# ╔═╡ 32d55286-620c-11eb-2910-fd3e5b3fd78a
+"Download twitter data to csv and load data into a DataFrame"
+function twitter_data(args...; kwargs...)
+	filename = download_twitter_data(args...; kwargs...)
+	
+	csv = CSV.File(filename)
+	
+	DataFrame(csv)
 end
 
 # ╔═╡ 14e6dece-60dc-11eb-2d5a-275b8c9e382d
-begin
-	_x_ # make sure that this cell is run after the CSV is created
-	df0 = CSV.File(file_name) |> DataFrame
-end
-
-# ╔═╡ 1635940c-60e4-11eb-1b33-5b8faaf933d8
-names(df0)
+tweet_df0 = twitter_data(keyword)
 
 # ╔═╡ 1f927f3c-60e5-11eb-0304-f1639b68468d
 md"""
@@ -238,7 +249,7 @@ function parse_hashtags(hashtags)
 end
 
 # ╔═╡ 5401181c-60dd-11eb-0844-9b4b7b35693c
-df = select(df0, :hashtags => ByRow(parse_hashtags),
+tweet_df = select(tweet_df0, :hashtags => ByRow(parse_hashtags),
 				 # "parse_hashtags" is defined in the appendix
 	   		     :user_id,
 				 :username => categorical,
@@ -246,8 +257,8 @@ df = select(df0, :hashtags => ByRow(parse_hashtags),
 			renamecols = false)
 
 # ╔═╡ 9d5c72ca-60df-11eb-262d-6f0803d386f5
-df2 = combine(
-		groupby(df, :username), # group the data by user. Each group consists of all tweets of one user
+user_df = combine(
+		groupby(tweet_df, :username), # group the data by user. Each group consists of all tweets of one user
 		:hashtags => ∪ # for each group, take the union (∪) of hashtags
 		)
 
@@ -255,8 +266,8 @@ df2 = combine(
 begin
 	edge_list = DataFrame(user1 = String[], user2 = String[], common_hashtags = Int[])
 
-	for (i, (user₁, hashtags₁)) in enumerate(eachrow(df2))
-		for (user₂, hashtags₂) in eachrow(df2[i+1:end,:])
+	for (i, (user₁, hashtags₁)) in enumerate(eachrow(user_df))
+		for (user₂, hashtags₂) in eachrow(user_df[i+1:end,:])
 			
 			common = hashtags₁ ∩ hashtags₂
 
@@ -281,24 +292,24 @@ begin
 		username = GraphDataFrameBridge.MetaGraphs.get_prop.(Ref(graph), vertices(graph), :name)
 		)
 	
-	node_df = leftjoin(node_df, df2, on = :username)
+	node_df = leftjoin(node_df, user_df, on = :username)
 	
-	transform!(node_df, :hashtags_union => ByRow(x -> "covid19" in x) => :talks_covid)
+	transform!(node_df, :hashtags_union => ByRow(x -> "covid19" in x) => :highlighted_nodes)
 	
-	transform!(node_df, :talks_covid => ByRow(x -> x ? colorant"red" : colorant"blue") => :talks_covid_c)
+	transform!(node_df, :highlighted_nodes => ByRow(x -> x ? colorant"red" : colorant"blue") => :node_color)
 	
 	node_df
 end
 
 # ╔═╡ 5dacc3c2-60e2-11eb-1352-0ddbe3405aec
-gplot(graph, nodesize=0.1, NODESIZE=0.025, nodefillc = node_df.talks_covid_c)
+gplot(graph, nodesize=0.1, NODESIZE=0.025, nodefillc = node_df.node_color)
 
 # ╔═╡ 91ccdec2-60f3-11eb-2d0e-a59ba5392e65
-sum(node_df.talks_covid)
+sum(node_df.highlighted_nodes)
 
 # ╔═╡ 5ceea932-60ef-11eb-3c13-37ddf8e09f6f
 let
-	all_hashtags = vcat(df.hashtags...)
+	all_hashtags = vcat(tweet_df.hashtags...)
 	freqs = freqtable(all_hashtags)
 	
 	df_hashtags = DataFrame(hashtag = names(freqs)[1], freqs = freqs)
@@ -381,6 +392,9 @@ else
 	correct(md"Great, we are looking forward to reading your answer!")
 end
 
+# ╔═╡ e5a741e8-60dc-11eb-317e-cfdd650ae5f0
+TableOfContents()
+
 # ╔═╡ Cell order:
 # ╟─8493134e-6183-11eb-0059-6d6ecf0f17bf
 # ╠═235bcd50-6183-11eb-1272-65c61cfbf961
@@ -403,13 +417,12 @@ end
 # ╟─f1c8a53a-6180-11eb-2e05-179bfab97223
 # ╟─3fcf627c-6182-11eb-3a6c-851a6f96bd4a
 # ╟─b201cb56-60e3-11eb-302c-4180510aacf8
-# ╠═5a75f01a-60dc-11eb-3bd1-6f68e4edcd20
 # ╟─e4dcc0a6-60e3-11eb-2717-5347187c73c0
-# ╠═85838053-8aa3-4e56-ae9d-17293937fe4f
-# ╠═fb0aabb5-72ea-48a9-ac83-ebd593d4a2e5
-# ╟─04e5ec1a-60e4-11eb-0d45-fd8291a674f9
 # ╠═14e6dece-60dc-11eb-2d5a-275b8c9e382d
-# ╠═1635940c-60e4-11eb-1b33-5b8faaf933d8
+# ╟─ea8bc558-620d-11eb-24e8-57cd8d41e912
+# ╟─c76895aa-620e-11eb-3da2-b572953e6d34
+# ╠═85838053-8aa3-4e56-ae9d-17293937fe4f
+# ╠═32d55286-620c-11eb-2910-fd3e5b3fd78a
 # ╟─f998e4fc-60e3-11eb-0533-1717bea29668
 # ╟─46021976-60e4-11eb-3797-33b6ff7755d4
 # ╟─87f77baa-60e4-11eb-24e2-019e317451f6
@@ -428,7 +441,6 @@ end
 # ╠═91ccdec2-60f3-11eb-2d0e-a59ba5392e65
 # ╟─eea5accc-60db-11eb-3889-c992db2ec8ec
 # ╠═400cc04e-4784-11eb-11a2-ff8e245cad27
-# ╠═e5a741e8-60dc-11eb-317e-cfdd650ae5f0
 # ╠═87b7bc86-60df-11eb-3f9f-2375449c77f6
 # ╟─a1d99d9e-60dc-11eb-391c-b52c2e16aedd
 # ╠═6535e16c-6146-11eb-35c0-31aef62a631c
@@ -442,3 +454,4 @@ end
 # ╠═5f434c54-617b-11eb-0dc3-650499285995
 # ╠═873ad282-617c-11eb-2b60-6782461922fe
 # ╠═c97c33c8-617e-11eb-31a8-e3fec23ace37
+# ╠═e5a741e8-60dc-11eb-317e-cfdd650ae5f0
