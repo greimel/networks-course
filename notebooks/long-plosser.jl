@@ -163,7 +163,7 @@ t = Node(0)
 
 # ╔═╡ 893dea14-6277-11eb-2b7b-fbe9186f3024
 begin
-	@unpack production = impulse_response(10, A, param, 1, -0.3, T_shock = 0:0)
+	@unpack production = impulse_response(10, A, param, 1, -0.3, T_shock = 0:2)
 	
 	color_extr = extrema(production)
 end
@@ -196,7 +196,7 @@ function network_plot(node_positions, edges_as_pts; axis = (;), scatter = (;), l
 	
 	hidedecorations!(ax)
 
-	lp = lines!(ax, edges_as_pts; lines...)
+	lp = arrows!(ax, edges_as_pts...; arrowsize = 15, lengthscale=0.87, lines...)
 	sp = scatter!(ax, node_positions; scatter...)
 
 	cb = Colorbar(fig[1,1][1,2]; colorbar...)
@@ -206,19 +206,19 @@ function network_plot(node_positions, edges_as_pts; axis = (;), scatter = (;), l
 end
 
 # ╔═╡ ee096014-6271-11eb-1709-ff7acd68917b
-function edges_as_points(edges, node_positions;
+function edges_as_arrows(edges, node_positions;
 			    		 weights = missing, min_wgt = -Inf, max_wgt = Inf)
-	edges_as_pts = Point2f0[]
+	from = Point2f0[]
+	dir  = Point2f0[]
 
 	for e in edges
 		if ismissing(weights) || (min_wgt < weights[e.src, e.dst] < max_wgt)
-			push!(edges_as_pts, node_positions[e.src])
-    	    push!(edges_as_pts, node_positions[e.dst])
-        	push!(edges_as_pts, Point2f0(NaN, NaN))
+			push!(from, node_positions[e.src])
+    	    push!(dir,   node_positions[e.dst] .- node_positions[e.src])
 		end
     end
 	
-	edges_as_pts
+	from, dir
 end
 
 # ╔═╡ 189faa00-6271-11eb-0030-cb39dd021a06
@@ -230,18 +230,21 @@ function nodes_edges(graph)
 	
 	#cutoffs = [0.001,0.01,0.05,0.15,0.4,1.0]
 	
-	edges_as_pts = edges_as_points(edges(graph), node_positions)
+	edge_arrows = edges_as_arrows(edges(graph), node_positions)
 	
-	(; node_positions, edges_as_pts)
+	(; node_positions, edge_arrows)
 end
 
 # ╔═╡ 45b660f0-6272-11eb-255f-292f6840e53a
 fig = let
 	node_positions, edges = nodes_edges(graph)
 	
+	#colormap = CairoMakie.AbstractPlotting.ColorSchemes.linear_bmy_10_95_c78_n256
+	
 	fig = network_plot(node_positions, edges; 
-		scatter = (color = node_colors, colorrange = color_extr ),
-		colorbar = (limits = color_extr, ),
+		scatter = (; color = node_colors, colorrange = color_extr, strokewidth = 0 ),
+		lines = (; arrowcolor = (:black, 0.5), linecolor = (:black, 0.5)), 
+		colorbar = (; limits = color_extr),
 		axis = (title = "Production network", ))
 	
 	ax = Axis(fig[1,2][1,1])
@@ -273,11 +276,11 @@ t0; fig
 # ╠═8d1dd157-c464-4e0f-b570-b04dac7e4782
 # ╠═bc50a2ae-6270-11eb-1bb0-334a0d45a47c
 # ╠═93844b20-624b-11eb-3950-afc439d44aaa
-# ╠═fb8a35e4-6274-11eb-3b46-efe966cee7fc
 # ╠═67a3cf42-627a-11eb-2577-f5c57c66e8bb
 # ╠═70a40ad2-627a-11eb-0d97-f7354da92712
 # ╠═893dea14-6277-11eb-2b7b-fbe9186f3024
 # ╠═c9ed747e-6274-11eb-1d1d-714cee58b5b1
+# ╠═fb8a35e4-6274-11eb-3b46-efe966cee7fc
 # ╠═3d221bf2-6275-11eb-0a52-a5bc0ced7120
 # ╠═68b5d4ee-6274-11eb-0c36-5334c129f893
 # ╠═45b660f0-6272-11eb-255f-292f6840e53a
