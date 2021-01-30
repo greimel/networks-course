@@ -81,12 +81,6 @@ md"""
 ## The Economy at a Glance: The Input-Output-Network
 """
 
-# ╔═╡ ce86b610-6237-11eb-3977-07c18c2dd4a9
-5
-
-# ╔═╡ 0fab2ff8-6241-11eb-37ab-eb45c9977781
-
-
 # ╔═╡ f53bd8ee-6212-11eb-160b-83d1bdef6bfc
 #gplot(swg, nodesize = nodes_df1.centrality)
 
@@ -262,6 +256,24 @@ value(p::Pair{<:Any, <: Union{Symbol,AbstractString}}) = first(p)
 
 # ╔═╡ f348398e-6289-11eb-12c6-6fe8a0028bb4
 
+
+# ╔═╡ b8f15542-6354-11eb-356c-378fec886c25
+md"""
+* industry is only affected in the period(s) the shock hit(s)
+* then the shock travels one step per period (see simpler graphs in other notebook
+
+### Todo 1
+
+* can we understand this using the formulas?
+* can we see this in Acemoglu et al?
+* can we decentralize the "planner's solution" and see what's going on?
+
+### Todo 2
+
+* use consumption expenditure shares to get heterogenous responses on impact
+* Think about policy experiments (Corona) and country comparisons
+* Illustrate washing out of shocks for different networks with many nodes
+"""
 
 # ╔═╡ be66082e-2b28-11eb-37b2-b5261b9413b2
 md"""
@@ -562,8 +574,6 @@ TableOfContents()
 # ╔═╡ Cell order:
 # ╟─35389b9e-6213-11eb-3886-01ddddc5ade2
 # ╟─c1e9325a-616f-11eb-1bc2-991abde9ff86
-# ╠═ce86b610-6237-11eb-3977-07c18c2dd4a9
-# ╠═0fab2ff8-6241-11eb-37ab-eb45c9977781
 # ╠═7ac0e4c2-623c-11eb-1097-635550667caa
 # ╠═022ed772-623e-11eb-2bc1-45fbdbccdb3d
 # ╠═3a7e6cf2-623e-11eb-16e8-0555386fccc0
@@ -616,6 +626,7 @@ TableOfContents()
 # ╠═749db7be-6287-11eb-01d6-cd89dc060c9c
 # ╠═f348398e-6289-11eb-12c6-6fe8a0028bb4
 # ╠═68f5c7d4-6288-11eb-06ed-8da1362d71f7
+# ╟─b8f15542-6354-11eb-356c-378fec886c25
 # ╟─be66082e-2b28-11eb-37b2-b5261b9413b2
 # ╟─348e2384-614c-11eb-310b-5928a0e9b5b0
 # ╠═0d416c6a-6218-11eb-2f4b-594b9e7bf8a6
