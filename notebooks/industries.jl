@@ -33,7 +33,7 @@ end
 # ╔═╡ 0f429ed0-6218-11eb-1486-d508f430df6e
 begin
 	Pkg.add("PlutoUI")
-	Pkg.add(["XLSX", "DataFrames", "LightGraphs", "Plots", "Underscores", "NamedArrays", "MetaGraphs", "SimpleWeightedGraphs", "GraphPlot", "Colors"])
+	Pkg.add(["XLSX", "DataFrames", "LightGraphs", "Plots", "Underscores", "UnPack",  "NamedArrays", "MetaGraphs", "SimpleWeightedGraphs", "GraphPlot", "Colors", "OffsetArrays"])
 	Pkg.add("GraphDataFrameBridge")
 
 	# Working with tabular data
@@ -48,9 +48,12 @@ begin
 	using SparseArrays
 	using PlutoUI
 	using PlutoUI: Slider
-	
+
+	using UnPack
+	using LinearAlgebra
 	#using PooledArrays
 	# using TabularMakie
+	using OffsetArrays
 	
 	_a_ # make sure this is run as cell #2
 end
@@ -159,6 +162,105 @@ md"""
 """
 
 # ╔═╡ 6a738b14-6215-11eb-0821-11a7a78a9d59
+md"""
+## Long & Plosser
+"""
+
+# ╔═╡ 0caf5776-6286-11eb-2a20-ddb5f632b470
+# parameters
+function params(A)
+	N = size(A, 1)
+	θ = fill(1/(N+1), N) # utility weights of commodities
+	θ₀ = 1/(N+1) # utility weight of leisure
+	β = 0.95
+	H = 1
+	α = 0.3
+	param = (; α, β, θ, θ₀, H)
+end
+
+# ╔═╡ 27371f5a-6286-11eb-22fc-f11c03379ad7
+get_γ(A, param) = (I - param.β * A) \ param.θ
+
+# ╔═╡ 2d46b51a-6286-11eb-06ff-8d1a16e10ac3
+# equations
+function L(A, param)
+	@unpack α, β, θ, θ₀, H = param
+	γ = get_γ(A, param)
+	L = β .* γ .* (1-α) ./ (θ₀ + (1-α) * β * sum(γ)) .* H
+end
+
+# ╔═╡ 33656356-6286-11eb-121a-e53321d7effc
+C(Y, A, param) = param.θ ./ get_γ(A, param) .* Y
+
+# ╔═╡ 395ee70a-6286-11eb-1d00-2b41a8cb4ae3
+function welfare(y, param)
+	dot(y, param.θ)
+end
+
+# ╔═╡ 3fa788e4-6286-11eb-21df-eb8e98065fcd
+function κ(A, param)
+	N = size(A, 1)
+	@unpack α, β = param
+	γ = get_γ(A, param)
+	
+	κ = (1 - α) .* log.(L(A, param))
+	for i in 1:N
+		tmp = sum(A[i,j] == 0 ? 0 : A[i,j] * log(β * γ[i] * A[i,j] / γ[j]) for j in 1:N)
+		κ[i] = κ[i] + α * tmp
+	end
+	κ
+end
+
+# ╔═╡ 4d21f4c6-6286-11eb-244f-c796d9b2b601
+y₀(A, param) = (I - param.α * A) \ κ(A, param)
+
+# ╔═╡ 4edf516e-6286-11eb-1689-3f99370b30a8
+y_next(y, ε, A, param) = κ(A, param) + param.α * A * y + ε
+
+# ╔═╡ 5ad1100c-6286-11eb-1b9b-1d2b05370d41
+function impulse_response(T, A, param, shocked_nodes, ε₀; T_shock = 0, T₀=3)
+	y = y₀(A, param)
+	N = size(A, 2)
+	
+	t_indices = -T₀:T
+	
+	
+	
+	y_out = OffsetArray(zeros(N, length(t_indices)), 1:N, t_indices)
+	w_out = OffsetArray(zeros(length(t_indices)), t_indices)
+	
+	y_out[:, -T₀] .= y
+	w_out[-T₀]     = welfare(y, param)
+	
+	for t in (-T₀+1):T
+		ε = zeros(N)
+		if t ∈ T_shock 
+			ε[shocked_nodes] .= ε₀
+		end
+		y = y_next(y, ε, A, param)
+		
+		y_out[:, t] .= y
+		w_out[t]     = welfare(y, param)
+	end
+	
+	y_out .= y_out ./ -y_out[:,-T₀] .+ 1
+	w_out .= w_out ./ -w_out[-T₀] .+ 1
+	(production = y_out, welfare = w_out)
+end
+
+# ╔═╡ b692dcea-634e-11eb-3c90-e59b222788a0
+n = 5
+
+# ╔═╡ 966ea54c-634f-11eb-3f7f-711fb8d088a3
+
+
+# ╔═╡ 2e6639c2-634f-11eb-29c6-1f995924bd93
+label(p::Pair{<:Any, <: Union{Symbol,AbstractString}}) = string(last(p))
+
+# ╔═╡ 64bf2f8a-634f-11eb-27ec-b18184971cc1
+value(p::Pair{<:Any, <: Union{Symbol,AbstractString}}) = first(p)
+
+# ╔═╡ f348398e-6289-11eb-12c6-6fe8a0028bb4
 
 
 # ╔═╡ be66082e-2b28-11eb-37b2-b5261b9413b2
@@ -332,6 +434,57 @@ extrema(weights(swg))
 # ╔═╡ 22069258-6216-11eb-3e83-7154e6e5e09b
 eigenvector_centrality(swg)
 
+# ╔═╡ 749db7be-6287-11eb-01d6-cd89dc060c9c
+Matrix(sum(weights(swg), dims = 2))
+
+# ╔═╡ 68f5c7d4-6288-11eb-06ed-8da1362d71f7
+A = let
+	A₀ = weights(swg) .* (weights(swg) .> 0)
+	
+	drop = findall(dropdims(sum(A₀, dims=2), dims=2) .≈ 0)
+	
+	A = A₀[Not(drop), Not(drop)] |> Matrix
+	
+	A = A ./ dropdims(sum(A, dims = 2), dims=2)
+	
+	n = size(A, 1)
+	
+	A
+	#(I - 0.3 * A) \ ones(n)
+	#sum(A, dims = 1)
+end
+
+
+# ╔═╡ 1e54d356-6287-11eb-3342-7bf6f504aeb3
+sorted_nodes = sortperm(eigenvector_centrality(SimpleWeightedDiGraph(A')), rev = true)
+
+# ╔═╡ 70c30cfe-6287-11eb-21fe-c352080c9a15
+top_n = sorted_nodes[1:n]
+
+# ╔═╡ 777ce6ea-634e-11eb-02ac-ef2df5cf8ae1
+bot_n = sorted_nodes[end-n+1:end]
+
+# ╔═╡ 6338a23c-6286-11eb-1ef0-31c108887aaa
+let
+	nodes = [bot_n => :bottom, top_n => :top]
+	#nodes = [bot_n, top_n]
+	
+	fig = Figure()
+	
+	col = rand([:red, :blue, :green], length(nodes))
+	
+	ax = Axis(fig[1,1])
+	
+	for (i, node) in enumerate(nodes)
+		@unpack welfare = impulse_response(10, A, params(A), value(node), -0.5, T_shock = 0:2)
+		lines!(ax, collect(axes(welfare, 1)), parent(welfare), color = col[i], label = label(node))
+	end
+	
+	Legend(fig[1,2], ax)
+
+	fig
+end
+
 # ╔═╡ 52821b38-2b4e-11eb-0258-672b1e609ac0
 list_nodes(graph) = [(i = i, node_name = props(graph, i)[:name]) for i in 1:nv(graph)] |> DataFrame
 
@@ -393,7 +546,7 @@ begin
 end
 
 # ╔═╡ 96a16f86-2b4b-11eb-33d4-c548ec069343
-Plots.histogram(nodes_df1.centrality)
+hist(nodes_df1.centrality)
 
 # ╔═╡ 8d00e92a-2b4b-11eb-06f5-fdcb9b0c5d12
 sort(nodes_df1, :centrality, rev=true)
@@ -442,7 +595,27 @@ TableOfContents()
 # ╠═96a16f86-2b4b-11eb-33d4-c548ec069343
 # ╠═8d00e92a-2b4b-11eb-06f5-fdcb9b0c5d12
 # ╟─206c0ab4-6215-11eb-3bf1-6338a3f9877f
-# ╠═6a738b14-6215-11eb-0821-11a7a78a9d59
+# ╟─6a738b14-6215-11eb-0821-11a7a78a9d59
+# ╠═0caf5776-6286-11eb-2a20-ddb5f632b470
+# ╠═27371f5a-6286-11eb-22fc-f11c03379ad7
+# ╠═2d46b51a-6286-11eb-06ff-8d1a16e10ac3
+# ╠═33656356-6286-11eb-121a-e53321d7effc
+# ╠═395ee70a-6286-11eb-1d00-2b41a8cb4ae3
+# ╠═3fa788e4-6286-11eb-21df-eb8e98065fcd
+# ╠═4d21f4c6-6286-11eb-244f-c796d9b2b601
+# ╠═4edf516e-6286-11eb-1689-3f99370b30a8
+# ╠═5ad1100c-6286-11eb-1b9b-1d2b05370d41
+# ╠═1e54d356-6287-11eb-3342-7bf6f504aeb3
+# ╠═b692dcea-634e-11eb-3c90-e59b222788a0
+# ╠═70c30cfe-6287-11eb-21fe-c352080c9a15
+# ╠═777ce6ea-634e-11eb-02ac-ef2df5cf8ae1
+# ╠═6338a23c-6286-11eb-1ef0-31c108887aaa
+# ╠═966ea54c-634f-11eb-3f7f-711fb8d088a3
+# ╠═2e6639c2-634f-11eb-29c6-1f995924bd93
+# ╠═64bf2f8a-634f-11eb-27ec-b18184971cc1
+# ╠═749db7be-6287-11eb-01d6-cd89dc060c9c
+# ╠═f348398e-6289-11eb-12c6-6fe8a0028bb4
+# ╠═68f5c7d4-6288-11eb-06ed-8da1362d71f7
 # ╟─be66082e-2b28-11eb-37b2-b5261b9413b2
 # ╟─348e2384-614c-11eb-310b-5928a0e9b5b0
 # ╠═0d416c6a-6218-11eb-2f4b-594b9e7bf8a6
