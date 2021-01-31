@@ -180,11 +180,23 @@ begin
 	Pkg.add(["PyCall", "Conda"])
 	Pkg.build("PyCall")
 	
+	# Download twint
+	import LibGit2
+	twint_path = joinpath(@__DIR__(), "twint") # specify where to save twint
+	if !isdir(twint_path)
+		repo_url = "https://github.com/twintproject/twint"
+		repo = LibGit2.clone(repo_url, twint_path) # download twint from github
+	end
+	
+	# Install twint
 	import Conda
-	run(`$(Conda._pip(Conda.ROOTENV)) install --user --upgrade -e "git+https://github.com/twintproject/twint.git@origin/master#egg=twint"`)
+	dir = pwd() # save current directory, before leaving it
+	cd(twint_path) # move to twint folder
+	run(`$(Conda._pip(Conda.ROOTENV)) install . -r requirements.txt`)
+	cd(dir) # move back
 	
+	# Load twint to Julia
 	import PyCall
-	
 	twint = PyCall.pyimport("twint")
 	
 	_b_ = _a_ + 1 # make sure this is cell #2
