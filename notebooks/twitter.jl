@@ -181,7 +181,18 @@ begin
 	Pkg.build("PyCall")
 	
 	import Conda
-	run(`$(Conda._pip(Conda.ROOTENV)) install --user --upgrade -e "git+https://github.com/twintproject/twint.git@origin/master#egg=twint"`)
+	import LibGit2
+	
+	repo_url = "https://github.com/twintproject/twint"
+	twint_path = joinpath(@__DIR__(), "twint")
+	repo = LibGit2.clone(repo_url, twint_path)
+	
+	dir = pwd()
+	cd(twint_path)
+	
+	run(`$(Conda._pip(Conda.ROOTENV)) install . -r requirements.txt`)
+	
+	cd(dir)
 	
 	import PyCall
 	
