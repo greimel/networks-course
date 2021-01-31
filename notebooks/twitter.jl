@@ -180,6 +180,17 @@ begin
 	Pkg.add(["PyCall", "Conda"])
 	Pkg.build("PyCall")
 	
+	# Install twint (1)
+	import Conda
+	Conda.pip_interop(true)
+	Conda.pip("install", "twint") # it could be so easy ...
+	
+	# ... but the above command installs twint 2.1.20 which doesn't work any more
+	# So we have to download it from github and install it manually.
+	
+	# One-liner that doesn't always work on Windows
+	# run(`$(Conda._pip(Conda.ROOTENV)) install --user --upgrade -e git+https://github.com/twintproject/twint.git@origin/master#egg=twint`)
+	
 	# Download twint
 	import LibGit2
 	twint_path = joinpath(@__DIR__(), "twint") # specify where to save twint
@@ -188,8 +199,8 @@ begin
 		repo = LibGit2.clone(repo_url, twint_path) # download twint from github
 	end
 	
-	# Install twint
-	import Conda
+	# Install twint (2)
+	Conda.pip("install", "dataclasses") # manually install a dependency because that doesn't work automatically on windows
 	dir = pwd() # save current directory, before leaving it
 	cd(twint_path) # move to twint folder
 	run(`$(Conda._pip(Conda.ROOTENV)) install . -r requirements.txt`)
