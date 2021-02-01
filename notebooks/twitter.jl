@@ -36,7 +36,6 @@ group_number = 99
 group_members = ([
 	(firstname = "Ella-Louise", lastname = "Flores"),
 	(firstname = "Padraig", 	lastname = "Cope"),
-	(firstname = "Maeve", 		lastname = "Reed"),
 	(firstname = "Christy",  	lastname = "Denton")
 	]);
 
