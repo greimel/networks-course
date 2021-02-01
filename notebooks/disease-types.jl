@@ -80,10 +80,9 @@ md"
 "
 
 # ╔═╡ 8ddb6f1e-649e-11eb-3982-83d2d319b31f
-function transition_(::I, par, args...; kwargs...)
+function transition(::I, par, args...; kwargs...)
 	x = rand()
-	
-	if x < par.ρ # recover
+	if x < par.ρ + par.δ # recover or die
 		R()
 	else
 		I()
@@ -91,13 +90,13 @@ function transition_(::I, par, args...; kwargs...)
 end
 
 # ╔═╡ 61a36e78-57f8-4ef0-83b4-90e5952c116f
-transition_(::R,      args...; kwargs...) = R()
+transition(::R, args...; kwargs...) = R()
 
 # ╔═╡ d3bfc9aa-649e-11eb-2c36-b1fba4507f07
-# transition_(::D,      args...; kwargs...) = ...
+# transition(::D,      args...; kwargs...) = ...
 
 # ╔═╡ ffe07e00-0408-4986-9205-0fbb025a698c
-function transition_(::S, par, node, adjacency_matrix, is_infected)
+function transition(::S, par, node, adjacency_matrix, is_infected)
 	inv_prob_transmission = 1.0
 	
 	for i in is_infected
@@ -115,7 +114,7 @@ function iterate!(states_new, states, adjacency_matrix, par)
 	is_infected = findall(isa.(states, I))
 	
 	for i in 1:size(adjacency_matrix, 1)
-		states_new[i] = transition_(states[i], par, i, adjacency_matrix, is_infected)
+		states_new[i] = transition(states[i], par, i, adjacency_matrix, is_infected)
 	end
 	
 	states_new
@@ -123,9 +122,8 @@ end
 
 # ╔═╡ 07f4816c-b893-4771-be3f-cc10695720cf
 md"""
-# Simulate
+## Functions for the simulation
 """
-
 
 # ╔═╡ fecf62c5-2c1d-4709-8c17-d4b6e0565617
 function initial_state(N, n_infected)
@@ -140,37 +138,42 @@ function initial_state(N, n_infected)
 	init
 end
 
-# ╔═╡ e7c5f754-649b-11eb-1f34-0392ece0b1f6
-
-
-# ╔═╡ b0d34450-6497-11eb-01e3-27582a9f1dcc
-llabel(x::DataType) = string(Base.typename(x).name)
-
-# ╔═╡ 63b2882e-649b-11eb-28de-bd418b43a35f
-llabel(x) = llabel(typeof(x))
-
-# ╔═╡ a89c6f63-35e4-44d8-bfd1-20ed73549fea
-function summarize(sim)
-	T = size(sim, 2)
-	levels = unique(sim)
+# ╔═╡ 208445c4-5359-4442-9b9b-bde5e55a8c23
+function simulate(graph, par, T, init = initial_state(nv(graph), 10))
+	mat = adjacency_matrix(graph)
+	N = nv(graph)
 	
-	llabel.(sim)
+	sim = Matrix{States}(undef, N, T)
+	sim[:,1] .= init
 	
-	df = DataFrame(t = 1:T)
-	
-	for lev in levels
-		#lev::DataType{T}
-		#@show T
-		df[:, llabel(lev)] = dropdims(sum(sim .== Ref(lev), dims = 1), dims = 1)
+	for t = 2:T
+		iterate!(view(sim, :, t), view(sim, :, t-1), mat, par)
 	end
-	df
+	sim
 end
 
-# ╔═╡ 53e344e6-6497-11eb-08ab-7f0468fb47b0
-Type{S}.name
+# ╔═╡ 50d9fb56-64af-11eb-06b8-eb56903084e2
+md"""
+## Simulate
+
+### Choosing the network
+"""
+
+# ╔═╡ 213510df-9772-4be9-b58d-db173c21519a
+N = 1000
+
+# ╔═╡ 5d11a2df-3187-4509-ba7b-8388564573a6
+function iterate(states, adjacency_matrix, par)
+	states_new = Vector{States}(undef, N)
+	iterate!(states_new, states, adjacency_matrix, par)
+	
+	states_new
+end
 
 # ╔═╡ 37972f08-db05-4e84-9528-fe16cd86efbf
 md"""
+### Setting the Parameters
+
 * ``\rho``: $(@bind ρ0 Slider(0.1:0.1:0.9, default = 0.1, show_value =true)) (recovery probability)
 * ``\delta``: $(@bind δ0 Slider(0.0:0.02:0.2, default = 0.04, show_value =true)) (death rate)
 * ``p``: $(@bind p0 Slider(0.1:0.1:0.9, default = 0.3, show_value =true)) (infection probability)
@@ -178,6 +181,17 @@ md"""
 
 # ╔═╡ 2d3466df-48b3-432f-843d-8f83d7fb575e
 par = (ρ = ρ0, δ = δ0, p = p0)
+
+# ╔═╡ e4d016cc-64ae-11eb-1ca2-259e5a262f33
+md"""
+## Processing the Simulated Data
+"""
+
+# ╔═╡ b0d34450-6497-11eb-01e3-27582a9f1dcc
+llabel(x::DataType) = string(Base.typename(x).name)
+
+# ╔═╡ 63b2882e-649b-11eb-28de-bd418b43a35f
+llabel(x) = llabel(typeof(x))
 
 # ╔═╡ 11ea4b84-649c-11eb-00a4-d93af0bd31c8
 function tidy_simulation_output(sim)
@@ -202,33 +216,32 @@ function tidy_simulation_output(sim)
 	df
 end
 
+# ╔═╡ bf18bef2-649d-11eb-3e3c-45b41a3fa6e5
+function fractions_over_time(sim)
+	tidy_sim = tidy_simulation_output(sim)
+	
+	combine(groupby(tidy_sim, [:t, :state]), :node_id => (x -> length(x)/N) => :fraction)
+end
+
+# ╔═╡ a89c6f63-35e4-44d8-bfd1-20ed73549fea
+function summarize(sim)
+	T = size(sim, 2)
+	levels = unique(sim)
+	
+	llabel.(sim)
+	
+	df = DataFrame(t = 1:T)
+	
+	for lev in levels
+		#lev::DataType{T}
+		#@show T
+		df[:, llabel(lev)] = dropdims(sum(sim .== Ref(lev), dims = 1), dims = 1)
+	end
+	df
+end
+
 # ╔═╡ 2ed340be-649e-11eb-31a7-a369a8215914
 
-
-# ╔═╡ 1523ee2e-6490-11eb-2216-a1806099830b
-# 15 ms => 40 ms => 20ms
-
-# ╔═╡ 213510df-9772-4be9-b58d-db173c21519a
-N = 1000
-
-# ╔═╡ 5d11a2df-3187-4509-ba7b-8388564573a6
-function iterate(states, adjacency_matrix, par)
-	states_new = Vector{States}(undef, N)
-	transition!(states_new, states, adjacency_matrix, par)
-	
-	states_new
-end
-
-# ╔═╡ 208445c4-5359-4442-9b9b-bde5e55a8c23
-function simulate(mat, par, T, init = initial_state(N, 10))
-	sim = Matrix{States}(undef, N, T)
-	sim[:,1] .= init
-	
-	for t = 2:T
-		iterate!(view(sim, :, t), view(sim, :, t-1), mat, par)
-	end
-	sim
-end
 
 # ╔═╡ 4dee5da9-aa4b-4551-974a-f7268d016617
 md"""
@@ -311,37 +324,15 @@ end
 # ╔═╡ bea21e32-7b13-4772-9e34-9b4b1f3333fb
 graph = spatial_graph(N)
 
-# ╔═╡ 512593af-f72c-4e67-88a3-896876efc52b
-mat = adjacency_matrix(graph)
-
 # ╔═╡ 0b35f73f-6976-4d85-b61f-b4188440043e
 begin
-	sim = simulate(mat, par, 100)
-	df0 = summarize(sim)
-	df = stack(df0, Not(:t)) 
+	sim = simulate(graph, par, 100)	
+	df = fractions_over_time(sim)
 	nothing
 end
 
-# ╔═╡ eada7ed0-649b-11eb-3257-a715ea450554
-llabel.(sim)
-
-# ╔═╡ 994a7574-649d-11eb-3011-dbb82db18b5e
-tidy_sim = tidy_simulation_output(sim)
-
-# ╔═╡ bf18bef2-649d-11eb-3e3c-45b41a3fa6e5
-df000 = combine(groupby(tidy_sim, [:t, :state]), :node_id => (x -> length(x)/N) => :fraction)
-
 # ╔═╡ 2f00e2c6-649e-11eb-156f-a53dfb6d9f3f
-plot(df000.t, df000.fraction, group=df000.state)
-
-# ╔═╡ 465f0169-2bd2-4935-aa3f-951cd08ba3c1
-begin
-	plt = plot()
-	plot!(df.t, df.value, group = df.variable)
-#	plot!(df.t, df.S, label = "S")	
-#	plot!(df.t, df.I, label = "I")
-#	plot!(df.t, df.R, label = "R")
-end
+plot(df.t, df.fraction, group=df.state)
 
 # ╔═╡ c5f48079-f52e-4134-8e6e-6cd4c9ee915d
 let
@@ -349,7 +340,7 @@ let
 	for p in p_range
 		par = (p = p, ρ = ρ0, δ = δ0)
 		
-		sim = simulate(mat, par, 100)
+		sim = simulate(graph, par, 100)
 		
 		df0 = summarize(sim)
 		
@@ -405,7 +396,7 @@ let
 	for (lab, init) in ["top" => init_vaccine(:top), "bottom" => init_vaccine(:bottom), "none" => init_vaccine(:none)]
 		#par = (p = p, ρ = ρ0, δ = δ0)
 		
-		sim = simulate(mat, par, 100, init)
+		sim = simulate(graph, par, 100, init)
 		
 		df0 = summarize(sim)
 		
@@ -443,24 +434,20 @@ TableOfContents()
 # ╟─07f4816c-b893-4771-be3f-cc10695720cf
 # ╠═fecf62c5-2c1d-4709-8c17-d4b6e0565617
 # ╠═208445c4-5359-4442-9b9b-bde5e55a8c23
-# ╠═e7c5f754-649b-11eb-1f34-0392ece0b1f6
+# ╟─50d9fb56-64af-11eb-06b8-eb56903084e2
+# ╠═213510df-9772-4be9-b58d-db173c21519a
+# ╠═bea21e32-7b13-4772-9e34-9b4b1f3333fb
+# ╟─37972f08-db05-4e84-9528-fe16cd86efbf
+# ╠═2d3466df-48b3-432f-843d-8f83d7fb575e
+# ╠═0b35f73f-6976-4d85-b61f-b4188440043e
+# ╠═2f00e2c6-649e-11eb-156f-a53dfb6d9f3f
+# ╟─e4d016cc-64ae-11eb-1ca2-259e5a262f33
+# ╠═bf18bef2-649d-11eb-3e3c-45b41a3fa6e5
+# ╠═11ea4b84-649c-11eb-00a4-d93af0bd31c8
 # ╠═a89c6f63-35e4-44d8-bfd1-20ed73549fea
 # ╠═b0d34450-6497-11eb-01e3-27582a9f1dcc
 # ╠═63b2882e-649b-11eb-28de-bd418b43a35f
-# ╠═53e344e6-6497-11eb-08ab-7f0468fb47b0
-# ╠═37972f08-db05-4e84-9528-fe16cd86efbf
-# ╠═2f00e2c6-649e-11eb-156f-a53dfb6d9f3f
-# ╠═2d3466df-48b3-432f-843d-8f83d7fb575e
-# ╠═0b35f73f-6976-4d85-b61f-b4188440043e
-# ╠═eada7ed0-649b-11eb-3257-a715ea450554
-# ╠═11ea4b84-649c-11eb-00a4-d93af0bd31c8
-# ╠═994a7574-649d-11eb-3011-dbb82db18b5e
-# ╠═bf18bef2-649d-11eb-3e3c-45b41a3fa6e5
 # ╠═2ed340be-649e-11eb-31a7-a369a8215914
-# ╠═1523ee2e-6490-11eb-2216-a1806099830b
-# ╠═465f0169-2bd2-4935-aa3f-951cd08ba3c1
-# ╠═512593af-f72c-4e67-88a3-896876efc52b
-# ╠═213510df-9772-4be9-b58d-db173c21519a
 # ╟─4dee5da9-aa4b-4551-974a-f7268d016617
 # ╟─78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
 # ╠═7b43d3d6-03a0-4e0b-96e2-9de420d3187f
@@ -473,12 +460,11 @@ TableOfContents()
 # ╠═f8ee8f92-acea-4def-b8d5-eaa452a66349
 # ╠═674f577e-29c4-499e-836b-6642cb2e7e03
 # ╠═04227a80-5d28-43db-929e-1cdc5b31796d
-# ╠═fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
+# ╟─fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
 # ╟─1b8c26b6-64aa-11eb-2d9a-47db5469a654
 # ╟─e82d5b7f-5f37-4696-9917-58b117b9c1d6
 # ╠═95b67e4d-5d41-4b86-bb9e-5de97f5d8957
 # ╠═c1971734-2299-4038-8bb6-f62d020f92cb
-# ╠═bea21e32-7b13-4772-9e34-9b4b1f3333fb
 # ╟─a81f5244-64aa-11eb-1854-6dbb64c8eb6a
 # ╠═df9b4eb2-64aa-11eb-050c-adf04609ef21
 # ╠═2b55141f-1cba-4a84-8811-98697d408d65
