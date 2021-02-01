@@ -90,7 +90,7 @@ Below you find a template of building a network from scratch. Play with it make 
 
 # ╔═╡ 67a2e792-647a-11eb-208e-4df018d00425
 md"""
-Note, that you can build directed graphs using `SimpleDiGraph`. Replace `SimpleGraph` by `SimpleDiGraph` to get an undirected graph.
+Note, that you can build directed graphs using `SimpleDiGraph`. Replace `SimpleDiGraph` by `SimpleGraph` to get an undirected graph.
 """
 
 # ╔═╡ d3feb786-2c69-416f-8fda-e2b4da0c0c1c
@@ -326,7 +326,7 @@ degree(weighted_network)
 md"""
 ## Issue with weighted graphs (advanced)
 
-There is a second way of construction weighted graphs.
+There is a second way of constructing weighted graphs.
 """
 
 # ╔═╡ 6e4afa92-647c-11eb-2165-73b6b8494c70
