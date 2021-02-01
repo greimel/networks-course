@@ -28,5 +28,6 @@ jobs:
               shell: bash
             - name: Upload artifacts for preview
               uses: actions/upload-artifact@v2
-              with: 
-                path: .
+              with:
+                  name: ${{ matrix.config.artifact }}
+                  path: .
