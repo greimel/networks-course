@@ -57,7 +57,7 @@ keyword = "#econtwitter"
 
 # ╔═╡ 574747d4-617e-11eb-20e7-5760a3a3f3e9
 md"""
-#### Task 1: Explain your choice
+#### Task 1: Explain your choice (2 points)
 
 👉 Describe in <150 words why *$(keyword)* is an interesting keyword to search for.
 """
@@ -69,10 +69,12 @@ Your answer goes here ...
 
 # ╔═╡ b2975790-617f-11eb-3dad-ab030c5213ec
 md"""
-#### Task 2: Analyze the network
-👉 
+#### Task 2: Analyze the network (5 points)
+👉 Describe the network in terms of the measures that are discussed in lectures 1 and 2. You can look at the notebook **first-networks.jl** and the section *Analyzing the network* for some inspiration.
 
-You can look at the section *Analyzing the network* for some inspiration.
+👉 Interpret all results that you show.
+
+👉 Be accurate but concise. Aim at no more than 500 words. (You can use `wordcount` if you like)
 
 """
 
@@ -81,11 +83,11 @@ You can look at the section *Analyzing the network* for some inspiration.
 
 # ╔═╡ 840f84aa-6180-11eb-03bb-71fa9a6e9d17
 md"""
-#### Task 3: Look under the hood
+#### Task 3: Look under the hood (3 points)
 
 Now look at sections **A first glance at the data** and **Making a network** of this notebook. Make sure you understand what data are available to us and how we created the network from the data. 
 
-👉 We want to read your critical thoughts in <150 words. You might tell us about an idea how to generate a different network from the data. Or what twist you would add to our network to make it more interesting. 
+👉 We want to read your critical thoughts in <250 words. You might tell us about an idea how to generate a different network from the data. Or what twist you would add to our network to make it more interesting. 
 """
 
 # ╔═╡ e96b54dc-6180-11eb-027f-a9db3a83aa99
@@ -97,7 +99,7 @@ Your answer goes here ...
 md"""
 #### Before you submit ...
 
-👉 Make sure you have added your names and your group nummber at the top.
+👉 Make sure you have added your names and your group number at the top.
 
 👉 Make sure that that **all group members proofread** your submission (especially your little essays).
 
@@ -431,7 +433,7 @@ TableOfContents()
 # ╠═cc8bb4e6-617c-11eb-10ed-a316641c78f7
 # ╟─d7046f24-617e-11eb-0571-ebcacb3a39e9
 # ╟─a36f6492-617f-11eb-2bb8-1ded14d9f438
-# ╟─b2975790-617f-11eb-3dad-ab030c5213ec
+# ╠═b2975790-617f-11eb-3dad-ab030c5213ec
 # ╠═82b31aea-6180-11eb-0281-c512bdd2f667
 # ╟─840f84aa-6180-11eb-03bb-71fa9a6e9d17
 # ╠═e96b54dc-6180-11eb-027f-a9db3a83aa99
