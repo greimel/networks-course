@@ -24,10 +24,8 @@ begin
 end
 
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
-md"""
-!!! danger "Preliminary version"
-	Nice that you've found this notebook on github. We appreciate your engagement. Feel free to have a look. Please note that the assignment notebook is subject to change until it is uploaded to *Canvas*.
-"""
+md"
+`assignment-twitter.jl` | **Version 1.0** | *(last changed: Feb 1)*"
 
 # ╔═╡ 235bcd50-6183-11eb-1272-65c61cfbf961
 group_number = 99
@@ -36,7 +34,6 @@ group_number = 99
 group_members = ([
 	(firstname = "Ella-Louise", lastname = "Flores"),
 	(firstname = "Padraig", 	lastname = "Cope"),
-	(firstname = "Maeve", 		lastname = "Reed"),
 	(firstname = "Christy",  	lastname = "Denton")
 	]);
 
@@ -58,7 +55,7 @@ keyword = "#econtwitter"
 
 # ╔═╡ 574747d4-617e-11eb-20e7-5760a3a3f3e9
 md"""
-#### Task 1: Explain your choice
+#### Task 1: Explain your choice (2 points)
 
 👉 Describe in <150 words why *$(keyword)* is an interesting keyword to search for.
 """
@@ -68,25 +65,52 @@ answer1 = md"""
 Your answer goes here ...
 """
 
+# ╔═╡ 3ba06884-6481-11eb-20ea-69d7baf86fff
+md"""
+**NOTE** the word count is done by the function `wordcount` at the very bottom. It is not completely accurate :-). If you are a few words above the limit, that's ok.
+"""
+
 # ╔═╡ b2975790-617f-11eb-3dad-ab030c5213ec
 md"""
-#### Task 2: Analyze the network
-👉 
+#### Task 2: Analyze the network (5 points)
+👉 Describe the network in terms of the measures that are discussed in lectures 1 and 2. You can look at the notebook **first-networks.jl** and the section *Analyzing the network* for some inspiration.
 
-You can look at the section *Analyzing the network* for some inspiration.
+👉 Interpret all results that you show.
 
+👉 Be accurate but concise. Aim at no more than 500 words.
+
+You can spread your answer over multiple cells. Add code and text cells as it suits you.
 """
 
 # ╔═╡ 82b31aea-6180-11eb-0281-c512bdd2f667
+answer2_1 = md"""
+Start here ...
+"""
 
+# ╔═╡ f947607e-647f-11eb-2758-2f931b208406
+# some
+
+# ╔═╡ fc185e8e-647f-11eb-3351-910d651cf077
+# analysis
+
+# ╔═╡ f5e4f31a-647f-11eb-11c0-87221d14576e
+# analyze
+
+# ╔═╡ 05854c34-6480-11eb-021a-07c21ae697ba
+# more
+
+# ╔═╡ 0ee478fe-6480-11eb-3d3d-1bc21388754f
+answer2_3 = md"""
+... write more ... add more cells if you need. If you want to use the word count above, adjust the cell below.
+"""
 
 # ╔═╡ 840f84aa-6180-11eb-03bb-71fa9a6e9d17
 md"""
-#### Task 3: Look under the hood
+#### Task 3: Look under the hood (3 points)
 
 Now look at sections **A first glance at the data** and **Making a network** of this notebook. Make sure you understand what data are available to us and how we created the network from the data. 
 
-👉 We want to read your critical thoughts in <150 words. You might tell us about an idea how to generate a different network from the data. Or what twist you would add to our network to make it more interesting. 
+👉 We want to read your critical thoughts in <250 words. You might tell us about an idea how to generate a different network from the data. Or what twist you would add to our network to make it more interesting. 
 """
 
 # ╔═╡ e96b54dc-6180-11eb-027f-a9db3a83aa99
@@ -98,7 +122,7 @@ Your answer goes here ...
 md"""
 #### Before you submit ...
 
-👉 Make sure you have added your names and your group nummber at the top.
+👉 Make sure you have added your names and your group number at the top.
 
 👉 Make sure that that **all group members proofread** your submission (especially your little essays).
 
@@ -309,6 +333,18 @@ graph = MetaGraph(edge_list, :user1, :user2, weight = :common_hashtags)
 # ╔═╡ 41f4f6cc-6173-11eb-104f-69c755afd266
 gplot(graph)
 
+# ╔═╡ dc41336a-647f-11eb-3ca3-cb3ab8a6a024
+# some dummy analysis
+begin
+	n_edges = ne(graph)
+	n_nodes = nv(graph)
+end
+
+# ╔═╡ dfc92f56-647f-11eb-3038-15e225cb4d22
+answer2_2 = md"""
+... Continue here ... The twitter network with $keyword has $n_nodes nodes and $n_edges edges. ...
+"""
+
 # ╔═╡ 76c50e74-60f3-11eb-1e25-cdcaeae76c38
 begin
 	node_df = DataFrame(
@@ -403,6 +439,9 @@ else
 	correct(md"Great, we are looking forward to reading your answer!")
 end
 
+# ╔═╡ 163ef7aa-6480-11eb-2ead-e9fb9a35f490
+sum(wordcount.([answer2_1, answer2_2, answer2_3]))
+
 # ╔═╡ 0cbb406e-6181-11eb-015d-d582e3a9b175
 md" ~ $(wordcount(answer3)) words"
 
@@ -431,9 +470,18 @@ TableOfContents()
 # ╟─574747d4-617e-11eb-20e7-5760a3a3f3e9
 # ╠═cc8bb4e6-617c-11eb-10ed-a316641c78f7
 # ╟─d7046f24-617e-11eb-0571-ebcacb3a39e9
+# ╟─3ba06884-6481-11eb-20ea-69d7baf86fff
 # ╟─a36f6492-617f-11eb-2bb8-1ded14d9f438
 # ╟─b2975790-617f-11eb-3dad-ab030c5213ec
 # ╠═82b31aea-6180-11eb-0281-c512bdd2f667
+# ╠═dc41336a-647f-11eb-3ca3-cb3ab8a6a024
+# ╠═f947607e-647f-11eb-2758-2f931b208406
+# ╠═fc185e8e-647f-11eb-3351-910d651cf077
+# ╠═dfc92f56-647f-11eb-3038-15e225cb4d22
+# ╠═f5e4f31a-647f-11eb-11c0-87221d14576e
+# ╠═05854c34-6480-11eb-021a-07c21ae697ba
+# ╠═0ee478fe-6480-11eb-3d3d-1bc21388754f
+# ╠═163ef7aa-6480-11eb-2ead-e9fb9a35f490
 # ╟─840f84aa-6180-11eb-03bb-71fa9a6e9d17
 # ╠═e96b54dc-6180-11eb-027f-a9db3a83aa99
 # ╟─0cbb406e-6181-11eb-015d-d582e3a9b175
