@@ -203,7 +203,7 @@ begin
 	Conda.pip("install", "dataclasses") # manually install a dependency because that doesn't work automatically on windows
 	dir = pwd() # save current directory, before leaving it
 	cd(twint_path) # move to twint folder
-	run(`$(Conda._pip(Conda.ROOTENV)) install . -r requirements.txt`)
+	run(`$(Conda._pip(Conda.ROOTENV)) install .`)
 	cd(dir) # move back
 	
 	# Load twint to Julia
