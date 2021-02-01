@@ -219,7 +219,7 @@ There are $N people and you can distribute $(N ÷ 10) doses of the vaccine. Whom
 
 # ╔═╡ 04227a80-5d28-43db-929e-1cdc5b31796d
 md"""
-# Travel ban
+## Travel ban
 
 remove links
 """
