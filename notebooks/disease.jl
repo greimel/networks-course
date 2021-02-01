@@ -44,6 +44,8 @@ begin
 	using PooledArrays
 	# using TabularMakie
 	
+	using PlutoUI
+	
 	_a_ # make sure this cell is run after other Pkg cell
 end
 
@@ -67,13 +69,12 @@ md"""
 T = 100
 
 # ╔═╡ 9cf2a2b6-5cb4-11eb-06d4-bd3cdbf3a586
-p_out = 0.1
+md"""
+Set the parameters.
 
-# ╔═╡ a58d8c6a-5cb4-11eb-219b-c5e532647b75
-ρ_out = 0.2
-
-# ╔═╡ 3b01b10c-5cb7-11eb-1967-9d79a22d13de
-
+* ``p`` $(@bind p_out PlutoUI.Slider(0.1:0.1:0.9, show_value = true, default = 0.3)) the probability of transmission
+* ``\rho`` $(@bind ρ_out PlutoUI.Slider(0.1:0.1:0.9, show_value = true, default = 0.2)) the probability of being removed 
+"""
 
 # ╔═╡ cd2672dc-5cb4-11eb-35d6-07bd4e06968b
 states = ["susceptible", "infected", "recovered"]
@@ -236,6 +237,7 @@ end
 
 # ╔═╡ 164a8a98-5cb0-11eb-0b6b-0df3a8cb942b
 graph = spatial_graph(node_positions; degreedist)
+#graph = CompleteGraph(N)
 
 # ╔═╡ 0058c274-5cb5-11eb-1943-257819793991
 init = let
@@ -300,9 +302,7 @@ end
 # ╟─94c9c7ee-5ca6-11eb-3b9f-dff68cabc208
 # ╟─386c0068-5cb3-11eb-14b0-1da10f7af55e
 # ╠═96781c36-5cb4-11eb-1565-d5274fa01da4
-# ╠═9cf2a2b6-5cb4-11eb-06d4-bd3cdbf3a586
-# ╠═a58d8c6a-5cb4-11eb-219b-c5e532647b75
-# ╠═3b01b10c-5cb7-11eb-1967-9d79a22d13de
+# ╟─9cf2a2b6-5cb4-11eb-06d4-bd3cdbf3a586
 # ╠═cd2672dc-5cb4-11eb-35d6-07bd4e06968b
 # ╠═4159d66c-5cb7-11eb-08cd-d991a06fb3df
 # ╠═0058c274-5cb5-11eb-1943-257819793991
