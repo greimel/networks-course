@@ -29,5 +29,5 @@ jobs:
             - name: Upload artifacts for preview
               uses: actions/upload-artifact@v2
               with:
-                  name: ${{ matrix.config.artifact }}
+                  name: ${{ matrix.artifact }}
                   path: .
