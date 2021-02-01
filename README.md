@@ -2,6 +2,18 @@
 
 This repository hosts some of the material for the course "Economic and Financial Network Analysis" at the University of Amsterdam.
 
+## Material
+
+### Lectures
+
+In most lectures, we will spend some time going over computer code.
+
+* Week 1: Basic Julia ([preview](https://greimel.github.io/networks-course/notebooks/basic-julia.html), [download](https://greimel.github.io/networks-course/notebooks/basic-julia.jl)), First Networks ([preview](https://greimel.github.io/networks-course/notebooks/first-networks.html), [download](https://greimel.github.io/networks-course/notebooks/first-networks.jl))
+
+### Assignments
+
+1. A Twitter Network ([preview](https://greimel.github.io/networks-course/notebooks/assignment-twitter.html), [download](https://greimel.github.io/networks-course/notebooks/assignment-twitter.jl))
+
 ## Software and setup
 
 For this course we will use the modern programming language [Julia](https://www.julialang.org). It is a very young language that is gaining popularity pretty fast. Here are the reasons why we use it.
