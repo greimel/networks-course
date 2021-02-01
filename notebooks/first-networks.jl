@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.18
+# v0.12.20
 
 using Markdown
 using InteractiveUtils
@@ -9,20 +9,27 @@ let
 	using Pkg
 	Pkg.activate(temp = true)
 	
-	Pkg.add(["LightGraphs", "GraphPlot", "Plots", "SNAPDatasets", "FreqTables", "StatsBase", "PlutoUI"])
-	using PlutoUI
+	Pkg.add(["LightGraphs", "GraphPlot", "Plots", "SNAPDatasets", "FreqTables", "StatsBase", "PlutoUI", "SimpleWeightedGraphs", "MetaGraphs"])
+	using PlutoUI: TableOfContents
 	
-	using LightGraphs # for handling analyzing networks
-	using GraphPlot   # for plotting networks
-	using SNAPDatasets  # cool datasets of *big* networks
+	using LightGraphs # for analyzing networks
+	using SimpleWeightedGraphs # for handling weighted graphs
+	using MetaGraphs
+	using GraphPlot: gplot, random_layout, spring_layout   # for plotting networks
+	using SNAPDatasets: loadsnap  # cool datasets of *big* networks
 	
-	using Plots
+	using Plots: histogram, plot
 	
 	# Basic statistical analysis
-	using Statistics
+	using Statistics: mean, std
 	using FreqTables    
-	using StatsBase
+	using StatsBase: ecdf
 end
+
+# ╔═╡ eb6a3510-6477-11eb-0e4e-33557d794e45
+md"""
+*Last updated: Feb 1*
+"""
 
 # ╔═╡ 6009f070-5ef8-11eb-340a-d9780be085ad
 md"""
@@ -67,7 +74,7 @@ Try it and visualize a few graphs!
 
 # ╔═╡ b01cef89-6258-4050-9d35-7628eaf54010
 begin
-	my_network = SimpleGraph(7)
+	my_network = SimpleDiGraph(7)
 	add_edge!(my_network, 3, 4)
 	add_edge!(my_network, 2, 3)
 end
@@ -79,6 +86,11 @@ md"""
 Below you find a template of building a network from scratch. Play with it make it your own! (you can set the number of nodes (currently $(nv(my_network))) and add a few edges (there are currently $(ne(my_network))).
 
 (Can you rebuild one of the named networks from above?)
+"""
+
+# ╔═╡ 67a2e792-647a-11eb-208e-4df018d00425
+md"""
+Note, that you can build directed graphs using `SimpleDiGraph`. Replace `SimpleGraph` by `SimpleDiGraph` to get an undirected graph.
 """
 
 # ╔═╡ d3feb786-2c69-416f-8fda-e2b4da0c0c1c
@@ -112,7 +124,10 @@ big_network = loadsnap(:facebook_combined)
 # ╔═╡ c3946663-eddf-4bc1-bb52-9c82c8f7258c
 md"Even though the dataset is rather small compared to others from this collection, we already run into problems when we want to visualize the network. 
 
-Don't run the following cell on an old computer. The plot takes around 1 minute on my recent MacBook Pro."
+Don't run the following cell on an old computer. The plot takes around 1 minute on my recent MacBook Pro.
+
+**NOTE** `gplot` creates vector graphics (svg), which is not recommended for plots with many components (here: 88234 lines). That is why your browser might get stuck when you run this command.
+"
 
 # ╔═╡ 07f7ed69-3e9a-4a6b-a10f-de8d09aa0db5
 #gplot(big_network)
@@ -136,7 +151,7 @@ For illustration, let's plot the degree of each node for the `simple_network` fr
 """
 
 # ╔═╡ b34c0187-86dd-482c-a1dd-11a461bc0be2
-gplot(simple_network, nodelabel = degree_centrality(simple_network, normalize=false))
+gplot(simple_network, nodelabel = degree(simple_network))
 
 # ╔═╡ 7dead69c-36c1-4676-a072-3442d20ba899
 md"
@@ -144,7 +159,7 @@ Now, let's compute it for the big network.
 "
 
 # ╔═╡ 97d36935-3d2d-4079-a141-1bd030196328
-degrees = Int.(degree_centrality(big_network, normalize=false))
+degrees = degree(big_network)
 
 # ╔═╡ b1d74829-82fd-48b0-a0d9-3d2ae2b802b0
 (deg, node) = findmax(degrees)
@@ -186,6 +201,17 @@ global_clustering_coefficient(big_network)
 
 # ╔═╡ 9f083058-6a12-41cc-bb65-ad81e5d79aea
 diameter(big_network)
+
+# ╔═╡ a22c9ec0-647b-11eb-2141-974fa4223428
+md"""
+To get the length of shortest path from node `i` to node `j` use `gdistances(graph, i)[j]`.
+"""
+
+# ╔═╡ 257c32c8-647b-11eb-1244-e1d2baa5c58d
+distances_from_1 = gdistances(simple_network, 1)
+
+# ╔═╡ d9428a14-647b-11eb-336d-778226dd13e1
+dist_from_1_to_5 = distances_from_1[5]
 
 # ╔═╡ 2c703f99-5d25-44db-8651-92dd6427a605
 diameter(simple_network)
@@ -259,6 +285,84 @@ eigenvector_centrality(simple_network)
 # ╔═╡ 7883f729-f34d-4a1c-a684-6d78700d2a45
 closeness_centrality(simple_network)
 
+# ╔═╡ 1df2ac74-6478-11eb-1266-7381e24cab9d
+md"""
+# Weighted graphs
+
+You can work with weighted networks using the package `SimpleWeightedGraphs`.
+
+It offers the types `SimpleWeightedGraph` and `SimpleWeightedDiGraph`.
+
+Let's construct a weighted directed network.
+"""
+
+# ╔═╡ 89ce79c8-6478-11eb-18ae-ff6ec414e65b
+begin
+	weighted_network = SimpleWeightedDiGraph(3)
+	add_edge!(weighted_network, 1, 2, 0.5)
+	add_edge!(weighted_network, 2, 3, 0.8)
+	add_edge!(weighted_network, 1, 3, 2.0)
+end
+
+# ╔═╡ 9c51f3fe-6478-11eb-2e87-69a72bb28e6d
+adjacency_matrix(weighted_network)
+
+# ╔═╡ 3cc59dcc-6479-11eb-1722-11883fbbd5a7
+edge_weights = (e.weight for e in edges(weighted_network))
+
+# ╔═╡ b6c85692-6478-11eb-310a-3ddc517ccdb0
+gplot(weighted_network, edgelabel = edge_weights, nodelabel = 1:3)
+
+# ╔═╡ 99fb9532-6479-11eb-1c7b-1d385d3a5441
+indegree(weighted_network)
+
+# ╔═╡ b0beccf8-6479-11eb-0ca8-e125c7183758
+outdegree(weighted_network)
+
+# ╔═╡ c706e9dc-6479-11eb-16ef-dbddc09a2612
+degree(weighted_network)
+
+# ╔═╡ 56f44286-647c-11eb-11ca-23a5342611b4
+md"""
+## Issue with weighted graphs (advanced)
+
+There is a second way of construction weighted graphs.
+"""
+
+# ╔═╡ 6e4afa92-647c-11eb-2165-73b6b8494c70
+begin
+	meta_graph = MetaDiGraph(3)
+	add_edge!(meta_graph, 1, 2)
+	add_edge!(meta_graph, 2, 3)
+	add_edge!(meta_graph, 1, 3)
+	set_prop!(meta_graph, 1, 2, :weight, 0.5)
+	set_prop!(meta_graph, 2, 3, :weight, 0.8)
+	set_prop!(meta_graph, 1, 3, :weight, 2.0)
+	
+	meta_graph
+end
+
+# ╔═╡ 4a6c6e48-647d-11eb-16e2-d3fa799ebe1f
+md"""
+`MetaGraph`s are convenient to work with because they can store names of nodes and other meta data. However, they behave slightly differently than `SimpleWeightedGraphs`. The `adjacency_matrix` is a matrix of 0 and 1 (not showing the weights).
+"""
+
+# ╔═╡ fb7a80ae-647c-11eb-2909-9164e5a3676a
+adjacency_matrix(meta_graph)
+
+# ╔═╡ 97c76ed6-647d-11eb-3b73-b9fe79d52b4c
+md"""
+In order to get the matrix representation of the weighted graph use
+"""
+
+# ╔═╡ 0213d442-647d-11eb-3b7c-85ba0343c503
+adjacency_matrix(meta_graph) .* weights(meta_graph)
+
+# ╔═╡ a0a0cc5a-647d-11eb-380a-bb5c0da3d2bd
+md"""
+This inconsistency will likely be fixed in the future. See [this issue on github](https://github.com/JuliaGraphs/LightGraphs.jl/issues/1519).
+"""
+
 # ╔═╡ 1250300d-8bd5-41c3-a36f-b59064e8fbfd
 md"""
 # Appendix
@@ -268,6 +372,7 @@ md"""
 TableOfContents()
 
 # ╔═╡ Cell order:
+# ╟─eb6a3510-6477-11eb-0e4e-33557d794e45
 # ╟─6009f070-5ef8-11eb-340a-d9780be085ad
 # ╟─df4d9fab-13da-4df7-b51e-0689112f65fe
 # ╠═bdd75f9a-17e1-4b80-aa88-8a1477032441
@@ -276,6 +381,7 @@ TableOfContents()
 # ╟─0f0dc575-7660-4b32-b158-95a9a0ab31e8
 # ╟─5f1e3589-48fe-418a-958b-74b5dc0d7eff
 # ╠═b01cef89-6258-4050-9d35-7628eaf54010
+# ╟─67a2e792-647a-11eb-208e-4df018d00425
 # ╠═d3feb786-2c69-416f-8fda-e2b4da0c0c1c
 # ╟─51528bcb-0dac-4e32-8b8a-772fa964cbd8
 # ╠═99c5a7ee-9d4b-4bbf-9ddb-29f5778438d9
@@ -298,6 +404,9 @@ TableOfContents()
 # ╟─5d7adf23-4fef-4597-a3ac-18adbef08d8e
 # ╠═7ba0f472-f8a3-497d-8093-6f9275365841
 # ╠═9f083058-6a12-41cc-bb65-ad81e5d79aea
+# ╟─a22c9ec0-647b-11eb-2141-974fa4223428
+# ╠═257c32c8-647b-11eb-1244-e1d2baa5c58d
+# ╠═d9428a14-647b-11eb-336d-778226dd13e1
 # ╠═2c703f99-5d25-44db-8651-92dd6427a605
 # ╠═7381cca1-5f12-48d3-8a33-4642e8f80072
 # ╠═9c3d3a6a-4ad5-4c45-bb07-8e75b4380290
@@ -314,6 +423,21 @@ TableOfContents()
 # ╠═ec57d7c7-0a96-40a4-942f-73723460a5fe
 # ╠═0d659ab1-88ce-48ce-8ee0-83185fd865aa
 # ╠═7883f729-f34d-4a1c-a684-6d78700d2a45
+# ╟─1df2ac74-6478-11eb-1266-7381e24cab9d
+# ╠═89ce79c8-6478-11eb-18ae-ff6ec414e65b
+# ╠═9c51f3fe-6478-11eb-2e87-69a72bb28e6d
+# ╠═b6c85692-6478-11eb-310a-3ddc517ccdb0
+# ╠═3cc59dcc-6479-11eb-1722-11883fbbd5a7
+# ╠═99fb9532-6479-11eb-1c7b-1d385d3a5441
+# ╠═b0beccf8-6479-11eb-0ca8-e125c7183758
+# ╠═c706e9dc-6479-11eb-16ef-dbddc09a2612
+# ╟─56f44286-647c-11eb-11ca-23a5342611b4
+# ╠═6e4afa92-647c-11eb-2165-73b6b8494c70
+# ╟─4a6c6e48-647d-11eb-16e2-d3fa799ebe1f
+# ╠═fb7a80ae-647c-11eb-2909-9164e5a3676a
+# ╟─97c76ed6-647d-11eb-3b73-b9fe79d52b4c
+# ╠═0213d442-647d-11eb-3b7c-85ba0343c503
+# ╟─a0a0cc5a-647d-11eb-380a-bb5c0da3d2bd
 # ╟─1250300d-8bd5-41c3-a36f-b59064e8fbfd
 # ╠═c5cf8e17-9dcc-4f37-ace2-dbc3d92a83d4
 # ╠═2ecf4ffd-d41d-494c-9fec-d681a176a8ba
