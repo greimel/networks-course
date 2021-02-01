@@ -13,11 +13,24 @@ macro bind(def, element)
     end
 end
 
+# ╔═╡ 3b444a90-64b3-11eb-0b8f-1facc32a4088
+begin
+	_a_ = 1 # make sure this cell is run before other Pkg cell
+	
+	import Pkg
+	Pkg.activate(temp = true)
+	
+	Pkg.add(["WGLMakie", "JSServe"])
+	Pkg.add("NetworkLayout")
+	using WGLMakie, JSServe
+	using NetworkLayout: NetworkLayout
+	
+	Page(exportable = true)
+end
+
 # ╔═╡ 2b55141f-1cba-4a84-8811-98697d408d65
 begin
-	using Pkg
-	Pkg.activate(temp = true)
-	Pkg.add(["LightGraphs", "GeometryBasics", "PlutoUI", "FreqTables", "PooledArrays", "NearestNeighbors", "Distributions", "DataFrames", "Plots"])
+	Pkg.add(["LightGraphs", "GeometryBasics", "PlutoUI", "FreqTables", "PooledArrays", "NearestNeighbors", "CategoricalArrays", "Distributions", "DataFrames", "Plots"])
 	
 	using GeometryBasics, NearestNeighbors, Distributions
 	using LightGraphs
@@ -25,6 +38,9 @@ begin
 	using PooledArrays
 	using DataFrames
 	using Plots
+	using CategoricalArrays: CategoricalArrays, categorical
+	
+	_a_
 end
 
 # ╔═╡ f4266196-64aa-11eb-3fc1-2bf0e099d19c
@@ -182,21 +198,30 @@ md"""
 # ╔═╡ 2d3466df-48b3-432f-843d-8f83d7fb575e
 par = (ρ = ρ0, δ = δ0, p = p0)
 
+# ╔═╡ ce504df8-64b2-11eb-18d2-736ca85dcb29
+begin
+	_a_
+	t = Node(1)
+end
+
+# ╔═╡ f5b5a992-64b2-11eb-2d63-6124a43fa115
+color_dict = Dict("S" => :blue, "I" => :red, "R" => :yellow)
+
 # ╔═╡ e4d016cc-64ae-11eb-1ca2-259e5a262f33
 md"""
 ## Processing the Simulated Data
 """
 
 # ╔═╡ b0d34450-6497-11eb-01e3-27582a9f1dcc
-llabel(x::DataType) = string(Base.typename(x).name)
+label(x::DataType) = string(Base.typename(x).name)
 
 # ╔═╡ 63b2882e-649b-11eb-28de-bd418b43a35f
-llabel(x) = llabel(typeof(x))
+label(x) = label(typeof(x))
 
 # ╔═╡ 11ea4b84-649c-11eb-00a4-d93af0bd31c8
 function tidy_simulation_output(sim)
 	# go from type to symbol (S() => "S")
-	sim1 = llabel.(sim)
+	sim1 = label.(sim)
 	
 	# make it a DataFrame with T columns and N rows
 	df0 = DataFrame(sim1)
@@ -222,26 +247,6 @@ function fractions_over_time(sim)
 	
 	combine(groupby(tidy_sim, [:t, :state]), :node_id => (x -> length(x)/N) => :fraction)
 end
-
-# ╔═╡ a89c6f63-35e4-44d8-bfd1-20ed73549fea
-function summarize(sim)
-	T = size(sim, 2)
-	levels = unique(sim)
-	
-	llabel.(sim)
-	
-	df = DataFrame(t = 1:T)
-	
-	for lev in levels
-		#lev::DataType{T}
-		#@show T
-		df[:, llabel(lev)] = dropdims(sum(sim .== Ref(lev), dims = 1), dims = 1)
-	end
-	df
-end
-
-# ╔═╡ 2ed340be-649e-11eb-31a7-a369a8215914
-
 
 # ╔═╡ 4dee5da9-aa4b-4551-974a-f7268d016617
 md"""
@@ -318,33 +323,57 @@ function spatial_graph(N::Int)
 	y = rand(N)
 	node_positions = Point2f0.(x, y)
 	
-	spatial_graph(node_positions)
+	spatial_graph(node_positions), node_positions
 end
 
 # ╔═╡ bea21e32-7b13-4772-9e34-9b4b1f3333fb
-graph = spatial_graph(N)
+begin
+	graph, node_positions = spatial_graph(N)
+end
 
 # ╔═╡ 0b35f73f-6976-4d85-b61f-b4188440043e
 begin
-	sim = simulate(graph, par, 100)	
+	T = 100
+	sim = simulate(graph, par, T)	
 	df = fractions_over_time(sim)
 	nothing
 end
 
 # ╔═╡ 2f00e2c6-649e-11eb-156f-a53dfb6d9f3f
-plot(df.t, df.fraction, group=df.state)
+Plots.plot(df.t, df.fraction, group=df.state)
+
+# ╔═╡ d910af76-64b2-11eb-14b6-a7f62a6ad82e
+begin
+	@bind t0 PlutoUI.Slider(1:T, show_value = true, default = 1)
+end
+
+# ╔═╡ df75d936-64b2-11eb-0aba-9d867fe18f14
+begin
+	t[] = t0
+end
+
+# ╔═╡ ec57f8b4-64b2-11eb-146d-01a1acf7a4d5
+sim_colors = [color_dict[label(s)] for s in sim]
+
+# ╔═╡ e96cfc1a-64b2-11eb-0cf6-c1a6403ac024
+state_as_color_t = @lift(sim_colors[:,$t])
+
+# ╔═╡ 70605248-64b1-11eb-0c7c-b50c8394cdb6
+tidy_simulation_output(sim)
 
 # ╔═╡ c5f48079-f52e-4134-8e6e-6cd4c9ee915d
 let
-	plt = plot(title = "#infected when varying the infection probability")
+	plt = Plots.plot(title = "#infected when varying the infection probability")
 	for p in p_range
 		par = (p = p, ρ = ρ0, δ = δ0)
 		
 		sim = simulate(graph, par, 100)
 		
-		df0 = summarize(sim)
+		df0 = fractions_over_time(sim)
 		
-		plot!(df0.t, df0.I, label = "p = $p", color = :blue, alpha = (1 - p))
+		filter!(:state => ==("I"), df0)
+		
+		Plots.plot!(df0.t, df0.fraction, label = "p = $p", color = :blue, alpha = (1 - p))
 	end
 	
 	plt
@@ -392,27 +421,73 @@ end
 
 # ╔═╡ 674f577e-29c4-499e-836b-6642cb2e7e03
 let
-	plt = plot(title = "#infected when vaccinating different groups")
+	plt = Plots.plot(title = "#infected when vaccinating different groups")
 	for (lab, init) in ["top" => init_vaccine(:top), "bottom" => init_vaccine(:bottom), "none" => init_vaccine(:none)]
 		#par = (p = p, ρ = ρ0, δ = δ0)
 		
 		sim = simulate(graph, par, 100, init)
 		
-		df0 = summarize(sim)
+		df0 = fractions_over_time(sim)
 		
-		plot!(df0.t, df0.I, label = lab)
+		filter!(:state => ==("I"), df0)
+		
+		Plots.plot!(df0.t, df0.fraction, label = lab)
 	end
 	
 	plt
 end
 
+# ╔═╡ 5fe4d47c-64b4-11eb-2a44-473ef5b19c6d
+md"""
+## Utils
+"""
+
+# ╔═╡ 66d78eb4-64b4-11eb-2d30-b9cee7370d2a
+# generate a list of points that can be used to plot the graph
+function edges_as_points(graph, node_positions)
+	edges_as_pts = Point2f0[]
+
+	for e in edges(graph)
+		push!(edges_as_pts, node_positions[e.src])
+        push!(edges_as_pts, node_positions[e.dst])
+        push!(edges_as_pts, Point2f0(NaN, NaN))
+    end
+	
+	edges_as_pts
+end
+
+# ╔═╡ 952f2540-64b4-11eb-0563-673747769a61
+edges_as_pts = edges_as_points(graph, node_positions)
+
+# ╔═╡ 4a9b5d8a-64b3-11eb-0028-898635af227c
+fig = let
+    fig = Figure()
+    ax = fig[1,1] = Axis(fig, title = @lift("A network -- time = " * string($t)))
+
+	hidedecorations!(ax)
+    hidespines!(ax)
+
+	AbstractPlotting.lines!(ax, edges_as_pts, linewidth = 0.1, color = (:black, 0.1))
+    AbstractPlotting.scatter!(ax, node_positions, markersize=5, color = state_as_color_t)
+
+	fig
+end
+
+# ╔═╡ 1e56a3f8-64b6-11eb-3d40-05472252140a
+fig
+
 # ╔═╡ a81f5244-64aa-11eb-1854-6dbb64c8eb6a
 md"""
-## Package environment
+## Package Environment
+"""
+
+# ╔═╡ bed07322-64b1-11eb-3324-7b7ac5e8fba2
+md"""
+## Other Stuff
 """
 
 # ╔═╡ df9b4eb2-64aa-11eb-050c-adf04609ef21
-
+Base.show(io::IO, ::MIME"text/html", x::CategoricalArrays.CategoricalValue) = print(io, get(x))
 
 # ╔═╡ 31bbc540-68cd-4d4a-b87a-d648e003524c
 TableOfContents()
@@ -437,17 +512,25 @@ TableOfContents()
 # ╟─50d9fb56-64af-11eb-06b8-eb56903084e2
 # ╠═213510df-9772-4be9-b58d-db173c21519a
 # ╠═bea21e32-7b13-4772-9e34-9b4b1f3333fb
+# ╠═952f2540-64b4-11eb-0563-673747769a61
 # ╟─37972f08-db05-4e84-9528-fe16cd86efbf
 # ╠═2d3466df-48b3-432f-843d-8f83d7fb575e
 # ╠═0b35f73f-6976-4d85-b61f-b4188440043e
 # ╠═2f00e2c6-649e-11eb-156f-a53dfb6d9f3f
+# ╠═4a9b5d8a-64b3-11eb-0028-898635af227c
+# ╠═d910af76-64b2-11eb-14b6-a7f62a6ad82e
+# ╠═1e56a3f8-64b6-11eb-3d40-05472252140a
+# ╠═ce504df8-64b2-11eb-18d2-736ca85dcb29
+# ╠═df75d936-64b2-11eb-0aba-9d867fe18f14
+# ╠═e96cfc1a-64b2-11eb-0cf6-c1a6403ac024
+# ╠═f5b5a992-64b2-11eb-2d63-6124a43fa115
+# ╠═ec57f8b4-64b2-11eb-146d-01a1acf7a4d5
 # ╟─e4d016cc-64ae-11eb-1ca2-259e5a262f33
 # ╠═bf18bef2-649d-11eb-3e3c-45b41a3fa6e5
 # ╠═11ea4b84-649c-11eb-00a4-d93af0bd31c8
-# ╠═a89c6f63-35e4-44d8-bfd1-20ed73549fea
+# ╠═70605248-64b1-11eb-0c7c-b50c8394cdb6
 # ╠═b0d34450-6497-11eb-01e3-27582a9f1dcc
 # ╠═63b2882e-649b-11eb-28de-bd418b43a35f
-# ╠═2ed340be-649e-11eb-31a7-a369a8215914
 # ╟─4dee5da9-aa4b-4551-974a-f7268d016617
 # ╟─78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
 # ╠═7b43d3d6-03a0-4e0b-96e2-9de420d3187f
@@ -465,7 +548,11 @@ TableOfContents()
 # ╟─e82d5b7f-5f37-4696-9917-58b117b9c1d6
 # ╠═95b67e4d-5d41-4b86-bb9e-5de97f5d8957
 # ╠═c1971734-2299-4038-8bb6-f62d020f92cb
+# ╠═5fe4d47c-64b4-11eb-2a44-473ef5b19c6d
+# ╠═66d78eb4-64b4-11eb-2d30-b9cee7370d2a
 # ╟─a81f5244-64aa-11eb-1854-6dbb64c8eb6a
-# ╠═df9b4eb2-64aa-11eb-050c-adf04609ef21
+# ╠═3b444a90-64b3-11eb-0b8f-1facc32a4088
 # ╠═2b55141f-1cba-4a84-8811-98697d408d65
+# ╟─bed07322-64b1-11eb-3324-7b7ac5e8fba2
+# ╠═df9b4eb2-64aa-11eb-050c-adf04609ef21
 # ╠═31bbc540-68cd-4d4a-b87a-d648e003524c
