@@ -27,8 +27,41 @@ begin
 	using Plots
 end
 
-# ╔═╡ 31bbc540-68cd-4d4a-b87a-d648e003524c
-TableOfContents()
+# ╔═╡ f4266196-64aa-11eb-3fc1-2bf0e099d19c
+md"""
+# Diffusion on Networks: Modeling Transmission of Disease
+
+This notebook will be the basis for part of **Lecture 3** *and* **Assignment 2**. Here is what we will cover.
+
+1. We will model the diffusion of disease on a network. We will analyze how the parameters of the model change the outcomes.
+"""
+
+# ╔═╡ b36832aa-64ab-11eb-308a-8f031686c8d6
+md"""
+2. We will show how various policies mitigate the spread of the disease. We will see how we can map *social distancing*, *travel restrictions* and *vaccination programs* into the model. 
+
+   The plot below shows how the number of infected people decreases when we randomly pick 10% of the population. *(Can we improve the efficacy of the vaccination program by targeting specific people?)*
+"""
+
+# ╔═╡ c8f92204-64ac-11eb-0734-2df58e3373e8
+md"""
+3. In your assignment you will make to model a little richer by ``(i)`` separating the `R` state into *dead* and *immune* (which includes recovered and vaccinated) and ``(ii)`` taking into account age-specific death (case-fatality) rates.
+
+   *(Can we now improve the efficacy of the vaccination program even more?)*
+"""
+
+# ╔═╡ 2f9f008a-64aa-11eb-0d9a-0fdfc41d4657
+md"""
+# The SIR Model
+
+In the simplest case, there are three states.
+
+1. `S`usceptible
+2. `I`nfected
+3. `R`emoved (recovered or dead)
+
+(For your assignment you will split up the `R` state into immune and dead.)
+"""
 
 # ╔═╡ b8d874b6-648d-11eb-251c-636c5ebc1f42
 begin
@@ -43,14 +76,8 @@ const States = Union{subtypes(State)...}
 
 # ╔═╡ 10dd6814-f796-42ea-8d40-287ed7c9d239
 md"
-# Define the transitions
+## Define the transitions
 "
-
-# ╔═╡ 61a36e78-57f8-4ef0-83b4-90e5952c116f
-transition_(::R,      args...; kwargs...) = R()
-
-# ╔═╡ d3bfc9aa-649e-11eb-2c36-b1fba4507f07
-# transition_(::D,      args...; kwargs...) = ...
 
 # ╔═╡ 8ddb6f1e-649e-11eb-3982-83d2d319b31f
 function transition_(::I, par, args...; kwargs...)
@@ -62,6 +89,12 @@ function transition_(::I, par, args...; kwargs...)
 		I()
 	end
 end
+
+# ╔═╡ 61a36e78-57f8-4ef0-83b4-90e5952c116f
+transition_(::R,      args...; kwargs...) = R()
+
+# ╔═╡ d3bfc9aa-649e-11eb-2c36-b1fba4507f07
+# transition_(::D,      args...; kwargs...) = ...
 
 # ╔═╡ ffe07e00-0408-4986-9205-0fbb025a698c
 function transition_(::S, par, node, adjacency_matrix, is_infected)
@@ -77,7 +110,7 @@ function transition_(::S, par, node, adjacency_matrix, is_infected)
 end
 
 # ╔═╡ f4c62f95-876d-4915-8372-258dfde835f7
-function transition!(states_new, states, adjacency_matrix, par)
+function iterate!(states_new, states, adjacency_matrix, par)
 
 	is_infected = findall(isa.(states, I))
 	
@@ -179,7 +212,7 @@ end
 N = 1000
 
 # ╔═╡ 5d11a2df-3187-4509-ba7b-8388564573a6
-function transition(states, adjacency_matrix, par)
+function iterate(states, adjacency_matrix, par)
 	states_new = Vector{States}(undef, N)
 	transition!(states_new, states, adjacency_matrix, par)
 	
@@ -192,19 +225,19 @@ function simulate(mat, par, T, init = initial_state(N, 10))
 	sim[:,1] .= init
 	
 	for t = 2:T
-		transition!(view(sim, :, t), view(sim, :, t-1), mat, par)
+		iterate!(view(sim, :, t), view(sim, :, t-1), mat, par)
 	end
 	sim
 end
 
 # ╔═╡ 4dee5da9-aa4b-4551-974a-f7268d016617
 md"""
-# A glance at policies
+# A First Look at Policies
 """
 
 # ╔═╡ 78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
 md"""
-## Social distancing
+## Social Distancing
 """
 
 # ╔═╡ 7b43d3d6-03a0-4e0b-96e2-9de420d3187f
@@ -224,13 +257,24 @@ md"""
 remove links
 """
 
+# ╔═╡ fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
+md"""
+# Assignment 2: Whom to Vaccinate When Death Rates are Age-Specfic
+"""
+
+# ╔═╡ 1b8c26b6-64aa-11eb-2d9a-47db5469a654
+md"""
+# Appendix
+"""
+
 # ╔═╡ e82d5b7f-5f37-4696-9917-58b117b9c1d6
 md"
-# Spatial graph
+## Spatial graph
 "
 
 # ╔═╡ 95b67e4d-5d41-4b86-bb9e-5de97f5d8957
-# adapted from David Gleich
+# adapted from David Gleich, Purdue University
+# https://www.cs.purdue.edu/homes/dgleich/cs515-2020/julia/viral-spreading.html
 function spatial_graph(node_positions; degreedist = LogNormal(log(2),1))
   	n = length(node_positions)
 	
@@ -255,8 +299,7 @@ function spatial_graph(node_positions; degreedist = LogNormal(log(2),1))
 end
 
 # ╔═╡ c1971734-2299-4038-8bb6-f62d020f92cb
-graph = let
-	N = 1000
+function spatial_graph(N::Int)
 	id = 1:N
 	x = rand(N)
 	y = rand(N)
@@ -264,6 +307,9 @@ graph = let
 	
 	spatial_graph(node_positions)
 end
+
+# ╔═╡ bea21e32-7b13-4772-9e34-9b4b1f3333fb
+graph = spatial_graph(N)
 
 # ╔═╡ 512593af-f72c-4e67-88a3-896876efc52b
 mat = adjacency_matrix(graph)
@@ -369,21 +415,31 @@ let
 	plt
 end
 
-# ╔═╡ bea21e32-7b13-4772-9e34-9b4b1f3333fb
-_graph = CompleteGraph(N)
+# ╔═╡ a81f5244-64aa-11eb-1854-6dbb64c8eb6a
+md"""
+## Package environment
+"""
+
+# ╔═╡ df9b4eb2-64aa-11eb-050c-adf04609ef21
+
+
+# ╔═╡ 31bbc540-68cd-4d4a-b87a-d648e003524c
+TableOfContents()
 
 # ╔═╡ Cell order:
-# ╠═31bbc540-68cd-4d4a-b87a-d648e003524c
-# ╠═2b55141f-1cba-4a84-8811-98697d408d65
+# ╟─f4266196-64aa-11eb-3fc1-2bf0e099d19c
+# ╟─b36832aa-64ab-11eb-308a-8f031686c8d6
+# ╟─c8f92204-64ac-11eb-0734-2df58e3373e8
+# ╟─2f9f008a-64aa-11eb-0d9a-0fdfc41d4657
 # ╠═b8d874b6-648d-11eb-251c-636c5ebc1f42
 # ╠═f48fa122-649a-11eb-2041-bbf0d0c4670c
 # ╟─10dd6814-f796-42ea-8d40-287ed7c9d239
-# ╠═5d11a2df-3187-4509-ba7b-8388564573a6
-# ╠═f4c62f95-876d-4915-8372-258dfde835f7
+# ╠═8ddb6f1e-649e-11eb-3982-83d2d319b31f
 # ╠═61a36e78-57f8-4ef0-83b4-90e5952c116f
 # ╠═d3bfc9aa-649e-11eb-2c36-b1fba4507f07
-# ╠═8ddb6f1e-649e-11eb-3982-83d2d319b31f
 # ╠═ffe07e00-0408-4986-9205-0fbb025a698c
+# ╠═5d11a2df-3187-4509-ba7b-8388564573a6
+# ╠═f4c62f95-876d-4915-8372-258dfde835f7
 # ╟─07f4816c-b893-4771-be3f-cc10695720cf
 # ╠═fecf62c5-2c1d-4709-8c17-d4b6e0565617
 # ╠═208445c4-5359-4442-9b9b-bde5e55a8c23
@@ -417,7 +473,13 @@ _graph = CompleteGraph(N)
 # ╠═f8ee8f92-acea-4def-b8d5-eaa452a66349
 # ╠═674f577e-29c4-499e-836b-6642cb2e7e03
 # ╠═04227a80-5d28-43db-929e-1cdc5b31796d
+# ╠═fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
+# ╟─1b8c26b6-64aa-11eb-2d9a-47db5469a654
 # ╟─e82d5b7f-5f37-4696-9917-58b117b9c1d6
 # ╠═95b67e4d-5d41-4b86-bb9e-5de97f5d8957
 # ╠═c1971734-2299-4038-8bb6-f62d020f92cb
 # ╠═bea21e32-7b13-4772-9e34-9b4b1f3333fb
+# ╟─a81f5244-64aa-11eb-1854-6dbb64c8eb6a
+# ╠═df9b4eb2-64aa-11eb-050c-adf04609ef21
+# ╠═2b55141f-1cba-4a84-8811-98697d408d65
+# ╠═31bbc540-68cd-4d4a-b87a-d648e003524c
