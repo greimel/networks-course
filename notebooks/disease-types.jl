@@ -181,6 +181,11 @@ p_range = 0.1:0.1:0.9
 # ╔═╡ 2c4dda14-6577-11eb-2ef7-997664b20722
 
 
+# ╔═╡ 1978febe-657c-11eb-04ac-e19b2d0e5a85
+md"""
+Can we do better?
+"""
+
 # ╔═╡ 04227a80-5d28-43db-929e-1cdc5b31796d
 md"""
 ## Travel ban
@@ -221,17 +226,24 @@ md"""
 ## Functions for the simulation
 """
 
-# ╔═╡ fecf62c5-2c1d-4709-8c17-d4b6e0565617
-function initial_state(N, n_infected)
+# ╔═╡ ca77fa78-657a-11eb-0faf-15ffd3fdc540
+function initial_state(N, infected_nodes, recovered_nodes)
 	# fill with "Susceptible"
 	init = States[S() for i in 1:N]
-	# spread out the desired number of infected people
-	inds_I = 1:(N÷n_infected):N
-	for i in inds_I
-		init[i] = I()
-	end
+	
+	init[infected_nodes] .= Ref(I())
+	init[recovered_nodes] .= Ref(R())
 	
 	init
+end
+
+# ╔═╡ fecf62c5-2c1d-4709-8c17-d4b6e0565617
+function initial_state(N, n_infected)
+	
+	# spread out the desired number of infected people
+	infected_nodes = 1:(N÷n_infected):N
+	
+	initial_state(N, infected_nodes, [])
 end
 
 # ╔═╡ 208445c4-5359-4442-9b9b-bde5e55a8c23
@@ -293,7 +305,7 @@ end
 
 # ╔═╡ 47ac6d3c-6556-11eb-209d-f7a8219512ee
 md"""
-## Constructing the Figure
+## Constructing the Figures
 """
 
 # ╔═╡ f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
@@ -312,9 +324,9 @@ function plot_fractions!(figpos, t, df, color_dict, legpos = nothing)
 	
 	if !isnothing(legpos)
 		leg = Legend(legpos, ax)
-		leg.tellwidth = false
-		leg.tellheight = true
-		leg.orientation = :horizontal
+		leg.tellwidth[] = false
+		leg.tellheight[] = true
+		leg.orientation[] = :horizontal
 	else
 		leg = nothing
 	end
@@ -339,12 +351,12 @@ function plot_diffusion!(figpos, edges_as_pts, node_positions, sim, t, color_dic
 	AbstractPlotting.lines!(ax, edges_as_pts, linewidth = 0.1, color = (:black, 0.1))
     AbstractPlotting.scatter!(ax, node_positions, markersize=msize, color = state_as_color_t);
 	
-	(; ax)
+	ax
 end
 
 # ╔═╡ 51a16fcc-6556-11eb-16cc-71a978e02ef0
-function sir_plot!(figpos, legpos, sim, edges_as_pts, node_positions)
-	t = Node(1)
+function sir_plot!(figpos, legpos, sim, edges_as_pts, node_positions, t)
+	
 	
 	df = fractions_over_time(sim)
 			
@@ -352,10 +364,11 @@ function sir_plot!(figpos, legpos, sim, edges_as_pts, node_positions)
 	colors = cgrad(:viridis, length(states), categorical=true)
 	color_dict = Dict(s => colors[i] for (i,s) in enumerate(states))
 	
-	plot_fractions!(figpos[1,2], t, df, color_dict, legpos)
-	plot_diffusion!(figpos[1,1], edges_as_pts, node_positions, sim, t, color_dict)
+	ax_f, leg = plot_fractions!(figpos[1,2], t, df, color_dict, legpos)
+	ax_d = plot_diffusion!(figpos[1,1], edges_as_pts, node_positions, sim, t, color_dict)
 
-	(; t, T_range = axes(sim, 2))
+	(; ax_f, ax_d, leg)
+
 end 
 
 # ╔═╡ e82d5b7f-5f37-4696-9917-58b117b9c1d6
@@ -497,8 +510,58 @@ function edges_as_points(graph, node_positions)
 	edges_as_pts
 end
 
+# ╔═╡ c511f396-6579-11eb-18b1-df745093a116
+function compare_sir(sim1, sim2, graph, node_positions = NetworkLayout.Spring.layout(adjacency_matrix(graph), Point2f0))
+	t = Node(1)
+	
+	edges_as_pts = edges_as_points(graph, node_positions)
+	
+	fig = Figure(padding = (0,0,0,0))
+	legpos = fig[1:2,2]
+	panel1 = fig[1,1]
+	panel2 = fig[2,1]
+	
+	axs1 = sir_plot!(panel1, legpos,  sim1, edges_as_pts, node_positions, t)
+	axs2 = sir_plot!(panel2, nothing, sim2, edges_as_pts, node_positions, t)
+	
+	hidedecorations!(axs1.ax_f)
+	hidedecorations!(axs2.ax_f)
+	
+	axs1.leg.orientation[] = :vertical
+	axs1.leg.tellwidth[]   = true
+	axs1.leg.tellheight[]  = false
+	
+	
+	@assert axes(sim1, 2) == axes(sim2, 2)
+	
+	(; fig, t, T_range = axes(sim1, 2))
+end
+
+# ╔═╡ 76b738fe-657a-11eb-31d3-413a08ee6e69
+out_vacc = let
+	N = 1000
+	graph, node_positions = spatial_graph(N)
+	
+	par = (p = 0.1, ρ = ρ0, δ = δ0)
+	
+	infected_nodes = rand(1:N, 100)
+	vaccinated_nodes = rand(1:N, 100)
+	
+	init0 = initial_state(N, infected_nodes, [])
+	initv = initial_state(N, infected_nodes, vaccinated_nodes)
+	
+	sim0 = simulate(graph, par, 100, init0)
+	simv = simulate(graph, par, 100, initv)
+	
+	compare_sir(sim0, simv, graph, node_positions)
+end;
+
+# ╔═╡ 83b817d2-657d-11eb-3cd2-332a348142ea
+out_vacc.fig
+
 # ╔═╡ 67e74a32-6578-11eb-245c-07894c89cc7c
 function sir_plot(sim, graph, node_positions = NetworkLayout.Spring.layout(adjacency_matrix(graph), Point2f0))
+	t = Node(1)
 	
 	edges_as_pts = edges_as_points(graph, node_positions)
 
@@ -506,9 +569,9 @@ function sir_plot(sim, graph, node_positions = NetworkLayout.Spring.layout(adjac
 	main_fig = fig[2,1]
 	leg_pos = fig[1,1]
 
-	out = sir_plot!(main_fig, leg_pos, sim, edges_as_pts, node_positions)
+	sir_plot!(main_fig, leg_pos, sim, edges_as_pts, node_positions, t)
 	
-	(; fig, out...)
+	(; fig, t, T_range = axes(sim, 2))
 	
 end
 
@@ -568,6 +631,14 @@ Check to activate slider: $(@bind past_intro CheckBox(default = false))
 # ╔═╡ 373cb47e-655e-11eb-2751-0150985d98c1
 out_big.t[] = past_intro ? t0_big : t0_intro
 
+# ╔═╡ 34b1a3ba-657d-11eb-17fc-5bf325945dce
+md"""
+``t``: $(@bind t0_vacc PlutoUI.Slider(out_big.T_range, show_value = true, default = 1))
+"""
+
+# ╔═╡ 99a1f078-657a-11eb-2183-1b6a0598ffcd
+out_vacc.t[] = t0_vacc
+
 # ╔═╡ a81f5244-64aa-11eb-1854-6dbb64c8eb6a
 md"""
 ## Package Environment
@@ -620,7 +691,12 @@ TableOfContents()
 # ╠═c5f48079-f52e-4134-8e6e-6cd4c9ee915d
 # ╠═2c4dda14-6577-11eb-2ef7-997664b20722
 # ╟─b44bf44f-7041-409a-aea2-7652f18853b0
-# ╠═2ef8ab6b-3862-474f-ae9f-38d45246ef99
+# ╠═99a1f078-657a-11eb-2183-1b6a0598ffcd
+# ╟─34b1a3ba-657d-11eb-17fc-5bf325945dce
+# ╠═83b817d2-657d-11eb-3cd2-332a348142ea
+# ╠═76b738fe-657a-11eb-31d3-413a08ee6e69
+# ╟─1978febe-657c-11eb-04ac-e19b2d0e5a85
+# ╟─2ef8ab6b-3862-474f-ae9f-38d45246ef99
 # ╠═f8ee8f92-acea-4def-b8d5-eaa452a66349
 # ╠═674f577e-29c4-499e-836b-6642cb2e7e03
 # ╠═c99f637f-cca9-4b77-b2db-2f5a251b23de
@@ -631,6 +707,7 @@ TableOfContents()
 # ╟─fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
 # ╟─1b8c26b6-64aa-11eb-2d9a-47db5469a654
 # ╟─07a66c72-6576-11eb-26f3-810607ca7e51
+# ╠═ca77fa78-657a-11eb-0faf-15ffd3fdc540
 # ╠═fecf62c5-2c1d-4709-8c17-d4b6e0565617
 # ╠═208445c4-5359-4442-9b9b-bde5e55a8c23
 # ╟─e4d016cc-64ae-11eb-1ca2-259e5a262f33
@@ -639,6 +716,7 @@ TableOfContents()
 # ╠═b0d34450-6497-11eb-01e3-27582a9f1dcc
 # ╠═63b2882e-649b-11eb-28de-bd418b43a35f
 # ╟─47ac6d3c-6556-11eb-209d-f7a8219512ee
+# ╠═c511f396-6579-11eb-18b1-df745093a116
 # ╠═67e74a32-6578-11eb-245c-07894c89cc7c
 # ╠═51a16fcc-6556-11eb-16cc-71a978e02ef0
 # ╠═f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
