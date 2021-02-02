@@ -149,7 +149,36 @@ function iterate(states, adjacency_matrix, par)
 	states_new
 end
 
+# ╔═╡ 50d9fb56-64af-11eb-06b8-eb56903084e2
+md"""
+## Simulate on a Simple Network
+
+* ``\rho_s``: $(@bind ρ_simple PlutoUI.Slider(0.0:0.25:1.0, default = 0.0, show_value =true)) (recovery probability)
+* ``\delta_s``: $(@bind δ_simple PlutoUI.Slider(0.0:0.25:1.0, default = 0.0, show_value =true)) (death rate)
+* ``p_s``: $(@bind p_simple PlutoUI.Slider(0.0:0.25:1.0, default = 0.5, show_value =true)) (infection probability)
+"""
+
+# ╔═╡ 8d4cb5dc-6573-11eb-29c8-81baa6e3fffc
+simple_graph = CycleGraph(10)
+
+# ╔═╡ ce75fe16-6570-11eb-3f3a-577eac7f9ee8
+md"""
+## Simulate on a Big Network
+"""
+
+# ╔═╡ 37972f08-db05-4e84-9528-fe16cd86efbf
+md"""
+* ``\rho``: $(@bind ρ0 PlutoUI.Slider(0.1:0.1:0.9, default = 0.1, show_value =true)) (recovery probability)
+* ``\delta``: $(@bind δ0 PlutoUI.Slider(0.0:0.02:0.2, default = 0.04, show_value =true)) (death rate)
+* ``p``: $(@bind p0 PlutoUI.Slider(0.1:0.1:0.9, default = 0.3, show_value =true)) (infection probability)
+"""
+
 # ╔═╡ 07f4816c-b893-4771-be3f-cc10695720cf
+md"""
+# Implementing the functionality
+"""
+
+# ╔═╡ 07a66c72-6576-11eb-26f3-810607ca7e51
 md"""
 ## Functions for the simulation
 """
@@ -181,61 +210,6 @@ function simulate(graph, par, T, init = initial_state(nv(graph), max(nv(graph) �
 	sim
 end
 
-# ╔═╡ 50d9fb56-64af-11eb-06b8-eb56903084e2
-md"""
-## Simulate on a Simple Network
-
-### Setting the Parameters
-
-* ``\rho_s``: $(@bind ρ_simple PlutoUI.Slider(0.0:0.25:1.0, default = 0.0, show_value =true)) (recovery probability)
-* ``\delta_s``: $(@bind δ_simple PlutoUI.Slider(0.0:0.25:1.0, default = 0.0, show_value =true)) (death rate)
-* ``p_s``: $(@bind p_simple PlutoUI.Slider(0.0:0.25:1.0, default = 0.5, show_value =true)) (infection probability)
-"""
-
-# ╔═╡ 8d4cb5dc-6573-11eb-29c8-81baa6e3fffc
-simple_graph = CycleGraph(10)
-
-# ╔═╡ ce75fe16-6570-11eb-3f3a-577eac7f9ee8
-md"""
-## Simulate on a Big Network
-"""
-
-# ╔═╡ 37972f08-db05-4e84-9528-fe16cd86efbf
-md"""
-### Setting the Parameters
-
-* ``\rho``: $(@bind ρ0 PlutoUI.Slider(0.1:0.1:0.9, default = 0.1, show_value =true)) (recovery probability)
-* ``\delta``: $(@bind δ0 PlutoUI.Slider(0.0:0.02:0.2, default = 0.04, show_value =true)) (death rate)
-* ``p``: $(@bind p0 PlutoUI.Slider(0.1:0.1:0.9, default = 0.3, show_value =true)) (infection probability)
-"""
-
-# ╔═╡ 47ac6d3c-6556-11eb-209d-f7a8219512ee
-md"""
-### Construct the figure
-"""
-
-# ╔═╡ f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
-function plot_fractions!(figpos, legpos, t, df, color_dict)	
-	ax = Axis(figpos)
-	
-	for (i, gdf) in enumerate(groupby(df, :state))
-		s = only(unique(gdf.state)) |> string
-		
-		AbstractPlotting.lines!(ax, gdf.t, gdf.fraction, label = s, color = color_dict[s])
-	end
-	
-	vlines!(ax, @lift([$t]), color = :gray50, linestyle=(:dash, :loose))
-	
-	AbstractPlotting.ylims!(ax, -0.05, 1.05)
-	
-	leg = Legend(legpos, ax)
-	leg.tellwidth = false
-	leg.tellheight = true
-	leg.orientation = :horizontal
-	
-	(; ax, leg)
-end
-
 # ╔═╡ e4d016cc-64ae-11eb-1ca2-259e5a262f33
 md"""
 ## Processing the Simulated Data
@@ -246,26 +220,6 @@ label(x::DataType) = string(Base.typename(x).name)
 
 # ╔═╡ 63b2882e-649b-11eb-28de-bd418b43a35f
 label(x) = label(typeof(x))
-
-# ╔═╡ 4a9b5d8a-64b3-11eb-0028-898635af227c
-function plot_diffusion!(figpos, edges_as_pts, node_positions, sim, t, color_dict)
-	sim_colors = [color_dict[label(s)] for s in sim]
-	state_as_color_t = @lift(sim_colors[:,$t])
-	
-    ax = Axis(figpos)
-
-	hidedecorations!(ax)
-    #hidespines!(ax)
-
-	N, T = size(sim)
-	msize = N < 20 ? 10 : N < 100 ? 5 : 3
-	
-	
-	AbstractPlotting.lines!(ax, edges_as_pts, linewidth = 0.1, color = (:black, 0.1))
-    AbstractPlotting.scatter!(ax, node_positions, markersize=msize, color = state_as_color_t);
-	
-	(; ax)
-end
 
 # ╔═╡ 11ea4b84-649c-11eb-00a4-d93af0bd31c8
 function tidy_simulation_output(sim)
@@ -299,8 +253,52 @@ function fractions_over_time(sim)
 	combine(groupby(tidy_sim, [:t, :state]), :node_id => (x -> length(x)/N) => :fraction)
 end
 
-# ╔═╡ 70605248-64b1-11eb-0c7c-b50c8394cdb6
-tidy_simulation_output(sim)
+# ╔═╡ 47ac6d3c-6556-11eb-209d-f7a8219512ee
+md"""
+## Construct the figure
+"""
+
+# ╔═╡ f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
+function plot_fractions!(figpos, legpos, t, df, color_dict)	
+	ax = Axis(figpos)
+	
+	for (i, gdf) in enumerate(groupby(df, :state))
+		s = only(unique(gdf.state)) |> string
+		
+		AbstractPlotting.lines!(ax, gdf.t, gdf.fraction, label = s, color = color_dict[s])
+	end
+	
+	vlines!(ax, @lift([$t]), color = :gray50, linestyle=(:dash, :loose))
+	
+	AbstractPlotting.ylims!(ax, -0.05, 1.05)
+	
+	leg = Legend(legpos, ax)
+	leg.tellwidth = false
+	leg.tellheight = true
+	leg.orientation = :horizontal
+	
+	(; ax, leg)
+end
+
+# ╔═╡ 4a9b5d8a-64b3-11eb-0028-898635af227c
+function plot_diffusion!(figpos, edges_as_pts, node_positions, sim, t, color_dict)
+	sim_colors = [color_dict[label(s)] for s in sim]
+	state_as_color_t = @lift(sim_colors[:,$t])
+	
+    ax = Axis(figpos)
+
+	hidedecorations!(ax)
+    #hidespines!(ax)
+
+	N, T = size(sim)
+	msize = N < 20 ? 10 : N < 100 ? 5 : 3
+	
+	
+	AbstractPlotting.lines!(ax, edges_as_pts, linewidth = 0.1, color = (:black, 0.1))
+    AbstractPlotting.scatter!(ax, node_positions, markersize=msize, color = state_as_color_t);
+	
+	(; ax)
+end
 
 # ╔═╡ 4dee5da9-aa4b-4551-974a-f7268d016617
 md"""
@@ -586,9 +584,6 @@ TableOfContents()
 # ╠═ffe07e00-0408-4986-9205-0fbb025a698c
 # ╠═5d11a2df-3187-4509-ba7b-8388564573a6
 # ╠═f4c62f95-876d-4915-8372-258dfde835f7
-# ╟─07f4816c-b893-4771-be3f-cc10695720cf
-# ╠═fecf62c5-2c1d-4709-8c17-d4b6e0565617
-# ╠═208445c4-5359-4442-9b9b-bde5e55a8c23
 # ╟─50d9fb56-64af-11eb-06b8-eb56903084e2
 # ╟─9302b00c-656f-11eb-25b3-495ae1c843cc
 # ╟─657c3a98-6573-11eb-1ccb-b1d974414647
@@ -601,16 +596,19 @@ TableOfContents()
 # ╟─f4cd5fb2-6574-11eb-37c4-73d4b21c1883
 # ╠═0b35f73f-6976-4d85-b61f-b4188440043e
 # ╟─373cb47e-655e-11eb-2751-0150985d98c1
+# ╟─07f4816c-b893-4771-be3f-cc10695720cf
+# ╟─07a66c72-6576-11eb-26f3-810607ca7e51
+# ╠═fecf62c5-2c1d-4709-8c17-d4b6e0565617
+# ╠═208445c4-5359-4442-9b9b-bde5e55a8c23
+# ╟─e4d016cc-64ae-11eb-1ca2-259e5a262f33
+# ╠═bf18bef2-649d-11eb-3e3c-45b41a3fa6e5
+# ╠═11ea4b84-649c-11eb-00a4-d93af0bd31c8
+# ╠═b0d34450-6497-11eb-01e3-27582a9f1dcc
+# ╠═63b2882e-649b-11eb-28de-bd418b43a35f
 # ╟─47ac6d3c-6556-11eb-209d-f7a8219512ee
 # ╠═51a16fcc-6556-11eb-16cc-71a978e02ef0
 # ╠═f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
 # ╠═4a9b5d8a-64b3-11eb-0028-898635af227c
-# ╟─e4d016cc-64ae-11eb-1ca2-259e5a262f33
-# ╠═bf18bef2-649d-11eb-3e3c-45b41a3fa6e5
-# ╠═11ea4b84-649c-11eb-00a4-d93af0bd31c8
-# ╠═70605248-64b1-11eb-0c7c-b50c8394cdb6
-# ╠═b0d34450-6497-11eb-01e3-27582a9f1dcc
-# ╠═63b2882e-649b-11eb-28de-bd418b43a35f
 # ╟─4dee5da9-aa4b-4551-974a-f7268d016617
 # ╟─78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
 # ╠═7b43d3d6-03a0-4e0b-96e2-9de420d3187f
