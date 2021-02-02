@@ -211,9 +211,9 @@ md"""
 # Assignment 2: Whom to Vaccinate When Death Rates are Age-Specfic
 """
 
-# ╔═╡ 07f4816c-b893-4771-be3f-cc10695720cf
+# ╔═╡ 1b8c26b6-64aa-11eb-2d9a-47db5469a654
 md"""
-# Implementing the functionality
+# Appendix
 """
 
 # ╔═╡ 07a66c72-6576-11eb-26f3-810607ca7e51
@@ -293,11 +293,11 @@ end
 
 # ╔═╡ 47ac6d3c-6556-11eb-209d-f7a8219512ee
 md"""
-## Construct the figure
+## Constructing the Figure
 """
 
 # ╔═╡ f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
-function plot_fractions!(figpos, legpos, t, df, color_dict)	
+function plot_fractions!(figpos, t, df, color_dict, legpos = nothing)	
 	ax = Axis(figpos)
 	
 	for (i, gdf) in enumerate(groupby(df, :state))
@@ -310,10 +310,14 @@ function plot_fractions!(figpos, legpos, t, df, color_dict)
 	
 	AbstractPlotting.ylims!(ax, -0.05, 1.05)
 	
-	leg = Legend(legpos, ax)
-	leg.tellwidth = false
-	leg.tellheight = true
-	leg.orientation = :horizontal
+	if !isnothing(legpos)
+		leg = Legend(legpos, ax)
+		leg.tellwidth = false
+		leg.tellheight = true
+		leg.orientation = :horizontal
+	else
+		leg = nothing
+	end
 	
 	(; ax, leg)
 end
@@ -338,10 +342,21 @@ function plot_diffusion!(figpos, edges_as_pts, node_positions, sim, t, color_dic
 	(; ax)
 end
 
-# ╔═╡ 1b8c26b6-64aa-11eb-2d9a-47db5469a654
-md"""
-# Appendix
-"""
+# ╔═╡ 51a16fcc-6556-11eb-16cc-71a978e02ef0
+function sir_plot!(figpos, legpos, sim, edges_as_pts, node_positions)
+	t = Node(1)
+	
+	df = fractions_over_time(sim)
+			
+	states = label.(subtypes(State))
+	colors = cgrad(:viridis, length(states), categorical=true)
+	color_dict = Dict(s => colors[i] for (i,s) in enumerate(states))
+	
+	plot_fractions!(figpos[1,2], t, df, color_dict, legpos)
+	plot_diffusion!(figpos[1,1], edges_as_pts, node_positions, sim, t, color_dict)
+
+	(; t, T_range = axes(sim, 2))
+end 
 
 # ╔═╡ e82d5b7f-5f37-4696-9917-58b117b9c1d6
 md"
@@ -482,27 +497,20 @@ function edges_as_points(graph, node_positions)
 	edges_as_pts
 end
 
-# ╔═╡ 51a16fcc-6556-11eb-16cc-71a978e02ef0
+# ╔═╡ 67e74a32-6578-11eb-245c-07894c89cc7c
 function sir_plot(sim, graph, node_positions = NetworkLayout.Spring.layout(adjacency_matrix(graph), Point2f0))
-	t = Node(1)
 	
-	df = fractions_over_time(sim)
-		
 	edges_as_pts = edges_as_points(graph, node_positions)
-	
-	states = label.(subtypes(State))
-	colors = cgrad(:viridis, length(states), categorical=true)
-	color_dict = Dict(s => colors[i] for (i,s) in enumerate(states))
-	
+
 	fig = Figure()
 	main_fig = fig[2,1]
 	leg_pos = fig[1,1]
 
-	plot_fractions!(main_fig[1,2], leg_pos, t, df, color_dict)
-	plot_diffusion!(main_fig[1,1], edges_as_pts, node_positions, sim, t, color_dict)
-
-	(; t, fig, T_range = axes(sim, 2))
-end 
+	out = sir_plot!(main_fig, leg_pos, sim, edges_as_pts, node_positions)
+	
+	(; fig, out...)
+	
+end
 
 # ╔═╡ d6694c32-656c-11eb-0796-5f485cccccf0
 out_simple = let
@@ -618,10 +626,10 @@ TableOfContents()
 # ╠═c99f637f-cca9-4b77-b2db-2f5a251b23de
 # ╠═14791f01-7625-457e-941e-cd180460fbc5
 # ╠═ee230ae8-8885-4b40-9ad1-87ae295f11c1
-# ╠═04227a80-5d28-43db-929e-1cdc5b31796d
+# ╟─04227a80-5d28-43db-929e-1cdc5b31796d
 # ╠═3d4eccc4-6577-11eb-11d0-09073ea3a50e
 # ╟─fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
-# ╟─07f4816c-b893-4771-be3f-cc10695720cf
+# ╟─1b8c26b6-64aa-11eb-2d9a-47db5469a654
 # ╟─07a66c72-6576-11eb-26f3-810607ca7e51
 # ╠═fecf62c5-2c1d-4709-8c17-d4b6e0565617
 # ╠═208445c4-5359-4442-9b9b-bde5e55a8c23
@@ -631,14 +639,14 @@ TableOfContents()
 # ╠═b0d34450-6497-11eb-01e3-27582a9f1dcc
 # ╠═63b2882e-649b-11eb-28de-bd418b43a35f
 # ╟─47ac6d3c-6556-11eb-209d-f7a8219512ee
+# ╠═67e74a32-6578-11eb-245c-07894c89cc7c
 # ╠═51a16fcc-6556-11eb-16cc-71a978e02ef0
 # ╠═f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
 # ╠═4a9b5d8a-64b3-11eb-0028-898635af227c
-# ╟─1b8c26b6-64aa-11eb-2d9a-47db5469a654
 # ╟─e82d5b7f-5f37-4696-9917-58b117b9c1d6
 # ╠═95b67e4d-5d41-4b86-bb9e-5de97f5d8957
 # ╠═c1971734-2299-4038-8bb6-f62d020f92cb
-# ╠═5fe4d47c-64b4-11eb-2a44-473ef5b19c6d
+# ╟─5fe4d47c-64b4-11eb-2a44-473ef5b19c6d
 # ╠═66d78eb4-64b4-11eb-2d30-b9cee7370d2a
 # ╟─a81f5244-64aa-11eb-1854-6dbb64c8eb6a
 # ╠═3b444a90-64b3-11eb-0b8f-1facc32a4088
