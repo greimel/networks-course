@@ -141,14 +141,6 @@ function iterate!(states_new, states, adjacency_matrix, par)
 	states_new
 end
 
-# ╔═╡ 5d11a2df-3187-4509-ba7b-8388564573a6
-function iterate(states, adjacency_matrix, par)
-	states_new = Vector{States}(undef, N)
-	iterate!(states_new, states, adjacency_matrix, par)
-	
-	states_new
-end
-
 # ╔═╡ 50d9fb56-64af-11eb-06b8-eb56903084e2
 md"""
 ## Simulate on a Simple Network
@@ -171,6 +163,52 @@ md"""
 * ``\rho``: $(@bind ρ0 PlutoUI.Slider(0.1:0.1:0.9, default = 0.1, show_value =true)) (recovery probability)
 * ``\delta``: $(@bind δ0 PlutoUI.Slider(0.0:0.02:0.2, default = 0.04, show_value =true)) (death rate)
 * ``p``: $(@bind p0 PlutoUI.Slider(0.1:0.1:0.9, default = 0.3, show_value =true)) (infection probability)
+"""
+
+# ╔═╡ 4dee5da9-aa4b-4551-974a-f7268d016617
+md"""
+# A First Look at Policies
+"""
+
+# ╔═╡ 78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
+md"""
+## Social Distancing
+"""
+
+# ╔═╡ 7b43d3d6-03a0-4e0b-96e2-9de420d3187f
+p_range = 0.1:0.1:0.9
+
+# ╔═╡ 2c4dda14-6577-11eb-2ef7-997664b20722
+
+
+# ╔═╡ 04227a80-5d28-43db-929e-1cdc5b31796d
+md"""
+## Travel ban
+
+remove links
+"""
+
+# ╔═╡ 3d4eccc4-6577-11eb-11d0-09073ea3a50e
+N = 1000
+
+# ╔═╡ 5d11a2df-3187-4509-ba7b-8388564573a6
+function iterate(states, adjacency_matrix, par)
+	states_new = Vector{States}(undef, N)
+	iterate!(states_new, states, adjacency_matrix, par)
+	
+	states_new
+end
+
+# ╔═╡ b44bf44f-7041-409a-aea2-7652f18853b0
+md"""
+## Vaccination
+
+There are $N people and you can distribute $(N ÷ 10) doses of the vaccine. Whom would you vaccinate?
+"""
+
+# ╔═╡ fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
+md"""
+# Assignment 2: Whom to Vaccinate When Death Rates are Age-Specfic
 """
 
 # ╔═╡ 07f4816c-b893-4771-be3f-cc10695720cf
@@ -300,114 +338,6 @@ function plot_diffusion!(figpos, edges_as_pts, node_positions, sim, t, color_dic
 	(; ax)
 end
 
-# ╔═╡ 4dee5da9-aa4b-4551-974a-f7268d016617
-md"""
-# A First Look at Policies
-"""
-
-# ╔═╡ 78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
-md"""
-## Social Distancing
-"""
-
-# ╔═╡ 7b43d3d6-03a0-4e0b-96e2-9de420d3187f
-p_range = 0.1:0.1:0.9
-
-# ╔═╡ c5f48079-f52e-4134-8e6e-6cd4c9ee915d
-let
-	plt = Plots.plot(title = "#infected when varying the infection probability")
-	for p in p_range
-		par = (p = p, ρ = ρ0, δ = δ0)
-		
-		sim = simulate(graph, par, 100)
-		
-		df0 = fractions_over_time(sim)
-		
-		filter!(:state => ==("I"), df0)
-		
-		Plots.plot!(df0.t, df0.fraction, label = "p = $p", color = :blue, alpha = (1 - p))
-	end
-	
-	plt
-end
-
-# ╔═╡ b44bf44f-7041-409a-aea2-7652f18853b0
-md"""
-## Vaccination
-
-There are $N people and you can distribute $(N ÷ 10) doses of the vaccine. Whom would you vaccinate?
-"""
-
-# ╔═╡ ee230ae8-8885-4b40-9ad1-87ae295f11c1
-n_contacts = degree_centrality(graph, normalize = false)
-
-# ╔═╡ 2ef8ab6b-3862-474f-ae9f-38d45246ef99
-begin
-	degree_df = DataFrame(i = 1:N, n_contacts = n_contacts)
-	sort!(degree_df, :n_contacts)
-end
-
-# ╔═╡ c99f637f-cca9-4b77-b2db-2f5a251b23de
-top_100_nodes = degree_df.i[901:1000]
-
-# ╔═╡ 14791f01-7625-457e-941e-cd180460fbc5
-bottom_100_nodes = degree_df.i[1:100]
-
-# ╔═╡ f8ee8f92-acea-4def-b8d5-eaa452a66349
-function init_vaccine(whom; N=N, n_vacc=100, n_I=50)
-	# fill with "Susceptible"
-	init = States[S() for i in 1:N]
-	
-	# vaccinate people
-	if whom == :top
-		ind_R = degree_df.i[(end-n_vacc):end]
-	elseif whom == :bottom
-		ind_R = degree_df.i[begin:(begin+n_vacc)]
-	elseif whom == :none
-		ind_R = Int[]
-	else
-		@error "Provide :top, :bottom or :none"
-	end
-	
-	init[ind_R] .= Ref(R())
-	
-	ind_I = rand(degree_df.i[(begin+n_vacc):(end-n_vacc)], n_I)
-	init[ind_I] .= Ref(I())
-	
-	init
-	
-end
-
-# ╔═╡ 674f577e-29c4-499e-836b-6642cb2e7e03
-let
-	plt = Plots.plot(title = "#infected when vaccinating different groups")
-	for (lab, init) in ["top" => init_vaccine(:top), "bottom" => init_vaccine(:bottom), "none" => init_vaccine(:none)]
-		#par = (p = p, ρ = ρ0, δ = δ0)
-		
-		sim = simulate(graph, par, 100, init)
-		
-		df0 = fractions_over_time(sim)
-		
-		filter!(:state => ==("I"), df0)
-		
-		Plots.plot!(df0.t, df0.fraction, label = lab)
-	end
-	
-	plt
-end
-
-# ╔═╡ 04227a80-5d28-43db-929e-1cdc5b31796d
-md"""
-## Travel ban
-
-remove links
-"""
-
-# ╔═╡ fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
-md"""
-# Assignment 2: Whom to Vaccinate When Death Rates are Age-Specfic
-"""
-
 # ╔═╡ 1b8c26b6-64aa-11eb-2d9a-47db5469a654
 md"""
 # Appendix
@@ -453,6 +383,85 @@ function spatial_graph(N::Int)
 	
 	spatial_graph(node_positions), node_positions
 end
+
+# ╔═╡ 49b21e4e-6577-11eb-38b2-45d30b0f9c80
+graph, node_positions = spatial_graph(1000)
+
+# ╔═╡ c5f48079-f52e-4134-8e6e-6cd4c9ee915d
+let
+	plt = Plots.plot(title = "#infected when varying the infection probability")
+	for p in p_range
+		par = (p = p, ρ = ρ0, δ = δ0)
+		
+		sim = simulate(graph, par, 100)
+		
+		df0 = fractions_over_time(sim)
+		
+		filter!(:state => ==("I"), df0)
+		
+		Plots.plot!(df0.t, df0.fraction, label = "p = $p", color = :blue, alpha = (1 - p))
+	end
+	
+	plt
+end
+
+# ╔═╡ ee230ae8-8885-4b40-9ad1-87ae295f11c1
+n_contacts = degree(graph)
+
+# ╔═╡ 2ef8ab6b-3862-474f-ae9f-38d45246ef99
+begin
+	degree_df = DataFrame(i = 1:N, n_contacts = n_contacts)
+	sort!(degree_df, :n_contacts)
+end
+
+# ╔═╡ f8ee8f92-acea-4def-b8d5-eaa452a66349
+function init_vaccine(whom; N=N, n_vacc=100, n_I=50)
+	# fill with "Susceptible"
+	init = States[S() for i in 1:N]
+	
+	# vaccinate people
+	if whom == :top
+		ind_R = degree_df.i[(end-n_vacc):end]
+	elseif whom == :bottom
+		ind_R = degree_df.i[begin:(begin+n_vacc)]
+	elseif whom == :none
+		ind_R = Int[]
+	else
+		@error "Provide :top, :bottom or :none"
+	end
+	
+	init[ind_R] .= Ref(R())
+	
+	ind_I = rand(degree_df.i[(begin+n_vacc):(end-n_vacc)], n_I)
+	init[ind_I] .= Ref(I())
+	
+	init
+	
+end
+
+# ╔═╡ 674f577e-29c4-499e-836b-6642cb2e7e03
+let
+	plt = Plots.plot(title = "#infected when vaccinating different groups")
+	for (lab, init) in ["top" => init_vaccine(:top), "bottom" => init_vaccine(:bottom), "none" => init_vaccine(:none)]
+		par = (p = p0, ρ = ρ0, δ = δ0)
+		
+		sim = simulate(graph, par, 100, init)
+		
+		df0 = fractions_over_time(sim)
+		
+		filter!(:state => ==("I"), df0)
+		
+		Plots.plot!(df0.t, df0.fraction, label = lab)
+	end
+	
+	plt
+end
+
+# ╔═╡ c99f637f-cca9-4b77-b2db-2f5a251b23de
+top_100_nodes = degree_df.i[901:1000]
+
+# ╔═╡ 14791f01-7625-457e-941e-cd180460fbc5
+bottom_100_nodes = degree_df.i[1:100]
 
 # ╔═╡ 5fe4d47c-64b4-11eb-2a44-473ef5b19c6d
 md"""
@@ -596,6 +605,22 @@ TableOfContents()
 # ╟─f4cd5fb2-6574-11eb-37c4-73d4b21c1883
 # ╠═0b35f73f-6976-4d85-b61f-b4188440043e
 # ╟─373cb47e-655e-11eb-2751-0150985d98c1
+# ╟─4dee5da9-aa4b-4551-974a-f7268d016617
+# ╠═49b21e4e-6577-11eb-38b2-45d30b0f9c80
+# ╟─78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
+# ╠═7b43d3d6-03a0-4e0b-96e2-9de420d3187f
+# ╠═c5f48079-f52e-4134-8e6e-6cd4c9ee915d
+# ╠═2c4dda14-6577-11eb-2ef7-997664b20722
+# ╟─b44bf44f-7041-409a-aea2-7652f18853b0
+# ╠═2ef8ab6b-3862-474f-ae9f-38d45246ef99
+# ╠═f8ee8f92-acea-4def-b8d5-eaa452a66349
+# ╠═674f577e-29c4-499e-836b-6642cb2e7e03
+# ╠═c99f637f-cca9-4b77-b2db-2f5a251b23de
+# ╠═14791f01-7625-457e-941e-cd180460fbc5
+# ╠═ee230ae8-8885-4b40-9ad1-87ae295f11c1
+# ╠═04227a80-5d28-43db-929e-1cdc5b31796d
+# ╠═3d4eccc4-6577-11eb-11d0-09073ea3a50e
+# ╟─fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
 # ╟─07f4816c-b893-4771-be3f-cc10695720cf
 # ╟─07a66c72-6576-11eb-26f3-810607ca7e51
 # ╠═fecf62c5-2c1d-4709-8c17-d4b6e0565617
@@ -609,19 +634,6 @@ TableOfContents()
 # ╠═51a16fcc-6556-11eb-16cc-71a978e02ef0
 # ╠═f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
 # ╠═4a9b5d8a-64b3-11eb-0028-898635af227c
-# ╟─4dee5da9-aa4b-4551-974a-f7268d016617
-# ╟─78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
-# ╠═7b43d3d6-03a0-4e0b-96e2-9de420d3187f
-# ╠═c5f48079-f52e-4134-8e6e-6cd4c9ee915d
-# ╟─b44bf44f-7041-409a-aea2-7652f18853b0
-# ╠═ee230ae8-8885-4b40-9ad1-87ae295f11c1
-# ╠═2ef8ab6b-3862-474f-ae9f-38d45246ef99
-# ╠═c99f637f-cca9-4b77-b2db-2f5a251b23de
-# ╠═14791f01-7625-457e-941e-cd180460fbc5
-# ╠═f8ee8f92-acea-4def-b8d5-eaa452a66349
-# ╠═674f577e-29c4-499e-836b-6642cb2e7e03
-# ╠═04227a80-5d28-43db-929e-1cdc5b31796d
-# ╟─fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
 # ╟─1b8c26b6-64aa-11eb-2d9a-47db5469a654
 # ╟─e82d5b7f-5f37-4696-9917-58b117b9c1d6
 # ╠═95b67e4d-5d41-4b86-bb9e-5de97f5d8957
