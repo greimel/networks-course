@@ -186,6 +186,9 @@ function iterate(states, adjacency_matrix, par)
 	states_new
 end
 
+# ╔═╡ 952f2540-64b4-11eb-0563-673747769a61
+
+
 # ╔═╡ 37972f08-db05-4e84-9528-fe16cd86efbf
 md"""
 ### Setting the Parameters
@@ -203,12 +206,6 @@ md"""
 ### Construct the figure
 """
 
-# ╔═╡ 30c412bc-655d-11eb-17ea-37b51e780001
-begin
-	t = Node(1)
-	_b_ = _a_ + 1
-end
-
 # ╔═╡ f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
 function plot_fractions!(figpos, legpos, t, df, color_dict)	
 	ax = Axis(figpos)
@@ -219,7 +216,7 @@ function plot_fractions!(figpos, legpos, t, df, color_dict)
 		AbstractPlotting.lines!(ax, gdf.t, gdf.fraction, label = s, color = color_dict[s])
 	end
 	
-	vlines!(ax, @lift([$t]), color = :gray80, linestyle=(:dash, :loose))
+	vlines!(ax, @lift([$t]), color = :gray50, linestyle=(:dash, :loose))
 	
 	leg = Legend(legpos, ax)
 	leg.tellwidth = false
@@ -241,26 +238,19 @@ label(x::DataType) = string(Base.typename(x).name)
 label(x) = label(typeof(x))
 
 # ╔═╡ 4a9b5d8a-64b3-11eb-0028-898635af227c
-function plot_diffusion!(fig_l, edges_as_pts, node_positions, sim, t, color_dict)
+function plot_diffusion!(figpos, edges_as_pts, node_positions, sim, t, color_dict)
 	sim_colors = [color_dict[label(s)] for s in sim]
 	state_as_color_t = @lift(sim_colors[:,$t])
 	
-    ax_l = Axis(fig_l)
+    ax = Axis(figpos)
 
-	hidedecorations!(ax_l)
-    #hidespines!(ax_l)
+	hidedecorations!(ax)
+    #hidespines!(ax)
 
-	AbstractPlotting.lines!(ax_l, edges_as_pts, linewidth = 0.1, color = (:black, 0.1))
-    AbstractPlotting.scatter!(ax_l, node_positions, markersize=3, color = state_as_color_t);
+	AbstractPlotting.lines!(ax, edges_as_pts, linewidth = 0.1, color = (:black, 0.1))
+    AbstractPlotting.scatter!(ax, node_positions, markersize=3, color = state_as_color_t);
 	
-	(ax = ax_l, )
-end
-
-# ╔═╡ ab41f638-655a-11eb-3f93-bf35f5d9cb9c
-begin
-	states = label.(subtypes(State))
-	colorss = cgrad(:viridis, length(states), categorical=true)
-	color_dict = Dict(s => colorss[i] for (i,s) in enumerate(states))
+	(; ax)
 end
 
 # ╔═╡ 11ea4b84-649c-11eb-00a4-d93af0bd31c8
@@ -380,19 +370,12 @@ end
 begin
 	T = 100
 	sim = simulate(graph, par, T)	
-	df = fractions_over_time(sim)
 	nothing
 end
 
 # ╔═╡ d910af76-64b2-11eb-14b6-a7f62a6ad82e
 begin
 	@bind t0 PlutoUI.Slider(1:T, show_value = true, default = 1)
-end
-
-# ╔═╡ df75d936-64b2-11eb-0aba-9d867fe18f14
-begin
-	_b_
-	t[] = t0
 end
 
 # ╔═╡ 70605248-64b1-11eb-0c7c-b50c8394cdb6
@@ -493,21 +476,37 @@ function edges_as_points(graph, node_positions)
 	edges_as_pts
 end
 
-# ╔═╡ 952f2540-64b4-11eb-0563-673747769a61
-edges_as_pts = edges_as_points(graph, node_positions)
-
 # ╔═╡ 51a16fcc-6556-11eb-16cc-71a978e02ef0
-begin
+function sir_plot(sim, graph, node_positions)
+	t = Node(1)
+	
+	df = fractions_over_time(sim)
+		
+	edges_as_pts = edges_as_points(graph, node_positions)
+	
+	states = label.(subtypes(State))
+	colors = cgrad(:viridis, length(states), categorical=true)
+	color_dict = Dict(s => colors[i] for (i,s) in enumerate(states))
+	
 	sir_fig = Figure()
 	main_fig = sir_fig[2,1]
 	leg_pos = sir_fig[1,1]
-	_c_ = _b_ + 1
 
 	plot_fractions!(main_fig[1,2], leg_pos, t, df, color_dict)
 	plot_diffusion!(main_fig[1,1], edges_as_pts, node_positions, sim, t, color_dict)
 
-	sir_fig
+	(; t, sir_fig)
 end 
+
+# ╔═╡ f9ce314c-655d-11eb-135b-2df45d413ab1
+begin
+	t, sir_fig = sir_plot(sim, graph, node_positions)
+	nothing
+	sir_fig
+end
+
+# ╔═╡ 373cb47e-655e-11eb-2751-0150985d98c1
+t[] = t0
 
 # ╔═╡ a81f5244-64aa-11eb-1854-6dbb64c8eb6a
 md"""
@@ -550,13 +549,12 @@ TableOfContents()
 # ╠═2d3466df-48b3-432f-843d-8f83d7fb575e
 # ╠═0b35f73f-6976-4d85-b61f-b4188440043e
 # ╟─47ac6d3c-6556-11eb-209d-f7a8219512ee
+# ╟─d910af76-64b2-11eb-14b6-a7f62a6ad82e
+# ╟─f9ce314c-655d-11eb-135b-2df45d413ab1
+# ╠═373cb47e-655e-11eb-2751-0150985d98c1
 # ╠═51a16fcc-6556-11eb-16cc-71a978e02ef0
-# ╠═30c412bc-655d-11eb-17ea-37b51e780001
-# ╠═d910af76-64b2-11eb-14b6-a7f62a6ad82e
 # ╠═f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
 # ╠═4a9b5d8a-64b3-11eb-0028-898635af227c
-# ╠═df75d936-64b2-11eb-0aba-9d867fe18f14
-# ╠═ab41f638-655a-11eb-3f93-bf35f5d9cb9c
 # ╟─e4d016cc-64ae-11eb-1ca2-259e5a262f33
 # ╠═bf18bef2-649d-11eb-3e3c-45b41a3fa6e5
 # ╠═11ea4b84-649c-11eb-00a4-d93af0bd31c8
