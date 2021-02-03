@@ -198,9 +198,16 @@ md"""
 # ╔═╡ 7b43d3d6-03a0-4e0b-96e2-9de420d3187f
 p_range = 0.1:0.1:0.9
 
+# ╔═╡ e8b7861e-661c-11eb-1c06-bfedd6ab563f
+md"""
+It's really hard to see the difference, so let's use an alternative visualization.
+"""
+
 # ╔═╡ 1978febe-657c-11eb-04ac-e19b2d0e5a85
 md"""
-Can we do better?
+### Exercise: Can we do better?
+
+Can you think of a way to improve the effectiveness of the vaccination program? If you have 100 doses at your disposal, whom would you vaccinate?
 """
 
 # ╔═╡ 04227a80-5d28-43db-929e-1cdc5b31796d
@@ -433,7 +440,8 @@ graph, node_positions = spatial_graph(1000)
 
 # ╔═╡ c5f48079-f52e-4134-8e6e-6cd4c9ee915d
 let
-	plt = Plots.plot(title = "#infected when varying the infection probability")
+	fig = Figure()
+	ax = Axis(fig[1,1], title = "#infected when varying the infection probability")
 	for p in p_range
 		par = (p = p, ρ = ρ0, δ = δ0)
 		
@@ -443,10 +451,11 @@ let
 		
 		filter!(:state => ==("I"), df0)
 		
-		Plots.plot!(df0.t, df0.fraction, label = "p = $p", color = :blue, alpha = (1 - p))
+		lines!(df0.t, df0.fraction, label = "p = $p", color = (:blue, 1 - p))
 	end
+	Legend(fig[1,2], ax)
 	
-	plt
+	fig
 end
 
 # ╔═╡ ee230ae8-8885-4b40-9ad1-87ae295f11c1
@@ -485,7 +494,9 @@ end
 
 # ╔═╡ 674f577e-29c4-499e-836b-6642cb2e7e03
 let
-	plt = Plots.plot(title = "#infected when vaccinating different groups")
+	fig = Figure()
+	ax = Axis(fig[1,1], title = "#infected when vaccinating different groups")
+	
 	for (lab, init) in ["top" => init_vaccine(:top), "bottom" => init_vaccine(:bottom), "none" => init_vaccine(:none)]
 		par = (p = p0, ρ = ρ0, δ = δ0)
 		
@@ -495,10 +506,14 @@ let
 		
 		filter!(:state => ==("I"), df0)
 		
-		Plots.plot!(df0.t, df0.fraction, label = lab)
+		lines!(df0.t, df0.fraction, label = lab)
 	end
 	
-	plt
+	leg = Legend(fig[0,1], ax)
+	leg.orientation[] = :horizontal
+	leg.tellheight[] = true
+	leg.tellwidth[] = false
+	fig
 end
 
 # ╔═╡ c99f637f-cca9-4b77-b2db-2f5a251b23de
@@ -506,6 +521,47 @@ top_100_nodes = degree_df.i[901:1000]
 
 # ╔═╡ 14791f01-7625-457e-941e-cd180460fbc5
 bottom_100_nodes = degree_df.i[1:100]
+
+# ╔═╡ 76b738fe-657a-11eb-31d3-413a08ee6e69
+vacc = let
+	N = 1000
+	graph, node_positions = spatial_graph(N)
+	
+	par = (p = 0.1, ρ = ρ0, δ = δ0)
+	
+	infected_nodes = rand(1:N, 100)
+	vaccinated_nodes = rand(1:N, 100)
+	
+	init0 = initial_state(N, infected_nodes, [])
+	initv = initial_state(N, infected_nodes, vaccinated_nodes)
+	
+	sim0 = simulate(graph, par, 100, init0)
+	simv = simulate(graph, par, 100, initv)
+	
+	(; graph, node_positions, sims=("none" => sim0, "random" => simv))
+end;
+
+# ╔═╡ 02b1e334-661d-11eb-3194-b382045810ef
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], title = "#infected when vaccinating different groups")
+	
+	colors = cgrad(:viridis, length(vacc.sims), categorical=true)
+
+	for (i, (lab, sim)) in enumerate(vacc.sims)
+				
+		df0 = fractions_over_time(sim)
+		
+		filter!(:state => ==("I"), df0)
+		
+		lines!(df0.t, df0.fraction, label = lab, color = colors[i])
+	end
+	
+	leg = Legend(fig[2,1], ax,
+				 orientation = :horizontal, tellheight = true, tellwidth=false
+				)
+	fig
+end
 
 # ╔═╡ 5fe4d47c-64b4-11eb-2a44-473ef5b19c6d
 md"""
@@ -553,24 +609,8 @@ function compare_sir(sim1, sim2, graph, node_positions = NetworkLayout.Spring.la
 	(; fig, t, T_range = axes(sim1, 2))
 end
 
-# ╔═╡ 76b738fe-657a-11eb-31d3-413a08ee6e69
-out_vacc = let
-	N = 1000
-	graph, node_positions = spatial_graph(N)
-	
-	par = (p = 0.1, ρ = ρ0, δ = δ0)
-	
-	infected_nodes = rand(1:N, 100)
-	vaccinated_nodes = rand(1:N, 100)
-	
-	init0 = initial_state(N, infected_nodes, [])
-	initv = initial_state(N, infected_nodes, vaccinated_nodes)
-	
-	sim0 = simulate(graph, par, 100, init0)
-	simv = simulate(graph, par, 100, initv)
-	
-	compare_sir(sim0, simv, graph, node_positions)
-end;
+# ╔═╡ 0d610e80-661e-11eb-3b9a-93af6b0ad5de
+out_vacc = compare_sir(last.(vacc.sims[[1,2]])..., vacc.graph, vacc.node_positions);
 
 # ╔═╡ bf2c5f5a-661b-11eb-01c5-51740fba63e3
 fancy && out_vacc.fig
@@ -728,8 +768,11 @@ TableOfContents()
 # ╟─bf2c5f5a-661b-11eb-01c5-51740fba63e3
 # ╟─83b817d2-657d-11eb-3cd2-332a348142ea
 # ╠═76b738fe-657a-11eb-31d3-413a08ee6e69
+# ╠═0d610e80-661e-11eb-3b9a-93af6b0ad5de
+# ╟─e8b7861e-661c-11eb-1c06-bfedd6ab563f
+# ╠═02b1e334-661d-11eb-3194-b382045810ef
 # ╟─1978febe-657c-11eb-04ac-e19b2d0e5a85
-# ╟─2ef8ab6b-3862-474f-ae9f-38d45246ef99
+# ╠═2ef8ab6b-3862-474f-ae9f-38d45246ef99
 # ╠═f8ee8f92-acea-4def-b8d5-eaa452a66349
 # ╠═674f577e-29c4-499e-836b-6642cb2e7e03
 # ╠═c99f637f-cca9-4b77-b2db-2f5a251b23de
