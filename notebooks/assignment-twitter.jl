@@ -10,6 +10,7 @@ begin
 	Pkg.activate(temp = true)
 	Pkg.add(["PlutoUI", "CSV", "LightGraphs", "DataFrames", "GraphPlot", "CategoricalArrays", "GraphDataFrameBridge", "FreqTables", "Colors"])
 	
+	
 	using PlutoUI: TableOfContents, with_terminal
 	import CSV
 	using DataFrames: DataFrames, DataFrame, groupby, select, select!, combine, transform, transform!, ByRow, leftjoin
