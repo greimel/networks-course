@@ -4,13 +4,29 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        el
+    end
+end
+
 # ╔═╡ 400cc04e-4784-11eb-11a2-ff8e245cad27
 begin
 	import Pkg
 	Pkg.activate(temp = true)
-	Pkg.add(["PlutoUI", "CSV", "LightGraphs", "DataFrames", "GraphPlot", "CategoricalArrays", "GraphDataFrameBridge", "FreqTables", "Colors"])
+	Pkg.add([
+			Pkg.PackageSpec(name="DataAPI",           version="1.4"),
+			Pkg.PackageSpec(name="DataFrames",        version="0.22"),
+			Pkg.PackageSpec(name="CSV",               version="0.8"),
+			Pkg.PackageSpec(name="CategoricalArrays", version="0.9"),
+			])
 	
-	using PlutoUI: TableOfContents, with_terminal
+	Pkg.add(["PlutoUI", "LightGraphs", "GraphPlot", "GraphDataFrameBridge", "FreqTables", "Colors"])
+	
+	using PlutoUI: FilePicker, TableOfContents
 	import CSV
 	using DataFrames: DataFrames, DataFrame, groupby, select, select!, combine, transform, transform!, ByRow, leftjoin
 	using CategoricalArrays: CategoricalArrays, categorical
@@ -25,7 +41,7 @@ end
 
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`assignment-twitter.jl` | **Version 1.1** | *(last changed: Feb 1)*"
+`assignment-twitter.jl` | **Version 1.2** | *last changed: Feb 3*"
 
 # ╔═╡ 235bcd50-6183-11eb-1272-65c61cfbf961
 group_number = 99
@@ -139,10 +155,21 @@ md"""
 First we specify what data we want to have.
 """
 
+# ╔═╡ bdc32cf2-6611-11eb-080c-6fd828280754
+md"""
+!!! note "Note"
+    If you get an error here, ask your group members to send you their `twtter-data.csv` and upload it here. In this case make sure that you still put the right `keyword` above. 
+
+    If you don't have an error message, you don't need to upload a file!
+"""
+
+# ╔═╡ 02509edc-6611-11eb-2451-0fa79effbee7
+@bind file_data FilePicker()
+
 # ╔═╡ ea8bc558-620d-11eb-24e8-57cd8d41e912
 md"""
 !!! note "Note"
-	If you want to change the parameters of your query you can specify some optional keyword arguments in the cell above. E.g. `tweet_df0 = twitter_data(keyword, language = "dutch")` or `tweet_df0 = twitter_data(keyword, n_tweets = 1000)`.
+    If you want to change the parameters of your query you can specify some optional keyword arguments in the cell above. E.g. `tweet_df0 = twitter_data(keyword, language = "dutch")` or `tweet_df0 = twitter_data(keyword, n_tweets = 1000)`.
 """
 
 # ╔═╡ c76895aa-620e-11eb-3da2-b572953e6d34
@@ -268,16 +295,21 @@ end
 
 # ╔═╡ 32d55286-620c-11eb-2910-fd3e5b3fd78a
 "Download twitter data to csv and load data into a DataFrame"
-function twitter_data(args...; kwargs...)
-	filename = download_twitter_data(args...; kwargs...)
+function twitter_data(file_data, args...; kwargs...)
+	# check if file was uploaded using the file picker
+	file_uploaded = length(file_data["data"]) > 0 
 	
-	csv = CSV.File(filename)
-	
+	if file_uploaded
+		csv = CSV.File(file_data["data"])
+	else
+		filename = download_twitter_data(args...; kwargs...)
+		csv = CSV.File(filename)
+	end
 	DataFrame(csv)
 end
 
 # ╔═╡ 14e6dece-60dc-11eb-2d5a-275b8c9e382d
-tweet_df0 = twitter_data(keyword)
+tweet_df0 = twitter_data(file_data, keyword)
 
 # ╔═╡ 1f927f3c-60e5-11eb-0304-f1639b68468d
 md"""
@@ -489,7 +521,9 @@ TableOfContents()
 # ╟─3fcf627c-6182-11eb-3a6c-851a6f96bd4a
 # ╟─b201cb56-60e3-11eb-302c-4180510aacf8
 # ╟─e4dcc0a6-60e3-11eb-2717-5347187c73c0
-# ╠═14e6dece-60dc-11eb-2d5a-275b8c9e382d
+# ╟─14e6dece-60dc-11eb-2d5a-275b8c9e382d
+# ╟─bdc32cf2-6611-11eb-080c-6fd828280754
+# ╟─02509edc-6611-11eb-2451-0fa79effbee7
 # ╟─ea8bc558-620d-11eb-24e8-57cd8d41e912
 # ╟─c76895aa-620e-11eb-3da2-b572953e6d34
 # ╠═85838053-8aa3-4e56-ae9d-17293937fe4f
