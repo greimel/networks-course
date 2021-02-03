@@ -62,7 +62,6 @@ begin
 	using PlutoUI
 	using PooledArrays
 	using DataFrames
-	using Plots
 	using CategoricalArrays: CategoricalArrays, categorical
 	
 	_a_
@@ -347,18 +346,18 @@ function plot_fractions!(figpos, t, df, color_dict, legpos = nothing)
 	for (i, gdf) in enumerate(groupby(df, :state))
 		s = only(unique(gdf.state)) |> string
 		
-		AbstractPlotting.lines!(ax, gdf.t, gdf.fraction, label = s, color = color_dict[s])
+		lines!(ax, gdf.t, gdf.fraction, label = s, color = color_dict[s])
 	end
 	
 	vlines!(ax, @lift([$t]), color = :gray50, linestyle=(:dash, :loose))
 	
-	AbstractPlotting.ylims!(ax, -0.05, 1.05)
+	ylims!(ax, -0.05, 1.05)
+	
+	# some attributes to make the legend nicer
+	attr = (orientation = :horizontal, tellwidth = :false, tellheight = true)
 	
 	if !isnothing(legpos)
-		leg = Legend(legpos, ax)
-		leg.tellwidth[] = false
-		leg.tellheight[] = true
-		leg.orientation[] = :horizontal
+		leg = Legend(legpos, ax; attr...)
 	else
 		leg = nothing
 	end
@@ -374,13 +373,12 @@ function plot_diffusion!(figpos, edges_as_pts, node_positions, sim, t, color_dic
     ax = Axis(figpos)
 
 	hidedecorations!(ax)
-    #hidespines!(ax)
 
 	N, T = size(sim)
 	msize = N < 20 ? 10 : N < 100 ? 5 : 3
 		
-	AbstractPlotting.lines!(ax, edges_as_pts, linewidth = 0.5, color = (:black, 0.3))
-    AbstractPlotting.scatter!(ax, node_positions, markersize=msize, strokewidth = 0, color = state_as_color_t);
+	lines!(ax, edges_as_pts, linewidth = 0.5, color = (:black, 0.3))
+    scatter!(ax, node_positions, markersize=msize, strokewidth = 0, color = state_as_color_t);
 	
 	ax
 end
@@ -501,9 +499,11 @@ let
 		lines!(df0.t, df0.fraction, label = lab, color = colors[i])
 	end
 	
-	leg = Legend(fig[2,1], ax,
-				 orientation = :horizontal, tellheight = true, tellwidth=false
-				)
+	# some attributes to make the legend nicer
+	attr = (orientation = :horizontal, tellwidth = :false, tellheight = true)
+
+	leg = Legend(fig[2,1], ax; attr...)
+
 	fig
 end
 
@@ -715,7 +715,7 @@ TableOfContents()
 # ╠═76b738fe-657a-11eb-31d3-413a08ee6e69
 # ╠═0d610e80-661e-11eb-3b9a-93af6b0ad5de
 # ╟─e8b7861e-661c-11eb-1c06-bfedd6ab563f
-# ╟─02b1e334-661d-11eb-3194-b382045810ef
+# ╠═02b1e334-661d-11eb-3194-b382045810ef
 # ╟─1978febe-657c-11eb-04ac-e19b2d0e5a85
 # ╟─fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
 # ╟─1b8c26b6-64aa-11eb-2d9a-47db5469a654
