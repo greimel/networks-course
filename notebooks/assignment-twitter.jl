@@ -155,63 +155,27 @@ md"""
 First we specify what data we want to have.
 """
 
+# ╔═╡ bdc32cf2-6611-11eb-080c-6fd828280754
+md"""
+!!! note "Note"
+    If you get an error here, ask your group members to send you their `twtter-data.csv` and upload it here. In this case make sure that you still put the right `keyword` above. 
+
+    If you don't have an error message, you don't need to upload a file!
+"""
+
+# ╔═╡ 02509edc-6611-11eb-2451-0fa79effbee7
+@bind file_data FilePicker()
+
 # ╔═╡ ea8bc558-620d-11eb-24e8-57cd8d41e912
 md"""
 !!! note "Note"
-	If you want to change the parameters of your query you can specify some optional keyword arguments in the cell above. E.g. `tweet_df0 = twitter_data(keyword, language = "dutch")` or `tweet_df0 = twitter_data(keyword, n_tweets = 1000)`.
+    If you want to change the parameters of your query you can specify some optional keyword arguments in the cell above. E.g. `tweet_df0 = twitter_data(keyword, language = "dutch")` or `tweet_df0 = twitter_data(keyword, n_tweets = 1000)`.
 """
 
 # ╔═╡ c76895aa-620e-11eb-3da2-b572953e6d34
 md"""
 If you are curious how the data are downloaded, look at the following function. You shouldn't change these two functions below unless you are absolutely sure what you are doing. The underlying Python package `twint` is very fragile and might hang forever if you don't specify the inputs correctly.
 """
-
-# ╔═╡ 85838053-8aa3-4e56-ae9d-17293937fe4f
-"Download tweets that contain `keyword` and save to csv file `filename`"
-function download_twitter_data(keyword::String;
-							   filename = joinpath(".", "twitter-data.csv"),
-							   n_tweets::Int = 500,
-							   language = missing,
-							   min_likes = 2
-							   )
-	# Configure twint query object
-	c = twint.Config()
-	c.Search = keyword
-	if !ismissing(language)
-		@assert language isa String
-		c.Lang = language
-	end
-	#c.Geo = "52.377956,4.897070,5km"
-	c.Limit = n_tweets
-	c.Output = filename
-	c.Store_csv = true
-	c.Min_likes = min_likes
-	
-	# if file exists, overwrite it
-	isfile(filename) && rm(filename)
-	twint.run.Search(c)
-	
-	filename
-end
-
-# ╔═╡ b41de1b8-660e-11eb-2bfb-7dd34194fd01
-#@bind file_data PlutoUI.FilePicker()
-
-# ╔═╡ f9152920-660e-11eb-1868-9bdf126432c4
-#file_data["data"]
-
-# ╔═╡ 32d55286-620c-11eb-2910-fd3e5b3fd78a
-"Download twitter data to csv and load data into a DataFrame"
-function twitter_data(args...; kwargs...)
-	filename = download_twitter_data(args...; kwargs...)
-	
-	csv = CSV.File(filename)
-	
-	DataFrame(csv)
-end
-
-# ╔═╡ 14e6dece-60dc-11eb-2d5a-275b8c9e382d
-tweet_df0 = twitter_data(keyword)
 
 # ╔═╡ f998e4fc-60e3-11eb-0533-1717bea29668
 md"""
@@ -331,16 +295,18 @@ end
 
 # ╔═╡ 32d55286-620c-11eb-2910-fd3e5b3fd78a
 "Download twitter data to csv and load data into a DataFrame"
-function twitter_data(args...; kwargs...)
-	filename = download_twitter_data(args...; kwargs...)
-	
-	csv = CSV.File(filename)
-	
+function twitter_data(file_data, args...; kwargs...)
+	if length(file_data["data"]) > 0
+		csv = CSV.File(file_data["data"])
+	else
+		filename = download_twitter_data(args...; kwargs...)
+		csv = CSV.File(filename)
+	end
 	DataFrame(csv)
 end
 
 # ╔═╡ 14e6dece-60dc-11eb-2d5a-275b8c9e382d
-tweet_df0 = twitter_data(keyword)
+tweet_df0 = twitter_data(file_data, keyword)
 
 # ╔═╡ 1f927f3c-60e5-11eb-0304-f1639b68468d
 md"""
@@ -552,12 +518,12 @@ TableOfContents()
 # ╟─3fcf627c-6182-11eb-3a6c-851a6f96bd4a
 # ╟─b201cb56-60e3-11eb-302c-4180510aacf8
 # ╟─e4dcc0a6-60e3-11eb-2717-5347187c73c0
-# ╠═14e6dece-60dc-11eb-2d5a-275b8c9e382d
+# ╟─14e6dece-60dc-11eb-2d5a-275b8c9e382d
+# ╟─bdc32cf2-6611-11eb-080c-6fd828280754
+# ╟─02509edc-6611-11eb-2451-0fa79effbee7
 # ╟─ea8bc558-620d-11eb-24e8-57cd8d41e912
 # ╟─c76895aa-620e-11eb-3da2-b572953e6d34
 # ╠═85838053-8aa3-4e56-ae9d-17293937fe4f
-# ╠═b41de1b8-660e-11eb-2bfb-7dd34194fd01
-# ╠═f9152920-660e-11eb-1868-9bdf126432c4
 # ╠═32d55286-620c-11eb-2910-fd3e5b3fd78a
 # ╟─f998e4fc-60e3-11eb-0533-1717bea29668
 # ╟─46021976-60e4-11eb-3797-33b6ff7755d4
