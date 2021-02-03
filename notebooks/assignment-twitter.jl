@@ -9,6 +9,9 @@ begin
 	import Pkg
 	Pkg.activate(temp = true)
 	Pkg.add(["PlutoUI", "CSV", "LightGraphs", "DataFrames", "GraphPlot", "CategoricalArrays", "GraphDataFrameBridge", "FreqTables", "Colors"])
+	Pkg.add([
+			Pkg.PackageSpec(name="DataAPI", version="1.4"),
+			])
 	
 	
 	using PlutoUI: TableOfContents, with_terminal
