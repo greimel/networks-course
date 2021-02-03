@@ -4,17 +4,29 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        el
+    end
+end
+
 # ╔═╡ 400cc04e-4784-11eb-11a2-ff8e245cad27
 begin
 	import Pkg
 	Pkg.activate(temp = true)
-	Pkg.add(["PlutoUI", "CSV", "LightGraphs", "DataFrames", "GraphPlot", "CategoricalArrays", "GraphDataFrameBridge", "FreqTables", "Colors"])
 	Pkg.add([
-			Pkg.PackageSpec(name="DataAPI", version="1.4"),
+			Pkg.PackageSpec(name="DataAPI",           version="1.4"),
+			Pkg.PackageSpec(name="DataFrames",        version="0.22"),
+			Pkg.PackageSpec(name="CSV",               version="0.8"),
+			Pkg.PackageSpec(name="CategoricalArrays", version="0.9"),
 			])
 	
+	Pkg.add(["PlutoUI", "LightGraphs", "GraphPlot", "GraphDataFrameBridge", "FreqTables", "Colors"])
 	
-	using PlutoUI: TableOfContents, with_terminal
+	using PlutoUI: FilePicker, TableOfContents
 	import CSV
 	using DataFrames: DataFrames, DataFrame, groupby, select, select!, combine, transform, transform!, ByRow, leftjoin
 	using CategoricalArrays: CategoricalArrays, categorical
@@ -29,7 +41,7 @@ end
 
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`assignment-twitter.jl` | **Version 1.1** | *(last changed: Feb 1)*"
+`assignment-twitter.jl` | **Version 1.2** | *last changed: Feb 3*"
 
 # ╔═╡ 235bcd50-6183-11eb-1272-65c61cfbf961
 group_number = 99
@@ -154,6 +166,53 @@ md"""
 If you are curious how the data are downloaded, look at the following function. You shouldn't change these two functions below unless you are absolutely sure what you are doing. The underlying Python package `twint` is very fragile and might hang forever if you don't specify the inputs correctly.
 """
 
+# ╔═╡ 85838053-8aa3-4e56-ae9d-17293937fe4f
+"Download tweets that contain `keyword` and save to csv file `filename`"
+function download_twitter_data(keyword::String;
+							   filename = joinpath(".", "twitter-data.csv"),
+							   n_tweets::Int = 500,
+							   language = missing,
+							   min_likes = 2
+							   )
+	# Configure twint query object
+	c = twint.Config()
+	c.Search = keyword
+	if !ismissing(language)
+		@assert language isa String
+		c.Lang = language
+	end
+	#c.Geo = "52.377956,4.897070,5km"
+	c.Limit = n_tweets
+	c.Output = filename
+	c.Store_csv = true
+	c.Min_likes = min_likes
+	
+	# if file exists, overwrite it
+	isfile(filename) && rm(filename)
+	twint.run.Search(c)
+	
+	filename
+end
+
+# ╔═╡ b41de1b8-660e-11eb-2bfb-7dd34194fd01
+#@bind file_data PlutoUI.FilePicker()
+
+# ╔═╡ f9152920-660e-11eb-1868-9bdf126432c4
+#file_data["data"]
+
+# ╔═╡ 32d55286-620c-11eb-2910-fd3e5b3fd78a
+"Download twitter data to csv and load data into a DataFrame"
+function twitter_data(args...; kwargs...)
+	filename = download_twitter_data(args...; kwargs...)
+	
+	csv = CSV.File(filename)
+	
+	DataFrame(csv)
+end
+
+# ╔═╡ 14e6dece-60dc-11eb-2d5a-275b8c9e382d
+tweet_df0 = twitter_data(keyword)
+
 # ╔═╡ f998e4fc-60e3-11eb-0533-1717bea29668
 md"""
 # Constructing a network
@@ -200,88 +259,6 @@ end
 md"""
 ## Install Python and the package `twint`
 """
-
-# ╔═╡ 6535e16c-6146-11eb-35c0-31aef62a631c
-begin
-	# Make sure Python is available - install if necessary
-	ENV["PYTHON"] = ""
-	Pkg.add(["PyCall", "Conda"])
-	Pkg.build("PyCall")
-	
-	# Install twint (1)
-	import Conda
-	Conda.pip_interop(true)
-	Conda.pip("install", "twint") # it could be so easy ...
-	
-	# ... but the above command installs twint 2.1.20 which doesn't work any more
-	# So we have to download it from github and install it manually.
-	
-	# One-liner that doesn't always work on Windows
-	# run(`$(Conda._pip(Conda.ROOTENV)) install --user --upgrade -e git+https://github.com/twintproject/twint.git@origin/master#egg=twint`)
-	
-	# Download twint
-	import LibGit2
-	twint_path = joinpath(@__DIR__(), "twint") # specify where to save twint
-	if !isdir(twint_path)
-		repo_url = "https://github.com/twintproject/twint"
-		repo = LibGit2.clone(repo_url, twint_path) # download twint from github
-	end
-	
-	# Install twint (2)
-	Conda.pip("install", "dataclasses") # manually install a dependency because that doesn't work automatically on windows
-	dir = pwd() # save current directory, before leaving it
-	cd(twint_path) # move to twint folder
-	run(`$(Conda._pip(Conda.ROOTENV)) install .`)
-	cd(dir) # move back
-	
-	# Load twint to Julia
-	import PyCall
-	twint = PyCall.pyimport("twint")
-	
-	_b_ = _a_ + 1 # make sure this is cell #2
-	nothing
-end
-
-# ╔═╡ 85838053-8aa3-4e56-ae9d-17293937fe4f
-"Download tweets that contain `keyword` and save to csv file `filename`"
-function download_twitter_data(keyword::String;
-							   filename = joinpath(".", "twitter-data.csv"),
-							   n_tweets::Int = 500,
-							   language = missing,
-							   min_likes = 2
-							   )
-	# Configure twint query object
-	c = twint.Config()
-	c.Search = keyword
-	if !ismissing(language)
-		@assert language isa String
-		c.Lang = language
-	end
-	#c.Geo = "52.377956,4.897070,5km"
-	c.Limit = n_tweets
-	c.Output = filename
-	c.Store_csv = true
-	c.Min_likes = min_likes
-	
-	# if file exists, overwrite it
-	isfile(filename) && rm(filename)
-	twint.run.Search(c)
-	
-	filename
-end
-
-# ╔═╡ 32d55286-620c-11eb-2910-fd3e5b3fd78a
-"Download twitter data to csv and load data into a DataFrame"
-function twitter_data(args...; kwargs...)
-	filename = download_twitter_data(args...; kwargs...)
-	
-	csv = CSV.File(filename)
-	
-	DataFrame(csv)
-end
-
-# ╔═╡ 14e6dece-60dc-11eb-2d5a-275b8c9e382d
-tweet_df0 = twitter_data(keyword)
 
 # ╔═╡ 1f927f3c-60e5-11eb-0304-f1639b68468d
 md"""
@@ -497,6 +474,8 @@ TableOfContents()
 # ╟─ea8bc558-620d-11eb-24e8-57cd8d41e912
 # ╟─c76895aa-620e-11eb-3da2-b572953e6d34
 # ╠═85838053-8aa3-4e56-ae9d-17293937fe4f
+# ╠═b41de1b8-660e-11eb-2bfb-7dd34194fd01
+# ╠═f9152920-660e-11eb-1868-9bdf126432c4
 # ╠═32d55286-620c-11eb-2910-fd3e5b3fd78a
 # ╟─f998e4fc-60e3-11eb-0533-1717bea29668
 # ╟─46021976-60e4-11eb-3797-33b6ff7755d4
@@ -518,7 +497,6 @@ TableOfContents()
 # ╠═400cc04e-4784-11eb-11a2-ff8e245cad27
 # ╠═87b7bc86-60df-11eb-3f9f-2375449c77f6
 # ╟─a1d99d9e-60dc-11eb-391c-b52c2e16aedd
-# ╠═6535e16c-6146-11eb-35c0-31aef62a631c
 # ╟─1f927f3c-60e5-11eb-0304-f1639b68468d
 # ╠═620c76e4-60de-11eb-2c82-d364f55fbe4d
 # ╠═eeb99bfe-6178-11eb-04f7-bf04d3c10eeb
