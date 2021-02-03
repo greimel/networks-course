@@ -13,6 +13,17 @@ macro bind(def, element)
     end
 end
 
+# ╔═╡ fdf43912-6623-11eb-2e6a-137c10342f32
+begin
+	_a_ = 1 # make sure this cell is run before other Pkg cell
+	
+	import Pkg
+	Pkg.activate(temp = true)
+	
+	Pkg.add("PlutoUI")
+	using PlutoUI
+end
+
 # ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
 md"""
 `disease.jl` | **Version 0.1** | *last updated: Feb 3*
@@ -25,17 +36,14 @@ md"""
 """
 
 # ╔═╡ 21be9262-6614-11eb-3ae6-79fdc6c56c3e
-md"""
+_b_ = _a_ + 1; md"""
 Fancy version $(@bind fancy CheckBox()) (might not work on Safari)
 """
 
 # ╔═╡ 3b444a90-64b3-11eb-0b8f-1facc32a4088
 begin
-	_a_ = 1 # make sure this cell is run before other Pkg cell
-	
-	import Pkg
-	Pkg.activate(temp = true)
-	
+	_c_ = _b_ + 1 # make sure this cell is run before other Pkg cell
+		
 	if fancy
 		Pkg.add(["WGLMakie", "JSServe"])
 		using WGLMakie, JSServe
@@ -54,17 +62,16 @@ end
 begin
 	Pkg.add(Pkg.PackageSpec(name="DataAPI", version="1.4"))
 	Pkg.add(["LightGraphs",
-			 "GeometryBasics", "PlutoUI", "FreqTables", "PooledArrays", "NearestNeighbors", "CategoricalArrays", "Distributions", "DataFrames", "Plots"
+			 "GeometryBasics", "FreqTables", "PooledArrays", "NearestNeighbors", "CategoricalArrays", "Distributions", "DataFrames", "Plots"
 			])
 
 	using GeometryBasics, NearestNeighbors, Distributions
 	using LightGraphs
-	using PlutoUI
 	using PooledArrays
 	using DataFrames
 	using CategoricalArrays: CategoricalArrays, categorical
 	
-	_a_
+	_c_
 end
 
 # ╔═╡ c2940f90-661a-11eb-3d77-0fc1189e0960
@@ -740,6 +747,7 @@ TableOfContents()
 # ╟─5fe4d47c-64b4-11eb-2a44-473ef5b19c6d
 # ╠═66d78eb4-64b4-11eb-2d30-b9cee7370d2a
 # ╟─a81f5244-64aa-11eb-1854-6dbb64c8eb6a
+# ╠═fdf43912-6623-11eb-2e6a-137c10342f32
 # ╠═3b444a90-64b3-11eb-0b8f-1facc32a4088
 # ╠═2b55141f-1cba-4a84-8811-98697d408d65
 # ╟─bed07322-64b1-11eb-3324-7b7ac5e8fba2
