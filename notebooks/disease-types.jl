@@ -62,6 +62,12 @@ begin
 	_a_
 end
 
+# ╔═╡ c2940f90-661a-11eb-3d77-0fc1189e0960
+begin
+	elegant = !fancy
+	(; elegant, fancy)
+end
+
 # ╔═╡ f4266196-64aa-11eb-3fc1-2bf0e099d19c
 md"""
 # Diffusion on Networks: Modeling Transmission of Disease
@@ -191,9 +197,6 @@ md"""
 
 # ╔═╡ 7b43d3d6-03a0-4e0b-96e2-9de420d3187f
 p_range = 0.1:0.1:0.9
-
-# ╔═╡ 2c4dda14-6577-11eb-2ef7-997664b20722
-
 
 # ╔═╡ 1978febe-657c-11eb-04ac-e19b2d0e5a85
 md"""
@@ -360,10 +363,9 @@ function plot_diffusion!(figpos, edges_as_pts, node_positions, sim, t, color_dic
 
 	N, T = size(sim)
 	msize = N < 20 ? 10 : N < 100 ? 5 : 3
-	
-	
-	AbstractPlotting.lines!(ax, edges_as_pts, linewidth = 0.1, color = (:black, 0.1))
-    AbstractPlotting.scatter!(ax, node_positions, markersize=msize, color = state_as_color_t);
+		
+	AbstractPlotting.lines!(ax, edges_as_pts, linewidth = 0.5, color = (:black, 0.3))
+    AbstractPlotting.scatter!(ax, node_positions, markersize=msize, strokewidth = 0, color = state_as_color_t);
 	
 	ax
 end
@@ -538,8 +540,8 @@ function compare_sir(sim1, sim2, graph, node_positions = NetworkLayout.Spring.la
 	axs1 = sir_plot!(panel1, legpos,  sim1, edges_as_pts, node_positions, t)
 	axs2 = sir_plot!(panel2, nothing, sim2, edges_as_pts, node_positions, t)
 	
-	hidedecorations!(axs1.ax_f)
-	hidedecorations!(axs2.ax_f)
+	hidedecorations!(axs1.ax_f, grid = false)
+	hidedecorations!(axs2.ax_f, grid = false)
 	
 	axs1.leg.orientation[] = :vertical
 	axs1.leg.tellwidth[]   = true
@@ -570,8 +572,8 @@ out_vacc = let
 	compare_sir(sim0, simv, graph, node_positions)
 end;
 
-# ╔═╡ 83b817d2-657d-11eb-3cd2-332a348142ea
-out_vacc.fig
+# ╔═╡ bf2c5f5a-661b-11eb-01c5-51740fba63e3
+fancy && out_vacc.fig
 
 # ╔═╡ 67e74a32-6578-11eb-245c-07894c89cc7c
 function sir_plot(sim, graph, node_positions = NetworkLayout.Spring.layout(adjacency_matrix(graph), Point2f0))
@@ -591,7 +593,7 @@ end
 
 # ╔═╡ d6694c32-656c-11eb-0796-5f485cccccf0
 out_simple = let
-	T = 10
+	T = 15
 	
 	par = (ρ = ρ_simple, δ = δ_simple, p = p_simple)
 	
@@ -607,7 +609,10 @@ md"""
 """
 
 # ╔═╡ 657c3a98-6573-11eb-1ccb-b1d974414647
-out_simple.fig
+fancy && out_simple.fig
+
+# ╔═╡ 3aeb0106-661b-11eb-362f-6b9af20f71d7
+elegant && (t0_simple; out_simple.fig)
 
 # ╔═╡ d2813d40-656d-11eb-2cfc-e389ed2a0d84
 out_simple.t[] = t0_simple
@@ -630,10 +635,13 @@ md"""
 """
 
 # ╔═╡ 3e9af1f4-6575-11eb-21b2-453dc18d1b7b
-out_big.fig
+fancy && out_big.fig
 
-# ╔═╡ 1bd2c660-6572-11eb-268c-732fd2210a58
-out_big.fig
+# ╔═╡ 5eafd0f0-6619-11eb-355d-f9de3ae53f6a
+elegant && (t0_intro; out_big.fig)
+
+# ╔═╡ 6948e6c6-661b-11eb-141c-370fc6ffe618
+fancy && out_big.fig
 
 # ╔═╡ f4cd5fb2-6574-11eb-37c4-73d4b21c1883
 md"""
@@ -641,6 +649,9 @@ Check to activate slider: $(@bind past_intro CheckBox(default = false))
 
 ``t``: $(@bind t0_big PlutoUI.Slider(out_big.T_range, show_value = true, default = 1))
 """
+
+# ╔═╡ 1bd2c660-6572-11eb-268c-732fd2210a58
+elegant && (t0_big; out_big.fig)
 
 # ╔═╡ 373cb47e-655e-11eb-2751-0150985d98c1
 out_big.t[] = past_intro ? t0_big : t0_intro
@@ -652,6 +663,9 @@ md"""
 
 # ╔═╡ 99a1f078-657a-11eb-2183-1b6a0598ffcd
 out_vacc.t[] = t0_vacc
+
+# ╔═╡ 83b817d2-657d-11eb-3cd2-332a348142ea
+elegant && (t0_vacc; out_vacc.fig)
 
 # ╔═╡ a81f5244-64aa-11eb-1854-6dbb64c8eb6a
 md"""
@@ -671,10 +685,12 @@ TableOfContents()
 
 # ╔═╡ Cell order:
 # ╟─0e30624c-65fc-11eb-185d-1d018f68f82c
-# ╠═21be9262-6614-11eb-3ae6-79fdc6c56c3e
+# ╟─21be9262-6614-11eb-3ae6-79fdc6c56c3e
+# ╟─c2940f90-661a-11eb-3d77-0fc1189e0960
 # ╟─f4266196-64aa-11eb-3fc1-2bf0e099d19c
 # ╟─43a25dc8-6574-11eb-3607-311aa8d5451e
 # ╟─3e9af1f4-6575-11eb-21b2-453dc18d1b7b
+# ╟─5eafd0f0-6619-11eb-355d-f9de3ae53f6a
 # ╟─b36832aa-64ab-11eb-308a-8f031686c8d6
 # ╟─c8f92204-64ac-11eb-0734-2df58e3373e8
 # ╟─2f9f008a-64aa-11eb-0d9a-0fdfc41d4657
@@ -690,11 +706,13 @@ TableOfContents()
 # ╟─50d9fb56-64af-11eb-06b8-eb56903084e2
 # ╟─9302b00c-656f-11eb-25b3-495ae1c843cc
 # ╟─657c3a98-6573-11eb-1ccb-b1d974414647
+# ╟─3aeb0106-661b-11eb-362f-6b9af20f71d7
+# ╠═d2813d40-656d-11eb-2cfc-e389ed2a0d84
 # ╠═8d4cb5dc-6573-11eb-29c8-81baa6e3fffc
 # ╠═d6694c32-656c-11eb-0796-5f485cccccf0
-# ╠═d2813d40-656d-11eb-2cfc-e389ed2a0d84
 # ╟─ce75fe16-6570-11eb-3f3a-577eac7f9ee8
 # ╟─37972f08-db05-4e84-9528-fe16cd86efbf
+# ╟─6948e6c6-661b-11eb-141c-370fc6ffe618
 # ╟─1bd2c660-6572-11eb-268c-732fd2210a58
 # ╟─f4cd5fb2-6574-11eb-37c4-73d4b21c1883
 # ╠═0b35f73f-6976-4d85-b61f-b4188440043e
@@ -704,11 +722,11 @@ TableOfContents()
 # ╟─78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
 # ╠═7b43d3d6-03a0-4e0b-96e2-9de420d3187f
 # ╠═c5f48079-f52e-4134-8e6e-6cd4c9ee915d
-# ╠═2c4dda14-6577-11eb-2ef7-997664b20722
 # ╟─b44bf44f-7041-409a-aea2-7652f18853b0
 # ╠═99a1f078-657a-11eb-2183-1b6a0598ffcd
 # ╟─34b1a3ba-657d-11eb-17fc-5bf325945dce
-# ╠═83b817d2-657d-11eb-3cd2-332a348142ea
+# ╟─bf2c5f5a-661b-11eb-01c5-51740fba63e3
+# ╟─83b817d2-657d-11eb-3cd2-332a348142ea
 # ╠═76b738fe-657a-11eb-31d3-413a08ee6e69
 # ╟─1978febe-657c-11eb-04ac-e19b2d0e5a85
 # ╟─2ef8ab6b-3862-474f-ae9f-38d45246ef99
