@@ -296,7 +296,10 @@ end
 # ╔═╡ 32d55286-620c-11eb-2910-fd3e5b3fd78a
 "Download twitter data to csv and load data into a DataFrame"
 function twitter_data(file_data, args...; kwargs...)
-	if length(file_data["data"]) > 0
+	# check if file was uploaded using the file picker
+	file_uploaded = length(file_data["data"]) > 0 
+	
+	if file_uploaded
 		csv = CSV.File(file_data["data"])
 	else
 		filename = download_twitter_data(args...; kwargs...)
