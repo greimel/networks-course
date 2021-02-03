@@ -18,6 +18,12 @@ md"""
 `disease.jl` | **Version 0.1** | *last updated: Feb 3*
 """
 
+# ╔═╡ d0ee632c-6621-11eb-39ac-cb766429529f
+md"""
+!!! danger "Preliminary version"
+    Nice that you've found this notebook on github. We appreciate your engagement. Feel free to have a look. Please note that the assignment notebook is subject to change until a link is is uploaded to *Canvas*.
+"""
+
 # ╔═╡ 21be9262-6614-11eb-3ae6-79fdc6c56c3e
 md"""
 Fancy version $(@bind fancy CheckBox()) (might not work on Safari)
@@ -161,6 +167,14 @@ function iterate!(states_new, states, adjacency_matrix, par)
 	states_new
 end
 
+# ╔═╡ 5d11a2df-3187-4509-ba7b-8388564573a6
+function iterate(states, adjacency_matrix, par)
+	states_new = Vector{States}(undef, N)
+	iterate!(states_new, states, adjacency_matrix, par)
+	
+	states_new
+end
+
 # ╔═╡ 50d9fb56-64af-11eb-06b8-eb56903084e2
 md"""
 ## Simulate on a Simple Network
@@ -188,6 +202,25 @@ md"""
 # ╔═╡ 4dee5da9-aa4b-4551-974a-f7268d016617
 md"""
 # A First Look at Policies
+
+We understand now how to model the spread of a disease using the SIR model.
+
+#### Live Exercise 1: Corona policies
+
+I will randomly assign you to break-out rooms.
+
+👉 Think about one or two Corona policies. How would you evaluate them with our model?
+
+👉 *(We'll talk later about social distancing and vaccinations. Probably you can come up with at least one other policy.)*
+"""
+
+# ╔═╡ 04227a80-5d28-43db-929e-1cdc5b31796d
+md"""
+#### Place to collect your ideas
+
+*
+*
+*
 """
 
 # ╔═╡ 78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
@@ -205,34 +238,9 @@ It's really hard to see the difference, so let's use an alternative visualizatio
 
 # ╔═╡ 1978febe-657c-11eb-04ac-e19b2d0e5a85
 md"""
-### Exercise: Can we do better?
+### Live Exercise 2: Can we do better?
 
 Can you think of a way to improve the effectiveness of the vaccination program? If you have 100 doses at your disposal, whom would you vaccinate?
-"""
-
-# ╔═╡ 04227a80-5d28-43db-929e-1cdc5b31796d
-md"""
-## Travel ban
-
-remove links
-"""
-
-# ╔═╡ 3d4eccc4-6577-11eb-11d0-09073ea3a50e
-N = 1000
-
-# ╔═╡ 5d11a2df-3187-4509-ba7b-8388564573a6
-function iterate(states, adjacency_matrix, par)
-	states_new = Vector{States}(undef, N)
-	iterate!(states_new, states, adjacency_matrix, par)
-	
-	states_new
-end
-
-# ╔═╡ b44bf44f-7041-409a-aea2-7652f18853b0
-md"""
-## Vaccination
-
-There are $N people and you can distribute $(N ÷ 10) doses of the vaccine. Whom would you vaccinate?
 """
 
 # ╔═╡ fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
@@ -458,70 +466,6 @@ let
 	fig
 end
 
-# ╔═╡ ee230ae8-8885-4b40-9ad1-87ae295f11c1
-n_contacts = degree(graph)
-
-# ╔═╡ 2ef8ab6b-3862-474f-ae9f-38d45246ef99
-begin
-	degree_df = DataFrame(i = 1:N, n_contacts = n_contacts)
-	sort!(degree_df, :n_contacts)
-end
-
-# ╔═╡ f8ee8f92-acea-4def-b8d5-eaa452a66349
-function init_vaccine(whom; N=N, n_vacc=100, n_I=50)
-	# fill with "Susceptible"
-	init = States[S() for i in 1:N]
-	
-	# vaccinate people
-	if whom == :top
-		ind_R = degree_df.i[(end-n_vacc):end]
-	elseif whom == :bottom
-		ind_R = degree_df.i[begin:(begin+n_vacc)]
-	elseif whom == :none
-		ind_R = Int[]
-	else
-		@error "Provide :top, :bottom or :none"
-	end
-	
-	init[ind_R] .= Ref(R())
-	
-	ind_I = rand(degree_df.i[(begin+n_vacc):(end-n_vacc)], n_I)
-	init[ind_I] .= Ref(I())
-	
-	init
-	
-end
-
-# ╔═╡ 674f577e-29c4-499e-836b-6642cb2e7e03
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "#infected when vaccinating different groups")
-	
-	for (lab, init) in ["top" => init_vaccine(:top), "bottom" => init_vaccine(:bottom), "none" => init_vaccine(:none)]
-		par = (p = p0, ρ = ρ0, δ = δ0)
-		
-		sim = simulate(graph, par, 100, init)
-		
-		df0 = fractions_over_time(sim)
-		
-		filter!(:state => ==("I"), df0)
-		
-		lines!(df0.t, df0.fraction, label = lab)
-	end
-	
-	leg = Legend(fig[0,1], ax)
-	leg.orientation[] = :horizontal
-	leg.tellheight[] = true
-	leg.tellwidth[] = false
-	fig
-end
-
-# ╔═╡ c99f637f-cca9-4b77-b2db-2f5a251b23de
-top_100_nodes = degree_df.i[901:1000]
-
-# ╔═╡ 14791f01-7625-457e-941e-cd180460fbc5
-bottom_100_nodes = degree_df.i[1:100]
-
 # ╔═╡ 76b738fe-657a-11eb-31d3-413a08ee6e69
 vacc = let
 	N = 1000
@@ -725,6 +669,7 @@ TableOfContents()
 
 # ╔═╡ Cell order:
 # ╟─0e30624c-65fc-11eb-185d-1d018f68f82c
+# ╟─d0ee632c-6621-11eb-39ac-cb766429529f
 # ╟─21be9262-6614-11eb-3ae6-79fdc6c56c3e
 # ╟─c2940f90-661a-11eb-3d77-0fc1189e0960
 # ╟─f4266196-64aa-11eb-3fc1-2bf0e099d19c
@@ -758,11 +703,11 @@ TableOfContents()
 # ╠═0b35f73f-6976-4d85-b61f-b4188440043e
 # ╟─373cb47e-655e-11eb-2751-0150985d98c1
 # ╟─4dee5da9-aa4b-4551-974a-f7268d016617
-# ╠═49b21e4e-6577-11eb-38b2-45d30b0f9c80
+# ╟─04227a80-5d28-43db-929e-1cdc5b31796d
 # ╟─78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
+# ╠═49b21e4e-6577-11eb-38b2-45d30b0f9c80
 # ╠═7b43d3d6-03a0-4e0b-96e2-9de420d3187f
 # ╠═c5f48079-f52e-4134-8e6e-6cd4c9ee915d
-# ╟─b44bf44f-7041-409a-aea2-7652f18853b0
 # ╠═99a1f078-657a-11eb-2183-1b6a0598ffcd
 # ╟─34b1a3ba-657d-11eb-17fc-5bf325945dce
 # ╟─bf2c5f5a-661b-11eb-01c5-51740fba63e3
@@ -770,16 +715,8 @@ TableOfContents()
 # ╠═76b738fe-657a-11eb-31d3-413a08ee6e69
 # ╠═0d610e80-661e-11eb-3b9a-93af6b0ad5de
 # ╟─e8b7861e-661c-11eb-1c06-bfedd6ab563f
-# ╠═02b1e334-661d-11eb-3194-b382045810ef
+# ╟─02b1e334-661d-11eb-3194-b382045810ef
 # ╟─1978febe-657c-11eb-04ac-e19b2d0e5a85
-# ╠═2ef8ab6b-3862-474f-ae9f-38d45246ef99
-# ╠═f8ee8f92-acea-4def-b8d5-eaa452a66349
-# ╠═674f577e-29c4-499e-836b-6642cb2e7e03
-# ╠═c99f637f-cca9-4b77-b2db-2f5a251b23de
-# ╠═14791f01-7625-457e-941e-cd180460fbc5
-# ╠═ee230ae8-8885-4b40-9ad1-87ae295f11c1
-# ╟─04227a80-5d28-43db-929e-1cdc5b31796d
-# ╠═3d4eccc4-6577-11eb-11d0-09073ea3a50e
 # ╟─fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
 # ╟─1b8c26b6-64aa-11eb-2d9a-47db5469a654
 # ╟─07a66c72-6576-11eb-26f3-810607ca7e51
