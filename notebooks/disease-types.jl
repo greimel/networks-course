@@ -30,8 +30,11 @@ end
 
 # ╔═╡ 2b55141f-1cba-4a84-8811-98697d408d65
 begin
-	Pkg.add(["LightGraphs", "GeometryBasics", "PlutoUI", "FreqTables", "PooledArrays", "NearestNeighbors", "CategoricalArrays", "Distributions", "DataFrames", "Plots"])
-	
+	Pkg.add(Pkg.PackageSpec(name="DataAPI", version="1.4"))
+	Pkg.add(["LightGraphs",
+			 "GeometryBasics", "PlutoUI", "FreqTables", "PooledArrays", "NearestNeighbors", "CategoricalArrays", "Distributions", "DataFrames", "Plots"
+			])
+
 	using GeometryBasics, NearestNeighbors, Distributions
 	using LightGraphs
 	using PlutoUI
@@ -42,6 +45,11 @@ begin
 	
 	_a_
 end
+
+# ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
+md"""
+`disease.jl` | **Version 0.1** | *last updated: Feb 3*
+"""
 
 # ╔═╡ 7666d01c-6575-11eb-0197-8d34dd66d720
 md"""
@@ -656,6 +664,7 @@ Base.show(io::IO, ::MIME"text/html", x::CategoricalArrays.CategoricalValue) = pr
 TableOfContents()
 
 # ╔═╡ Cell order:
+# ╟─0e30624c-65fc-11eb-185d-1d018f68f82c
 # ╟─7666d01c-6575-11eb-0197-8d34dd66d720
 # ╟─f4266196-64aa-11eb-3fc1-2bf0e099d19c
 # ╟─43a25dc8-6574-11eb-3607-311aa8d5451e
