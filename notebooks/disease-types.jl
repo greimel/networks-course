@@ -13,6 +13,16 @@ macro bind(def, element)
     end
 end
 
+# ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
+md"""
+`disease.jl` | **Version 0.1** | *last updated: Feb 3*
+"""
+
+# ╔═╡ 21be9262-6614-11eb-3ae6-79fdc6c56c3e
+md"""
+Fancy version $(@bind fancy CheckBox()) (might not work on Safari)
+"""
+
 # ╔═╡ 3b444a90-64b3-11eb-0b8f-1facc32a4088
 begin
 	_a_ = 1 # make sure this cell is run before other Pkg cell
@@ -20,12 +30,18 @@ begin
 	import Pkg
 	Pkg.activate(temp = true)
 	
-	Pkg.add(["WGLMakie", "JSServe"])
-	Pkg.add("NetworkLayout")
-	using WGLMakie, JSServe
-	using NetworkLayout: NetworkLayout
+	if fancy
+		Pkg.add(["WGLMakie", "JSServe"])
+		using WGLMakie, JSServe
+		Page(exportable = true)
+	else
+		Pkg.add("CairoMakie")
+		using CairoMakie
+		CairoMakie.activate!(type = "png")
+	end
 	
-	Page(exportable = true)
+	Pkg.add("NetworkLayout")
+	using NetworkLayout: NetworkLayout
 end
 
 # ╔═╡ 2b55141f-1cba-4a84-8811-98697d408d65
@@ -45,16 +61,6 @@ begin
 	
 	_a_
 end
-
-# ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
-md"""
-`disease.jl` | **Version 0.1** | *last updated: Feb 3*
-"""
-
-# ╔═╡ 7666d01c-6575-11eb-0197-8d34dd66d720
-md"""
-**NOTE!** This notebook does not run in Safari!
-"""
 
 # ╔═╡ f4266196-64aa-11eb-3fc1-2bf0e099d19c
 md"""
@@ -665,7 +671,7 @@ TableOfContents()
 
 # ╔═╡ Cell order:
 # ╟─0e30624c-65fc-11eb-185d-1d018f68f82c
-# ╟─7666d01c-6575-11eb-0197-8d34dd66d720
+# ╠═21be9262-6614-11eb-3ae6-79fdc6c56c3e
 # ╟─f4266196-64aa-11eb-3fc1-2bf0e099d19c
 # ╟─43a25dc8-6574-11eb-3607-311aa8d5451e
 # ╟─3e9af1f4-6575-11eb-21b2-453dc18d1b7b
