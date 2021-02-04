@@ -48,7 +48,7 @@ md"""
 # ╔═╡ 0b3a89e6-66d3-11eb-2bf4-9b348d25a3a2
 md"""
 !!! danger "Note"
-    The dataset is not publicly available. Please download it from *Canvas* load it into the notebook. You can either specify `path_to_csv` or use the file picker.
+    The dataset is not publicly available. Please download it from *Canvas* and load it into the notebook. You can either specify `path_to_csv` or use the file picker.
 """
 
 # ╔═╡ d6daf5ae-66d3-11eb-02a9-b33a381cf6cf
