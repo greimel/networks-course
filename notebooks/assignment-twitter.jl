@@ -41,7 +41,7 @@ end
 
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`assignment-twitter.jl` | **Version 1.2** | *last changed: Feb 3*"
+`assignment-twitter.jl` | **Version 1.3** | *last changed: Feb 4*"
 
 # ╔═╡ 235bcd50-6183-11eb-1272-65c61cfbf961
 group_number = 99
@@ -124,7 +124,7 @@ answer2_3 = md"""
 md"""
 #### Task 3: Look under the hood (3 points)
 
-Now look at sections **A first glance at the data** and **Constructing a network** of this notebook. Make sure you understand what data are available to us and how we created the network from the data. 
+Now look at section **Constructing a network** of this notebook. Make sure you understand what data are available to us and how we created the network from the data. 
 
 👉 We want to read your critical thoughts in <250 words. You might tell us about an idea how to generate a different network from the data. Or what twist you would add to our network to make it more interesting. 
 """
