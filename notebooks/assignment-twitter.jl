@@ -69,6 +69,14 @@ if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_m
 	"""
 end
 
+# ╔═╡ fa27f93c-67b4-11eb-0bcb-c39ff0c3bcaf
+md"""
+!!! note "Note"
+    Some students experienced lagging browers because the output of `gplot` is shown as a vector graphic (svg) by default. By appending `|> gplot_to_png` the output will be shown as a pixel graphic (png) instead.
+
+    If you have a performant browser, feel free to remove `|> gplot_to_png`.
+"""
+
 # ╔═╡ 39feff38-617d-11eb-0682-874b2f747ff8
 md"""
 Now, it's your turn. Think of an interesting keyword or hashtag. And insert your keyword below. You will see that the graph above will update as soon as you evaluate the new keyword.
@@ -522,6 +530,7 @@ TableOfContents()
 # ╟─849cd5bc-617b-11eb-12eb-a7f0907fc718
 # ╟─da51e362-6176-11eb-15b2-b7bcebc2cbb6
 # ╠═41f4f6cc-6173-11eb-104f-69c755afd266
+# ╟─fa27f93c-67b4-11eb-0bcb-c39ff0c3bcaf
 # ╟─39feff38-617d-11eb-0682-874b2f747ff8
 # ╠═8c5a33dc-6174-11eb-397a-43d67c7773e0
 # ╟─09d66db0-617c-11eb-1b92-b3ed2e5f68f6
