@@ -49,7 +49,7 @@ end
 
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`assignment-twitter.jl` | **Version 1.3** | *last changed: Feb 4*"
+`assignment-twitter.jl` | **Version 1.4** | *last changed: Feb 5*"
 
 # ╔═╡ 235bcd50-6183-11eb-1272-65c61cfbf961
 group_number = 99
