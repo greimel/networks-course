@@ -22,6 +22,12 @@ begin
 			Pkg.PackageSpec(name="DataFrames",        version="0.22"),
 			Pkg.PackageSpec(name="CSV",               version="0.8"),
 			Pkg.PackageSpec(name="CategoricalArrays", version="0.9"),
+			Pkg.PackageSpec(name="Plots",             version="1.10"),
+			Pkg.PackageSpec(name="Cairo", ),
+			Pkg.PackageSpec(name="Compose", ),
+			Pkg.PackageSpec(name="Images", ),
+			Pkg.PackageSpec(name="ImageIO", ),
+			
 			])
 	
 	Pkg.add(["PlutoUI", "LightGraphs", "GraphPlot", "GraphDataFrameBridge", "FreqTables", "Colors"])
@@ -34,14 +40,16 @@ begin
 	using GraphPlot, Colors
 	using GraphDataFrameBridge
 	using FreqTables
-
+	using Cairo, Compose, Images
+	using Plots
+	
 	_a_ = 1 # make sure that this is cell #1
 	nothing
 end
 
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`assignment-twitter.jl` | **Version 1.3** | *last changed: Feb 4*"
+`assignment-twitter.jl` | **Version 1.4** | *last changed: Feb 5*"
 
 # ╔═╡ 235bcd50-6183-11eb-1272-65c61cfbf961
 group_number = 99
@@ -60,6 +68,14 @@ if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_m
     **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in the top cell.
 	"""
 end
+
+# ╔═╡ fa27f93c-67b4-11eb-0bcb-c39ff0c3bcaf
+md"""
+!!! note "Note"
+    Some students experienced lagging browers because the output of `gplot` is shown as a vector graphic (svg) by default. By appending `|> gplot_to_png` the output will be shown as a pixel graphic (png) instead.
+
+    If you have a performant browser, feel free to remove `|> gplot_to_png`.
+"""
 
 # ╔═╡ 39feff38-617d-11eb-0682-874b2f747ff8
 md"""
@@ -214,6 +230,11 @@ md"""
 # Appendix
 """
 
+# ╔═╡ d07dc2ac-67b1-11eb-1bee-c52695fb4f28
+md"""
+## Package environment
+"""
+
 # ╔═╡ 87b7bc86-60df-11eb-3f9f-2375449c77f6
 begin
 	Base.show(io::IO, ::MIME"text/html", x::CategoricalArrays.CategoricalValue) = print(io, get(x))
@@ -311,6 +332,18 @@ end
 # ╔═╡ 14e6dece-60dc-11eb-2d5a-275b8c9e382d
 tweet_df0 = twitter_data(file_data, keyword)
 
+# ╔═╡ dee4b0da-67b1-11eb-0cdd-c70a310e3546
+md"""
+## PNG output for `gplot`
+"""
+
+# ╔═╡ 8de96054-67b1-11eb-0e55-a35a1f821d8a
+function gplot_to_png(gp::Context)
+	filename = tempname() * ".png"
+	gp |> PNG(filename)
+	load(filename)
+end
+
 # ╔═╡ 1f927f3c-60e5-11eb-0304-f1639b68468d
 md"""
 ## Useful functions
@@ -363,7 +396,7 @@ end
 graph = MetaGraph(edge_list, :user1, :user2, weight = :common_hashtags)
 
 # ╔═╡ 41f4f6cc-6173-11eb-104f-69c755afd266
-gplot(graph)
+gplot(graph) |> gplot_to_png
 
 # ╔═╡ dc41336a-647f-11eb-3ca3-cb3ab8a6a024
 # some dummy analysis
@@ -393,7 +426,8 @@ begin
 end
 
 # ╔═╡ 5dacc3c2-60e2-11eb-1352-0ddbe3405aec
-gplot(graph, nodesize=0.1, NODESIZE=0.025, nodefillc = node_df.node_color)
+gplot(graph, nodesize=0.1, NODESIZE=0.025, nodefillc = node_df.node_color) |> gplot_to_png
+
 
 # ╔═╡ 91ccdec2-60f3-11eb-2d0e-a59ba5392e65
 sum(node_df.highlighted_nodes)
@@ -496,6 +530,7 @@ TableOfContents()
 # ╟─849cd5bc-617b-11eb-12eb-a7f0907fc718
 # ╟─da51e362-6176-11eb-15b2-b7bcebc2cbb6
 # ╠═41f4f6cc-6173-11eb-104f-69c755afd266
+# ╟─fa27f93c-67b4-11eb-0bcb-c39ff0c3bcaf
 # ╟─39feff38-617d-11eb-0682-874b2f747ff8
 # ╠═8c5a33dc-6174-11eb-397a-43d67c7773e0
 # ╟─09d66db0-617c-11eb-1b92-b3ed2e5f68f6
@@ -545,10 +580,13 @@ TableOfContents()
 # ╠═76c50e74-60f3-11eb-1e25-cdcaeae76c38
 # ╠═91ccdec2-60f3-11eb-2d0e-a59ba5392e65
 # ╟─eea5accc-60db-11eb-3889-c992db2ec8ec
+# ╟─d07dc2ac-67b1-11eb-1bee-c52695fb4f28
 # ╠═400cc04e-4784-11eb-11a2-ff8e245cad27
 # ╠═87b7bc86-60df-11eb-3f9f-2375449c77f6
 # ╟─a1d99d9e-60dc-11eb-391c-b52c2e16aedd
 # ╠═6535e16c-6146-11eb-35c0-31aef62a631c
+# ╟─dee4b0da-67b1-11eb-0cdd-c70a310e3546
+# ╠═8de96054-67b1-11eb-0e55-a35a1f821d8a
 # ╟─1f927f3c-60e5-11eb-0304-f1639b68468d
 # ╠═620c76e4-60de-11eb-2c82-d364f55fbe4d
 # ╠═eeb99bfe-6178-11eb-04f7-bf04d3c10eeb
