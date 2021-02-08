@@ -8,10 +8,10 @@ This repository hosts some of the material for the course "Economic and Financia
 * Basic Julia ([preview](https://greimel.github.io/networks-course/notebooks/basic-julia.html), [download](https://greimel.github.io/networks-course/notebooks/basic-julia.jl))
 * First Networks ([preview](https://greimel.github.io/networks-course/notebooks/first-networks.html), [download](https://greimel.github.io/networks-course/notebooks/first-networks.jl))
 * TI Network (see Canvas)
-* Assignment 1: A Twitter Network ([preview](https://greimel.github.io/networks-course/notebooks/assignment-twitter.html), [download](https://greimel.github.io/networks-course/notebooks/assignment-twitter.jl))
+* **Assignment 1**: A Twitter Network ([preview](https://greimel.github.io/networks-course/notebooks/assignment-twitter.html), [download](https://greimel.github.io/networks-course/notebooks/assignment-twitter.jl))
 
 ### Week 2
-* Diffusion on Networks: Modeling Transmission of Disease (contains Assignment 2) ([preview](https://greimel.github.io/networks-course/notebooks/disease.html), [download](https://greimel.github.io/networks-course/notebooks/disease.jl))
+* Diffusion on Networks: Modeling Transmission of Disease (contains **Assignment 2**) ([preview](https://greimel.github.io/networks-course/notebooks/disease.html), [download](https://greimel.github.io/networks-course/notebooks/disease.jl))
 
 ## Software and setup
 
