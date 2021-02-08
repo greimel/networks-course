@@ -21,12 +21,12 @@ begin
 	Pkg.activate(temp = true)
 	
 	Pkg.add("PlutoUI")
-	using PlutoUI
+	using PlutoUI: Slider, TableOfContents, CheckBox, NumberField
 end
 
 # ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
 md"""
-`disease.jl` | **Version 0.2** | *last updated: Feb 7*
+`disease.jl` | **Version 0.3** | *last updated: Feb 8*
 """
 
 # ╔═╡ d0ee632c-6621-11eb-39ac-cb766429529f
@@ -43,16 +43,27 @@ Fancy version $(@bind fancy CheckBox()) (might not work on Safari)
 # ╔═╡ 3b444a90-64b3-11eb-0b8f-1facc32a4088
 begin
 	_c_ = _b_ + 1 # make sure this cell is run before other Pkg cell
-		
+	
+	Pkg.add("AbstractPlotting")
+	
 	if fancy
-		Pkg.add(["WGLMakie", "JSServe"])
-		using WGLMakie, JSServe
+		Pkg.add([
+			Pkg.PackageSpec(name="JSServe"),
+			Pkg.PackageSpec(name="WGLMakie"),
+			])
+		import WGLMakie, JSServe
 		Page(exportable = true)
 	else
 		Pkg.add("CairoMakie")
-		using CairoMakie
+		import CairoMakie
 		CairoMakie.activate!(type = "png")
 	end
+
+	using AbstractPlotting: 
+		Figure, Axis, Legend,
+		lines!, scatter!, scatterlines, scatterlines!, vlines!, 
+		hidedecorations!, ylims!, cgrad,
+		@lift, Node
 	
 	Pkg.add("NetworkLayout")
 	using NetworkLayout: NetworkLayout
@@ -60,20 +71,31 @@ end
 
 # ╔═╡ 2b55141f-1cba-4a84-8811-98697d408d65
 begin
-	Pkg.add(Pkg.PackageSpec(name="DataAPI", version="1.4"))
-	Pkg.add(["LightGraphs",
-			 "GeometryBasics", "FreqTables", "PooledArrays", "NearestNeighbors", "CategoricalArrays", "Distributions", "DataFrames", "Plots", "CSV", "Chain", "UnPack"
+	Pkg.add([
+			Pkg.PackageSpec(name="DataAPI", version="1.4"),
+			Pkg.PackageSpec(name="CSV", version="0.8"),
+			Pkg.PackageSpec(name="CategoricalArrays", version="0.9"),
+			Pkg.PackageSpec(name="Chain", version="0.4"),
+			Pkg.PackageSpec(name="DataFrames", version="0.22"),
+			Pkg.PackageSpec(name="Distributions", version="0.24"),
+			Pkg.PackageSpec(name="FreqTables", version="0.4"),
+			Pkg.PackageSpec(name="GeometryBasics", version="0.3.9"),
+			Pkg.PackageSpec(name="LightGraphs", version="1.3"),
+			Pkg.PackageSpec(name="NearestNeighbors", version="0.4.8"),
+			Pkg.PackageSpec(name="Plots", version="1"),
+			Pkg.PackageSpec(name="UnPack", version="1")
 			])
 
-	using Distributions
+	using Distributions: Distributions, LogNormal
 	using Chain: @chain
-	using CSV
-	using GeometryBasics, NearestNeighbors, Distributions
-	using LightGraphs
-	using PooledArrays
-	using DataFrames
+	import CSV
+	using GeometryBasics: Point2f0
+	using NearestNeighbors: BallTree, knn
+	using LightGraphs: SimpleGraph, add_edge!, StarGraph, CycleGraph, WheelGraph, betweenness_centrality, eigenvector_centrality, edges, adjacency_matrix, nv, ne
+	using DataFrames: transform!, transform, DataFrame, ByRow, groupby, combine, rename!, Not, stack, unstack, leftjoin
 	using CategoricalArrays: CategoricalArrays, categorical, cut
-	using UnPack
+	using UnPack: @unpack
+	using Statistics: mean
 	
 	_c_
 end
@@ -195,9 +217,9 @@ end
 md"""
 ## Simulate on a Simple Network
 
-* ``\rho_s``: $(@bind ρ_simple PlutoUI.Slider(0.0:0.25:1.0, default = 0.0, show_value =true)) (recovery probability)
-* ``\delta_s``: $(@bind δ_simple PlutoUI.Slider(0.0:0.25:1.0, default = 0.0, show_value =true)) (death rate)
-* ``p_s``: $(@bind p_simple PlutoUI.Slider(0.0:0.25:1.0, default = 0.5, show_value =true)) (infection probability)
+* ``\rho_s``: $(@bind ρ_simple Slider(0.0:0.25:1.0, default = 0.0, show_value =true)) (recovery probability)
+* ``\delta_s``: $(@bind δ_simple Slider(0.0:0.25:1.0, default = 0.0, show_value =true)) (death rate)
+* ``p_s``: $(@bind p_simple Slider(0.0:0.25:1.0, default = 0.5, show_value =true)) (infection probability)
 """
 
 # ╔═╡ 8d4cb5dc-6573-11eb-29c8-81baa6e3fffc
@@ -210,9 +232,9 @@ md"""
 
 # ╔═╡ 37972f08-db05-4e84-9528-fe16cd86efbf
 md"""
-* ``\rho``: $(@bind ρ0 PlutoUI.Slider(0.1:0.1:0.9, default = 0.1, show_value =true)) (recovery probability)
-* ``\delta``: $(@bind δ0 PlutoUI.Slider(0.0:0.02:0.2, default = 0.04, show_value =true)) (death rate)
-* ``p``: $(@bind p0 PlutoUI.Slider(0.1:0.1:0.9, default = 0.3, show_value =true)) (infection probability)
+* ``\rho``: $(@bind ρ0 Slider(0.1:0.1:0.9, default = 0.1, show_value =true)) (recovery probability)
+* ``\delta``: $(@bind δ0 Slider(0.0:0.02:0.2, default = 0.04, show_value =true)) (death rate)
+* ``p``: $(@bind p0 Slider(0.1:0.1:0.9, default = 0.3, show_value =true)) (infection probability)
 """
 
 # ╔═╡ 4dee5da9-aa4b-4551-974a-f7268d016617
@@ -339,7 +361,6 @@ md"""
 In the lecture we've figured out, how we can improve on vaccinating random people. Now there is more structure in the model. Can you improve on the situation?
 
 First, let's construct the graph and specify the death rates. *(You don't need to change this.)*
-
 """
 
 # ╔═╡ 18e84a22-69ff-11eb-3909-7fd30fcf3040
@@ -435,7 +456,7 @@ md"""
 
 When the recovery rate is $\rho$, the expected time infected is $T_I = 1/\rho$. So we want the survival probability to 
 
-$$(1-IFR) = (1 - p)^{T_I}.$$ 
+$$(1-IFR) = (1 - \delta)^{T_I}.$$ 
 """
 
 # ╔═╡ 6ffb63bc-69f0-11eb-3f84-d3fca5526a3e
@@ -904,7 +925,7 @@ end;
 
 # ╔═╡ 43a25dc8-6574-11eb-3607-311aa8d5451e
 md"""
-``t``: $(@bind t0_intro PlutoUI.Slider(out_big.T_range, show_value = true, default = 20))
+``t``: $(@bind t0_intro Slider(out_big.T_range, show_value = true, default = 20))
 """
 
 # ╔═╡ 3e9af1f4-6575-11eb-21b2-453dc18d1b7b
@@ -920,7 +941,7 @@ fancy && out_big.fig
 md"""
 Check to activate slider: $(@bind past_intro CheckBox(default = false))
 
-``t``: $(@bind t0_big PlutoUI.Slider(out_big.T_range, show_value = true, default = 1))
+``t``: $(@bind t0_big Slider(out_big.T_range, show_value = true, default = 1))
 """
 
 # ╔═╡ 1bd2c660-6572-11eb-268c-732fd2210a58
@@ -931,7 +952,7 @@ out_big.t[] = past_intro ? t0_big : t0_intro
 
 # ╔═╡ 34b1a3ba-657d-11eb-17fc-5bf325945dce
 md"""
-``t``: $(@bind t0_vacc PlutoUI.Slider(out_big.T_range, show_value = true, default = 1))
+``t``: $(@bind t0_vacc Slider(out_big.T_range, show_value = true, default = 1))
 """
 
 # ╔═╡ 99a1f078-657a-11eb-2183-1b6a0598ffcd
@@ -1082,7 +1103,7 @@ md"""
 # ╠═ffe07e00-0408-4986-9205-0fbb025a698c
 # ╠═5d11a2df-3187-4509-ba7b-8388564573a6
 # ╠═f4c62f95-876d-4915-8372-258dfde835f7
-# ╟─50d9fb56-64af-11eb-06b8-eb56903084e2
+# ╠═50d9fb56-64af-11eb-06b8-eb56903084e2
 # ╟─9302b00c-656f-11eb-25b3-495ae1c843cc
 # ╟─657c3a98-6573-11eb-1ccb-b1d974414647
 # ╟─3aeb0106-661b-11eb-362f-6b9af20f71d7
@@ -1090,7 +1111,7 @@ md"""
 # ╠═8d4cb5dc-6573-11eb-29c8-81baa6e3fffc
 # ╠═d6694c32-656c-11eb-0796-5f485cccccf0
 # ╟─ce75fe16-6570-11eb-3f3a-577eac7f9ee8
-# ╟─37972f08-db05-4e84-9528-fe16cd86efbf
+# ╠═37972f08-db05-4e84-9528-fe16cd86efbf
 # ╟─6948e6c6-661b-11eb-141c-370fc6ffe618
 # ╟─1bd2c660-6572-11eb-268c-732fd2210a58
 # ╟─f4cd5fb2-6574-11eb-37c4-73d4b21c1883
@@ -1126,12 +1147,12 @@ md"""
 # ╟─11c507a2-6a0f-11eb-35bf-55e1116a3c72
 # ╟─48818cf0-6962-11eb-2024-8fca0690dd78
 # ╟─fac414f6-6961-11eb-03bb-4f58826b0e61
-# ╟─d18f1b0c-69ee-11eb-2fc0-4f14873847fb
+# ╠═d18f1b0c-69ee-11eb-2fc0-4f14873847fb
 # ╟─75b4c0c2-69f3-11eb-1ebc-75efd2d0bf1f
 # ╠═98b2eefe-69f2-11eb-36f4-7b19a55cfe78
 # ╟─33c4ea42-6a10-11eb-094c-75343532f835
 # ╟─e64300dc-6a10-11eb-1f68-57120286535b
-# ╠═2e3413ae-6962-11eb-173c-6d53cfd8a968
+# ╟─2e3413ae-6962-11eb-173c-6d53cfd8a968
 # ╠═29036938-69f4-11eb-09c1-63a7a75de61d
 # ╠═18e84a22-69ff-11eb-3909-7fd30fcf3040
 # ╟─0d2b1bdc-6a14-11eb-340a-3535d7bfbec1
