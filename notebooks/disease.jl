@@ -26,14 +26,11 @@ end
 
 # ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
 md"""
-`disease.jl` | **Version 0.3** | *last updated: Feb 8*
+`disease.jl` | **Version 1.0** | *last updated: Feb 8*
 """
 
 # ╔═╡ d0ee632c-6621-11eb-39ac-cb766429529f
-md"""
-!!! danger "Preliminary version"
-    Nice that you've found this notebook on github. We appreciate your engagement. Feel free to have a look. Please note that the assignment notebook is subject to change until a link is is uploaded to *Canvas*.
-"""
+#
 
 # ╔═╡ 21be9262-6614-11eb-3ae6-79fdc6c56c3e
 _b_ = _a_ + 1; md"""
