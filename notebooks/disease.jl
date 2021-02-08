@@ -76,9 +76,9 @@ begin
 			Pkg.PackageSpec(name="DataFrames", version="0.22"),
 			Pkg.PackageSpec(name="Distributions", version="0.24"),
 			Pkg.PackageSpec(name="FreqTables", version="0.4"),
-			Pkg.PackageSpec(name="GeometryBasics", version="0.3.9"),
+			Pkg.PackageSpec(name="GeometryBasics", version="0.3"),
 			Pkg.PackageSpec(name="LightGraphs", version="1.3"),
-			Pkg.PackageSpec(name="NearestNeighbors", version="0.4.8"),
+			Pkg.PackageSpec(name="NearestNeighbors", version="0.4"),
 			Pkg.PackageSpec(name="Plots", version="1"),
 			Pkg.PackageSpec(name="UnPack", version="1")
 			])
