@@ -26,7 +26,7 @@ end
 
 # ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
 md"""
-`disease.jl` | **Version 0.1** | *last updated: Feb 3*
+`disease.jl` | **Version 0.2** | *last updated: Feb 7*
 """
 
 # ╔═╡ d0ee632c-6621-11eb-39ac-cb766429529f
@@ -62,14 +62,18 @@ end
 begin
 	Pkg.add(Pkg.PackageSpec(name="DataAPI", version="1.4"))
 	Pkg.add(["LightGraphs",
-			 "GeometryBasics", "FreqTables", "PooledArrays", "NearestNeighbors", "CategoricalArrays", "Distributions", "DataFrames", "Plots"
+			 "GeometryBasics", "FreqTables", "PooledArrays", "NearestNeighbors", "CategoricalArrays", "Distributions", "DataFrames", "Plots", "CSV", "Chain", "UnPack"
 			])
 
+	using Distributions
+	using Chain: @chain
+	using CSV
 	using GeometryBasics, NearestNeighbors, Distributions
 	using LightGraphs
 	using PooledArrays
 	using DataFrames
-	using CategoricalArrays: CategoricalArrays, categorical
+	using CategoricalArrays: CategoricalArrays, categorical, cut
+	using UnPack
 	
 	_c_
 end
@@ -122,6 +126,7 @@ begin
 	struct S <: State end
 	struct I <: State end
 	struct R <: State end
+	#struct D <: State end # (Assignment)
 end
 
 # ╔═╡ f48fa122-649a-11eb-2041-bbf0d0c4670c
@@ -133,10 +138,18 @@ md"
 "
 
 # ╔═╡ 8ddb6f1e-649e-11eb-3982-83d2d319b31f
-function transition(::I, par, args...; kwargs...)
+function transition(::I, par, node, args...; kwargs...)
+	## The following lines will be helpful for the assignment (task 2)
+	#if length(par.δ) == 1
+	 	δ = only(par.δ)
+	#else
+	# 	δ = par.δ[node]
+	#end
 	x = rand()
-	if x < par.ρ + par.δ # recover or die
+	if x < par.ρ + δ # recover or die
 		R()
+	#elseif x < ...
+	#	...
 	else
 		I()
 	end
@@ -144,9 +157,6 @@ end
 
 # ╔═╡ 61a36e78-57f8-4ef0-83b4-90e5952c116f
 transition(::R, args...; kwargs...) = R()
-
-# ╔═╡ d3bfc9aa-649e-11eb-2c36-b1fba4507f07
-# transition(::D,      args...; kwargs...) = ...
 
 # ╔═╡ ffe07e00-0408-4986-9205-0fbb025a698c
 function transition(::S, par, node, adjacency_matrix, is_infected)
@@ -244,15 +254,198 @@ It's really hard to see the difference, so let's use an alternative visualizatio
 
 # ╔═╡ 1978febe-657c-11eb-04ac-e19b2d0e5a85
 md"""
-### Live Exercise 2: Can we do better?
+#### Live Exercise 2: Can we do better?
 
 Can you think of a way to improve the effectiveness of the vaccination program? If you have 100 doses at your disposal, whom would you vaccinate?
 """
 
-# ╔═╡ fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
+# ╔═╡ 12d7647e-6a13-11eb-2b1e-9f77bdb3a87a
 md"""
-# Assignment 2: Whom to Vaccinate When Death Rates are Age-Specfic
+## (End of Lecture)
 """
+
+# ╔═╡ b402b1e2-6a12-11eb-16ac-7b19064562b8
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]);
+
+# ╔═╡ e7d47230-6a12-11eb-0392-4360f36222b8
+group_number = 99
+
+# ╔═╡ eea88902-6a12-11eb-3a63-df8979fbdd55
+if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
+	md"""
+!!! danger "Note!"
+    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in the top cell.
+	"""
+end
+
+# ╔═╡ 98d449ac-695f-11eb-3daf-dffb377aa5e2
+md"""
+#### Task 1: Distinguish between `R`ecovered and `D`ead
+
+👉 Add a new state `D`ead.
+"""
+
+# ╔═╡ 8a2c223e-6960-11eb-3d8a-516474e6653c
+md"""
+👉 Add a transition rule for `D`.
+"""
+
+# ╔═╡ 809375ba-6960-11eb-29d7-f9ab3ee61367
+# transition(::D, args...; kwargs...) = #= your code here =#
+
+# ╔═╡ 945d67f6-6961-11eb-33cf-57ffe340b35f
+md"""
+👉 Go to section **Define the transtions** and adjust the transition rules for the other states if necessary.
+"""
+
+# ╔═╡ 48818cf0-6962-11eb-2024-8fca0690dd78
+md"""
+Great! You can now have a look how the simulations from the lecture have automatically updated.
+"""
+
+# ╔═╡ fac414f6-6961-11eb-03bb-4f58826b0e61
+md"""
+#### Task 2: Introduce age-specific death rates
+
+The death probabilities are highly heterogeneous across age groups. See for example [this article in Nature.](https://www.nature.com/articles/s41586-020-2918-0)
+
+>  We find that age-specific IFRs estimated by the ensemble model range from 0.001% (95% credible interval, 0–0.001) in those aged 5–9 years old (range, 0–0.002% across individual national-level seroprevalence surveys) to 8.29% (95% credible intervals, 7.11–9.59%) in those aged 80+ (range, 2.49–15.55% across individual national-level seroprevalence surveys).
+
+Below find the data from supplementary table S3 from this article.
+"""
+
+# ╔═╡ 75b4c0c2-69f3-11eb-1ebc-75efd2d0bf1f
+md"""
+Let us assume there are the following age groups with age specific $\delta$. *(Feel free to experiment a bit and change how these are computed.)*
+
+"""
+
+# ╔═╡ 33c4ea42-6a10-11eb-094c-75343532f835
+md"""
+We want to adjust the code so that it can handle node-specific $\delta$. The way we are going to do it is to pass a vector $\vec \delta = (\delta_1, \ldots, \delta_N)$ that holds the death probability for each node.
+
+👉 Go the the definition of `transition(::I, ...)`, make sure you understand the code snippet in the comment and uncomment the lines.
+
+"""
+
+# ╔═╡ 2e3413ae-6962-11eb-173c-6d53cfd8a968
+md"""
+#### Task 3: Whom to vaccinate?
+
+In the lecture we've figured out, how we can improve on vaccinating random people. Now there is more structure in the model. Can you improve on the situation?
+
+First, let's construct the graph and specify the death rates. *(You don't need to change this.)*
+
+"""
+
+# ╔═╡ 18e84a22-69ff-11eb-3909-7fd30fcf3040
+function pseudo_random(N, n, offset = 1)
+	step = N ÷ n
+	range(offset, step = step, length = n)
+end
+
+# ╔═╡ 0d2b1bdc-6a14-11eb-340a-3535d7bfbec1
+md"""
+
+Now it's your turn.
+
+👉 Decide which nodes you want to vaccinate and adjust the cell below. Make sure you only vaccinate `N_vacc` nodes.
+"""
+
+# ╔═╡ 297e4d74-6a12-11eb-0302-0f97bab2c906
+md"""
+Now write a short essay describing your choice. *(Your simulation results are subject to random noise. Make sure you run you simulations multiple times to make sure they are robust.)*
+
+👉 Describe how you would select nodes to be vaccinated
+
+👉 Be accurate but concise. Aim at no more than 500 words.
+"""
+
+# ╔═╡ d0f3064a-6a11-11eb-05bf-09f67a451510
+answer1 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 9c562b8c-6a12-11eb-1e07-c378e9304a1d
+md"""
+#### Before you submit ...
+
+👉 Make sure you have added your names and your group number at the top.
+
+👉 Make sure that that **all group members proofread** your submission (especially your little essay).
+
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. In addition, **upload the source code** of the notebook (the .jl file).
+"""
+
+# ╔═╡ 515edb16-69f3-11eb-0bc9-a3504565b80b
+md"""
+### Details on age-specific infection fatality rates
+"""
+
+# ╔═╡ 1abd6992-6962-11eb-3db0-f3dbe5f095eb
+ifr_csv = CSV.File(IOBuffer(
+		"""
+from	to	IFR_pc
+0	4	0.003
+5	9	0.001
+10	14	0.001
+15	19	0.003
+20	24	0.006
+25	29	0.013
+30	34	0.024
+35	39	0.040
+40	44	0.075
+45	49	0.121
+50	54	0.207
+55	59	0.323
+60	64	0.456
+65	69	1.075
+70	74	1.674
+75	79	3.203
+80	95	8.292
+""" # note: the oldest age group is actually 80+
+		));
+
+# ╔═╡ 07c102c2-69ee-11eb-3b29-25e612df6911
+ifr_df = @chain ifr_csv begin
+	DataFrame
+	transform!([:from, :to] => ByRow(mean ∘ tuple) => :age)
+	transform!(:to => (x -> cut(x, [0, 40, 75, 100])) => :age_group)
+end
+
+# ╔═╡ d18f1b0c-69ee-11eb-2fc0-4f14873847fb
+scatterlines(ifr_df.age, ifr_df.IFR_pc, 
+			 axis = (xlabel="age group", ylabel = "infection fatality ratio (%)")
+			)
+
+# ╔═╡ 57a72310-69ef-11eb-251b-c5b8ab2c6082
+ifr_df2 = @chain ifr_df begin
+	groupby(:age_group)
+	combine(:IFR_pc => mean, renamecols = false)
+	
+end
+
+# ╔═╡ 74c35594-69f0-11eb-015e-2bf4b55e658c
+md"""
+### Get from infection fatality ratio to $\delta$
+
+When the recovery rate is $\rho$, the expected time infected is $T_I = 1/\rho$. So we want the survival probability to 
+
+$$(1-IFR) = (1 - p)^{T_I}.$$ 
+"""
+
+# ╔═╡ 6ffb63bc-69f0-11eb-3f84-d3fca5526a3e
+get_δ_from_ifr(ifr, ρ) = 1 - (1 - ifr/100)^(ρ)
+
+# ╔═╡ 98b2eefe-69f2-11eb-36f4-7b19a55cfe78
+begin
+	ρ_new = 1/7
+	transform(ifr_df2, :IFR_pc => ByRow(x -> get_δ_from_ifr(x, ρ_new)) => "δ")
+end
 
 # ╔═╡ 1b8c26b6-64aa-11eb-2d9a-47db5469a654
 md"""
@@ -453,8 +646,9 @@ graph, node_positions = spatial_graph(1000)
 
 # ╔═╡ c5f48079-f52e-4134-8e6e-6cd4c9ee915d
 let
+	state = "I"
 	fig = Figure()
-	ax = Axis(fig[1,1], title = "#infected when varying the infection probability")
+	ax = Axis(fig[1,1], title = "#$(state) when varying the infection probability")
 	for p in p_range
 		par = (p = p, ρ = ρ0, δ = δ0)
 		
@@ -462,7 +656,7 @@ let
 		
 		df0 = fractions_over_time(sim)
 		
-		filter!(:state => ==("I"), df0)
+		filter!(:state => ==(state), df0)
 		
 		lines!(df0.t, df0.fraction, label = "p = $p", color = (:blue, 1 - p))
 	end
@@ -471,37 +665,125 @@ let
 	fig
 end
 
-# ╔═╡ 76b738fe-657a-11eb-31d3-413a08ee6e69
+# ╔═╡ bb924b8e-69f9-11eb-1e4e-7f841ac1c1bd
 vacc = let
 	N = 1000
-	graph, node_positions = spatial_graph(N)
-	
+
 	par = (p = 0.1, ρ = ρ0, δ = δ0)
 	
+	graph, node_positions = spatial_graph(N)
+	
+	vaccinated = [
+		"none"   => [],
+		"random" => rand(1:N, 100),	
+		# place for your suggestions
+		]
+	
 	infected_nodes = rand(1:N, 100)
-	vaccinated_nodes = rand(1:N, 100)
+
+	sims = map(vaccinated) do (label, vacc_nodes)
+		init = initial_state(N, infected_nodes, vacc_nodes)
+		
+		sim = simulate(graph, par, 100, init)
+		
+		label => sim
+	end
 	
-	init0 = initial_state(N, infected_nodes, [])
-	initv = initial_state(N, infected_nodes, vaccinated_nodes)
-	
-	sim0 = simulate(graph, par, 100, init0)
-	simv = simulate(graph, par, 100, initv)
-	
-	(; graph, node_positions, sims=("none" => sim0, "random" => simv))
+	(; graph, node_positions, sims=sims)
 end;
 
 # ╔═╡ 02b1e334-661d-11eb-3194-b382045810ef
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "#infected when vaccinating different groups")
+fig_vaccc = let
+	state = "I"
 	
-	colors = cgrad(:viridis, length(vacc.sims), categorical=true)
+	fig = Figure()
+	ax = Axis(fig[1,1], title = "#$(state) when vaccinating different groups")
+	
+	colors = cgrad(:viridis, max(3, length(vacc.sims)), categorical=true)
 
 	for (i, (lab, sim)) in enumerate(vacc.sims)
 				
 		df0 = fractions_over_time(sim)
 		
-		filter!(:state => ==("I"), df0)
+		filter!(:state => ==(state), df0)
+		
+		lines!(df0.t, df0.fraction, label = lab, color = colors[i])
+	end
+	
+	# some attributes to make the legend nicer
+	attr = (orientation = :horizontal, tellwidth = :false, tellheight = true)
+
+	leg = Legend(fig[2,1], ax; attr...)
+
+	fig
+end
+
+# ╔═╡ 7ed6b942-695f-11eb-38a1-e79655aedfa2
+fig_vaccc
+
+# ╔═╡ 29036938-69f4-11eb-09c1-63a7a75de61d
+vacc_age_graph = let
+	N = 1000
+	p = 0.5
+	ρ = ρ_new
+	
+	# age specfic death rates
+	age_groups = rand(Distributions.Categorical([0.4, 0.35, 0.25]), N)
+		
+	δ_vec = get_δ_from_ifr.(ifr_df2.IFR_pc, ρ) .* 20 # we scale this up to remove some randomness
+	δ_per_node = δ_vec[age_groups]
+	
+	par = (p = p, ρ = ρ, δ = δ_per_node)
+
+	graph, node_positions = spatial_graph(N)
+	
+	bet_centr = betweenness_centrality(graph)
+	
+	(; par, graph, node_positions, bet_centr)
+end;	
+
+# ╔═╡ dceb5318-69fc-11eb-2e1b-0b8cef279e05
+vacc_age = let
+		
+	@unpack par, graph, node_positions, bet_centr = vacc_age_graph
+	N = nv(graph)
+	
+	N_vacc = N ÷ 5
+
+	split = 50
+	vaccinated = [
+		"none"   => [],
+		"random" => pseudo_random(N, N_vacc, 4),
+		"central"=> sortperm(bet_centr, rev=true)[1:N_vacc],
+		# place your suggestions here!
+		]
+	
+	infected_nodes = pseudo_random(N, N ÷ 10, 1)
+
+	sims = map(vaccinated) do (label, vacc_nodes)
+		init = initial_state(N, infected_nodes, vacc_nodes)
+		
+		sim = simulate(graph, par, 100, init)
+		
+		label => sim
+	end
+	
+	(; graph, node_positions, sims=sims)
+end;
+
+# ╔═╡ da82d3ea-69f6-11eb-343f-a30cdc36228a
+fig_vacc_age = let
+	state = "D"
+	fig = Figure()
+	ax = Axis(fig[1,1], title = "#$(state) when vaccinating different groups")
+	
+	colors = cgrad(:viridis, min(5, length(vacc_age.sims)), categorical=true)
+
+	for (i, (lab, sim)) in enumerate(vacc_age.sims)
+				
+		df0 = fractions_over_time(sim)
+		
+		filter!(:state => ==(state), df0)
 		
 		lines!(df0.t, df0.fraction, label = lab, color = colors[i])
 	end
@@ -674,6 +956,111 @@ Base.show(io::IO, ::MIME"text/html", x::CategoricalArrays.CategoricalValue) = pr
 # ╔═╡ 31bbc540-68cd-4d4a-b87a-d648e003524c
 TableOfContents()
 
+# ╔═╡ 9c0ee044-6a0b-11eb-1899-bbb75f5ba57d
+begin
+	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
+	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
+	still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
+	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
+	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
+	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
+	function wordcount(text)
+    	words=split(string(text), (' ','\n','\t','-','.',',',':','_','"',';','!'))
+    	length(words)
+	end
+end
+
+# ╔═╡ b9c7df54-6a0c-11eb-1982-d7157b2c5b92
+if @isdefined D
+	if hasproperty(States.b.b, :b)
+		correct(md"You've successfully defined type `D`.")
+	else
+		almost(md"You've successfully defined `D`. But you need to do it in the right place. Go **The SIR Model** and uncomment the line that defines `D`.")
+	end
+else
+	keep_working(md"Go **The SIR Model** and uncomment the line that defines `D`.")
+end
+
+# ╔═╡ dc9ac0c0-6a0a-11eb-2ca8-ada347bffa85
+try
+	transition(D())
+	if transition(D()) == D()
+		correct(md"You've successfully specified the transition rule for `D`.")
+	else
+		keey_working(md"The transition rule for `D` doesn't seem to work correctly")
+	end
+catch e
+	if e isa MethodError
+		keep_working(md"The transition rule for `D` is not yet defined.")
+	else
+		keep_working(md"The transition rule for `D` doesn't seem to work correctly")
+	end
+end
+
+# ╔═╡ 1be1ac8a-6961-11eb-2736-79c77025255d
+hint(md"You can look at the section **Define the transitions** for inspiration.")
+
+# ╔═╡ 11c507a2-6a0f-11eb-35bf-55e1116a3c72
+begin
+	try
+		test1 = transition(I(), (δ = 1, ρ = 0), 0) == D()
+		test2 = transition(I(), (δ = 0, ρ = 1), 0) == R()
+		test3 = transition(I(), (δ = 0, ρ = 0), 0) == I()
+	
+		if test1 && test2 && test3
+			correct(md"It seems that you've successfully adjusted the transition rule for `I`. *(Note: the other rules are not checked)*")
+		else
+			keep_working()
+		end
+	catch
+		keep_working()
+	end
+end
+
+# ╔═╡ e64300dc-6a10-11eb-1f68-57120286535b
+begin
+	try
+		test1 = transition(I(), (δ = (1, 0), ρ = 0), 1) == D()
+		test2 = transition(I(), (δ = (0, 1), ρ = 0), 1) == I()
+		test3 = transition(I(), (δ = (0, 0), ρ = 1), 1) == R()
+		test4 = transition(I(), (δ = (0, 0), ρ = 0), 1) == I()
+	
+		if test1 && test2 && test3 && test4
+			correct(md"It seems that you've successfully adjusted the transition rule for `I`.")
+		else
+			keep_working()
+		end
+	catch
+		keep_working()
+	end
+end
+
+# ╔═╡ e79e6ed4-6a11-11eb-2d68-69a814ec657c
+if answer1 == md"Your answer goes here ..."
+	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
+elseif wordcount(answer1) > 1.1 * 500
+	almost(md"Try to shorten your text a bit, to get below 500 words.")
+else
+	correct(md"Great, we are looking forward to reading your answer!")
+end
+
+# ╔═╡ d14a8860-6a12-11eb-013e-d39bc64de8b2
+members = let
+	str = ""
+	for (first, last) in group_members
+		str *= str == "" ? "" : ", "
+		str *= first * " " * last
+	end
+	str
+end
+
+# ╔═╡ fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
+md"""
+# Assignment 2: Whom to Vaccinate When Death Rates are Age-Specfic
+
+*submitted by* **$members** (*group $(group_number)*)
+"""
+
 # ╔═╡ Cell order:
 # ╟─0e30624c-65fc-11eb-185d-1d018f68f82c
 # ╟─d0ee632c-6621-11eb-39ac-cb766429529f
@@ -684,6 +1071,7 @@ TableOfContents()
 # ╟─3e9af1f4-6575-11eb-21b2-453dc18d1b7b
 # ╟─5eafd0f0-6619-11eb-355d-f9de3ae53f6a
 # ╟─b36832aa-64ab-11eb-308a-8f031686c8d6
+# ╟─7ed6b942-695f-11eb-38a1-e79655aedfa2
 # ╟─c8f92204-64ac-11eb-0734-2df58e3373e8
 # ╟─2f9f008a-64aa-11eb-0d9a-0fdfc41d4657
 # ╠═b8d874b6-648d-11eb-251c-636c5ebc1f42
@@ -691,7 +1079,6 @@ TableOfContents()
 # ╟─10dd6814-f796-42ea-8d40-287ed7c9d239
 # ╠═8ddb6f1e-649e-11eb-3982-83d2d319b31f
 # ╠═61a36e78-57f8-4ef0-83b4-90e5952c116f
-# ╠═d3bfc9aa-649e-11eb-2c36-b1fba4507f07
 # ╠═ffe07e00-0408-4986-9205-0fbb025a698c
 # ╠═5d11a2df-3187-4509-ba7b-8388564573a6
 # ╠═f4c62f95-876d-4915-8372-258dfde835f7
@@ -719,12 +1106,47 @@ TableOfContents()
 # ╟─34b1a3ba-657d-11eb-17fc-5bf325945dce
 # ╟─bf2c5f5a-661b-11eb-01c5-51740fba63e3
 # ╟─83b817d2-657d-11eb-3cd2-332a348142ea
-# ╠═76b738fe-657a-11eb-31d3-413a08ee6e69
+# ╠═bb924b8e-69f9-11eb-1e4e-7f841ac1c1bd
 # ╠═0d610e80-661e-11eb-3b9a-93af6b0ad5de
 # ╟─e8b7861e-661c-11eb-1c06-bfedd6ab563f
 # ╠═02b1e334-661d-11eb-3194-b382045810ef
 # ╟─1978febe-657c-11eb-04ac-e19b2d0e5a85
+# ╟─12d7647e-6a13-11eb-2b1e-9f77bdb3a87a
+# ╠═b402b1e2-6a12-11eb-16ac-7b19064562b8
+# ╠═e7d47230-6a12-11eb-0392-4360f36222b8
+# ╟─eea88902-6a12-11eb-3a63-df8979fbdd55
 # ╟─fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
+# ╟─98d449ac-695f-11eb-3daf-dffb377aa5e2
+# ╟─b9c7df54-6a0c-11eb-1982-d7157b2c5b92
+# ╟─8a2c223e-6960-11eb-3d8a-516474e6653c
+# ╠═809375ba-6960-11eb-29d7-f9ab3ee61367
+# ╟─dc9ac0c0-6a0a-11eb-2ca8-ada347bffa85
+# ╟─1be1ac8a-6961-11eb-2736-79c77025255d
+# ╟─945d67f6-6961-11eb-33cf-57ffe340b35f
+# ╟─11c507a2-6a0f-11eb-35bf-55e1116a3c72
+# ╟─48818cf0-6962-11eb-2024-8fca0690dd78
+# ╟─fac414f6-6961-11eb-03bb-4f58826b0e61
+# ╟─d18f1b0c-69ee-11eb-2fc0-4f14873847fb
+# ╟─75b4c0c2-69f3-11eb-1ebc-75efd2d0bf1f
+# ╠═98b2eefe-69f2-11eb-36f4-7b19a55cfe78
+# ╟─33c4ea42-6a10-11eb-094c-75343532f835
+# ╟─e64300dc-6a10-11eb-1f68-57120286535b
+# ╠═2e3413ae-6962-11eb-173c-6d53cfd8a968
+# ╠═29036938-69f4-11eb-09c1-63a7a75de61d
+# ╠═18e84a22-69ff-11eb-3909-7fd30fcf3040
+# ╟─0d2b1bdc-6a14-11eb-340a-3535d7bfbec1
+# ╠═dceb5318-69fc-11eb-2e1b-0b8cef279e05
+# ╟─da82d3ea-69f6-11eb-343f-a30cdc36228a
+# ╟─297e4d74-6a12-11eb-0302-0f97bab2c906
+# ╠═d0f3064a-6a11-11eb-05bf-09f67a451510
+# ╟─e79e6ed4-6a11-11eb-2d68-69a814ec657c
+# ╟─9c562b8c-6a12-11eb-1e07-c378e9304a1d
+# ╟─515edb16-69f3-11eb-0bc9-a3504565b80b
+# ╠═1abd6992-6962-11eb-3db0-f3dbe5f095eb
+# ╠═07c102c2-69ee-11eb-3b29-25e612df6911
+# ╟─57a72310-69ef-11eb-251b-c5b8ab2c6082
+# ╟─74c35594-69f0-11eb-015e-2bf4b55e658c
+# ╠═6ffb63bc-69f0-11eb-3f84-d3fca5526a3e
 # ╟─1b8c26b6-64aa-11eb-2d9a-47db5469a654
 # ╟─07a66c72-6576-11eb-26f3-810607ca7e51
 # ╠═ca77fa78-657a-11eb-0faf-15ffd3fdc540
@@ -753,3 +1175,5 @@ TableOfContents()
 # ╟─bed07322-64b1-11eb-3324-7b7ac5e8fba2
 # ╠═df9b4eb2-64aa-11eb-050c-adf04609ef21
 # ╠═31bbc540-68cd-4d4a-b87a-d648e003524c
+# ╠═9c0ee044-6a0b-11eb-1899-bbb75f5ba57d
+# ╠═d14a8860-6a12-11eb-013e-d39bc64de8b2
