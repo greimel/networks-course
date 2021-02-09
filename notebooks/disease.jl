@@ -128,6 +128,11 @@ md"""
 3. In your assignment you will make to model a little richer by ``(i)`` separating the `R` state into *dead* and *immune* (which includes recovered and vaccinated) and ``(ii)`` taking into account age-specific death (case-fatality) rates.
 
    *(Can we now improve the efficacy of the vaccination program even more?)*
+
+4. **Is this economics?** Yes and no. There have been many papers studying the economic impact of Covid. Many of them integrate some version of the SIR model into a macroeconomic model.
+
+   If you are interested, you can have a look at the [collection of covid economics resources](https://cepr.org/content/covid-19) by the CEPR, this [blogpost](https://johnhcochrane.blogspot.com/2020/05/an-sir-model-with-behavior.html) by John Cochrane or this [paper](https://www.aeaweb.org/articles?id=10.1257/jep.34.4.105) by an epidemiologist in the *Journal of Economic Perspectives*.
+
 """
 
 # ╔═╡ 2f9f008a-64aa-11eb-0d9a-0fdfc41d4657
