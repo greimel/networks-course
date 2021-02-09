@@ -26,7 +26,7 @@ end
 
 # ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
 md"""
-`disease.jl` | **Version 1.0** | *last updated: Feb 8*
+`disease.jl` | **Version 1.1** | *last updated: Feb 9*
 """
 
 # ╔═╡ d0ee632c-6621-11eb-39ac-cb766429529f
@@ -34,21 +34,23 @@ md"""
 
 # ╔═╡ 21be9262-6614-11eb-3ae6-79fdc6c56c3e
 _b_ = _a_ + 1; md"""
-Fancy version $(@bind fancy CheckBox()) (might not work on Safari)
+Fancy version $(@bind fancy CheckBox(default=false)) (might not work)
 """
 
 # ╔═╡ 3b444a90-64b3-11eb-0b8f-1facc32a4088
 begin
 	_c_ = _b_ + 1 # make sure this cell is run before other Pkg cell
 	
-	Pkg.add("AbstractPlotting")
+	Pkg.add(Pkg.PackageSpec(name="AbstractPlotting", version = "0.15"))
 	
 	if fancy
 		Pkg.add([
 			Pkg.PackageSpec(name="JSServe"),
 			Pkg.PackageSpec(name="WGLMakie"),
 			])
-		import WGLMakie, JSServe
+		import WGLMakie
+		using JSServe: Page
+		WGLMakie.activate!()
 		Page(exportable = true)
 	else
 		Pkg.add("CairoMakie")
@@ -94,6 +96,8 @@ begin
 	using UnPack: @unpack
 	using Statistics: mean
 	
+	Base.show(io::IO, ::MIME"text/html", x::CategoricalArrays.CategoricalValue) = print(io, get(x))
+	
 	_c_
 end
 
@@ -114,9 +118,9 @@ This notebook will be the basis for part of **Lecture 3** *and* **Assignment 2**
 
 # ╔═╡ b36832aa-64ab-11eb-308a-8f031686c8d6
 md"""
-2. We will show how various policies mitigate the spread of the disease. We will see how we can map *social distancing*, *travel restrictions* and *vaccination programs* into the model. 
+2. We will show how various policies mitigate the spread of the disease. We will see how we can map *social distancing* and *vaccination programs* into the model. 
 
-   The plot below shows how the number of infected people decreases when we randomly pick 10% of the population. *(Can we improve the efficacy of the vaccination program by targeting specific people?)*
+   The plot below shows how the number of infected people decreases when we randomly pick 20% of the population. *(Can we improve the efficacy of the vaccination program by targeting specific people?)*
 """
 
 # ╔═╡ c8f92204-64ac-11eb-0734-2df58e3373e8
@@ -179,13 +183,14 @@ transition(::R, args...; kwargs...) = R()
 
 # ╔═╡ ffe07e00-0408-4986-9205-0fbb025a698c
 function transition(::S, par, node, adjacency_matrix, is_infected)
-	inv_prob_transmission = 1.0
-	
+	inv_prob = 1.0
 	for i in is_infected
-		inv_prob_transmission *= 1 - par.p * adjacency_matrix[i, node]
+	 	inv_prob *= 1 - par.p * adjacency_matrix[i, node]
 	end
 	
-	π =	1.0 - inv_prob_transmission
+	#inv_prob = prod(1 - par.p * adjacency_matrix[i, node] for i in is_infected, init = 1.0)
+	
+	π =	1.0 - inv_prob
 	
 	rand() < π ? I() : S()
 end
@@ -303,7 +308,7 @@ end
 
 # ╔═╡ 98d449ac-695f-11eb-3daf-dffb377aa5e2
 md"""
-#### Task 1: Distinguish between `R`ecovered and `D`ead
+#### Task 1: Distinguish between `R`ecovered and `D`ead (3 points)
 
 👉 Add a new state `D`ead.
 """
@@ -328,7 +333,7 @@ Great! You can now have a look how the simulations from the lecture have automat
 
 # ╔═╡ fac414f6-6961-11eb-03bb-4f58826b0e61
 md"""
-#### Task 2: Introduce age-specific death rates
+#### Task 2: Introduce age-specific death rates (2 points)
 
 The death probabilities are highly heterogeneous across age groups. See for example [this article in Nature.](https://www.nature.com/articles/s41586-020-2918-0)
 
@@ -353,7 +358,7 @@ We want to adjust the code so that it can handle node-specific $\delta$. The way
 
 # ╔═╡ 2e3413ae-6962-11eb-173c-6d53cfd8a968
 md"""
-#### Task 3: Whom to vaccinate?
+#### Task 3: Whom to vaccinate? (5 points)
 
 In the lecture we've figured out, how we can improve on vaccinating random people. Now there is more structure in the model. Can you improve on the situation?
 
@@ -384,8 +389,10 @@ Now write a short essay describing your choice. *(Your simulation results are su
 """
 
 # ╔═╡ d0f3064a-6a11-11eb-05bf-09f67a451510
-answer1 = md"""
-Your answer goes here ...
+answer3 = md"""
+Your answer
+
+goes here ...
 """
 
 # ╔═╡ 9c562b8c-6a12-11eb-1e07-c378e9304a1d
@@ -693,11 +700,11 @@ vacc = let
 	
 	vaccinated = [
 		"none"   => [],
-		"random" => rand(1:N, 100),	
+		"random" => pseudo_random(N, N ÷ 5, 3),	
 		# place for your suggestions
 		]
 	
-	infected_nodes = rand(1:N, 100)
+	infected_nodes = pseudo_random(N, N ÷ 5, 1)
 
 	sims = map(vaccinated) do (label, vacc_nodes)
 		init = initial_state(N, infected_nodes, vacc_nodes)
@@ -902,11 +909,11 @@ md"""
 # ╔═╡ 657c3a98-6573-11eb-1ccb-b1d974414647
 fancy && out_simple.fig
 
-# ╔═╡ 3aeb0106-661b-11eb-362f-6b9af20f71d7
-elegant && (t0_simple; out_simple.fig)
-
 # ╔═╡ d2813d40-656d-11eb-2cfc-e389ed2a0d84
-out_simple.t[] = t0_simple
+out_simple.t[] = t0_simple; a=1
+
+# ╔═╡ 3aeb0106-661b-11eb-362f-6b9af20f71d7
+elegant && (a; t0_simple; out_simple.fig)
 
 # ╔═╡ 0b35f73f-6976-4d85-b61f-b4188440043e
 out_big = let
@@ -967,9 +974,6 @@ md"""
 md"""
 ## Other Stuff
 """
-
-# ╔═╡ df9b4eb2-64aa-11eb-050c-adf04609ef21
-Base.show(io::IO, ::MIME"text/html", x::CategoricalArrays.CategoricalValue) = print(io, get(x))
 
 # ╔═╡ 31bbc540-68cd-4d4a-b87a-d648e003524c
 TableOfContents()
@@ -1054,9 +1058,13 @@ begin
 end
 
 # ╔═╡ e79e6ed4-6a11-11eb-2d68-69a814ec657c
-if answer1 == md"Your answer goes here ..."
+if answer3 == md"""
+Your answer
+
+goes here ...
+"""
 	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
-elseif wordcount(answer1) > 1.1 * 500
+elseif wordcount(answer3) > 1.1 * 500
 	almost(md"Try to shorten your text a bit, to get below 500 words.")
 else
 	correct(md"Great, we are looking forward to reading your answer!")
@@ -1104,7 +1112,7 @@ md"""
 # ╟─9302b00c-656f-11eb-25b3-495ae1c843cc
 # ╟─657c3a98-6573-11eb-1ccb-b1d974414647
 # ╟─3aeb0106-661b-11eb-362f-6b9af20f71d7
-# ╠═d2813d40-656d-11eb-2cfc-e389ed2a0d84
+# ╟─d2813d40-656d-11eb-2cfc-e389ed2a0d84
 # ╠═8d4cb5dc-6573-11eb-29c8-81baa6e3fffc
 # ╠═d6694c32-656c-11eb-0796-5f485cccccf0
 # ╟─ce75fe16-6570-11eb-3f3a-577eac7f9ee8
@@ -1134,7 +1142,7 @@ md"""
 # ╠═e7d47230-6a12-11eb-0392-4360f36222b8
 # ╟─eea88902-6a12-11eb-3a63-df8979fbdd55
 # ╟─fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
-# ╟─98d449ac-695f-11eb-3daf-dffb377aa5e2
+# ╠═98d449ac-695f-11eb-3daf-dffb377aa5e2
 # ╟─b9c7df54-6a0c-11eb-1982-d7157b2c5b92
 # ╟─8a2c223e-6960-11eb-3d8a-516474e6653c
 # ╠═809375ba-6960-11eb-29d7-f9ab3ee61367
@@ -1191,7 +1199,6 @@ md"""
 # ╠═3b444a90-64b3-11eb-0b8f-1facc32a4088
 # ╠═2b55141f-1cba-4a84-8811-98697d408d65
 # ╟─bed07322-64b1-11eb-3324-7b7ac5e8fba2
-# ╠═df9b4eb2-64aa-11eb-050c-adf04609ef21
 # ╠═31bbc540-68cd-4d4a-b87a-d648e003524c
 # ╠═9c0ee044-6a0b-11eb-1899-bbb75f5ba57d
 # ╠═d14a8860-6a12-11eb-013e-d39bc64de8b2
