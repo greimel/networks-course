@@ -90,7 +90,7 @@ begin
 	import CSV
 	using GeometryBasics: Point2f0
 	using NearestNeighbors: BallTree, knn
-	using LightGraphs: SimpleGraph, add_edge!, StarGraph, CycleGraph, WheelGraph, betweenness_centrality, eigenvector_centrality, edges, adjacency_matrix, nv, ne
+	using LightGraphs#: SimpleGraph, add_edge!, StarGraph, CycleGraph, WheelGraph, betweenness_centrality, eigenvector_centrality, edges, adjacency_matrix, nv, ne
 	using DataFrames: transform!, transform, DataFrame, ByRow, groupby, combine, rename!, Not, stack, unstack, leftjoin
 	using CategoricalArrays: CategoricalArrays, categorical, cut
 	using UnPack: @unpack
@@ -157,6 +157,18 @@ begin
 	#struct D <: State end # (Assignment)
 end
 
+# ╔═╡ c9ad009e-6b96-11eb-16fc-b9e0df9ceb5e
+whatsays(x::R) = "great, I'm fine"
+
+# ╔═╡ 038c11a6-6b97-11eb-3a14-d549e06372d0
+whatsays(x::I) = "aarrghhh!!!"
+
+# ╔═╡ 107a18f4-6b97-11eb-29af-c7f6b32914d1
+whatsays(x::State) = "I don't know ..."
+
+# ╔═╡ fd06ce3e-6b96-11eb-0ca0-3d9487098e12
+whatsays(R())
+
 # ╔═╡ f48fa122-649a-11eb-2041-bbf0d0c4670c
 const States = Union{subtypes(State)...}
 
@@ -167,17 +179,11 @@ md"
 
 # ╔═╡ 8ddb6f1e-649e-11eb-3982-83d2d319b31f
 function transition(::I, par, node, args...; kwargs...)
-	## The following lines will be helpful for the assignment (task 2)
-	#if length(par.δ) == 1
-	 	δ = only(par.δ)
-	#else
-	# 	δ = par.δ[node]
-	#end
+ 	#δ = only(par.δ)
 	x = rand()
-	if x < par.ρ + δ # recover or die
+
+	if x < par.ρ + par.δ # recover or die
 		R()
-	#elseif x < ...
-	#	...
 	else
 		I()
 	end
@@ -199,6 +205,9 @@ function transition(::S, par, node, adjacency_matrix, is_infected)
 	
 	rand() < π ? I() : S()
 end
+
+# ╔═╡ 6e31db10-6b97-11eb-1776-e1fb0db29e15
+transition(R())
 
 # ╔═╡ f4c62f95-876d-4915-8372-258dfde835f7
 function iterate!(states_new, states, adjacency_matrix, par)
@@ -230,7 +239,7 @@ md"""
 """
 
 # ╔═╡ 8d4cb5dc-6573-11eb-29c8-81baa6e3fffc
-simple_graph = CycleGraph(10)
+simple_graph = StarGraph(10)
 
 # ╔═╡ ce75fe16-6570-11eb-3f3a-577eac7f9ee8
 md"""
@@ -703,10 +712,18 @@ vacc = let
 	
 	graph, node_positions = spatial_graph(N)
 	
+	eigv_c = eigenvector_centrality(graph)
+	katz_c = katz_centrality(graph)
+	betw_c = betweenness_centrality(graph)
+	degree = degree(graph)
+	
 	vaccinated = [
 		"none"   => [],
 		"random" => pseudo_random(N, N ÷ 5, 3),	
-		# place for your suggestions
+		"eigv_c" => sortperm(eigv_c, rev=true)[1:(N ÷ 5)],
+		"katz_c" => sortperm(katz_c, rev=true)[1:(N ÷ 5)],
+		"betw_c" => sortperm(betw_c, rev=true)[1:(N ÷ 5)],
+		"degree" => sortperm(degree, rev=true)[1:(N ÷ 5)]
 		]
 	
 	infected_nodes = pseudo_random(N, N ÷ 5, 1)
@@ -1106,10 +1123,15 @@ md"""
 # ╟─c8f92204-64ac-11eb-0734-2df58e3373e8
 # ╟─2f9f008a-64aa-11eb-0d9a-0fdfc41d4657
 # ╠═b8d874b6-648d-11eb-251c-636c5ebc1f42
+# ╠═c9ad009e-6b96-11eb-16fc-b9e0df9ceb5e
+# ╠═038c11a6-6b97-11eb-3a14-d549e06372d0
+# ╠═107a18f4-6b97-11eb-29af-c7f6b32914d1
+# ╠═fd06ce3e-6b96-11eb-0ca0-3d9487098e12
 # ╠═f48fa122-649a-11eb-2041-bbf0d0c4670c
 # ╟─10dd6814-f796-42ea-8d40-287ed7c9d239
 # ╠═8ddb6f1e-649e-11eb-3982-83d2d319b31f
 # ╠═61a36e78-57f8-4ef0-83b4-90e5952c116f
+# ╠═6e31db10-6b97-11eb-1776-e1fb0db29e15
 # ╠═ffe07e00-0408-4986-9205-0fbb025a698c
 # ╠═5d11a2df-3187-4509-ba7b-8388564573a6
 # ╠═f4c62f95-876d-4915-8372-258dfde835f7
