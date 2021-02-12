@@ -13,6 +13,9 @@ This repository hosts some of the material for the course "Economic and Financia
 ### Week 2
 * Diffusion on Networks: Modeling Transmission of Disease (contains **Assignment 2**) ([preview](https://greimel.github.io/networks-course/notebooks/disease.html), [download](https://greimel.github.io/networks-course/notebooks/disease.jl))
 
+### Week 3
+* Social Connectedness: What Friendships on Facebook Tell Us About the World *(preliminary)* ([preview](https://greimel.github.io/networks-course/notebooks/facebook.html), [download](https://greimel.github.io/networks-course/notebooks/facebook.jl))
+
 ## Software and setup
 
 For this course we will use the modern programming language [Julia](https://www.julialang.org). It is a very young language that is gaining popularity pretty fast. Here are the reasons why we use it.
