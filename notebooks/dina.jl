@@ -144,11 +144,13 @@ begin
 	grp = [:age]
 	wgt = :dweght
 	byvar = :peinc
-	var = [:fiinc, :fninc, :ptinc, :peinc, :poinc, :ownermort, :ownerhome, :rentalmort, :rentalhome]
+	dbt_var = [:ownermort, :rentalmort, :nonmort, :hwdeb]
+	var = [[:fiinc, :fninc, :ptinc, :peinc, :poinc, :ownerhome, :rentalhome]; dbt_var]
+	cols = [ids; grp; wgt; var]
 end
 
-# ╔═╡ d9b6b664-6bae-11eb-2ec6-41be8491f39b
-cols = [ids; grp; wgt; var]
+# ╔═╡ af9ad364-6e04-11eb-18fa-cf66c3cf4f6b
+
 
 # ╔═╡ 31f69312-6bb1-11eb-220d-efd477af3e7a
 df = dina_quantile_panel(var, byvar, 10; wgt)
@@ -158,6 +160,75 @@ size(df)
 
 # ╔═╡ 1811758c-6bbd-11eb-1bde-81cead34ade8
 df |> CSV.write("dina_aggregated.csv")
+
+# ╔═╡ 11e25cc0-6e02-11eb-06ce-478cc66b8410
+md"""
+## Aggregate Debt
+"""
+
+# ╔═╡ 302d69a4-6e02-11eb-2ee6-01bd650a5a63
+agg_df = let
+	df1 = select(df,
+		:group,
+		:group => ByRow(x -> parse(Int, string(x)[6:end])) => :grp_id,
+		:age, :year, wgt, var...
+	)
+	
+	filter!(:age => !in([65]), df1)
+	
+	#transform!(df1, :grp_id => ByRow(x -> ifelse(x <= 5, "bottom 50", ifelse(x <= 9, "middle 40", "top 10"))) => :three_grps)
+	
+	df2 = combine(
+		groupby(df1, :year),
+		([v, wgt] => ((x,w) -> dot(x,w)/sum(w)) => v for v in var)...
+	)
+	
+	df3 = leftjoin(df2, gdpdef, on = :year)
+	rename!(df3, :GDPDEF => :prices)
+
+	filter!(:prices => !ismissing, df3)
+	
+	disallowmissing!(df3)
+	
+	df3.prices = df3.prices ./ first(filter(:year => ==(1980), df3).prices)
+	
+	inc = :peinc
+	
+	transform!(df3, ([v, :prices] => ByRow(/) => "r_$(string(v))" for v in var)...)
+	transform!(df2, ([d, inc] => ByRow(/) => string(d) * "2inc" for d in dbt_var)...)
+#	transform!(df3, [:ownermort, :rentalmort] => ByRow(+) => :mort)
+#	transform!(df3, [:mort, ] => ByRow(/) => "mort2inc")
+end
+
+# ╔═╡ 5ecf0b3c-6e02-11eb-280d-ef6617d94d3c
+let d = agg_df
+	fig = Figure()
+	Label(fig[1,1], "Growth of Household-Debt-To-Income in the USA", tellwidth = false)
+	ax1 = Axis(fig[2,1][1,1], ylabel = "relative to 1980")
+	ax2 = Axis(fig[2,1][1,2], ylabel = "relative to total debt in 1980")
+	
+	axs = [ax1, ax2]
+	
+	colors = [:blue, :red, :green, :orange]
+	i80 = findfirst(d.year .== 1980)
+	
+	for (i,dbt) in enumerate(dbt_var)
+		var = string(dbt) * "2inc"
+		for (j, fractionof) in enumerate([var, :hwdeb2inc])
+			lines!(axs[j], d.year, d[!,var]/d[i80,fractionof], label = string(dbt), color = colors[i])
+		end
+	end
+
+	leg_attr = (orientation = :horizontal, tellheight = true, tellwidth = false)
+	leg = Legend(fig[3,1], ax1; leg_attr...)
+	
+	fig
+end
+
+# ╔═╡ f94d2ce4-6e01-11eb-3e0d-5f3a0d45f227
+md"""
+## Three Groups: Bottom 50, Middle 40, Top 10
+"""
 
 # ╔═╡ 339dee36-6d37-11eb-0b57-cf3dc61977a7
 begin
@@ -189,33 +260,6 @@ begin
 	transform!(df3, [:ownermort, :fiinc] => ByRow(/) => "mort2inc")
 end
 
-
-
-# ╔═╡ 6a5edc50-6d37-11eb-279b-efbf5bb59692
-map(df1.group) do grp
-	parse(Int, string(grp)[6:end])
-end
-	
-
-# ╔═╡ 8b4564e0-6d49-11eb-08b7-17243def9e0c
-
-
-# ╔═╡ 8ecc82f2-6bb1-11eb-1bcb-dbba92543f2b
-begin
-	fig = Figure()
-	ax = Axis(fig[1,1])
-	
-	colors = [:blue, :red, :green]
-	
-	for (i,d) in enumerate(groupby(df3, :three_grps))
-			lines!(ax, d.year, d.r_fiinc ./ 1000, label = only(unique(d.three_grps)), color = colors[i])
-	end
-
-	Legend(fig[1,2], ax)
-	fig
-end
-
-# ╔═╡ 60d4207a-6d49-11eb-1785-0b0a06370f81
 
 
 # ╔═╡ e8d56ff8-6d42-11eb-13c0-73e77a9df363
@@ -289,15 +333,15 @@ TableOfContents()
 # ╟─c029567a-6bab-11eb-31d2-bd3b60724e99
 # ╠═dee716ce-6bab-11eb-1cdc-e18c5bf026a9
 # ╠═876ec3a8-6bb3-11eb-2d6c-39cfffb4d401
-# ╠═d9b6b664-6bae-11eb-2ec6-41be8491f39b
+# ╠═af9ad364-6e04-11eb-18fa-cf66c3cf4f6b
 # ╠═31f69312-6bb1-11eb-220d-efd477af3e7a
 # ╠═aa5659fc-6be6-11eb-272c-09834723ab9b
 # ╠═1811758c-6bbd-11eb-1bde-81cead34ade8
-# ╠═6a5edc50-6d37-11eb-279b-efbf5bb59692
+# ╟─11e25cc0-6e02-11eb-06ce-478cc66b8410
+# ╟─302d69a4-6e02-11eb-2ee6-01bd650a5a63
+# ╠═5ecf0b3c-6e02-11eb-280d-ef6617d94d3c
+# ╟─f94d2ce4-6e01-11eb-3e0d-5f3a0d45f227
 # ╠═339dee36-6d37-11eb-0b57-cf3dc61977a7
-# ╠═8b4564e0-6d49-11eb-08b7-17243def9e0c
-# ╠═8ecc82f2-6bb1-11eb-1bcb-dbba92543f2b
-# ╠═60d4207a-6d49-11eb-1785-0b0a06370f81
 # ╠═e8d56ff8-6d42-11eb-13c0-73e77a9df363
 # ╠═5406fb5e-6d3c-11eb-0723-4bc72209a494
 # ╠═87157a66-6d41-11eb-2a54-df5acc3c8f5c
