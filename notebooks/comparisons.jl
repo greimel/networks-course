@@ -68,6 +68,12 @@ md"""
 `comparisons.jl` | **Version 0.1** | *last updated: Feb 10*
 """
 
+# ╔═╡ 1b5e05a6-6d35-11eb-1921-3b5c6836e288
+md"""
+!!! danger "Preliminary version"
+    Nice that you've found this notebook on github. We appreciate your engagement. Feel free to have a look. Please note that the notebook is subject to change until a link is is uploaded to *Canvas*.
+"""
+
 # ╔═╡ 549c17f0-6b77-11eb-3cc7-379d1bcfad6f
 md"""
 # Social Comparisons, Income Inequality and the Mortgage Boom
@@ -172,6 +178,7 @@ TableOfContents()
 
 # ╔═╡ Cell order:
 # ╟─7fadac3a-6b77-11eb-2030-f92648bcef71
+# ╠═1b5e05a6-6d35-11eb-1921-3b5c6836e288
 # ╟─549c17f0-6b77-11eb-3cc7-379d1bcfad6f
 # ╠═93204904-6b7e-11eb-2101-711075dfeb68
 # ╟─fcdbad94-6b78-11eb-1f33-4b35fee6b1b9
