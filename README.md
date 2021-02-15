@@ -14,7 +14,10 @@ This repository hosts some of the material for the course "Economic and Financia
 * Diffusion on Networks: Modeling Transmission of Disease (contains **Assignment 2**) ([preview](https://greimel.github.io/networks-course/notebooks/disease.html), [download](https://greimel.github.io/networks-course/notebooks/disease.jl))
 
 ### Week 3
-* Social Connectedness: What Friendships on Facebook Tell Us About the World *(preliminary)* ([preview](https://greimel.github.io/networks-course/notebooks/facebook.html), [download](https://greimel.github.io/networks-course/notebooks/facebook.jl))
+*  *(preliminary)* Social Connectedness: What Friendships on Facebook Tell Us About the World ([preview](https://greimel.github.io/networks-course/notebooks/facebook.html), [download](https://greimel.github.io/networks-course/notebooks/facebook.jl))
+
+### Week 4
+*  *(preliminary)* Social Comparisons, Income Inequality and the Mortgage Boom ([preview](https://greimel.github.io/networks-course/notebooks/comparisons.html), [download](https://greimel.github.io/networks-course/notebooks/comparisons.jl))
 
 ## Software and setup
 
