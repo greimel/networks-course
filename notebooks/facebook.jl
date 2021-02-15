@@ -191,7 +191,7 @@ The social connectedness is strongly correlated with distance. The closest geogr
 
 👉 Think about a country for which you expect high social connectedness with a country far away. Replace the variable `country` (now *$(country)*) with the two-letter abbreviation of the country of your choice.
 
-👉 Explain in <200 words why you would expect high social connectedness with this distant country. (Common) history? A common stereotype?
+👉 Explain in <200 words why you would expect high social connectedness with this distant country. (Common) history? A stereotype?
 """
 
 # ╔═╡ 6114ed16-6f9d-11eb-1bd4-1d1710b7f9df
@@ -203,12 +203,52 @@ goes here ...
 
 # ╔═╡ 2338f91c-6f9e-11eb-0fb5-33421b7ae810
 md"""
-#### Task 2: Measuring centrality in the network of regions (2 points)
+#### Task 2: Measuring centrality in the network of regions (4 points)
+
+Take another look at the list of *most central countries* according to the social connectedness index. *(Shown below.)*
+"""
+
+# ╔═╡ da7f397a-6fa6-11eb-19d5-972c93f11f91
+md"""
+This list contains some surprises countries. Would you have thought that Papua New Guinea and Vanuatu are the most central countries? There are two possibilities.
+
+1. Our prior beliefs are wrong.
+
+2. We don't measure what we want to measure.
+
+Before we update our beliefs, let us think a bit about measuring centrality.
+
+👉 (2.1 | 1 points) Discuss what problems you see with our measure of centrality. (200 words)
+"""
 
 
-👉 Think 
+# ╔═╡ 55ab86e6-6fa8-11eb-2ac4-9f0548598014
+md"""
+👉 (2.2 | 2 points) Suggest an improved measure of centrality. Explain which of the problems you identified above are mitigated and how. 
+"""
 
-👉 Suggest alternative
+# ╔═╡ 74c2e86c-6fa8-11eb-32f7-a97c939225ef
+md"""
+👉 (2.3 | 1 point) Calculate your suggested centrality measure and compare it to the measure from the lecture. 
+"""
+
+# ╔═╡ e4a28c46-6fa8-11eb-0b80-658ffbab932b
+md"""
+#### Task 3: Using the Social Connectedness Index (4 points)
+
+The Social Connectedness Index dataset is a very recent dataset. Thus, there is plenty of room for further exploration.
+
+Look for papers that have used the Social Connectedness Index for economic research. (You can start on [Theresa Kuchler's website](http://pages.stern.nyu.edu/~tkuchler/index.html)). Select the two papers that have the most interesting titles or abstracts.
+"""
+
+# ╔═╡ 39ea6d9a-6fab-11eb-2b00-f3eda1cd2677
+md"""
+👉 (3.1 | 1 point) List the two papers and explain in two sentences (one per paper) why you find them interesting.
+"""
+
+# ╔═╡ 272f7770-6fab-11eb-32b9-01af616ae967
+md"""
+👉 (3.2 | 3 points) Think of a (research) question that you can be answered using the Social Connectedness Index.
 """
 
 # ╔═╡ 3062715a-6c75-11eb-30ef-2953bc64adb8
@@ -400,6 +440,9 @@ let
 end
 
 # ╔═╡ b5464c40-6cbb-11eb-233a-b1557763e8d6
+sort(df_nodes, :eigv_c, rev = true)
+
+# ╔═╡ d1fd17dc-6fa6-11eb-245d-8bc905079f2f
 sort(df_nodes, :eigv_c, rev = true)
 
 # ╔═╡ 29479030-6c75-11eb-1b96-9fd35f6d0840
@@ -640,12 +683,19 @@ md"""
 # ╠═94895ab8-6f9a-11eb-3c04-dbe13f545acc
 # ╟─a3176884-6f9a-11eb-1831-41486221dedb
 # ╟─50e332de-6f9a-11eb-3888-d15d986aca8e
-# ╠═96e4482c-6f9a-11eb-0e47-c568006368b6
+# ╟─96e4482c-6f9a-11eb-0e47-c568006368b6
 # ╠═ac0bbc28-6f9b-11eb-1467-6dbd9d2b763a
 # ╠═6114ed16-6f9d-11eb-1bd4-1d1710b7f9df
 # ╟─b0f46e9c-6f9d-11eb-1ed0-0fddd637fb6c
 # ╟─7156d9ac-6f9d-11eb-36e1-77f5eda39e16
-# ╠═2338f91c-6f9e-11eb-0fb5-33421b7ae810
+# ╟─2338f91c-6f9e-11eb-0fb5-33421b7ae810
+# ╠═d1fd17dc-6fa6-11eb-245d-8bc905079f2f
+# ╟─da7f397a-6fa6-11eb-19d5-972c93f11f91
+# ╟─55ab86e6-6fa8-11eb-2ac4-9f0548598014
+# ╟─74c2e86c-6fa8-11eb-32f7-a97c939225ef
+# ╟─e4a28c46-6fa8-11eb-0b80-658ffbab932b
+# ╟─39ea6d9a-6fab-11eb-2b00-f3eda1cd2677
+# ╟─272f7770-6fab-11eb-32b9-01af616ae967
 # ╟─3062715a-6c75-11eb-30ef-2953bc64adb8
 # ╟─186246ce-6c80-11eb-016f-1b1abb9039bd
 # ╠═7f85031a-6c75-11eb-0d7b-31519ba1c2f9
