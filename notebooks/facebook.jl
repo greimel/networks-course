@@ -112,7 +112,7 @@ end
 
 # ╔═╡ 47594b98-6c72-11eb-264f-e5416a8faa32
 md"""
-`facebook.jl` | **Version 0.5** | *last updated: Feb 11*
+`facebook.jl` | **Version 0.6** | *last updated: Feb 15*
 """
 
 # ╔═╡ 6712b2f0-6c72-11eb-0cb1-b12b78ab5556
@@ -158,6 +158,57 @@ md"""
 # ╔═╡ 8838d306-6c75-11eb-354a-7dadbf6e973f
 md"""
 # Network Concentration
+"""
+
+# ╔═╡ 7b50095c-6f9a-11eb-2cf5-31805fc10804
+md"""
+## (End of Lecture)
+"""
+
+# ╔═╡ 8a0e113c-6f9a-11eb-3c3b-bfb0c9220562
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]);
+
+# ╔═╡ 94895ab8-6f9a-11eb-3c04-dbe13f545acc
+group_number = 99
+
+# ╔═╡ a3176884-6f9a-11eb-1831-41486221dedb
+if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
+	md"""
+!!! danger "Note!"
+    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in the top cell.
+	"""
+end
+
+# ╔═╡ 96e4482c-6f9a-11eb-0e47-c568006368b6
+md"""
+#### Task 1: Social connectedness is not distance (2 points)
+
+The social connectedness is strongly correlated with distance. The closest geographical regions often have the highest social connectedness index.
+
+👉 Think about a country for which you expect high social connectedness with a country far away. Replace the variable `country` (now *$(country)*) with the two-letter abbreviation of the country of your choice.
+
+👉 Explain in <200 words why you would expect high social connectedness with this distant country. (Common) history? A common stereotype?
+"""
+
+# ╔═╡ 6114ed16-6f9d-11eb-1bd4-1d1710b7f9df
+answer1 = md"""
+Your answer
+
+goes here ...
+"""
+
+# ╔═╡ 2338f91c-6f9e-11eb-0fb5-33421b7ae810
+md"""
+#### Task 2: Measuring centrality in the network of regions (2 points)
+
+
+👉 Think 
+
+👉 Suggest alternative
 """
 
 # ╔═╡ 3062715a-6c75-11eb-30ef-2953bc64adb8
@@ -399,7 +450,7 @@ begin
 end
 
 # ╔═╡ 6d30c04a-6cb2-11eb-220b-998e7d5cc469
-let
+sci_country_fig = let
 	fig = Figure()
 	ax = Axis(fig[1,1], title = "Social connectedness with $country")
 	hidedecorations!(ax)
@@ -422,6 +473,9 @@ let
 	fig
 	
 end
+
+# ╔═╡ ac0bbc28-6f9b-11eb-1467-6dbd9d2b763a
+sci_country_fig
 
 # ╔═╡ d38c51d4-6cbb-11eb-09dc-a92080dea6c7
 let
@@ -508,8 +562,60 @@ let
 	LG.outneighbors(graph::DenseWeightedGraph, j) = LG.weights(graph)[i,:] .> 0
 end
 
+# ╔═╡ c069fd72-6f9a-11eb-000c-1fa67ae5bed4
+md"""
+## Other stuff
+"""
+
 # ╔═╡ 6bec11fe-6c75-11eb-2494-25e57c4c84c8
 TableOfContents()
+
+# ╔═╡ c9de87e2-6f9a-11eb-06cf-d778ae009fb6
+begin
+	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
+	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
+	still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
+	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
+	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
+	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
+	function wordcount(text)
+    	words=split(string(text), (' ','\n','\t','-','.',',',':','_','"',';','!'))
+    	length(words)
+	end
+end
+
+# ╔═╡ b0f46e9c-6f9d-11eb-1ed0-0fddd637fb6c
+md"(You have used approximately **$(wordcount(answer1))** words.)"
+
+# ╔═╡ 7156d9ac-6f9d-11eb-36e1-77f5eda39e16
+if answer1 == md"""
+Your answer
+
+goes here ...
+"""
+	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
+elseif wordcount(answer1) > 1.1 * 200
+	almost(md"Try to shorten your text a bit, to get below 500 words.")
+else
+	correct(md"Great, we are looking forward to reading your answer!")
+end
+
+# ╔═╡ c79b5e38-6f9a-11eb-05d3-9bf4844896f8
+members = let
+	str = ""
+	for (first, last) in group_members
+		str *= str == "" ? "" : ", "
+		str *= first * " " * last
+	end
+	str
+end
+
+# ╔═╡ 50e332de-6f9a-11eb-3888-d15d986aca8e
+md"""
+# Assignment 3: The Social Connectedness Index
+
+*submitted by* **$members** (*group $(group_number)*)
+"""
 
 # ╔═╡ Cell order:
 # ╟─47594b98-6c72-11eb-264f-e5416a8faa32
@@ -529,6 +635,17 @@ TableOfContents()
 # ╠═b5464c40-6cbb-11eb-233a-b1557763e8d6
 # ╠═d38c51d4-6cbb-11eb-09dc-a92080dea6c7
 # ╟─8838d306-6c75-11eb-354a-7dadbf6e973f
+# ╟─7b50095c-6f9a-11eb-2cf5-31805fc10804
+# ╠═8a0e113c-6f9a-11eb-3c3b-bfb0c9220562
+# ╠═94895ab8-6f9a-11eb-3c04-dbe13f545acc
+# ╟─a3176884-6f9a-11eb-1831-41486221dedb
+# ╟─50e332de-6f9a-11eb-3888-d15d986aca8e
+# ╠═96e4482c-6f9a-11eb-0e47-c568006368b6
+# ╠═ac0bbc28-6f9b-11eb-1467-6dbd9d2b763a
+# ╠═6114ed16-6f9d-11eb-1bd4-1d1710b7f9df
+# ╟─b0f46e9c-6f9d-11eb-1ed0-0fddd637fb6c
+# ╟─7156d9ac-6f9d-11eb-36e1-77f5eda39e16
+# ╠═2338f91c-6f9e-11eb-0fb5-33421b7ae810
 # ╟─3062715a-6c75-11eb-30ef-2953bc64adb8
 # ╟─186246ce-6c80-11eb-016f-1b1abb9039bd
 # ╠═7f85031a-6c75-11eb-0d7b-31519ba1c2f9
@@ -567,4 +684,7 @@ TableOfContents()
 # ╠═1f7e15e2-6cbb-11eb-1e92-9f37d4f3df40
 # ╟─3bdf7df2-6cbb-11eb-2ea4-f5e465bd0e63
 # ╠═2aa908f0-6cbb-11eb-1ee5-3399373632a5
+# ╟─c069fd72-6f9a-11eb-000c-1fa67ae5bed4
 # ╠═6bec11fe-6c75-11eb-2494-25e57c4c84c8
+# ╠═c9de87e2-6f9a-11eb-06cf-d778ae009fb6
+# ╠═c79b5e38-6f9a-11eb-05d3-9bf4844896f8
