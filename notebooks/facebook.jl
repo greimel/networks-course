@@ -179,35 +179,6 @@ md"""
 # ╔═╡ cf24412e-7125-11eb-1c82-7f59f4640c72
 county_name = "Cook"; state = "Illinois"
 
-# ╔═╡ d4b337f4-7124-11eb-0437-e1e4ec1a61c9
-md"""
-## Preparations County level analysis
-"""
-
-# ╔═╡ 3ebcb4d8-7123-11eb-3b71-c107f5ecfa30
-md"""
-### County-Level Data
-"""
-
-# ╔═╡ fe752700-711a-11eb-1c13-3303010dfa48
-md"""
-### Matching County Names
-"""
-
-# ╔═╡ 278f55b0-711c-11eb-36d9-05fff7161d82
-md"""
-The SCI data contain data on county-equivalent entities from U.S. protectorates and freely associated states (e.g. American Samoa, Puerto Rico, Guam). For these entities the don't have additional data, so we drop them.
-"""
-
-# ╔═╡ a6b7545a-711c-11eb-13b4-6baf343485a0
-md"""
-Unfortunately, the map data don't contain FIPS codes, but county names. These are not in the same format as the names in `county_acs_df`.
-
-* We need to remove identifiers like "County", "Parish", etc from the name.
-* We need to handle capitalization and spaces in spanish names
-* We need to handle the use of "St." vs "Saint"
-"""
-
 # ╔═╡ 7b50095c-6f9a-11eb-2cf5-31805fc10804
 md"""
 ## (End of Lecture)
@@ -381,45 +352,6 @@ function csv_from_url(url)
 	df = DataFrame(csv)
 end
 
-# ╔═╡ 5400d658-7123-11eb-00c3-b70d622faf7b
-begin
-	county_acs_csv = "https://github.com/social-connectedness-index/example-scripts/raw/master/covid19_exploration/_input/ACS_17_5YR_DP05.csv"
-	county_acs_df0 = csv_from_url(county_acs_csv)
-	
-	county_acs_df = select(county_acs_df0, "GEO.id2"=> :fips, "GEO.display-label" => :label, "HC01_VC03" => :pop)
-end
-
-# ╔═╡ 14d721c4-711b-11eb-2fef-a986c8581f11
-county_dict = let
-	df = map(county_acs_df.label) do str
-		county, state = split(str, ", ")
-
-		county_match = replace(county, " County" => "")
-		repl = [
-			" Parish"      => "",
-			" City"        => "", " city"    => "",
-			" and Borough" => "", " Borough" => "",
-			" Census Area" => "",
-			" Municipality"=> "",
-			"\xf1"         => "n", # ñ => n
-			"St."          => "Saint",
-			"Ste."         => "Sainte",
-			" " => ""]
-		
-		for r in repl
-			county_match = replace(county_match, r)
-		end
-		
-		county_match = lowercase(county_match)
-		
-		(; state, county, county_match)
-	end |> DataFrame
-	
-	df.fips = county_acs_df.fips
-	df.pop  = county_acs_df.pop
-	df
-end;
-
 # ╔═╡ 9d80ae04-6c80-11eb-2c03-b7b45ca6e0bf
 get_country_sci() = csv_from_url(url_country_country)
 
@@ -465,22 +397,6 @@ begin
 	#node_county_ids.eigv_c = eigenvector_centrality(g_county)
 end
 
-# ╔═╡ bb9821ce-710d-11eb-31ad-63c31f90019b
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Social connectedness between US counties")
-	
-	image!(ax, RGBA.(0,0,0, min.(1.0, weights .* 10_000)))
-	
-	fig
-end
-
-# ╔═╡ 3ec51950-711b-11eb-08fd-0d6ea3ee31ea
-node_county_ids
-
-# ╔═╡ 754db298-711b-11eb-3b0f-07e1d984dbe0
-filter(!in(county_acs_df.fips), node_county_ids)
-
 # ╔═╡ 72619534-6c81-11eb-07f1-67f833293077
 md"""
 ## Downloading the Maps
@@ -515,93 +431,6 @@ function download_county_shapes()
 	url = "https://biogeo.ucdavis.edu/data/gadm3.6/shp/gadm36_USA_shp.zip"
 	map_name = "gadm36_USA_2"
 	download_zipped_shapes(url, map_name)
-end
-
-# ╔═╡ 94c0fa82-7124-11eb-0fdd-c3cb8cc9311d
-county_shapes_df0 = let
-	df = download_county_shapes() |> DataFrame
-	select!(df, :NAME_1 => :state, :NAME_2 => :county, :Geometry => :shape)
-end
-
-# ╔═╡ de30588c-7121-11eb-3781-b9412bd4b7ae
-county_shapes_df1 = begin
-	transform!(county_shapes_df0, :county => ByRow(x -> lowercase(replace(x, " " => ""))) => :county_match)
-	transform!(county_shapes_df0, :county_match => ByRow(x-> replace(x, "city" => "")) => :county_match)
-end;
-
-# ╔═╡ e7231bac-7115-11eb-1c7a-8f1b9c109dd0
-county_dict_shapes0 = leftjoin(county_dict, county_shapes_df1, on = [:state, :county_match], makeunique=true);
-
-# ╔═╡ 38a2ac40-7122-11eb-1a80-edb0bc182b5c
-begin
-	not_matched = filter([:county_1, :fips] => (x,y) -> any(ismissing.([x,y])), county_dict_shapes0)
-	
-	county_dict_shapes = filter!(:shape => !ismissing, county_dict_shapes0)
-	select!(county_dict_shapes, :county_1 => :county, Not([:county_1, :county_match]))
-	disallowmissing!(county_dict_shapes)
-end
-
-# ╔═╡ da19832e-710b-11eb-0e66-01111d3070b5
-# filter out Alaska and Hawaii for plotting
-county_shapes_df = filter(:state => !in(["Hawaii", "Alaska"]), county_dict_shapes);
-
-# ╔═╡ 2f525ae6-7125-11eb-1254-3732191908e5
-fips, _df_ = let
-	_df_ = filter(:county => contains(county_name), county_shapes_df)
-	
-	if size(_df_, 1) == 1
-		fips = only(_df_.fips)
-	else
-		filter!(:state => ==(state), _df_)
-		if size(_df_, 1) == 1
-			fips = only(_df_.fips)
-		else
-			_df_
-		end
-	end
-	fips, _df_
-end
-
-# ╔═╡ de19a2a0-7125-11eb-230b-2fc866269553
-let
-	df = filter(:user_loc => ==(fips), county_df)
-	select!(df, :fr_loc => :fips, :scaled_sci)
-	
-	df = innerjoin(county_shapes_df, df, on=:fips)
-	
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Social Connectedness with $county_name")
-	
-	hidedecorations!(ax)
-	hidespines!(ax)
-	
-	color_variable = log.(df.scaled_sci)
-	attr = (tellwidth = true, width = 30)
-	
-	poly!(ax, df.shape, color = color_variable)
-	
-	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="log(scaled_sci)")
-	
-	fig
-end
-
-# ╔═╡ c090e76c-710b-11eb-3b8e-277cbfbb3aa1
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "US Counties with Random Colors")
-	
-	hidedecorations!(ax)
-	hidespines!(ax)
-	
-	df = county_shapes_df #filter(:state => !in(["Alaska", "Hawaii"]), county_dict_shapes) 
-	color_variable = log.(df.pop)
-	attr = (tellwidth = true, width = 30)
-	
-	poly!(ax, df.shape, color = color_variable)
-	
-	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="log(population)")
-	
-	fig
 end
 
 # ╔═╡ 713ce11e-6c85-11eb-12f7-d7fac18801fd
@@ -960,25 +789,7 @@ md"""
 # ╟─d127df3e-710d-11eb-391a-89f3aeb8c219
 # ╠═b20ab98c-710d-11eb-0a6a-7de2477acf35
 # ╠═98e7519a-710d-11eb-3781-0d80ff87c17f
-# ╠═bb9821ce-710d-11eb-31ad-63c31f90019b
 # ╠═cf24412e-7125-11eb-1c82-7f59f4640c72
-# ╠═2f525ae6-7125-11eb-1254-3732191908e5
-# ╠═de19a2a0-7125-11eb-230b-2fc866269553
-# ╟─d4b337f4-7124-11eb-0437-e1e4ec1a61c9
-# ╠═c090e76c-710b-11eb-3b8e-277cbfbb3aa1
-# ╠═da19832e-710b-11eb-0e66-01111d3070b5
-# ╟─3ebcb4d8-7123-11eb-3b71-c107f5ecfa30
-# ╠═94c0fa82-7124-11eb-0fdd-c3cb8cc9311d
-# ╠═5400d658-7123-11eb-00c3-b70d622faf7b
-# ╟─fe752700-711a-11eb-1c13-3303010dfa48
-# ╠═3ec51950-711b-11eb-08fd-0d6ea3ee31ea
-# ╟─278f55b0-711c-11eb-36d9-05fff7161d82
-# ╠═754db298-711b-11eb-3b0f-07e1d984dbe0
-# ╟─a6b7545a-711c-11eb-13b4-6baf343485a0
-# ╠═14d721c4-711b-11eb-2fef-a986c8581f11
-# ╠═de30588c-7121-11eb-3781-b9412bd4b7ae
-# ╠═e7231bac-7115-11eb-1c7a-8f1b9c109dd0
-# ╠═38a2ac40-7122-11eb-1a80-edb0bc182b5c
 # ╟─7b50095c-6f9a-11eb-2cf5-31805fc10804
 # ╠═8a0e113c-6f9a-11eb-3c3b-bfb0c9220562
 # ╠═94895ab8-6f9a-11eb-3c04-dbe13f545acc
