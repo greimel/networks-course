@@ -171,14 +171,6 @@ md"""
 # Social Connectedness as Weights of a Network of Regions
 """
 
-# ╔═╡ d127df3e-710d-11eb-391a-89f3aeb8c219
-md"""
-# The Same with US Counties
-"""
-
-# ╔═╡ cf24412e-7125-11eb-1c82-7f59f4640c72
-county_name = "Cook"; state = "Illinois"
-
 # ╔═╡ 7b50095c-6f9a-11eb-2cf5-31805fc10804
 md"""
 ## (End of Lecture)
@@ -358,9 +350,6 @@ get_country_sci() = csv_from_url(url_country_country)
 # ╔═╡ be47304a-6c80-11eb-18ad-974bb077e53f
 get_county_sci() = csv_from_url(url_county)
 
-# ╔═╡ b20ab98c-710d-11eb-0a6a-7de2477acf35
-county_df0 = get_county_sci()
-
 # ╔═╡ a6939ede-6c80-11eb-21ce-bdda8fe67acc
 md"""
 ## Constructing a Network From SCI Data
@@ -386,15 +375,6 @@ function make_sci_graph(df_sci)
 	wgts ./= maximum(wgts)
 	
 	(; node_names, wgts)
-end
-
-# ╔═╡ 98e7519a-710d-11eb-3781-0d80ff87c17f
-begin
-	node_county_ids, weights = make_sci_graph(county_df0)
-	g_county = SimpleWeightedGraph(weights)
-	
-	county_df = deepcopy(county_df0)
-	#node_county_ids.eigv_c = eigenvector_centrality(g_county)
 end
 
 # ╔═╡ 72619534-6c81-11eb-07f1-67f833293077
@@ -786,10 +766,6 @@ md"""
 # ╠═96cd1698-6cbb-11eb-0843-f9edd8f58c80
 # ╠═b5464c40-6cbb-11eb-233a-b1557763e8d6
 # ╠═d38c51d4-6cbb-11eb-09dc-a92080dea6c7
-# ╟─d127df3e-710d-11eb-391a-89f3aeb8c219
-# ╠═b20ab98c-710d-11eb-0a6a-7de2477acf35
-# ╠═98e7519a-710d-11eb-3781-0d80ff87c17f
-# ╠═cf24412e-7125-11eb-1c82-7f59f4640c72
 # ╟─7b50095c-6f9a-11eb-2cf5-31805fc10804
 # ╠═8a0e113c-6f9a-11eb-3c3b-bfb0c9220562
 # ╠═94895ab8-6f9a-11eb-3c04-dbe13f545acc
