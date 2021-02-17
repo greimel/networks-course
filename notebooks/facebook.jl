@@ -38,6 +38,9 @@ begin
 	using NetworkLayout: NetworkLayout
 end
 
+# ╔═╡ 131244a8-7130-11eb-3770-a18a06eac45f
+Pkg.add("StatsBase"); using StatsBase
+
 # ╔═╡ 6b906ab0-6c80-11eb-29a9-ab1e42290019
 begin
 	_c_ = _b_ + 1 # Cell #3
@@ -190,7 +193,18 @@ add0_infty(from, to, dist) = from == to ? 0.0 : ismissing(dist) ? Inf : dist
 # ╔═╡ 2dc57ad0-712c-11eb-3051-599c21f00b38
 distance = 150
 
+# ╔═╡ 729469f6-7130-11eb-07da-d1a7eb14881a
+format(a, b, i; kwargs...) = "$i"
+
+# ╔═╡ f3b6d9be-712e-11eb-2f2d-af92e85304b5
+md"""
+## US Presidential Elections 2020
+"""
+
 # ╔═╡ 825b52aa-712d-11eb-0eec-1561c87b7aac
+url_elect = "https://raw.githubusercontent.com/tonmcg/US_County_Level_Election_Results_08-20/master/2020_US_County_Level_Presidential_Results.csv"
+
+# ╔═╡ 5acfb60c-7132-11eb-0909-7587828d62af
 
 
 # ╔═╡ d4b337f4-7124-11eb-0437-e1e4ec1a61c9
@@ -335,6 +349,9 @@ function csv_from_url(url)
 	df = DataFrame(csv)
 end
 
+# ╔═╡ 1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
+df_elect0 = csv_from_url(url_elect)
+
 # ╔═╡ 5400d658-7123-11eb-00c3-b70d622faf7b
 begin
 	county_acs_csv = "https://github.com/social-connectedness-index/example-scripts/raw/master/covid19_exploration/_input/ACS_17_5YR_DP05.csv"
@@ -399,16 +416,13 @@ begin
 end
 
 # ╔═╡ 99eb89dc-7129-11eb-0f61-79af19d18589
-concentration_df = combine(groupby(df_c, :user_loc)) do all
+concentration_df0 = combine(groupby(df_c, :user_loc)) do all
 		close = filter(:distance => <(distance), all)
 		
 		concentration = dot(close.scaled_sci, close.pop) / dot(all.scaled_sci, all.pop)
 		
 		(; concentration)
 end
-
-# ╔═╡ 49278da8-712d-11eb-15c1-afcf15a38fa9
-hist(concentration_df.concentration)
 
 # ╔═╡ e1dae81c-712b-11eb-0fb8-654147206526
 extrema(skipmissing(df_c.mi_to_county))
@@ -563,12 +577,32 @@ let
 	fig
 end
 
+# ╔═╡ 4a641856-712f-11eb-34fe-eb9641c13f03
+concentration_df = let
+	df = innerjoin(county_shapes_df, concentration_df0, on=:fips => :user_loc)
+	
+	n = 40
+	q = quantile(df.concentration, Weights(df.pop), 0:1/n:1)
+	
+	df.conc_grp = cut(df.concentration, q, extend = true, labels = format)
+	df
+end
+	
+
+# ╔═╡ baebb396-7130-11eb-3ca2-1bb9e2d0826b
+let
+	var = [:pop, :concentration]
+	df = combine(
+		groupby(concentration_df, :conc_grp), 
+		([v, :pop] => ((x,p) -> dot(x,p) / sum(p)) => v for v in var)...
+	)
+	scatter(df.concentration, log.(df.pop))
+end
+
 # ╔═╡ 7ca9c2ec-712b-11eb-229a-3322c8115255
 let
 	df = concentration_df
-	
-	df = innerjoin(county_shapes_df, df, on=:fips => :user_loc)
-	
+		
 	fig = Figure()
 	ax = Axis(fig[1,1], title = "Network Concentration (% of friends closer than $distance mi)")
 	
@@ -583,6 +617,26 @@ let
 	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="concentration")
 	
 	fig
+end
+
+# ╔═╡ 49278da8-712d-11eb-15c1-afcf15a38fa9
+let
+	df = concentration_df
+		
+	scatter(log.(df.pop), df.concentration, color = (:black, 0.1), strokewidth = 0)
+end
+
+# ╔═╡ 281198fa-712f-11eb-02ae-99a2d48099eb
+df_elect = innerjoin(df_elect0, concentration_df, on = :county_fips => :fips)
+
+# ╔═╡ 8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
+let
+	var = [:pop, :per_gop, :concentration]
+	df = combine(
+		groupby(df_elect, :conc_grp), 
+		([v, :pop] => ((x,p) -> dot(x,p) / sum(p)) => v for v in var)...
+	)
+	scatter(df.concentration, df.per_gop, axis = (xlabel = "network concentration", ylabel = "vote share Trump"))
 end
 
 # ╔═╡ c090e76c-710b-11eb-3b8e-277cbfbb3aa1
@@ -953,10 +1007,18 @@ md"""
 # ╠═b9c0be22-7128-11eb-3da8-bb3a49e95fd7
 # ╠═2dc57ad0-712c-11eb-3051-599c21f00b38
 # ╠═99eb89dc-7129-11eb-0f61-79af19d18589
+# ╠═4a641856-712f-11eb-34fe-eb9641c13f03
+# ╠═729469f6-7130-11eb-07da-d1a7eb14881a
+# ╠═baebb396-7130-11eb-3ca2-1bb9e2d0826b
 # ╠═e1dae81c-712b-11eb-0fb8-654147206526
 # ╠═7ca9c2ec-712b-11eb-229a-3322c8115255
 # ╠═49278da8-712d-11eb-15c1-afcf15a38fa9
+# ╟─f3b6d9be-712e-11eb-2f2d-af92e85304b5
 # ╠═825b52aa-712d-11eb-0eec-1561c87b7aac
+# ╠═1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
+# ╠═281198fa-712f-11eb-02ae-99a2d48099eb
+# ╠═5acfb60c-7132-11eb-0909-7587828d62af
+# ╠═8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
 # ╟─d4b337f4-7124-11eb-0437-e1e4ec1a61c9
 # ╠═c090e76c-710b-11eb-3b8e-277cbfbb3aa1
 # ╠═da19832e-710b-11eb-0e66-01111d3070b5
@@ -1023,6 +1085,7 @@ md"""
 # ╟─39d717a4-6c75-11eb-15f0-d537959a41b8
 # ╠═69209f8a-6c75-11eb-228e-475c3fcde6e7
 # ╠═60483912-6c80-11eb-27ba-55477555f345
+# ╠═131244a8-7130-11eb-3770-a18a06eac45f
 # ╠═6b906ab0-6c80-11eb-29a9-ab1e42290019
 # ╟─3399e1f8-6cbb-11eb-329c-811efb68179f
 # ╠═1f7e15e2-6cbb-11eb-1e92-9f37d4f3df40
