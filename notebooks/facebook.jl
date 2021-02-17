@@ -204,9 +204,6 @@ md"""
 # ╔═╡ 825b52aa-712d-11eb-0eec-1561c87b7aac
 url_elect = "https://raw.githubusercontent.com/tonmcg/US_County_Level_Election_Results_08-20/master/2020_US_County_Level_Presidential_Results.csv"
 
-# ╔═╡ 5acfb60c-7132-11eb-0909-7587828d62af
-
-
 # ╔═╡ d4b337f4-7124-11eb-0437-e1e4ec1a61c9
 md"""
 ## Preparations County level analysis
@@ -596,7 +593,7 @@ let
 		groupby(concentration_df, :conc_grp), 
 		([v, :pop] => ((x,p) -> dot(x,p) / sum(p)) => v for v in var)...
 	)
-	scatter(df.concentration, log.(df.pop))
+	scatter(df.concentration, log.(df.pop), axis = (xlabel = "network concentration", ylabel = "log(population)"))
 end
 
 # ╔═╡ 7ca9c2ec-712b-11eb-229a-3322c8115255
@@ -1017,7 +1014,6 @@ md"""
 # ╠═825b52aa-712d-11eb-0eec-1561c87b7aac
 # ╠═1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
 # ╠═281198fa-712f-11eb-02ae-99a2d48099eb
-# ╠═5acfb60c-7132-11eb-0909-7587828d62af
 # ╠═8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
 # ╟─d4b337f4-7124-11eb-0437-e1e4ec1a61c9
 # ╠═c090e76c-710b-11eb-3b8e-277cbfbb3aa1
