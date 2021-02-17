@@ -209,14 +209,6 @@ distance = 150
 # ╔═╡ 729469f6-7130-11eb-07da-d1a7eb14881a
 format(a, b, i; kwargs...) = "$i"
 
-# ╔═╡ f3b6d9be-712e-11eb-2f2d-af92e85304b5
-md"""
-## US Presidential Elections 2020
-"""
-
-# ╔═╡ 825b52aa-712d-11eb-0eec-1561c87b7aac
-url_elect = "https://raw.githubusercontent.com/tonmcg/US_County_Level_Election_Results_08-20/master/2020_US_County_Level_Presidential_Results.csv"
-
 # ╔═╡ d4b337f4-7124-11eb-0437-e1e4ec1a61c9
 md"""
 ## Preparations County level analysis
@@ -418,9 +410,6 @@ function csv_from_url(url)
 	csv = CSV.File(HTTP.get(url).body)
 	df = DataFrame(csv)
 end
-
-# ╔═╡ 1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
-df_elect0 = csv_from_url(url_elect)
 
 # ╔═╡ 5400d658-7123-11eb-00c3-b70d622faf7b
 begin
@@ -700,39 +689,6 @@ let
 	df = concentration_df
 		
 	scatter(log.(df.pop), df.concentration, color = (:black, 0.1), strokewidth = 0)
-end
-
-# ╔═╡ 281198fa-712f-11eb-02ae-99a2d48099eb
-df_elect = innerjoin(df_elect0, concentration_df, on = :county_fips => :fips)
-
-# ╔═╡ 0243f610-7134-11eb-3b9b-e5474fd7d1cf
-let
-	df = df_elect
-		
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Trump vote share")
-	
-	hidedecorations!(ax)
-	hidespines!(ax)
-	
-	color_variable = df.per_gop
-	attr = (tellwidth = true, width = 30)
-	
-	poly!(ax, df.shape, color = color_variable)
-	
-	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="Trump vote share")
-	
-	fig
-end
-
-# ╔═╡ 8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
-let
-	var = [:pop, :per_gop, :concentration]
-	df = combine(
-		groupby(df_elect, :conc_grp), 
-		([v, :pop] => ((x,p) -> dot(x,p) / sum(p)) => v for v in var)...
-	)
-	scatter(df.concentration, df.per_gop, axis = (xlabel = "network concentration", ylabel = "vote share Trump"))
 end
 
 # ╔═╡ c090e76c-710b-11eb-3b8e-277cbfbb3aa1
@@ -1126,12 +1082,6 @@ md"""
 # ╠═e1dae81c-712b-11eb-0fb8-654147206526
 # ╠═7ca9c2ec-712b-11eb-229a-3322c8115255
 # ╠═49278da8-712d-11eb-15c1-afcf15a38fa9
-# ╟─f3b6d9be-712e-11eb-2f2d-af92e85304b5
-# ╠═825b52aa-712d-11eb-0eec-1561c87b7aac
-# ╠═1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
-# ╠═0243f610-7134-11eb-3b9b-e5474fd7d1cf
-# ╠═281198fa-712f-11eb-02ae-99a2d48099eb
-# ╠═8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
 # ╟─d4b337f4-7124-11eb-0437-e1e4ec1a61c9
 # ╠═c090e76c-710b-11eb-3b8e-277cbfbb3aa1
 # ╠═da19832e-710b-11eb-0e66-01111d3070b5
