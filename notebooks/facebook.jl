@@ -151,7 +151,7 @@ There at least two ways to visualize social connectedness.
 """
 
 # ╔═╡ 710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
-country = "BE"
+country = "GB"
 
 # ╔═╡ e90eb932-6c74-11eb-3338-618a4ea9c211
 md"""
@@ -258,7 +258,7 @@ end
 
 # ╔═╡ 96e4482c-6f9a-11eb-0e47-c568006368b6
 md"""
-#### Task 1: Social connectedness is not distance (2 points)
+### Task 1: Social connectedness is not distance (2 points)
 
 The social connectedness is strongly correlated with distance. The closest geographical regions often have the highest social connectedness index.
 
@@ -276,7 +276,7 @@ goes here ...
 
 # ╔═╡ 2338f91c-6f9e-11eb-0fb5-33421b7ae810
 md"""
-#### Task 2: Measuring centrality in the network of regions (4 points)
+### Task 2: Measuring centrality in the network of regions (4 points)
 
 Take another look at the list of *most central countries* according to the social connectedness index. *(Shown below.)*
 """
@@ -291,13 +291,27 @@ This list contains some surprises countries. Would you have thought that Papua N
 
 Before we update our beliefs, let us think a bit about measuring centrality.
 
-👉 (2.1 | 1 points) Discuss what problems you see with our measure of centrality. (200 words)
+👉 (2.1 | 1 points) Discuss what problems you see with our measure of centrality. ( <200 words)
 """
 
 
+# ╔═╡ d5c448e6-713c-11eb-1b3b-9b8e4af8ae5f
+answer21 = md"""
+Your answer
+
+goes here ...
+"""
+
 # ╔═╡ 55ab86e6-6fa8-11eb-2ac4-9f0548598014
 md"""
-👉 (2.2 | 2 points) Suggest an improved measure of centrality. Explain which of the problems you identified above are mitigated and how. 
+👉 (2.2 | 2 points) Suggest an improved measure of centrality. Explain which of the problems you identified above are mitigated and how. (<200 words)
+"""
+
+# ╔═╡ dcb2cd6c-713c-11eb-1f3d-2de066d25c6f
+answer22 = md"""
+Your answer
+
+goes here ...
 """
 
 # ╔═╡ 74c2e86c-6fa8-11eb-32f7-a97c939225ef
@@ -305,9 +319,28 @@ md"""
 👉 (2.3 | 1 point) Calculate your suggested centrality measure and compare it to the measure from the lecture. 
 """
 
+# ╔═╡ 778053a0-713d-11eb-10d9-0be586250eb1
+# your
+
+# ╔═╡ 7b89e48e-713d-11eb-3838-a5de7e13f72b
+# analysis
+
+# ╔═╡ 7f2a8d46-713d-11eb-08f1-3b310beea91c
+# goes
+
+# ╔═╡ 840a7d80-713d-11eb-19d5-594bcbb61ec0
+# here
+
+# ╔═╡ df16a43e-713c-11eb-15db-cdcdb1756588
+answer23 = md"""
+Your answer
+
+goes here ...
+"""
+
 # ╔═╡ e4a28c46-6fa8-11eb-0b80-658ffbab932b
 md"""
-#### Task 3: Using the Social Connectedness Index (4 points)
+### Task 3: Using the Social Connectedness Index (4 points)
 
 The Social Connectedness Index dataset is a very recent dataset. Thus, there is plenty of room for further exploration.
 
@@ -316,12 +349,39 @@ Look for papers that have used the Social Connectedness Index for economic resea
 
 # ╔═╡ 39ea6d9a-6fab-11eb-2b00-f3eda1cd2677
 md"""
-👉 (3.1 | 1 point) List the two papers and explain in two sentences (one per paper) why you find them interesting.
+👉 (3.1 | 2 points) List the two papers and explain in <150 words (per paper) why the papers are interesting from a network and/or policy perspective.
+"""
+
+# ╔═╡ 2816c75e-713d-11eb-11ec-5391cb16ecc3
+answer31 = md"""
+Your answer
+
+goes here ...
 """
 
 # ╔═╡ 272f7770-6fab-11eb-32b9-01af616ae967
 md"""
-👉 (3.2 | 3 points) Think of a (research) question that you can be answered using the Social Connectedness Index.
+👉 (3.2 | 2 points) Formulate in <300 words a (research) question that can be answered using the Social Connectedness Index and describe how the SCI can help.
+"""
+
+# ╔═╡ 2a61d17a-713d-11eb-2457-11e5c4dd792f
+answer32 = md"""
+Your answer
+
+goes here ...
+"""
+
+# ╔═╡ a81a894a-713d-11eb-0dd8-9d9e8dffee35
+md"""
+#### Before you submit ...
+
+👉 Make sure you have added your names and your group number at the top.
+
+👉 Make sure that that **all group members proofread** your submission (especially your little essay).
+
+👉 Make sure that you are **within the word limit**. Short and concise answers are appreciated. Answers longer than the word limit will lead to deductions.
+
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. In addition, **upload the source code** of the notebook (the .jl file).
 """
 
 # ╔═╡ 3062715a-6c75-11eb-30ef-2953bc64adb8
@@ -395,34 +455,7 @@ get_country_sci() = csv_from_url(url_country_country)
 get_county_sci() = csv_from_url(url_county)
 
 # ╔═╡ b20ab98c-710d-11eb-0a6a-7de2477acf35
-county_df = get_county_sci()
-
-# ╔═╡ b9c0be22-7128-11eb-3da8-bb3a49e95fd7
-begin
-	# add distances
-	df_c = leftjoin(county_df, dff, on=[:user_loc => :county1, :fr_loc => :county2])
-	# set distance to infinity if there are no data
-	transform!(df_c, [:user_loc, :fr_loc, :mi_to_county] => ByRow(add0_infty) => :distance)
-	
-	pop_df = select(county_dict, :fips, :pop)
-	df_c = leftjoin(df_c, pop_df, on = :fr_loc => :fips)
-	filter!(:pop => !ismissing, df_c)
-	disallowmissing!(df_c, :pop)
-	
-	df_c
-end
-
-# ╔═╡ 99eb89dc-7129-11eb-0f61-79af19d18589
-concentration_df0 = combine(groupby(df_c, :user_loc)) do all
-		close = filter(:distance => <(distance), all)
-		
-		concentration = dot(close.scaled_sci, close.pop) / dot(all.scaled_sci, all.pop)
-		
-		(; concentration)
-end
-
-# ╔═╡ e1dae81c-712b-11eb-0fb8-654147206526
-extrema(skipmissing(df_c.mi_to_county))
+county_df0 = get_county_sci()
 
 # ╔═╡ a6939ede-6c80-11eb-21ce-bdda8fe67acc
 md"""
@@ -452,7 +485,13 @@ function make_sci_graph(df_sci)
 end
 
 # ╔═╡ 98e7519a-710d-11eb-3781-0d80ff87c17f
-node_county_ids, weights = make_sci_graph(county_df);
+begin
+	node_county_ids, weights = make_sci_graph(county_df0)
+	g_county = SimpleWeightedGraph(weights)
+	
+	county_df = deepcopy(county_df0)
+	#node_county_ids.eigv_c = eigenvector_centrality(g_county)
+end
 
 # ╔═╡ bb9821ce-710d-11eb-31ad-63c31f90019b
 let
@@ -463,6 +502,33 @@ let
 	
 	fig
 end
+
+# ╔═╡ b9c0be22-7128-11eb-3da8-bb3a49e95fd7
+begin
+	# add distances
+	df_c = leftjoin(county_df, dff, on=[:user_loc => :county1, :fr_loc => :county2])
+	# set distance to infinity if there are no data
+	transform!(df_c, [:user_loc, :fr_loc, :mi_to_county] => ByRow(add0_infty) => :distance)
+	
+	pop_df = select(county_dict, :fips, :pop)
+	df_c = leftjoin(df_c, pop_df, on = :fr_loc => :fips)
+	filter!(:pop => !ismissing, df_c)
+	disallowmissing!(df_c, :pop)
+	
+	df_c
+end
+
+# ╔═╡ 99eb89dc-7129-11eb-0f61-79af19d18589
+concentration_df0 = combine(groupby(df_c, :user_loc)) do all
+		close = filter(:distance => <(distance), all)
+		
+		concentration = dot(close.scaled_sci, close.pop) / dot(all.scaled_sci, all.pop)
+		
+		(; concentration)
+end
+
+# ╔═╡ e1dae81c-712b-11eb-0fb8-654147206526
+extrema(skipmissing(df_c.mi_to_county))
 
 # ╔═╡ 3ec51950-711b-11eb-08fd-0d6ea3ee31ea
 node_county_ids
@@ -625,6 +691,26 @@ end
 
 # ╔═╡ 281198fa-712f-11eb-02ae-99a2d48099eb
 df_elect = innerjoin(df_elect0, concentration_df, on = :county_fips => :fips)
+
+# ╔═╡ 0243f610-7134-11eb-3b9b-e5474fd7d1cf
+let
+	df = df_elect
+		
+	fig = Figure()
+	ax = Axis(fig[1,1], title = "Trump vote share")
+	
+	hidedecorations!(ax)
+	hidespines!(ax)
+	
+	color_variable = df.per_gop
+	attr = (tellwidth = true, width = 30)
+	
+	poly!(ax, df.shape, color = color_variable)
+	
+	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="Trump vote share")
+	
+	fig
+end
 
 # ╔═╡ 8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
 let
@@ -936,7 +1022,7 @@ begin
 	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
 	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
 	function wordcount(text)
-    	words=split(string(text), (' ','\n','\t','-','.',',',':','_','"',';','!'))
+    	words=split(string(text), (' ','\n','\t','-'))
     	length(words)
 	end
 end
@@ -957,6 +1043,18 @@ else
 	correct(md"Great, we are looking forward to reading your answer!")
 end
 
+# ╔═╡ 477b9a84-713d-11eb-2b48-0553087b0735
+md"(You have used approximately **$(wordcount(answer21))** words.)"
+
+# ╔═╡ 3e69678e-713d-11eb-3591-ff5c3563d0eb
+md"(You have used approximately **$(wordcount(answer22))** words.)"
+
+# ╔═╡ 4dd44354-713d-11eb-164b-0d143e507815
+md"(You have used approximately **$(wordcount(answer31))** words.)"
+
+# ╔═╡ 54291450-713d-11eb-37d2-0db48a0e8a85
+md"(You have used approximately **$(wordcount(answer32))** words.)"
+
 # ╔═╡ c79b5e38-6f9a-11eb-05d3-9bf4844896f8
 members = let
 	str = ""
@@ -967,6 +1065,9 @@ members = let
 	str
 end
 
+# ╔═╡ 44ef5554-713f-11eb-35fc-1b93349ca7fa
+md"*Assignment submitted by* **$members** (*group $(group_number)*)"
+
 # ╔═╡ 50e332de-6f9a-11eb-3888-d15d986aca8e
 md"""
 # Assignment 3: The Social Connectedness Index
@@ -976,6 +1077,7 @@ md"""
 
 # ╔═╡ Cell order:
 # ╟─47594b98-6c72-11eb-264f-e5416a8faa32
+# ╟─44ef5554-713f-11eb-35fc-1b93349ca7fa
 # ╟─6712b2f0-6c72-11eb-0cb1-b12b78ab5556
 # ╟─7f8a57f0-6c72-11eb-27dd-2dae50f00232
 # ╟─547d93f4-6c74-11eb-28fe-c5be4dc7aaa6
@@ -1013,6 +1115,7 @@ md"""
 # ╟─f3b6d9be-712e-11eb-2f2d-af92e85304b5
 # ╠═825b52aa-712d-11eb-0eec-1561c87b7aac
 # ╠═1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
+# ╠═0243f610-7134-11eb-3b9b-e5474fd7d1cf
 # ╠═281198fa-712f-11eb-02ae-99a2d48099eb
 # ╠═8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
 # ╟─d4b337f4-7124-11eb-0437-e1e4ec1a61c9
@@ -1036,18 +1139,32 @@ md"""
 # ╟─a3176884-6f9a-11eb-1831-41486221dedb
 # ╟─50e332de-6f9a-11eb-3888-d15d986aca8e
 # ╟─96e4482c-6f9a-11eb-0e47-c568006368b6
-# ╠═ac0bbc28-6f9b-11eb-1467-6dbd9d2b763a
+# ╟─ac0bbc28-6f9b-11eb-1467-6dbd9d2b763a
 # ╠═6114ed16-6f9d-11eb-1bd4-1d1710b7f9df
 # ╟─b0f46e9c-6f9d-11eb-1ed0-0fddd637fb6c
 # ╟─7156d9ac-6f9d-11eb-36e1-77f5eda39e16
 # ╟─2338f91c-6f9e-11eb-0fb5-33421b7ae810
 # ╠═d1fd17dc-6fa6-11eb-245d-8bc905079f2f
 # ╟─da7f397a-6fa6-11eb-19d5-972c93f11f91
+# ╠═d5c448e6-713c-11eb-1b3b-9b8e4af8ae5f
+# ╟─477b9a84-713d-11eb-2b48-0553087b0735
 # ╟─55ab86e6-6fa8-11eb-2ac4-9f0548598014
+# ╟─dcb2cd6c-713c-11eb-1f3d-2de066d25c6f
+# ╠═3e69678e-713d-11eb-3591-ff5c3563d0eb
 # ╟─74c2e86c-6fa8-11eb-32f7-a97c939225ef
+# ╠═778053a0-713d-11eb-10d9-0be586250eb1
+# ╠═7b89e48e-713d-11eb-3838-a5de7e13f72b
+# ╠═7f2a8d46-713d-11eb-08f1-3b310beea91c
+# ╠═840a7d80-713d-11eb-19d5-594bcbb61ec0
+# ╠═df16a43e-713c-11eb-15db-cdcdb1756588
 # ╟─e4a28c46-6fa8-11eb-0b80-658ffbab932b
 # ╟─39ea6d9a-6fab-11eb-2b00-f3eda1cd2677
+# ╠═2816c75e-713d-11eb-11ec-5391cb16ecc3
+# ╟─4dd44354-713d-11eb-164b-0d143e507815
 # ╟─272f7770-6fab-11eb-32b9-01af616ae967
+# ╠═2a61d17a-713d-11eb-2457-11e5c4dd792f
+# ╟─54291450-713d-11eb-37d2-0db48a0e8a85
+# ╟─a81a894a-713d-11eb-0dd8-9d9e8dffee35
 # ╟─3062715a-6c75-11eb-30ef-2953bc64adb8
 # ╟─186246ce-6c80-11eb-016f-1b1abb9039bd
 # ╠═7f85031a-6c75-11eb-0d7b-31519ba1c2f9
