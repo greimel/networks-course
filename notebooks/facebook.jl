@@ -179,36 +179,6 @@ md"""
 # ╔═╡ cf24412e-7125-11eb-1c82-7f59f4640c72
 county_name = "Cook"; state = "Illinois"
 
-# ╔═╡ e0d17116-710d-11eb-1719-e18f188a6229
-md"""
-# Network Concentration
-"""
-
-# ╔═╡ aab55326-7127-11eb-2f03-e9d3f30d1947
-begin
-	url500 = "https://nber.org/distance/2010/sf1/county/sf12010countydistance500miles.csv.zip"
-	
-	url100 = "https://data.nber.org/distance/2010/sf1/county/sf12010countydistance100miles.csv.zip"
-	
-	url = url500
-	
-	zipfile = download(url)	
-	
-	z = ZipFile.Reader(zipfile)	
-	file_in_zip = only(z.files)
-
-	dff = CSV.File(read(file_in_zip)) |> DataFrame
-end
-
-# ╔═╡ 30350a46-712a-11eb-1d4b-81de61879835
-add0_infty(from, to, dist) = from == to ? 0.0 : ismissing(dist) ? Inf : dist
-
-# ╔═╡ 2dc57ad0-712c-11eb-3051-599c21f00b38
-distance = 150
-
-# ╔═╡ 729469f6-7130-11eb-07da-d1a7eb14881a
-format(a, b, i; kwargs...) = "$i"
-
 # ╔═╡ d4b337f4-7124-11eb-0437-e1e4ec1a61c9
 md"""
 ## Preparations County level analysis
@@ -505,33 +475,6 @@ let
 	fig
 end
 
-# ╔═╡ b9c0be22-7128-11eb-3da8-bb3a49e95fd7
-begin
-	# add distances
-	df_c = leftjoin(county_df, dff, on=[:user_loc => :county1, :fr_loc => :county2])
-	# set distance to infinity if there are no data
-	transform!(df_c, [:user_loc, :fr_loc, :mi_to_county] => ByRow(add0_infty) => :distance)
-	
-	pop_df = select(county_dict, :fips, :pop)
-	df_c = leftjoin(df_c, pop_df, on = :fr_loc => :fips)
-	filter!(:pop => !ismissing, df_c)
-	disallowmissing!(df_c, :pop)
-	
-	df_c
-end
-
-# ╔═╡ 99eb89dc-7129-11eb-0f61-79af19d18589
-concentration_df0 = combine(groupby(df_c, :user_loc)) do all
-		close = filter(:distance => <(distance), all)
-		
-		concentration = dot(close.scaled_sci, close.pop) / dot(all.scaled_sci, all.pop)
-		
-		(; concentration)
-end
-
-# ╔═╡ e1dae81c-712b-11eb-0fb8-654147206526
-extrema(skipmissing(df_c.mi_to_county))
-
 # ╔═╡ 3ec51950-711b-11eb-08fd-0d6ea3ee31ea
 node_county_ids
 
@@ -640,55 +583,6 @@ let
 	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="log(scaled_sci)")
 	
 	fig
-end
-
-# ╔═╡ 4a641856-712f-11eb-34fe-eb9641c13f03
-concentration_df = let
-	df = innerjoin(county_shapes_df, concentration_df0, on=:fips => :user_loc)
-	
-	n = 40
-	q = quantile(df.concentration, Weights(df.pop), 0:1/n:1)
-	
-	df.conc_grp = cut(df.concentration, q, extend = true, labels = format)
-	df
-end
-	
-
-# ╔═╡ baebb396-7130-11eb-3ca2-1bb9e2d0826b
-let
-	var = [:pop, :concentration]
-	df = combine(
-		groupby(concentration_df, :conc_grp), 
-		([v, :pop] => ((x,p) -> dot(x,p) / sum(p)) => v for v in var)...
-	)
-	scatter(df.concentration, log.(df.pop), axis = (xlabel = "network concentration", ylabel = "log(population)"))
-end
-
-# ╔═╡ 7ca9c2ec-712b-11eb-229a-3322c8115255
-let
-	df = concentration_df
-		
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Network Concentration (% of friends closer than $distance mi)")
-	
-	hidedecorations!(ax)
-	hidespines!(ax)
-	
-	color_variable = df.concentration
-	attr = (tellwidth = true, width = 30)
-	
-	poly!(ax, df.shape, color = color_variable)
-	
-	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="concentration")
-	
-	fig
-end
-
-# ╔═╡ 49278da8-712d-11eb-15c1-afcf15a38fa9
-let
-	df = concentration_df
-		
-	scatter(log.(df.pop), df.concentration, color = (:black, 0.1), strokewidth = 0)
 end
 
 # ╔═╡ c090e76c-710b-11eb-3b8e-277cbfbb3aa1
@@ -1070,18 +964,6 @@ md"""
 # ╠═cf24412e-7125-11eb-1c82-7f59f4640c72
 # ╠═2f525ae6-7125-11eb-1254-3732191908e5
 # ╠═de19a2a0-7125-11eb-230b-2fc866269553
-# ╟─e0d17116-710d-11eb-1719-e18f188a6229
-# ╠═aab55326-7127-11eb-2f03-e9d3f30d1947
-# ╠═30350a46-712a-11eb-1d4b-81de61879835
-# ╠═b9c0be22-7128-11eb-3da8-bb3a49e95fd7
-# ╠═2dc57ad0-712c-11eb-3051-599c21f00b38
-# ╠═99eb89dc-7129-11eb-0f61-79af19d18589
-# ╠═4a641856-712f-11eb-34fe-eb9641c13f03
-# ╠═729469f6-7130-11eb-07da-d1a7eb14881a
-# ╠═baebb396-7130-11eb-3ca2-1bb9e2d0826b
-# ╠═e1dae81c-712b-11eb-0fb8-654147206526
-# ╠═7ca9c2ec-712b-11eb-229a-3322c8115255
-# ╠═49278da8-712d-11eb-15c1-afcf15a38fa9
 # ╟─d4b337f4-7124-11eb-0437-e1e4ec1a61c9
 # ╠═c090e76c-710b-11eb-3b8e-277cbfbb3aa1
 # ╠═da19832e-710b-11eb-0e66-01111d3070b5
