@@ -130,13 +130,16 @@ md"""
 
 This notebook will be the basis for part of **Lecture 5** *and* **Assignment 3**. Here is what we will cover.
 
-1. We will see how socially connected a region is other regions.
+#### Lecture Notes
 
-2. We will regard the social connectedness index as the weights of network of regions. We will analyze the properties of this network.
+1. Define the Social Connectedness Index, discuss its limitations
+2. Measuring concentration of Social Networks
 
-3. We will compute the network concentration of a region and see that this measure has important socio-economic correlates.
+#### Pluto Notebook
 
-4. 
+3. Visualize social connectedness of a region
+4. Regard the social connectedness index as the weights of network of regions. Analyze the properties of this network.
+5. Compute the network concentration of a region and see that this measure has important socio-economic correlates.
 """
 
 # ╔═╡ 547d93f4-6c74-11eb-28fe-c5be4dc7aaa6
@@ -151,7 +154,12 @@ There at least two ways to visualize social connectedness.
 """
 
 # ╔═╡ 710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
-country = "GB"
+country = "BE"
+
+# ╔═╡ 8bee74ea-7140-11eb-3441-330ab08a9f38
+md"""
+## Visualizing the full network with a Heatmap
+"""
 
 # ╔═╡ e90eb932-6c74-11eb-3338-618a4ea9c211
 md"""
@@ -1081,10 +1089,11 @@ md"""
 # ╟─6712b2f0-6c72-11eb-0cb1-b12b78ab5556
 # ╟─7f8a57f0-6c72-11eb-27dd-2dae50f00232
 # ╟─547d93f4-6c74-11eb-28fe-c5be4dc7aaa6
-# ╠═710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
-# ╠═6d30c04a-6cb2-11eb-220b-998e7d5cc469
+# ╟─710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
+# ╟─6d30c04a-6cb2-11eb-220b-998e7d5cc469
 # ╠═4f14a79c-6cb3-11eb-3335-2bbb61da25d9
 # ╠═aa423d14-6cb3-11eb-0f1c-65ebbf99d539
+# ╟─8bee74ea-7140-11eb-3441-330ab08a9f38
 # ╠═f25cf8be-6cb3-11eb-0c9c-f9ed04ded513
 # ╠═baecfe58-6cb6-11eb-3a4e-31bbb8da02ae
 # ╠═cd3fd39a-6cb7-11eb-1d7f-459f25a393e4
