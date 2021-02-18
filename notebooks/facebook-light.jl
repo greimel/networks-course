@@ -469,8 +469,6 @@ let
 	ax.xticks = (labels.mid, labels.continent)
 	ax.yticks = (labels.mid, labels.continent)
 	
-	
-	
 	image!(ax, RGBA.(0,0,0, min.(1.0, wgts[df_nodes.id, df_nodes.id] .* 100)))
 	
 	fig
@@ -617,7 +615,7 @@ begin
 	
 	using AbstractPlotting: 	
 		Legend, Figure, Axis, Colorbar,
-		lines!, scatter!, poly!, vlines!, hlines!,
+		lines!, scatter!, poly!, vlines!, hlines!, image!,
 		hidedecorations!, hidespines!
 
 	#using WorldBankData
