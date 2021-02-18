@@ -6,7 +6,7 @@ using InteractiveUtils
 
 # ╔═╡ 53f814ac-7204-11eb-26e7-57398d26446f
 begin
-	_c_ = 1 
+	_a_ = 1 # make sure this cell is run as cell #1
 	using Pkg
 	Pkg.activate(temp = true)
 	
@@ -63,7 +63,7 @@ end
 
 # ╔═╡ 1f7e15e2-6cbb-11eb-1e92-9f37d4f3df40
 begin
-	_d_ = _c_ + 1 # cell #4
+	_b_ = _a_ + 1 # cell #2
 	nothing
 	
 	using LightGraphs
@@ -546,9 +546,6 @@ end
 # ╔═╡ 29479030-6c75-11eb-1b96-9fd35f6d0840
 g = SimpleWeightedGraph(wgts)
 
-# ╔═╡ 3fd2482e-6c82-11eb-059a-c546e5053143
-
-
 # ╔═╡ 60e9f650-6c83-11eb-270a-fb57f2449762
 begin
 	tbl = download_country_shapes()
@@ -961,19 +958,10 @@ md"""
 """
 
 # ╔═╡ 69209f8a-6c75-11eb-228e-475c3fcde6e7
-begin
-	#_a_ = 1 # make sure this cell is run as cell #1
-	
-	
-	
-	#Pkg.add()
-	
-end
+
 
 # ╔═╡ 60483912-6c80-11eb-27ba-55477555f345
-begin
-	#_b_ = _a_ + 1 # Cell #2
-end
+
 
 # ╔═╡ 3399e1f8-6cbb-11eb-329c-811efb68179f
 md"""
@@ -1172,7 +1160,6 @@ md"""
 # ╟─15139994-6c82-11eb-147c-59013c36a518
 # ╠═3dc97a66-6c82-11eb-20a5-635ac0b6bac1
 # ╠═4b8fba92-6cb0-11eb-0c53-b96600bc760d
-# ╠═3fd2482e-6c82-11eb-059a-c546e5053143
 # ╠═60e9f650-6c83-11eb-270a-fb57f2449762
 # ╠═64b321e8-6c84-11eb-35d4-b16736c24cea
 # ╠═05dcc1a2-6c83-11eb-3b62-2339a8e8863e
