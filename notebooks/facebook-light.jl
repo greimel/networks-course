@@ -12,74 +12,7 @@ begin
 	Pkg.activate(temp = true)
 	
 	Pkg.add(PackageSpec(name = "PlutoUI", version = "0.6.11-0.6"))
-	using PlutoUI
-end
-
-# ╔═╡ 60483912-6c80-11eb-27ba-55477555f345
-begin
-	_b_ = _a_ + 1 # Cell #2
-	
-	fancy = false
-	
-	if fancy
-		Pkg.add(["WGLMakie", "JSServe"])
-		using WGLMakie, JSServe
-		Page(exportable = true)
-		WGLMakie.activate!()
-	else
-		Pkg.add("CairoMakie")
-		using CairoMakie
-		CairoMakie.activate!(type = "png")
-	end
-	
-	Pkg.add("NetworkLayout")
-	using NetworkLayout: NetworkLayout
-end
-
-# ╔═╡ 131244a8-7130-11eb-3770-a18a06eac45f
-Pkg.add("StatsBase"); using StatsBase
-
-# ╔═╡ 6b906ab0-6c80-11eb-29a9-ab1e42290019
-begin
-	_c_ = _b_ + 1 # Cell #3
-	
-	Pkg.add([
-		PackageSpec(name = "DataAPI", version="1.4"),
-		PackageSpec(name = "LightGraphs", version = "1.3"),
-		PackageSpec(name = "DataFrames", version = "0.22"),
-		PackageSpec(name = "WorldBankData", version = "0.4.1-0.4"),
-		#PackageSpec(name = "Plots", version = "1.10"),	
-		PackageSpec(url = "https://github.com/greimel/Shapefile.jl", rev="multipolygon"),
-		#PackageSpec(url = "https://github.com/greimel/WeightedGraphs.jl")
-			])
-	
-	Pkg.add([
-			"GeometryBasics", "FreqTables",
-			"PooledArrays", "CategoricalArrays",
-			"Colors",
-			"Plots",
-			"Chain", "UnPack",
-			"ZipFile",
-			"SimpleWeightedGraphs", "GraphDataFrameBridge",
-			"CSV", "HTTP"
-			])
-
-	using Statistics, SparseArrays, LinearAlgebra
-	
-	#using WorldBankData
-	#using FreqTables
-	using Colors
-	using Chain: @chain
-	using UnPack: @unpack
-	using ZipFile, Shapefile
-	import CSV, HTTP
-	using DataFrames#, PooledArrays, CategoricalArrays, Underscores
-	#using Plots
-	#Plots.gr(fmt = :png)
-	
-	using GeometryBasics
-	
-	
+	using PlutoUI: TableOfContents
 end
 
 # ╔═╡ 1f7e15e2-6cbb-11eb-1e92-9f37d4f3df40
@@ -87,12 +20,13 @@ begin
 	_d_ = _c_ + 1 # cell #4
 	nothing
 	
-	using LightGraphs, SimpleWeightedGraphs, GraphDataFrameBridge
+	using LightGraphs
+	using SimpleWeightedGraphs: SimpleWeightedGraph
 	const LG = LightGraphs
 	
 	weighted_adjacency_matrix(graph::LightGraphs.AbstractGraph) = LG.weights(graph) .* adjacency_matrix(graph)
 	
-	LG.adjacency_matrix(graph::SimpleWeightedGraphs.SimpleWeightedGraph) = LG.weights(graph) .> 0
+	LG.adjacency_matrix(graph::SimpleWeightedGraph) = LG.weights(graph) .> 0
 	
 	function LG.katz_centrality(graph::AbstractGraph, α::Real=0.3; node_weights = ones(nv(graph)))
 		v = node_weights
@@ -119,7 +53,7 @@ md"""
 # ╔═╡ a4ff0fb8-71f3-11eb-1928-492c57739959
 md"""
 !!! note "This is the light version of facebook.jl"
-    The material on US counties is omitted to make it load faster.
+    The material on US counties is omitted to reduce load times.
 """
 
 # ╔═╡ 7f8a57f0-6c72-11eb-27dd-2dae50f00232
@@ -173,87 +107,15 @@ md"""
 # The Same with US Counties
 """
 
-# ╔═╡ b20ab98c-710d-11eb-0a6a-7de2477acf35
-
-
-# ╔═╡ 98e7519a-710d-11eb-3781-0d80ff87c17f
-
-
-# ╔═╡ 4a802f06-71f6-11eb-2c52-8d102b5abd55
-
-
-# ╔═╡ bb9821ce-710d-11eb-31ad-63c31f90019b
-
-
-# ╔═╡ cf24412e-7125-11eb-1c82-7f59f4640c72
-
-
-# ╔═╡ 2f525ae6-7125-11eb-1254-3732191908e5
-
-
-# ╔═╡ de19a2a0-7125-11eb-230b-2fc866269553
-
-
 # ╔═╡ e0d17116-710d-11eb-1719-e18f188a6229
 md"""
 # Network Concentration
 """
 
-# ╔═╡ aab55326-7127-11eb-2f03-e9d3f30d1947
-
-
-# ╔═╡ 30350a46-712a-11eb-1d4b-81de61879835
-
-
-# ╔═╡ b9c0be22-7128-11eb-3da8-bb3a49e95fd7
-
-
-# ╔═╡ 2dc57ad0-712c-11eb-3051-599c21f00b38
-
-
-# ╔═╡ 99eb89dc-7129-11eb-0f61-79af19d18589
-
-
-# ╔═╡ 4a641856-712f-11eb-34fe-eb9641c13f03
-
-
-# ╔═╡ f583afc6-71f7-11eb-0241-a71a659b5313
-
-
-# ╔═╡ 729469f6-7130-11eb-07da-d1a7eb14881a
-
-
-# ╔═╡ baebb396-7130-11eb-3ca2-1bb9e2d0826b
-
-
-# ╔═╡ e1dae81c-712b-11eb-0fb8-654147206526
-
-
-# ╔═╡ 7ca9c2ec-712b-11eb-229a-3322c8115255
-
-
 # ╔═╡ f3b6d9be-712e-11eb-2f2d-af92e85304b5
 md"""
 # US Presidential Elections 2020
 """
-
-# ╔═╡ 825b52aa-712d-11eb-0eec-1561c87b7aac
-
-
-# ╔═╡ 1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
-
-
-# ╔═╡ 0243f610-7134-11eb-3b9b-e5474fd7d1cf
-
-
-# ╔═╡ 281198fa-712f-11eb-02ae-99a2d48099eb
-
-
-# ╔═╡ 8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
-
-
-# ╔═╡ 109bb1ea-71f6-11eb-37f4-054f691b2f23
-
 
 # ╔═╡ 7b50095c-6f9a-11eb-2cf5-31805fc10804
 md"""
@@ -579,9 +441,6 @@ end
 # ╔═╡ 29479030-6c75-11eb-1b96-9fd35f6d0840
 g = SimpleWeightedGraph(wgts)
 
-# ╔═╡ 3fd2482e-6c82-11eb-059a-c546e5053143
-
-
 # ╔═╡ 60e9f650-6c83-11eb-270a-fb57f2449762
 begin
 	tbl = download_country_shapes()
@@ -715,53 +574,67 @@ md"""
 ## Preparations County level analysis
 """
 
-# ╔═╡ da19832e-710b-11eb-0e66-01111d3070b5
-
-
-# ╔═╡ 3ebcb4d8-7123-11eb-3b71-c107f5ecfa30
-md"""
-### County-Level Data
-"""
-
-# ╔═╡ 94c0fa82-7124-11eb-0fdd-c3cb8cc9311d
-
-
-# ╔═╡ 5400d658-7123-11eb-00c3-b70d622faf7b
-
-
-# ╔═╡ fe752700-711a-11eb-1c13-3303010dfa48
-md"""
-### Matching County Names
-"""
-
-# ╔═╡ 3ec51950-711b-11eb-08fd-0d6ea3ee31ea
-
-
-# ╔═╡ 278f55b0-711c-11eb-36d9-05fff7161d82
-
-
-# ╔═╡ 754db298-711b-11eb-3b0f-07e1d984dbe0
-
-
-# ╔═╡ a6b7545a-711c-11eb-13b4-6baf343485a0
-
-
-# ╔═╡ 14d721c4-711b-11eb-2fef-a986c8581f11
-
-
-# ╔═╡ de30588c-7121-11eb-3781-b9412bd4b7ae
-
-
-# ╔═╡ e7231bac-7115-11eb-1c7a-8f1b9c109dd0
-
-
-# ╔═╡ 38a2ac40-7122-11eb-1a80-edb0bc182b5c
-
-
 # ╔═╡ 39d717a4-6c75-11eb-15f0-d537959a41b8
 md"""
 ## Package Environment
 """
+
+# ╔═╡ 60483912-6c80-11eb-27ba-55477555f345
+begin
+	_b_ = _a_ + 1 # Cell #2
+	
+end
+
+# ╔═╡ 6b906ab0-6c80-11eb-29a9-ab1e42290019
+begin
+	_c_ = _b_ + 1 # Cell #3
+	
+	Pkg.add([
+		PackageSpec(name = "AbstractPlotting", version = "0.15"),
+		PackageSpec(name = "CairoMakie", version = "0.3")
+		PackageSpec(name = "CategoricalArrays", version = "0.9"),
+		PackageSpec(name = "Colors",            version = "0.12"),
+		PackageSpec(name = "Chain",             version = "0.4"),
+		PackageSpec(name = "CSV",               version = "0.8"),
+		PackageSpec(name = "HTTP",              version = "0.9"),			
+		PackageSpec(name = "DataFrames",        version = "0.22"),			
+		PackageSpec(name = "DataAPI",           version = "1.4"),
+		PackageSpec(name = "LightGraphs",       version = "1.3"),
+		PackageSpec(name = "UnPack",            version = "1"),
+		PackageSpec(name = "ZipFile",           version = "0.9"),
+		PackageSpec(name = "SimpleWeightedGraphs",version="1.1"),
+		#PackageSpec(name = "WorldBankData", version = "0.4.1-0.4"),
+		#PackageSpec(name = "Plots", version = "1.10"),	
+		PackageSpec(url = "https://github.com/greimel/Shapefile.jl", rev="multipolygon"),
+			])
+	
+	using Statistics: mean
+	using SparseArrays: sparse
+	using LinearAlgebra: I, dot, diag, Diagonal, norm
+	
+	import CairoMakie
+	CairoMakie.activate!(type = "png")
+	
+	using AbstractPlotting: 	
+		Legend, Figure, Axis, Colorbar,
+		lines!, scatter!, poly!, vlines!, hlines!,
+		hidedecorations!, hidespines!
+
+	#using WorldBankData
+	using CategoricalArrays: cut
+	using Colors: RGBA
+	using Chain: @chain
+	using DataFrames: DataFrames, DataFrame,
+		select, select!, transform, transform!, combine,
+		leftjoin, innerjoin, rightjoin,
+		groupby, ByRow, Not,
+		disallowmissing!, dropmissing!, disallowmissing
+	import CSV, HTTP, Shapefile, ZipFile
+	using UnPack: @unpack
+	#using Plots
+	#Plots.gr(fmt = :png)	
+	
+end
 
 # ╔═╡ 3399e1f8-6cbb-11eb-329c-811efb68179f
 md"""
@@ -861,9 +734,9 @@ md"""
 """
 
 # ╔═╡ Cell order:
-# ╠═47594b98-6c72-11eb-264f-e5416a8faa32
+# ╟─47594b98-6c72-11eb-264f-e5416a8faa32
 # ╟─44ef5554-713f-11eb-35fc-1b93349ca7fa
-# ╠═a4ff0fb8-71f3-11eb-1928-492c57739959
+# ╟─a4ff0fb8-71f3-11eb-1928-492c57739959
 # ╟─7f8a57f0-6c72-11eb-27dd-2dae50f00232
 # ╟─547d93f4-6c74-11eb-28fe-c5be4dc7aaa6
 # ╟─710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
@@ -880,32 +753,8 @@ md"""
 # ╠═b5464c40-6cbb-11eb-233a-b1557763e8d6
 # ╠═d38c51d4-6cbb-11eb-09dc-a92080dea6c7
 # ╟─d127df3e-710d-11eb-391a-89f3aeb8c219
-# ╟─b20ab98c-710d-11eb-0a6a-7de2477acf35
-# ╟─98e7519a-710d-11eb-3781-0d80ff87c17f
-# ╟─4a802f06-71f6-11eb-2c52-8d102b5abd55
-# ╟─bb9821ce-710d-11eb-31ad-63c31f90019b
-# ╟─cf24412e-7125-11eb-1c82-7f59f4640c72
-# ╟─2f525ae6-7125-11eb-1254-3732191908e5
-# ╟─de19a2a0-7125-11eb-230b-2fc866269553
 # ╟─e0d17116-710d-11eb-1719-e18f188a6229
-# ╟─aab55326-7127-11eb-2f03-e9d3f30d1947
-# ╟─30350a46-712a-11eb-1d4b-81de61879835
-# ╟─b9c0be22-7128-11eb-3da8-bb3a49e95fd7
-# ╟─2dc57ad0-712c-11eb-3051-599c21f00b38
-# ╟─99eb89dc-7129-11eb-0f61-79af19d18589
-# ╟─4a641856-712f-11eb-34fe-eb9641c13f03
-# ╟─f583afc6-71f7-11eb-0241-a71a659b5313
-# ╟─729469f6-7130-11eb-07da-d1a7eb14881a
-# ╟─baebb396-7130-11eb-3ca2-1bb9e2d0826b
-# ╟─e1dae81c-712b-11eb-0fb8-654147206526
-# ╟─7ca9c2ec-712b-11eb-229a-3322c8115255
 # ╟─f3b6d9be-712e-11eb-2f2d-af92e85304b5
-# ╟─825b52aa-712d-11eb-0eec-1561c87b7aac
-# ╠═1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
-# ╟─0243f610-7134-11eb-3b9b-e5474fd7d1cf
-# ╟─281198fa-712f-11eb-02ae-99a2d48099eb
-# ╟─8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
-# ╟─109bb1ea-71f6-11eb-37f4-054f691b2f23
 # ╟─7b50095c-6f9a-11eb-2cf5-31805fc10804
 # ╠═8a0e113c-6f9a-11eb-3c3b-bfb0c9220562
 # ╠═94895ab8-6f9a-11eb-3c04-dbe13f545acc
@@ -960,7 +809,6 @@ md"""
 # ╟─15139994-6c82-11eb-147c-59013c36a518
 # ╠═3dc97a66-6c82-11eb-20a5-635ac0b6bac1
 # ╠═4b8fba92-6cb0-11eb-0c53-b96600bc760d
-# ╠═3fd2482e-6c82-11eb-059a-c546e5053143
 # ╠═60e9f650-6c83-11eb-270a-fb57f2449762
 # ╠═64b321e8-6c84-11eb-35d4-b16736c24cea
 # ╠═05dcc1a2-6c83-11eb-3b62-2339a8e8863e
@@ -968,23 +816,9 @@ md"""
 # ╠═fdc229f8-6c84-11eb-1ae9-d133fc05035e
 # ╠═34b2982a-6c89-11eb-2ae6-77e735c49966
 # ╟─d4b337f4-7124-11eb-0437-e1e4ec1a61c9
-# ╟─da19832e-710b-11eb-0e66-01111d3070b5
-# ╟─3ebcb4d8-7123-11eb-3b71-c107f5ecfa30
-# ╟─94c0fa82-7124-11eb-0fdd-c3cb8cc9311d
-# ╟─5400d658-7123-11eb-00c3-b70d622faf7b
-# ╟─fe752700-711a-11eb-1c13-3303010dfa48
-# ╟─3ec51950-711b-11eb-08fd-0d6ea3ee31ea
-# ╟─278f55b0-711c-11eb-36d9-05fff7161d82
-# ╟─754db298-711b-11eb-3b0f-07e1d984dbe0
-# ╟─a6b7545a-711c-11eb-13b4-6baf343485a0
-# ╟─14d721c4-711b-11eb-2fef-a986c8581f11
-# ╟─de30588c-7121-11eb-3781-b9412bd4b7ae
-# ╟─e7231bac-7115-11eb-1c7a-8f1b9c109dd0
-# ╟─38a2ac40-7122-11eb-1a80-edb0bc182b5c
 # ╟─39d717a4-6c75-11eb-15f0-d537959a41b8
 # ╠═69209f8a-6c75-11eb-228e-475c3fcde6e7
 # ╠═60483912-6c80-11eb-27ba-55477555f345
-# ╠═131244a8-7130-11eb-3770-a18a06eac45f
 # ╠═6b906ab0-6c80-11eb-29a9-ab1e42290019
 # ╟─3399e1f8-6cbb-11eb-329c-811efb68179f
 # ╠═1f7e15e2-6cbb-11eb-1e92-9f37d4f3df40
