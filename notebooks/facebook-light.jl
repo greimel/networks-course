@@ -15,36 +15,6 @@ begin
 	using PlutoUI: TableOfContents
 end
 
-# ╔═╡ 1f7e15e2-6cbb-11eb-1e92-9f37d4f3df40
-begin
-	_d_ = _c_ + 1 # cell #4
-	nothing
-	
-	using LightGraphs
-	using SimpleWeightedGraphs: SimpleWeightedGraph
-	const LG = LightGraphs
-	
-	weighted_adjacency_matrix(graph::LightGraphs.AbstractGraph) = LG.weights(graph) .* adjacency_matrix(graph)
-	
-	LG.adjacency_matrix(graph::SimpleWeightedGraph) = LG.weights(graph) .> 0
-	
-	function LG.katz_centrality(graph::AbstractGraph, α::Real=0.3; node_weights = ones(nv(graph)))
-		v = node_weights
-
-	    A = weighted_adjacency_matrix(graph)
-    	v = (I - α * A) \ v
-    	v /=  norm(v)
-	end
-	
-	function LG.eigenvector_centrality(graph::AbstractGraph)
-		A = weighted_adjacency_matrix(graph)
-		eig = LightGraphs.eigs(A, which=LightGraphs.LM(), nev=1)
-		eigenvector = eig[2]
-	
-		centrality = abs.(vec(eigenvector))
-	end
-end
-
 # ╔═╡ 47594b98-6c72-11eb-264f-e5416a8faa32
 md"""
 `facebook-light.jl` | **Version 1.0** | *last updated: Feb 18*
@@ -284,6 +254,96 @@ url_country_country = "https://data.humdata.org/dataset/e9988552-74e4-4ff4-943f-
 # ╔═╡ 5427cfc6-6c80-11eb-24c8-e1a56dfd20f1
 url_county = "https://data.humdata.org/dataset/e9988552-74e4-4ff4-943f-c782ac8bca87/resource/3e3a1a7e-b557-4191-80cf-33d8e66c2e51/download/county_county_aug2020.tsv"
 
+# ╔═╡ a6939ede-6c80-11eb-21ce-bdda8fe67acc
+md"""
+## Constructing a Network From SCI Data
+"""
+
+# ╔═╡ 72619534-6c81-11eb-07f1-67f833293077
+md"""
+## Downloading the Maps
+"""
+
+# ╔═╡ 8575cb62-6c82-11eb-2a76-f9c1af6aab50
+md"""
+## Translating Country Codes
+"""
+
+# ╔═╡ a91896c6-6c82-11eb-018e-e514ca265b1a
+url_country_codes = "https://datahub.io/core/country-codes/r/country-codes.csv"
+
+# ╔═╡ 15139994-6c82-11eb-147c-59013c36a518
+md"""
+## Matching SCI and Map Shapes
+"""
+
+# ╔═╡ d4b337f4-7124-11eb-0437-e1e4ec1a61c9
+md"""
+## Preparations County level analysis
+"""
+
+# ╔═╡ 39d717a4-6c75-11eb-15f0-d537959a41b8
+md"""
+## Package Environment
+"""
+
+# ╔═╡ 60483912-6c80-11eb-27ba-55477555f345
+begin
+	_b_ = _a_ + 1 # Cell #2
+	
+end
+
+# ╔═╡ 6b906ab0-6c80-11eb-29a9-ab1e42290019
+begin
+	_c_ = _b_ + 1 # Cell #3
+	
+	Pkg.add([
+		PackageSpec(name = "AbstractPlotting",  version = "0.15"),
+		PackageSpec(name = "CairoMakie",        version = "0.3"),
+		PackageSpec(name = "CategoricalArrays", version = "0.9"),
+		PackageSpec(name = "Colors",            version = "0.12"),
+		PackageSpec(name = "Chain",             version = "0.4"),
+		PackageSpec(name = "CSV",               version = "0.8"),
+		PackageSpec(name = "HTTP",              version = "0.9"),			
+		PackageSpec(name = "DataFrames",        version = "0.22"),			
+		PackageSpec(name = "DataAPI",           version = "1.4"),
+		PackageSpec(name = "LightGraphs",       version = "1.3"),
+		PackageSpec(name = "UnPack",            version = "1"),
+		PackageSpec(name = "ZipFile",           version = "0.9"),
+		PackageSpec(name = "SimpleWeightedGraphs",version="1.1"),
+		#PackageSpec(name = "WorldBankData", version = "0.4.1-0.4"),
+		#PackageSpec(name = "Plots", version = "1.10"),	
+		PackageSpec(url = "https://github.com/greimel/Shapefile.jl", rev="multipolygon"),
+			])
+	
+	using Statistics: mean
+	using SparseArrays: sparse
+	using LinearAlgebra: I, dot, diag, Diagonal, norm
+	
+	import CairoMakie
+	CairoMakie.activate!(type = "png")
+	
+	using AbstractPlotting: 	
+		Legend, Figure, Axis, Colorbar,
+		lines!, scatter!, poly!, vlines!, hlines!, image!,
+		hidedecorations!, hidespines!
+
+	#using WorldBankData
+	using CategoricalArrays: cut
+	using Colors: RGBA
+	using Chain: @chain
+	using DataFrames: DataFrames, DataFrame,
+		select, select!, transform, transform!, combine,
+		leftjoin, innerjoin, rightjoin,
+		groupby, ByRow, Not,
+		disallowmissing!, dropmissing!, disallowmissing
+	import CSV, HTTP, Shapefile, ZipFile
+	using UnPack: @unpack
+	#using Plots
+	#Plots.gr(fmt = :png)	
+	
+end
+
 # ╔═╡ 5a0d2490-6c80-11eb-0985-9de4f34412f1
 function csv_from_url(url)
 	csv = CSV.File(HTTP.get(url).body)
@@ -293,13 +353,14 @@ end
 # ╔═╡ 9d80ae04-6c80-11eb-2c03-b7b45ca6e0bf
 get_country_sci() = csv_from_url(url_country_country)
 
+# ╔═╡ 3dc97a66-6c82-11eb-20a5-635ac0b6bac1
+country_df = get_country_sci()
+
 # ╔═╡ be47304a-6c80-11eb-18ad-974bb077e53f
 get_county_sci() = csv_from_url(url_county)
 
-# ╔═╡ a6939ede-6c80-11eb-21ce-bdda8fe67acc
-md"""
-## Constructing a Network From SCI Data
-"""
+# ╔═╡ 09109488-6c87-11eb-2d64-43fc9df7d8c8
+csv_from_url(url_country_codes)
 
 # ╔═╡ ca92332e-6c80-11eb-3b62-41f0301d6330
 function make_sci_graph(df_sci)
@@ -323,10 +384,8 @@ function make_sci_graph(df_sci)
 	(; node_names, wgts)
 end
 
-# ╔═╡ 72619534-6c81-11eb-07f1-67f833293077
-md"""
-## Downloading the Maps
-"""
+# ╔═╡ aa423d14-6cb3-11eb-0f1c-65ebbf99d539
+@unpack node_names, wgts = make_sci_graph(country_df);
 
 # ╔═╡ ca30bfda-6c81-11eb-20fa-0defd9b240b2
 function download_zipped_shapes(url, map_name)
@@ -382,17 +441,6 @@ function get_shapes()
 	df = extract_shapes_df(shp_table)
 end
 
-# ╔═╡ 8575cb62-6c82-11eb-2a76-f9c1af6aab50
-md"""
-## Translating Country Codes
-"""
-
-# ╔═╡ a91896c6-6c82-11eb-018e-e514ca265b1a
-url_country_codes = "https://datahub.io/core/country-codes/r/country-codes.csv"
-
-# ╔═╡ 09109488-6c87-11eb-2d64-43fc9df7d8c8
-csv_from_url(url_country_codes)
-
 # ╔═╡ c8d9234a-6c82-11eb-0f81-c17abae3e1c7
 iso2c_to_fips = begin
 	df = csv_from_url(url_country_codes)
@@ -409,17 +457,6 @@ iso2c_to_fips = begin
 	
 	[df; missing_countries]
 end
-
-# ╔═╡ 15139994-6c82-11eb-147c-59013c36a518
-md"""
-## Matching SCI and Map Shapes
-"""
-
-# ╔═╡ 3dc97a66-6c82-11eb-20a5-635ac0b6bac1
-country_df = get_country_sci()
-
-# ╔═╡ aa423d14-6cb3-11eb-0f1c-65ebbf99d539
-@unpack node_names, wgts = make_sci_graph(country_df);
 
 # ╔═╡ baecfe58-6cb6-11eb-3a4e-31bbb8da02ae
 begin
@@ -438,8 +475,8 @@ begin
 end
 
 
-# ╔═╡ 29479030-6c75-11eb-1b96-9fd35f6d0840
-g = SimpleWeightedGraph(wgts)
+# ╔═╡ 05dcc1a2-6c83-11eb-3b62-2339a8e8863e
+all(in(iso2c_to_fips.iso2c), node_names)
 
 # ╔═╡ 60e9f650-6c83-11eb-270a-fb57f2449762
 begin
@@ -447,38 +484,6 @@ begin
 	shapes_df = extract_shapes_df(tbl)
 	shapes_df = leftjoin(shapes_df, iso2c_to_fips, on = :iso3c, makeunique = true)
 end;
-
-# ╔═╡ 96cd1698-6cbb-11eb-0843-f9edd8f58c80
-begin
-	df_nodes = df_nodes0
-	df_nodes.eigv_c = eigenvector_centrality(g)
-	df_nodes.katz_c = katz_centrality(g)
-	df_nodes1 = rightjoin(shapes_df, df_nodes, on = :iso2c => :node_names, makeunique = true, matchmissing = :equal)
-	select!(df_nodes1, :eigv_c, :katz_c, :shape)
-	dropmissing!(df_nodes1)
-end;
-
-# ╔═╡ f25cf8be-6cb3-11eb-0c9c-f9ed04ded513
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Social Connectedness Between Countries of the World", xgridvisible = false, ygridvisible = false)
-	
-	vlines!(ax, labels.start, color = :gray80)
-	hlines!(ax, labels.start, color = :gray80)
-	
-	ax.xticks = (labels.mid, labels.continent)
-	ax.yticks = (labels.mid, labels.continent)
-	
-	image!(ax, RGBA.(0,0,0, min.(1.0, wgts[df_nodes.id, df_nodes.id] .* 100)))
-	
-	fig
-end
-
-# ╔═╡ b5464c40-6cbb-11eb-233a-b1557763e8d6
-sort(df_nodes, :eigv_c, rev = true)
-
-# ╔═╡ d1fd17dc-6fa6-11eb-245d-8bc905079f2f
-df_nodes1; sort(df_nodes, :eigv_c, rev = true)
 
 # ╔═╡ 4b8fba92-6cb0-11eb-0c53-b96600bc760d
 function sci(country)
@@ -495,6 +500,15 @@ end
 
 # ╔═╡ 4f14a79c-6cb3-11eb-3335-2bbb61da25d9
 sort(sci(country), :scaled_sci, rev=true)
+
+# ╔═╡ 4da91cd0-6c86-11eb-31fd-2fe037228a52
+filter(:continent => ismissing, shapes_df)
+
+# ╔═╡ fdc229f8-6c84-11eb-1ae9-d133fc05035e
+nomatch = filter(!in(filter(!ismissing, shapes_df.iso2c)), node_names)
+
+# ╔═╡ 34b2982a-6c89-11eb-2ae6-77e735c49966
+filter(:iso2c => in(nomatch), iso2c_to_fips) # too small
 
 # ╔═╡ 64b321e8-6c84-11eb-35d4-b16736c24cea
 begin
@@ -533,6 +547,68 @@ end
 # ╔═╡ ac0bbc28-6f9b-11eb-1467-6dbd9d2b763a
 sci_country_fig
 
+# ╔═╡ 1f7e15e2-6cbb-11eb-1e92-9f37d4f3df40
+begin
+	_d_ = _c_ + 1 # cell #4
+	nothing
+	
+	using LightGraphs
+	using SimpleWeightedGraphs: SimpleWeightedGraph
+	const LG = LightGraphs
+	
+	weighted_adjacency_matrix(graph::LightGraphs.AbstractGraph) = LG.weights(graph) .* adjacency_matrix(graph)
+	
+	LG.adjacency_matrix(graph::SimpleWeightedGraph) = LG.weights(graph) .> 0
+	
+	function LG.katz_centrality(graph::AbstractGraph, α::Real=0.3; node_weights = ones(nv(graph)))
+		v = node_weights
+
+	    A = weighted_adjacency_matrix(graph)
+    	v = (I - α * A) \ v
+    	v /=  norm(v)
+	end
+	
+	function LG.eigenvector_centrality(graph::AbstractGraph)
+		A = weighted_adjacency_matrix(graph)
+		eig = LightGraphs.eigs(A, which=LightGraphs.LM(), nev=1)
+		eigenvector = eig[2]
+	
+		centrality = abs.(vec(eigenvector))
+	end
+end
+
+# ╔═╡ 29479030-6c75-11eb-1b96-9fd35f6d0840
+g = SimpleWeightedGraph(wgts)
+
+# ╔═╡ 96cd1698-6cbb-11eb-0843-f9edd8f58c80
+begin
+	df_nodes = df_nodes0
+	df_nodes.eigv_c = eigenvector_centrality(g)
+	df_nodes.katz_c = katz_centrality(g)
+	df_nodes1 = rightjoin(shapes_df, df_nodes, on = :iso2c => :node_names, makeunique = true, matchmissing = :equal)
+	select!(df_nodes1, :eigv_c, :katz_c, :shape)
+	dropmissing!(df_nodes1)
+end;
+
+# ╔═╡ f25cf8be-6cb3-11eb-0c9c-f9ed04ded513
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], title = "Social Connectedness Between Countries of the World", xgridvisible = false, ygridvisible = false)
+	
+	vlines!(ax, labels.start, color = :gray80)
+	hlines!(ax, labels.start, color = :gray80)
+	
+	ax.xticks = (labels.mid, labels.continent)
+	ax.yticks = (labels.mid, labels.continent)
+	
+	image!(ax, RGBA.(0,0,0, min.(1.0, wgts[df_nodes.id, df_nodes.id] .* 100)))
+	
+	fig
+end
+
+# ╔═╡ b5464c40-6cbb-11eb-233a-b1557763e8d6
+sort(df_nodes, :eigv_c, rev = true)
+
 # ╔═╡ d38c51d4-6cbb-11eb-09dc-a92080dea6c7
 let
 	fig = Figure()
@@ -555,84 +631,8 @@ let
 	
 end
 
-# ╔═╡ 05dcc1a2-6c83-11eb-3b62-2339a8e8863e
-all(in(iso2c_to_fips.iso2c), node_names)
-
-# ╔═╡ 4da91cd0-6c86-11eb-31fd-2fe037228a52
-filter(:continent => ismissing, shapes_df)
-
-# ╔═╡ fdc229f8-6c84-11eb-1ae9-d133fc05035e
-nomatch = filter(!in(filter(!ismissing, shapes_df.iso2c)), node_names)
-
-# ╔═╡ 34b2982a-6c89-11eb-2ae6-77e735c49966
-filter(:iso2c => in(nomatch), iso2c_to_fips) # too small
-
-# ╔═╡ d4b337f4-7124-11eb-0437-e1e4ec1a61c9
-md"""
-## Preparations County level analysis
-"""
-
-# ╔═╡ 39d717a4-6c75-11eb-15f0-d537959a41b8
-md"""
-## Package Environment
-"""
-
-# ╔═╡ 60483912-6c80-11eb-27ba-55477555f345
-begin
-	_b_ = _a_ + 1 # Cell #2
-	
-end
-
-# ╔═╡ 6b906ab0-6c80-11eb-29a9-ab1e42290019
-begin
-	_c_ = _b_ + 1 # Cell #3
-	
-	Pkg.add([
-		PackageSpec(name = "AbstractPlotting", version = "0.15"),
-		PackageSpec(name = "CairoMakie", version = "0.3")
-		PackageSpec(name = "CategoricalArrays", version = "0.9"),
-		PackageSpec(name = "Colors",            version = "0.12"),
-		PackageSpec(name = "Chain",             version = "0.4"),
-		PackageSpec(name = "CSV",               version = "0.8"),
-		PackageSpec(name = "HTTP",              version = "0.9"),			
-		PackageSpec(name = "DataFrames",        version = "0.22"),			
-		PackageSpec(name = "DataAPI",           version = "1.4"),
-		PackageSpec(name = "LightGraphs",       version = "1.3"),
-		PackageSpec(name = "UnPack",            version = "1"),
-		PackageSpec(name = "ZipFile",           version = "0.9"),
-		PackageSpec(name = "SimpleWeightedGraphs",version="1.1"),
-		#PackageSpec(name = "WorldBankData", version = "0.4.1-0.4"),
-		#PackageSpec(name = "Plots", version = "1.10"),	
-		PackageSpec(url = "https://github.com/greimel/Shapefile.jl", rev="multipolygon"),
-			])
-	
-	using Statistics: mean
-	using SparseArrays: sparse
-	using LinearAlgebra: I, dot, diag, Diagonal, norm
-	
-	import CairoMakie
-	CairoMakie.activate!(type = "png")
-	
-	using AbstractPlotting: 	
-		Legend, Figure, Axis, Colorbar,
-		lines!, scatter!, poly!, vlines!, hlines!, image!,
-		hidedecorations!, hidespines!
-
-	#using WorldBankData
-	using CategoricalArrays: cut
-	using Colors: RGBA
-	using Chain: @chain
-	using DataFrames: DataFrames, DataFrame,
-		select, select!, transform, transform!, combine,
-		leftjoin, innerjoin, rightjoin,
-		groupby, ByRow, Not,
-		disallowmissing!, dropmissing!, disallowmissing
-	import CSV, HTTP, Shapefile, ZipFile
-	using UnPack: @unpack
-	#using Plots
-	#Plots.gr(fmt = :png)	
-	
-end
+# ╔═╡ d1fd17dc-6fa6-11eb-245d-8bc905079f2f
+df_nodes1; sort(df_nodes, :eigv_c, rev = true)
 
 # ╔═╡ 3399e1f8-6cbb-11eb-329c-811efb68179f
 md"""
