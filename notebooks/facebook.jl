@@ -118,8 +118,11 @@ md"""
 `facebook.jl` | **Version 1.0** | *last updated: Feb 17*
 """
 
-# ╔═╡ 6712b2f0-6c72-11eb-0cb1-b12b78ab5556
-
+# ╔═╡ a4ff0fb8-71f3-11eb-1928-492c57739959
+md"""
+!!! note "Notebook too slow? Try facebook-light.jl"
+    This notebook loads a lot of packages and downloads lots of data. If the notebook is too laggy on your computer use `facebook-light.jl` instead. The *light* version omits some material from the lecture that you don't need for the assignment.
+"""
 
 # ╔═╡ 7f8a57f0-6c72-11eb-27dd-2dae50f00232
 md"""
@@ -135,8 +138,12 @@ This notebook will be the basis for part of **Lecture 5** *and* **Assignment 3**
 #### Pluto Notebook
 
 3. Visualize social connectedness of a region
-4. Regard the social connectedness index as the weights of network of regions. Analyze the properties of this network.
-5. Compute the network concentration of a region and see that this measure has important socio-economic correlates.
+4. Regard the social connectedness index as the weights of network of regions. 
+5. Compute the network concentration of US counties, we show that counties with higher network concentration were more likely to vote for Trump in the US presidential election 2020.
+
+#### Assignment
+
+6. Get an overview of how social connectedness has been used in economic research.
 """
 
 # ╔═╡ 547d93f4-6c74-11eb-28fe-c5be4dc7aaa6
@@ -203,7 +210,7 @@ format(a, b, i; kwargs...) = "$i"
 
 # ╔═╡ f3b6d9be-712e-11eb-2f2d-af92e85304b5
 md"""
-## US Presidential Elections 2020
+# US Presidential Elections 2020
 """
 
 # ╔═╡ 825b52aa-712d-11eb-0eec-1561c87b7aac
@@ -392,7 +399,7 @@ get_country_sci() = csv_from_url(url_country_country)
 get_county_sci() = csv_from_url(url_county)
 
 # ╔═╡ b20ab98c-710d-11eb-0a6a-7de2477acf35
-county_df0 = get_county_sci()
+county_df = get_county_sci()
 
 # ╔═╡ a6939ede-6c80-11eb-21ce-bdda8fe67acc
 md"""
@@ -423,12 +430,15 @@ end
 
 # ╔═╡ 98e7519a-710d-11eb-3781-0d80ff87c17f
 begin
-	node_county_ids, weights = make_sci_graph(county_df0)
+	node_county_ids, weights = make_sci_graph(county_df)
 	g_county = SimpleWeightedGraph(weights)
-	
-	county_df = deepcopy(county_df0)
-	#node_county_ids.eigv_c = eigenvector_centrality(g_county)
 end
+
+# ╔═╡ 4a802f06-71f6-11eb-2c52-8d102b5abd55
+county_centrality_df = DataFrame(
+	fips = node_county_ids,
+	eigv_c = eigenvector_centrality(g_county)
+	);
 
 # ╔═╡ bb9821ce-710d-11eb-31ad-63c31f90019b
 let
@@ -886,17 +896,27 @@ concentration_df = let
 	
 	df.conc_grp = cut(df.concentration, q, extend = true, labels = format)
 	df
-end
-	
+end;
 
 # ╔═╡ baebb396-7130-11eb-3ca2-1bb9e2d0826b
 let
+	fig = Figure()
+	ax_l = Axis(fig[1,1][1,1], xlabel = "network concentration", ylabel = "log(population)")
+	
+	df_co = concentration_df
+		
+	scatter!(ax_l, df_co.concentration, log.(df_co.pop), color = (:black, 0.1), strokewidth = 0, label = "scatter")
+	
 	var = [:pop, :concentration]
 	df = combine(
-		groupby(concentration_df, :conc_grp), 
+		groupby(df_co, :conc_grp), 
 		([v, :pop] => ((x,p) -> dot(x,p) / sum(p)) => v for v in var)...
 	)
-	scatter(df.concentration, log.(df.pop), axis = (xlabel = "network concentration", ylabel = "log(population)"))
+	scatter!(ax_l, df.concentration, log.(df.pop), color = :deepskyblue, label = "binscatter")
+		
+	legend_attr = (orientation = :horizontal, tellheight = true, tellwidth = false)
+	Legend(fig[0,1], ax_l; legend_attr...)
+	fig
 end
 
 # ╔═╡ 7ca9c2ec-712b-11eb-229a-3322c8115255
@@ -919,15 +939,22 @@ let
 	fig
 end
 
-# ╔═╡ 49278da8-712d-11eb-15c1-afcf15a38fa9
-let
-	df = concentration_df
-		
-	scatter(log.(df.pop), df.concentration, color = (:black, 0.1), strokewidth = 0)
-end
+# ╔═╡ f583afc6-71f7-11eb-0241-a71a659b5313
+centrality_df = let
+	df = innerjoin(county_shapes_df, county_centrality_df, on = :fips)
+	
+	n = 40
+	q = quantile(df.eigv_c, Weights(df.pop), 0:1/n:1)
+	
+	df.conc_grp = cut(df.eigv_c, q, extend = true, labels = format)
+	df
+end;
 
 # ╔═╡ 281198fa-712f-11eb-02ae-99a2d48099eb
-df_elect = innerjoin(df_elect0, concentration_df, on = :county_fips => :fips)
+df_elect = let
+	df = innerjoin(df_elect0, concentration_df, on = :county_fips => :fips)
+	innerjoin(df, centrality_df, on = :county_fips => :fips, makeunique = true)
+end
 
 # ╔═╡ 0243f610-7134-11eb-3b9b-e5474fd7d1cf
 let
@@ -957,6 +984,16 @@ let
 		([v, :pop] => ((x,p) -> dot(x,p) / sum(p)) => v for v in var)...
 	)
 	scatter(df.concentration, df.per_gop, axis = (xlabel = "network concentration", ylabel = "vote share Trump"))
+end
+
+# ╔═╡ 109bb1ea-71f6-11eb-37f4-054f691b2f23
+let
+	var = [:pop, :per_gop, :eigv_c]
+	df = combine(
+		groupby(df_elect, :conc_grp), 
+		([v, :pop] => ((x,p) -> dot(x,p) / sum(p)) => v for v in var)...
+	)
+	scatter(log.(df.eigv_c), df.per_gop, axis = (xlabel = "log centrality", ylabel = "vote share Trump"))
 end
 
 # ╔═╡ c090e76c-710b-11eb-3b8e-277cbfbb3aa1
@@ -1083,7 +1120,7 @@ md"""
 # ╔═╡ Cell order:
 # ╟─47594b98-6c72-11eb-264f-e5416a8faa32
 # ╟─44ef5554-713f-11eb-35fc-1b93349ca7fa
-# ╟─6712b2f0-6c72-11eb-0cb1-b12b78ab5556
+# ╟─a4ff0fb8-71f3-11eb-1928-492c57739959
 # ╟─7f8a57f0-6c72-11eb-27dd-2dae50f00232
 # ╟─547d93f4-6c74-11eb-28fe-c5be4dc7aaa6
 # ╟─710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
@@ -1102,6 +1139,7 @@ md"""
 # ╟─d127df3e-710d-11eb-391a-89f3aeb8c219
 # ╠═b20ab98c-710d-11eb-0a6a-7de2477acf35
 # ╠═98e7519a-710d-11eb-3781-0d80ff87c17f
+# ╠═4a802f06-71f6-11eb-2c52-8d102b5abd55
 # ╠═bb9821ce-710d-11eb-31ad-63c31f90019b
 # ╠═cf24412e-7125-11eb-1c82-7f59f4640c72
 # ╠═2f525ae6-7125-11eb-1254-3732191908e5
@@ -1113,17 +1151,18 @@ md"""
 # ╠═2dc57ad0-712c-11eb-3051-599c21f00b38
 # ╠═99eb89dc-7129-11eb-0f61-79af19d18589
 # ╠═4a641856-712f-11eb-34fe-eb9641c13f03
+# ╠═f583afc6-71f7-11eb-0241-a71a659b5313
 # ╠═729469f6-7130-11eb-07da-d1a7eb14881a
 # ╠═baebb396-7130-11eb-3ca2-1bb9e2d0826b
 # ╠═e1dae81c-712b-11eb-0fb8-654147206526
 # ╠═7ca9c2ec-712b-11eb-229a-3322c8115255
-# ╠═49278da8-712d-11eb-15c1-afcf15a38fa9
 # ╟─f3b6d9be-712e-11eb-2f2d-af92e85304b5
 # ╠═825b52aa-712d-11eb-0eec-1561c87b7aac
 # ╠═1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
 # ╠═0243f610-7134-11eb-3b9b-e5474fd7d1cf
 # ╠═281198fa-712f-11eb-02ae-99a2d48099eb
 # ╠═8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
+# ╠═109bb1ea-71f6-11eb-37f4-054f691b2f23
 # ╟─7b50095c-6f9a-11eb-2cf5-31805fc10804
 # ╠═8a0e113c-6f9a-11eb-3c3b-bfb0c9220562
 # ╠═94895ab8-6f9a-11eb-3c04-dbe13f545acc
