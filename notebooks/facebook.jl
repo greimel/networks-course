@@ -25,16 +25,14 @@ begin
 		Pkg.add(["WGLMakie", "JSServe"])
 		using WGLMakie, JSServe
 		Page(exportable = true)
+		WGLMakie.activate!()
 	else
 		Pkg.add("CairoMakie")
 		using CairoMakie
 		CairoMakie.activate!(type = "png")
 	end
 	
-	Pkg.add("AlgebraOfGraphics")
 	Pkg.add("NetworkLayout")
-	
-	using AlgebraOfGraphics
 	using NetworkLayout: NetworkLayout
 end
 
@@ -699,25 +697,6 @@ nomatch = filter(!in(filter(!ismissing, shapes_df.iso2c)), node_names)
 # ╔═╡ 34b2982a-6c89-11eb-2ae6-77e735c49966
 filter(:iso2c => in(nomatch), iso2c_to_fips) # too small
 
-# ╔═╡ 71a3ea90-6c89-11eb-3ca5-813352af8243
-let
-	shape_df = get_shapes()
-	df = transform!(shape_df, :population => (x -> x/1_000_000) => :pop)
-
-	fig = Figure()
-	ax = Axis(fig[1,1])
-	hidedecorations!(ax)
-	hidespines!(ax)
-	
-	color_variable = log.(df.pop)
-	
-	attr = (tellwidth = true, width = 30)
-	poly!(ax, df.shape, color = color_variable)
-	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="log(population)")
-
-	fig
-end
-
 # ╔═╡ d4b337f4-7124-11eb-0437-e1e4ec1a61c9
 md"""
 ## Preparations County level analysis
@@ -996,25 +975,6 @@ let
 	scatter(log.(df.eigv_c), df.per_gop, axis = (xlabel = "log centrality", ylabel = "vote share Trump"))
 end
 
-# ╔═╡ c090e76c-710b-11eb-3b8e-277cbfbb3aa1
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "US Counties with Random Colors")
-	
-	hidedecorations!(ax)
-	hidespines!(ax)
-	
-	df = county_shapes_df #filter(:state => !in(["Alaska", "Hawaii"]), county_dict_shapes) 
-	color_variable = log.(df.pop)
-	attr = (tellwidth = true, width = 30)
-	
-	poly!(ax, df.shape, color = color_variable)
-	
-	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="log(population)")
-	
-	fig
-end
-
 # ╔═╡ 39d717a4-6c75-11eb-15f0-d537959a41b8
 md"""
 ## Package Environment
@@ -1224,9 +1184,7 @@ md"""
 # ╠═4da91cd0-6c86-11eb-31fd-2fe037228a52
 # ╠═fdc229f8-6c84-11eb-1ae9-d133fc05035e
 # ╠═34b2982a-6c89-11eb-2ae6-77e735c49966
-# ╠═71a3ea90-6c89-11eb-3ca5-813352af8243
 # ╟─d4b337f4-7124-11eb-0437-e1e4ec1a61c9
-# ╠═c090e76c-710b-11eb-3b8e-277cbfbb3aa1
 # ╠═da19832e-710b-11eb-0e66-01111d3070b5
 # ╟─3ebcb4d8-7123-11eb-3b71-c107f5ecfa30
 # ╠═94c0fa82-7124-11eb-0fdd-c3cb8cc9311d
