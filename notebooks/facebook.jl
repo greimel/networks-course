@@ -957,12 +957,6 @@ md"""
 ## Package Environment
 """
 
-# ╔═╡ 69209f8a-6c75-11eb-228e-475c3fcde6e7
-
-
-# ╔═╡ 60483912-6c80-11eb-27ba-55477555f345
-
-
 # ╔═╡ 3399e1f8-6cbb-11eb-329c-811efb68179f
 md"""
 ## Patch 1: Weights and Centralities
@@ -1181,8 +1175,6 @@ md"""
 # ╠═e7231bac-7115-11eb-1c7a-8f1b9c109dd0
 # ╠═38a2ac40-7122-11eb-1a80-edb0bc182b5c
 # ╟─39d717a4-6c75-11eb-15f0-d537959a41b8
-# ╠═69209f8a-6c75-11eb-228e-475c3fcde6e7
-# ╠═60483912-6c80-11eb-27ba-55477555f345
 # ╠═53f814ac-7204-11eb-26e7-57398d26446f
 # ╟─3399e1f8-6cbb-11eb-329c-811efb68179f
 # ╠═1f7e15e2-6cbb-11eb-1e92-9f37d4f3df40
