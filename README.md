@@ -10,14 +10,11 @@ This repository hosts some of the material for the course "Economic and Financia
 * TI Network (see Canvas)
 * **Assignment 1**: A Twitter Network ([preview](https://greimel.github.io/networks-course/notebooks/assignment-twitter.html), [download](https://greimel.github.io/networks-course/notebooks/assignment-twitter.jl))
 
-### Week 2
+### Weeks 2-5
 * Diffusion on Networks: Modeling Transmission of Disease (contains **Assignment 2**) ([preview](https://greimel.github.io/networks-course/notebooks/disease.html), [download](https://greimel.github.io/networks-course/notebooks/disease.jl))
-
-### Week 3
 *  Social Connectedness: What Friendships on Facebook Tell Us About the World  (contains **Assignment 3**) ([preview](https://greimel.github.io/networks-course/notebooks/facebook.html), [download](https://greimel.github.io/networks-course/notebooks/facebook.jl)) **light version** ([preview](https://greimel.github.io/networks-course/notebooks/facebook-light.html), [download](https://greimel.github.io/networks-course/notebooks/facebook-light.jl))
-
-### Week 4
-*  *(preliminary)* Social Comparisons, Income Inequality and the Mortgage Boom ([preview](https://greimel.github.io/networks-course/notebooks/comparisons.html), [download](https://greimel.github.io/networks-course/notebooks/comparisons.jl))
+*  Social Comparisons, Income Inequality and the Mortgage Boom ([preview](https://greimel.github.io/networks-course/notebooks/comparisons.html), [download](https://greimel.github.io/networks-course/notebooks/comparisons.jl))
+*  **(coming soon)** Production networks (contains **Assignment 4**)
 
 ## Software and setup
 
