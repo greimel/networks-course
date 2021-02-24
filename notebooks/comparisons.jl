@@ -134,17 +134,17 @@ md"""
 """
 
 # ╔═╡ 076ab958-6b79-11eb-3426-37f1dab6d734
-par = (β = 0.95, ξ = 0.30, ϕ = 0.7, p = 1)
+par = (β = 0.95, θ = 0.30, ϕ = 0.7, p = 1)
 
 # ╔═╡ 4b3e320e-6b79-11eb-2336-d57c4c0e784c
 h_next, h₀, y₀, groups, m_next = let
-	@unpack β, ξ, ϕ, p = par
+	@unpack β, θ, ϕ, p = par
 	
 	groups = ["bottom 50", "middle 40", "top 10"]
 	
-	κ₀ = ξ/(1 - ξ) * (1 + β)
-	κ₁ = κ₀ #ξ/(1 - ξ) * (1 + β)
-	κ₂ = (1 + β)/κ₁ + 1
+	κ₀ = θ/(1 - θ) * (1 + β)
+	κ₁ = (1 + β) * θ / p
+	κ₂ = 1 - θ
 	
 	y₀ = [0.5, 1, 2]
 
@@ -152,7 +152,7 @@ h_next, h₀, y₀, groups, m_next = let
 		 0  0   0.5;
 		 0.  0  0]
 	
-	h_next(y, h) = (1-β)/(κ₂ * p) * y + ϕ / κ₂ * G * h
+	h_next(y, h) = κ₁ * y + (κ₂ * ϕ) * G * h
 	
 	function m_next(y, h)
 		h_n = h_next(y, h)
@@ -160,7 +160,7 @@ h_next, h₀, y₀, groups, m_next = let
 		β .* (y - p/κ₀ * (h_n - ϕ * G * h)) 
 	end
 	
-	h₀ = (I - (ϕ/κ₂ * G)) \	((1-β)/(κ₂ * p) * y₀)
+	h₀ = (I - (ϕ * κ₂ * G)) \ (κ₁ * y₀)
 	
 	(; h_next, h₀, y₀, groups, m_next)
 end
