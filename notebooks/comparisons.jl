@@ -133,6 +133,17 @@ md"""
 # Simulating the model
 """
 
+# ╔═╡ 2b9592ca-7688-11eb-34c2-3d4f2e4f3159
+par_md = md"""
+* ``\beta``: discount factor (assume ``\beta = 1/(1+r)``)
+* ``\theta``: utility weight of housing
+* ``\phi``: strength of the comparison motive
+* ``p``: house price
+"""
+
+# ╔═╡ dca5d17a-7687-11eb-3bd4-b774087e626d
+par_md
+
 # ╔═╡ 076ab958-6b79-11eb-3426-37f1dab6d734
 par = (β = 0.95, θ = 0.30, ϕ = 0.7, p = 1)
 
@@ -499,11 +510,13 @@ TableOfContents()
 # ╟─46cc354c-6f73-11eb-1a28-a5b171989df4
 # ╟─f397be00-6f72-11eb-1600-b74b07053aa6
 # ╟─fcdbad94-6b78-11eb-1f33-4b35fee6b1b9
+# ╟─2b9592ca-7688-11eb-34c2-3d4f2e4f3159
 # ╠═4b3e320e-6b79-11eb-2336-d57c4c0e784c
 # ╠═d2fe0186-6b7b-11eb-02e6-cfb1e163889f
 # ╠═f6e061ce-6b7c-11eb-351d-8f890bc5318c
 # ╠═1dd8274e-75f5-11eb-060a-d7b5dbb5731a
 # ╠═d03b547a-75f4-11eb-2cb1-99c8da1411b7
+# ╠═dca5d17a-7687-11eb-3bd4-b774087e626d
 # ╠═076ab958-6b79-11eb-3426-37f1dab6d734
 # ╠═b860a4d8-6b7c-11eb-27f2-99c8672eb53d
 # ╠═4ccfee7a-75f9-11eb-04c4-cde6a5543f00
