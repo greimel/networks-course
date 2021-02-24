@@ -75,7 +75,7 @@ end
 
 # ╔═╡ 7fadac3a-6b77-11eb-2030-f92648bcef71
 md"""
-`comparisons.jl` | **Version 1.0** | *last updated: Feb 23*
+`comparisons.jl` | **Version 1.1** | *last updated: Feb 24*
 """
 
 # ╔═╡ 549c17f0-6b77-11eb-3cc7-379d1bcfad6f
