@@ -44,6 +44,8 @@ begin
 			Pkg.PackageSpec(name="Compose", ),
 			Pkg.PackageSpec(name="Images", ),
 			Pkg.PackageSpec(name="ImageIO", ),
+			Pkg.PackageSpec(name="Downloads", ),
+			
 		#PackageSpec(name = "Plots", version = "1.10"),	
 			])
 	
@@ -53,6 +55,7 @@ begin
 	using Statistics: mean
 	using SparseArrays#: sparse
 	using LinearAlgebra: I, dot, diag, Diagonal, norm
+	import Downloads
 	
 	import CairoMakie
 	CairoMakie.activate!(type = "png")
@@ -80,15 +83,6 @@ begin
 	#using Plots
 	#Plots.gr(fmt = :png)	
 	
-end
-
-# ╔═╡ b223523e-7753-11eb-1d9a-67c0281ae473
-begin
-	using Downloads
-	url = "https://apps.bea.gov/industry/xls/io-annual/CxI_DR_2007_2012_DOM_DET.xlsx"
-	file = Downloads.download(url)
-	f = XLSX.readxlsx(file)
-	sh = f["2007"]
 end
 
 # ╔═╡ 579444bc-774a-11eb-1d80-0557b12da169
@@ -465,6 +459,14 @@ md"""
 md"""
 ## Downloading the Input-Output Table for the US
 """
+
+# ╔═╡ b223523e-7753-11eb-1d9a-67c0281ae473
+begin
+	url = "https://apps.bea.gov/industry/xls/io-annual/CxI_DR_2007_2012_DOM_DET.xlsx"
+	file = Downloads.download(url)
+	f = XLSX.readxlsx(file)
+	sh = f["2007"]
+end
 
 # ╔═╡ 356d2016-7754-11eb-2e6f-07d1c12831b5
 md"""
@@ -931,7 +933,7 @@ gplot(unweighted_network) |> gplot_to_png
 # ╠═50194494-7772-11eb-20ff-419e874ec00c
 # ╟─cbb1e550-7751-11eb-1313-7ff968453f36
 # ╟─e93837d2-77b0-11eb-17e9-c7f25b2c47ed
-# ╠═ee72ef4c-7751-11eb-1781-6f4d027a9e66
+# ╟─ee72ef4c-7751-11eb-1781-6f4d027a9e66
 # ╟─d0630e36-774b-11eb-0750-370f1b1327e6
 # ╠═29f570c0-774b-11eb-2c1c-17a956c9fd27
 # ╠═2fa2a558-774b-11eb-396b-832d0ce9a130
