@@ -621,7 +621,7 @@ fig_welfare = let
 	
 	fig = Figure()
 	
-	col = rand([:red, :blue, :green], length(nodes_vec))
+	col = AbstractPlotting.wong_colors
 	
 	ax = Axis(fig[1,1], title = "Welfare loss after shock to different industries")
 	
@@ -637,6 +637,28 @@ end
 
 # ╔═╡ 76e6f44e-77aa-11eb-1f12-438937941606
 fig_welfare
+
+# ╔═╡ ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6
+fig_covid = let
+	nodes_vec = [bot_n => "bottom", top_n => "top"]
+	
+	A = weighted_adjacency_matrix(network)'
+	
+	fig = Figure()
+	
+	col = AbstractPlotting.wong_colors
+	
+	ax = Axis(fig[1,1], title = "Welfare loss after shock to different industries")
+	
+	for (i, nodes) in enumerate(nodes_vec)
+		@unpack welfare = impulse_response(10, A, params(A), nodes[1], -0.5, T_shock = 0:2)
+		lines!(ax, collect(axes(welfare, 1)), parent(welfare), color = col[i], label = nodes[2] * " $(length(nodes[1]))")
+	end
+	
+	Legend(fig[1,2], ax)
+
+	fig
+end
 
 # ╔═╡ 834669c4-776c-11eb-29b7-77dc465077d7
 begin
@@ -926,6 +948,7 @@ gplot(unweighted_network) |> gplot_to_png
 # ╠═4359dbee-77b1-11eb-3755-e1c1532212bb
 # ╠═45db03f2-77b1-11eb-2edd-6104bc85915b
 # ╠═486cd850-77b1-11eb-1dd2-15ca68d98173
+# ╠═ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6
 # ╟─4e891b56-77b1-11eb-116d-e94250f1d70e
 # ╟─48f0ffd4-77b0-11eb-04ab-43eac927ac9d
 # ╠═9fb0a0a8-77b1-11eb-011f-7fc7a549f552
