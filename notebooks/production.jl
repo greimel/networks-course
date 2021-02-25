@@ -593,6 +593,7 @@ end
 # ╔═╡ f6144074-7768-11eb-3624-51bbc44be7ec
 begin
 	used_as_input = sum(wgts, dims=1) |> vec # col sums
+	#filter!(>(√eps()), used_as_input)
 	hist(used_as_input, axis = (title = "Used as Inputs in Other Sectors", ))
 end
 
@@ -840,10 +841,10 @@ md"""
 """
 
 # ╔═╡ 346fd998-77ad-11eb-0c0a-83a1290795af
-function gplot_to_png(gp::Context)
+function gplot_to_png(gp::Compose.Context)
 	filename = tempname() * ".png"
-	gp |> PNG(filename)
-	load(filename)
+	gp |> Compose.PNG(filename)
+	Images.load(filename)
 end
 
 # ╔═╡ 958f9f3e-77ac-11eb-323c-cd78c1fe4c23
