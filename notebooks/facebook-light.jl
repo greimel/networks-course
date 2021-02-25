@@ -4,102 +4,26 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 53f814ac-7204-11eb-26e7-57398d26446f
+# ╔═╡ 69209f8a-6c75-11eb-228e-475c3fcde6e7
 begin
 	_a_ = 1 # make sure this cell is run as cell #1
+	
 	using Pkg
 	Pkg.activate(temp = true)
 	
-	Pkg.add([
-		PackageSpec(name = "AbstractPlotting",  version = "0.15"),
-		PackageSpec(name = "CairoMakie",        version = "0.3"),
-		PackageSpec(name = "CategoricalArrays", version = "0.9"),
-		PackageSpec(name = "Colors",            version = "0.12"),
-		PackageSpec(name = "Chain",             version = "0.4"),
-		PackageSpec(name = "CSV",               version = "0.8"),
-		PackageSpec(name = "HTTP",              version = "0.9"),			
-		PackageSpec(name = "DataFrames",        version = "0.22"),			
-		PackageSpec(name = "DataAPI",           version = "1.4"),
-		PackageSpec(name = "LightGraphs",       version = "1.3"),
-		PackageSpec(name = "PlutoUI",           version = "0.6.11-0.6"),
-		PackageSpec(name = "UnPack",            version = "1"),
-		PackageSpec(name = "SimpleWeightedGraphs",version="1.1"),
-		PackageSpec(name = "StatsBase",         version = "0.33"),
-		PackageSpec(name = "ZipFile",           version = "0.9"),
-		#PackageSpec(name = "WorldBankData", version = "0.4.1-0.4"),
-		#PackageSpec(name = "Plots", version = "1.10"),	
-		PackageSpec(url = "https://github.com/greimel/Shapefile.jl", rev="multipolygon"),
-			])
-	
-	using Statistics: mean
-	using SparseArrays: sparse
-	using LinearAlgebra: I, dot, diag, Diagonal, norm
-	
-	import CairoMakie
-	CairoMakie.activate!(type = "png")
-	
-	using AbstractPlotting: 	
-		Legend, Figure, Axis, Colorbar,
-		lines!, scatter, scatter!, poly!, vlines!, hlines!, image!,
-		hidedecorations!, hidespines!
-
-	#using WorldBankData
-	using CategoricalArrays: cut
-	using Colors: RGBA
-	using Chain: @chain
-	using DataFrames: DataFrames, DataFrame,
-		select, select!, transform, transform!, combine,
-		leftjoin, innerjoin, rightjoin,
-		groupby, ByRow, Not,
-		disallowmissing!, dropmissing!, disallowmissing
-	import CSV, HTTP, Shapefile, ZipFile
-	using UnPack: @unpack
-	using StatsBase: quantile, Weights
-	#using Plots
-	#Plots.gr(fmt = :png)	
-	
+	Pkg.add(PackageSpec(name = "PlutoUI", version = "0.6.11-0.6"))
 	using PlutoUI: TableOfContents
-end
-
-# ╔═╡ 1f7e15e2-6cbb-11eb-1e92-9f37d4f3df40
-begin
-	_b_ = _a_ + 1 # cell #2
-	nothing
-	
-	using LightGraphs
-	using SimpleWeightedGraphs: SimpleWeightedGraph
-	const LG = LightGraphs
-	
-	weighted_adjacency_matrix(graph::LightGraphs.AbstractGraph) = LG.weights(graph) .* adjacency_matrix(graph)
-	
-	LG.adjacency_matrix(graph::SimpleWeightedGraph) = LG.weights(graph) .> 0
-	
-	function LG.katz_centrality(graph::AbstractGraph, α::Real=0.3; node_weights = ones(nv(graph)))
-		v = node_weights
-
-	    A = weighted_adjacency_matrix(graph)
-    	v = (I - α * A) \ v
-    	v /=  norm(v)
-	end
-	
-	function LG.eigenvector_centrality(graph::AbstractGraph)
-		A = weighted_adjacency_matrix(graph)
-		eig = LightGraphs.eigs(A, which=LightGraphs.LM(), nev=1)
-		eigenvector = eig[2]
-	
-		centrality = abs.(vec(eigenvector))
-	end
 end
 
 # ╔═╡ 47594b98-6c72-11eb-264f-e5416a8faa32
 md"""
-`facebook.jl` | **Version 1.0** | *last updated: Feb 18*
+`facebook-light.jl` | **Version 1.0** | *last updated: Feb 18*
 """
 
 # ╔═╡ a4ff0fb8-71f3-11eb-1928-492c57739959
 md"""
-!!! note "Notebook too slow? Try facebook-light.jl"
-    This notebook loads a lot of packages and downloads lots of data. If the notebook is too laggy on your computer use `facebook-light.jl` instead. The *light* version omits some material from the lecture that you don't need for the assignment.
+!!! note "This is the light version of facebook.jl"
+    The material on US counties is omitted to reduce load times.
 """
 
 # ╔═╡ 7f8a57f0-6c72-11eb-27dd-2dae50f00232
@@ -153,46 +77,15 @@ md"""
 # The Same with US Counties
 """
 
-# ╔═╡ cf24412e-7125-11eb-1c82-7f59f4640c72
-county_name = "Cook"; state = "Illinois"
-
 # ╔═╡ e0d17116-710d-11eb-1719-e18f188a6229
 md"""
 # Network Concentration
 """
 
-# ╔═╡ aab55326-7127-11eb-2f03-e9d3f30d1947
-begin
-	url500 = "https://nber.org/distance/2010/sf1/county/sf12010countydistance500miles.csv.zip"
-	
-	url100 = "https://data.nber.org/distance/2010/sf1/county/sf12010countydistance100miles.csv.zip"
-	
-	url = url500
-	
-	zipfile = download(url)	
-	
-	z = ZipFile.Reader(zipfile)	
-	file_in_zip = only(z.files)
-
-	dff = CSV.File(read(file_in_zip)) |> DataFrame
-end
-
-# ╔═╡ 30350a46-712a-11eb-1d4b-81de61879835
-add0_infty(from, to, dist) = from == to ? 0.0 : ismissing(dist) ? Inf : dist
-
-# ╔═╡ 2dc57ad0-712c-11eb-3051-599c21f00b38
-distance = 150
-
-# ╔═╡ 729469f6-7130-11eb-07da-d1a7eb14881a
-format(a, b, i; kwargs...) = "$i"
-
 # ╔═╡ f3b6d9be-712e-11eb-2f2d-af92e85304b5
 md"""
 # US Presidential Elections 2020
 """
-
-# ╔═╡ 825b52aa-712d-11eb-0eec-1561c87b7aac
-url_elect = "https://raw.githubusercontent.com/tonmcg/US_County_Level_Election_Results_08-20/master/2020_US_County_Level_Presidential_Results.csv"
 
 # ╔═╡ 7b50095c-6f9a-11eb-2cf5-31805fc10804
 md"""
@@ -361,28 +254,113 @@ url_country_country = "https://data.humdata.org/dataset/e9988552-74e4-4ff4-943f-
 # ╔═╡ 5427cfc6-6c80-11eb-24c8-e1a56dfd20f1
 url_county = "https://data.humdata.org/dataset/e9988552-74e4-4ff4-943f-c782ac8bca87/resource/3e3a1a7e-b557-4191-80cf-33d8e66c2e51/download/county_county_aug2020.tsv"
 
+# ╔═╡ a6939ede-6c80-11eb-21ce-bdda8fe67acc
+md"""
+## Constructing a Network From SCI Data
+"""
+
+# ╔═╡ 72619534-6c81-11eb-07f1-67f833293077
+md"""
+## Downloading the Maps
+"""
+
+# ╔═╡ 8575cb62-6c82-11eb-2a76-f9c1af6aab50
+md"""
+## Translating Country Codes
+"""
+
+# ╔═╡ a91896c6-6c82-11eb-018e-e514ca265b1a
+url_country_codes = "https://datahub.io/core/country-codes/r/country-codes.csv"
+
+# ╔═╡ 15139994-6c82-11eb-147c-59013c36a518
+md"""
+## Matching SCI and Map Shapes
+"""
+
+# ╔═╡ d4b337f4-7124-11eb-0437-e1e4ec1a61c9
+md"""
+## Preparations County level analysis
+"""
+
+# ╔═╡ 39d717a4-6c75-11eb-15f0-d537959a41b8
+md"""
+## Package Environment
+"""
+
+# ╔═╡ 60483912-6c80-11eb-27ba-55477555f345
+begin
+	_b_ = _a_ + 1 # Cell #2
+	
+end
+
+# ╔═╡ 6b906ab0-6c80-11eb-29a9-ab1e42290019
+begin
+	_c_ = _b_ + 1 # Cell #3
+	
+	Pkg.add([
+		PackageSpec(name = "AbstractPlotting",  version = "0.15"),
+		PackageSpec(name = "CairoMakie",        version = "0.3"),
+		PackageSpec(name = "CategoricalArrays", version = "0.9"),
+		PackageSpec(name = "Colors",            version = "0.12"),
+		PackageSpec(name = "Chain",             version = "0.4"),
+		PackageSpec(name = "CSV",               version = "0.8"),
+		PackageSpec(name = "HTTP",              version = "0.9"),			
+		PackageSpec(name = "DataFrames",        version = "0.22"),			
+		PackageSpec(name = "DataAPI",           version = "1.4"),
+		PackageSpec(name = "LightGraphs",       version = "1.3"),
+		PackageSpec(name = "UnPack",            version = "1"),
+		PackageSpec(name = "ZipFile",           version = "0.9"),
+		PackageSpec(name = "SimpleWeightedGraphs",version="1.1"),
+		#PackageSpec(name = "WorldBankData", version = "0.4.1-0.4"),
+		#PackageSpec(name = "Plots", version = "1.10"),	
+		PackageSpec(url = "https://github.com/greimel/Shapefile.jl", rev="multipolygon"),
+			])
+	
+	using Statistics: mean
+	using SparseArrays: sparse
+	using LinearAlgebra: I, dot, diag, Diagonal, norm
+	
+	import CairoMakie
+	CairoMakie.activate!(type = "png")
+	
+	using AbstractPlotting: 	
+		Legend, Figure, Axis, Colorbar,
+		lines!, scatter!, poly!, vlines!, hlines!, image!,
+		hidedecorations!, hidespines!
+
+	#using WorldBankData
+	using CategoricalArrays: cut
+	using Colors: RGBA
+	using Chain: @chain
+	using DataFrames: DataFrames, DataFrame,
+		select, select!, transform, transform!, combine,
+		leftjoin, innerjoin, rightjoin,
+		groupby, ByRow, Not,
+		disallowmissing!, dropmissing!, disallowmissing
+	import CSV, HTTP, Shapefile, ZipFile
+	using UnPack: @unpack
+	#using Plots
+	#Plots.gr(fmt = :png)	
+	
+end
+
 # ╔═╡ 5a0d2490-6c80-11eb-0985-9de4f34412f1
 function csv_from_url(url)
 	csv = CSV.File(HTTP.get(url).body)
 	df = DataFrame(csv)
 end
 
-# ╔═╡ 1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
-df_elect0 = csv_from_url(url_elect)
-
 # ╔═╡ 9d80ae04-6c80-11eb-2c03-b7b45ca6e0bf
 get_country_sci() = csv_from_url(url_country_country)
+
+# ╔═╡ 3dc97a66-6c82-11eb-20a5-635ac0b6bac1
+country_df = get_country_sci()
 
 # ╔═╡ be47304a-6c80-11eb-18ad-974bb077e53f
 get_county_sci() = csv_from_url(url_county)
 
-# ╔═╡ b20ab98c-710d-11eb-0a6a-7de2477acf35
-county_df = get_county_sci()
-
-# ╔═╡ a6939ede-6c80-11eb-21ce-bdda8fe67acc
-md"""
-## Constructing a Network From SCI Data
-"""
+# ╔═╡ 09109488-6c87-11eb-2d64-43fc9df7d8c8
+csv_from_url(url_country_codes)
 
 # ╔═╡ ca92332e-6c80-11eb-3b62-41f0301d6330
 function make_sci_graph(df_sci)
@@ -406,32 +384,8 @@ function make_sci_graph(df_sci)
 	(; node_names, wgts)
 end
 
-# ╔═╡ 98e7519a-710d-11eb-3781-0d80ff87c17f
-begin
-	node_county_ids, weights = make_sci_graph(county_df)
-	g_county = SimpleWeightedGraph(weights)
-end
-
-# ╔═╡ 4a802f06-71f6-11eb-2c52-8d102b5abd55
-county_centrality_df = DataFrame(
-	fips = node_county_ids,
-	eigv_c = eigenvector_centrality(g_county)
-	);
-
-# ╔═╡ bb9821ce-710d-11eb-31ad-63c31f90019b
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Social connectedness between US counties")
-	
-	image!(ax, RGBA.(0,0,0, min.(1.0, weights .* 10_000)))
-	
-	fig
-end
-
-# ╔═╡ 72619534-6c81-11eb-07f1-67f833293077
-md"""
-## Downloading the Maps
-"""
+# ╔═╡ aa423d14-6cb3-11eb-0f1c-65ebbf99d539
+@unpack node_names, wgts = make_sci_graph(country_df);
 
 # ╔═╡ ca30bfda-6c81-11eb-20fa-0defd9b240b2
 function download_zipped_shapes(url, map_name)
@@ -487,17 +441,6 @@ function get_shapes()
 	df = extract_shapes_df(shp_table)
 end
 
-# ╔═╡ 8575cb62-6c82-11eb-2a76-f9c1af6aab50
-md"""
-## Translating Country Codes
-"""
-
-# ╔═╡ a91896c6-6c82-11eb-018e-e514ca265b1a
-url_country_codes = "https://datahub.io/core/country-codes/r/country-codes.csv"
-
-# ╔═╡ 09109488-6c87-11eb-2d64-43fc9df7d8c8
-csv_from_url(url_country_codes)
-
 # ╔═╡ c8d9234a-6c82-11eb-0f81-c17abae3e1c7
 iso2c_to_fips = begin
 	df = csv_from_url(url_country_codes)
@@ -514,17 +457,6 @@ iso2c_to_fips = begin
 	
 	[df; missing_countries]
 end
-
-# ╔═╡ 15139994-6c82-11eb-147c-59013c36a518
-md"""
-## Matching SCI and Map Shapes
-"""
-
-# ╔═╡ 3dc97a66-6c82-11eb-20a5-635ac0b6bac1
-country_df = get_country_sci()
-
-# ╔═╡ aa423d14-6cb3-11eb-0f1c-65ebbf99d539
-@unpack node_names, wgts = make_sci_graph(country_df);
 
 # ╔═╡ baecfe58-6cb6-11eb-3a4e-31bbb8da02ae
 begin
@@ -543,8 +475,8 @@ begin
 end
 
 
-# ╔═╡ 29479030-6c75-11eb-1b96-9fd35f6d0840
-g = SimpleWeightedGraph(wgts)
+# ╔═╡ 05dcc1a2-6c83-11eb-3b62-2339a8e8863e
+all(in(iso2c_to_fips.iso2c), node_names)
 
 # ╔═╡ 60e9f650-6c83-11eb-270a-fb57f2449762
 begin
@@ -552,40 +484,6 @@ begin
 	shapes_df = extract_shapes_df(tbl)
 	shapes_df = leftjoin(shapes_df, iso2c_to_fips, on = :iso3c, makeunique = true)
 end;
-
-# ╔═╡ 96cd1698-6cbb-11eb-0843-f9edd8f58c80
-begin
-	df_nodes = df_nodes0
-	df_nodes.eigv_c = eigenvector_centrality(g)
-	df_nodes.katz_c = katz_centrality(g)
-	df_nodes1 = rightjoin(shapes_df, df_nodes, on = :iso2c => :node_names, makeunique = true, matchmissing = :equal)
-	select!(df_nodes1, :eigv_c, :katz_c, :shape)
-	dropmissing!(df_nodes1)
-end;
-
-# ╔═╡ f25cf8be-6cb3-11eb-0c9c-f9ed04ded513
-let
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Social Connectedness Between Countries of the World", xgridvisible = false, ygridvisible = false)
-	
-	vlines!(ax, labels.start, color = :gray80)
-	hlines!(ax, labels.start, color = :gray80)
-	
-	ax.xticks = (labels.mid, labels.continent)
-	ax.yticks = (labels.mid, labels.continent)
-	
-	
-	
-	image!(ax, RGBA.(0,0,0, min.(1.0, wgts[df_nodes.id, df_nodes.id] .* 100)))
-	
-	fig
-end
-
-# ╔═╡ b5464c40-6cbb-11eb-233a-b1557763e8d6
-sort(df_nodes, :eigv_c, rev = true)
-
-# ╔═╡ d1fd17dc-6fa6-11eb-245d-8bc905079f2f
-df_nodes1; sort(df_nodes, :eigv_c, rev = true)
 
 # ╔═╡ 4b8fba92-6cb0-11eb-0c53-b96600bc760d
 function sci(country)
@@ -602,6 +500,15 @@ end
 
 # ╔═╡ 4f14a79c-6cb3-11eb-3335-2bbb61da25d9
 sort(sci(country), :scaled_sci, rev=true)
+
+# ╔═╡ 4da91cd0-6c86-11eb-31fd-2fe037228a52
+filter(:continent => ismissing, shapes_df)
+
+# ╔═╡ fdc229f8-6c84-11eb-1ae9-d133fc05035e
+nomatch = filter(!in(filter(!ismissing, shapes_df.iso2c)), node_names)
+
+# ╔═╡ 34b2982a-6c89-11eb-2ae6-77e735c49966
+filter(:iso2c => in(nomatch), iso2c_to_fips) # too small
 
 # ╔═╡ 64b321e8-6c84-11eb-35d4-b16736c24cea
 begin
@@ -640,6 +547,68 @@ end
 # ╔═╡ ac0bbc28-6f9b-11eb-1467-6dbd9d2b763a
 sci_country_fig
 
+# ╔═╡ 1f7e15e2-6cbb-11eb-1e92-9f37d4f3df40
+begin
+	_d_ = _c_ + 1 # cell #4
+	nothing
+	
+	using LightGraphs
+	using SimpleWeightedGraphs: SimpleWeightedGraph
+	const LG = LightGraphs
+	
+	weighted_adjacency_matrix(graph::LightGraphs.AbstractGraph) = LG.weights(graph) .* adjacency_matrix(graph)
+	
+	LG.adjacency_matrix(graph::SimpleWeightedGraph) = LG.weights(graph) .> 0
+	
+	function LG.katz_centrality(graph::AbstractGraph, α::Real=0.3; node_weights = ones(nv(graph)))
+		v = node_weights
+
+	    A = weighted_adjacency_matrix(graph)
+    	v = (I - α * A) \ v
+    	v /=  norm(v)
+	end
+	
+	function LG.eigenvector_centrality(graph::AbstractGraph)
+		A = weighted_adjacency_matrix(graph)
+		eig = LightGraphs.eigs(A, which=LightGraphs.LM(), nev=1)
+		eigenvector = eig[2]
+	
+		centrality = abs.(vec(eigenvector))
+	end
+end
+
+# ╔═╡ 29479030-6c75-11eb-1b96-9fd35f6d0840
+g = SimpleWeightedGraph(wgts)
+
+# ╔═╡ 96cd1698-6cbb-11eb-0843-f9edd8f58c80
+begin
+	df_nodes = df_nodes0
+	df_nodes.eigv_c = eigenvector_centrality(g)
+	df_nodes.katz_c = katz_centrality(g)
+	df_nodes1 = rightjoin(shapes_df, df_nodes, on = :iso2c => :node_names, makeunique = true, matchmissing = :equal)
+	select!(df_nodes1, :eigv_c, :katz_c, :shape)
+	dropmissing!(df_nodes1)
+end;
+
+# ╔═╡ f25cf8be-6cb3-11eb-0c9c-f9ed04ded513
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], title = "Social Connectedness Between Countries of the World", xgridvisible = false, ygridvisible = false)
+	
+	vlines!(ax, labels.start, color = :gray80)
+	hlines!(ax, labels.start, color = :gray80)
+	
+	ax.xticks = (labels.mid, labels.continent)
+	ax.yticks = (labels.mid, labels.continent)
+	
+	image!(ax, RGBA.(0,0,0, min.(1.0, wgts[df_nodes.id, df_nodes.id] .* 100)))
+	
+	fig
+end
+
+# ╔═╡ b5464c40-6cbb-11eb-233a-b1557763e8d6
+sort(df_nodes, :eigv_c, rev = true)
+
 # ╔═╡ d38c51d4-6cbb-11eb-09dc-a92080dea6c7
 let
 	fig = Figure()
@@ -662,300 +631,8 @@ let
 	
 end
 
-# ╔═╡ 05dcc1a2-6c83-11eb-3b62-2339a8e8863e
-all(in(iso2c_to_fips.iso2c), node_names)
-
-# ╔═╡ 4da91cd0-6c86-11eb-31fd-2fe037228a52
-filter(:continent => ismissing, shapes_df)
-
-# ╔═╡ fdc229f8-6c84-11eb-1ae9-d133fc05035e
-nomatch = filter(!in(filter(!ismissing, shapes_df.iso2c)), node_names)
-
-# ╔═╡ 34b2982a-6c89-11eb-2ae6-77e735c49966
-filter(:iso2c => in(nomatch), iso2c_to_fips) # too small
-
-# ╔═╡ d4b337f4-7124-11eb-0437-e1e4ec1a61c9
-md"""
-## Preparations County level analysis
-"""
-
-# ╔═╡ 3ebcb4d8-7123-11eb-3b71-c107f5ecfa30
-md"""
-### County-Level Data
-"""
-
-# ╔═╡ 94c0fa82-7124-11eb-0fdd-c3cb8cc9311d
-county_shapes_df0 = let
-	df = download_county_shapes() |> DataFrame
-	select!(df, :NAME_1 => :state, :NAME_2 => :county, :Geometry => :shape)
-end
-
-# ╔═╡ 5400d658-7123-11eb-00c3-b70d622faf7b
-begin
-	county_acs_csv = "https://github.com/social-connectedness-index/example-scripts/raw/master/covid19_exploration/_input/ACS_17_5YR_DP05.csv"
-	county_acs_df0 = csv_from_url(county_acs_csv)
-	
-	county_acs_df = select(county_acs_df0, "GEO.id2"=> :fips, "GEO.display-label" => :label, "HC01_VC03" => :pop)
-end
-
-# ╔═╡ fe752700-711a-11eb-1c13-3303010dfa48
-md"""
-### Matching County Names
-"""
-
-# ╔═╡ 3ec51950-711b-11eb-08fd-0d6ea3ee31ea
-node_county_ids
-
-# ╔═╡ 278f55b0-711c-11eb-36d9-05fff7161d82
-md"""
-The SCI data contain data on county-equivalent entities from U.S. protectorates and freely associated states (e.g. American Samoa, Puerto Rico, Guam). For these entities the don't have additional data, so we drop them.
-"""
-
-# ╔═╡ 754db298-711b-11eb-3b0f-07e1d984dbe0
-filter(!in(county_acs_df.fips), node_county_ids)
-
-# ╔═╡ a6b7545a-711c-11eb-13b4-6baf343485a0
-md"""
-Unfortunately, the map data don't contain FIPS codes, but county names. These are not in the same format as the names in `county_acs_df`.
-
-* We need to remove identifiers like "County", "Parish", etc from the name.
-* We need to handle capitalization and spaces in spanish names
-* We need to handle the use of "St." vs "Saint"
-"""
-
-# ╔═╡ 14d721c4-711b-11eb-2fef-a986c8581f11
-county_dict = let
-	df = map(county_acs_df.label) do str
-		county, state = split(str, ", ")
-
-		county_match = replace(county, " County" => "")
-		repl = [
-			" Parish"      => "",
-			" City"        => "", " city"    => "",
-			" and Borough" => "", " Borough" => "",
-			" Census Area" => "",
-			" Municipality"=> "",
-			"\xf1"         => "n", # ñ => n
-			"St."          => "Saint",
-			"Ste."         => "Sainte",
-			" " => ""]
-		
-		for r in repl
-			county_match = replace(county_match, r)
-		end
-		
-		county_match = lowercase(county_match)
-		
-		(; state, county, county_match)
-	end |> DataFrame
-	
-	df.fips = county_acs_df.fips
-	df.pop  = county_acs_df.pop
-	df
-end;
-
-# ╔═╡ b9c0be22-7128-11eb-3da8-bb3a49e95fd7
-begin
-	# add distances
-	df_c = leftjoin(county_df, dff, on=[:user_loc => :county1, :fr_loc => :county2])
-	# set distance to infinity if there are no data
-	transform!(df_c, [:user_loc, :fr_loc, :mi_to_county] => ByRow(add0_infty) => :distance)
-	
-	pop_df = select(county_dict, :fips, :pop)
-	df_c = leftjoin(df_c, pop_df, on = :fr_loc => :fips)
-	filter!(:pop => !ismissing, df_c)
-	disallowmissing!(df_c, :pop)
-	
-	df_c
-end
-
-# ╔═╡ 99eb89dc-7129-11eb-0f61-79af19d18589
-concentration_df0 = combine(groupby(df_c, :user_loc)) do all
-		close = filter(:distance => <(distance), all)
-		
-		concentration = dot(close.scaled_sci, close.pop) / dot(all.scaled_sci, all.pop)
-		
-		(; concentration)
-end
-
-# ╔═╡ e1dae81c-712b-11eb-0fb8-654147206526
-extrema(skipmissing(df_c.mi_to_county))
-
-# ╔═╡ de30588c-7121-11eb-3781-b9412bd4b7ae
-county_shapes_df1 = begin
-	transform!(county_shapes_df0, :county => ByRow(x -> lowercase(replace(x, " " => ""))) => :county_match)
-	transform!(county_shapes_df0, :county_match => ByRow(x-> replace(x, "city" => "")) => :county_match)
-end;
-
-# ╔═╡ e7231bac-7115-11eb-1c7a-8f1b9c109dd0
-county_dict_shapes0 = leftjoin(county_dict, county_shapes_df1, on = [:state, :county_match], makeunique=true);
-
-# ╔═╡ 38a2ac40-7122-11eb-1a80-edb0bc182b5c
-begin
-	not_matched = filter([:county_1, :fips] => (x,y) -> any(ismissing.([x,y])), county_dict_shapes0)
-	
-	county_dict_shapes = filter!(:shape => !ismissing, county_dict_shapes0)
-	select!(county_dict_shapes, :county_1 => :county, Not([:county_1, :county_match]))
-	disallowmissing!(county_dict_shapes)
-end
-
-# ╔═╡ da19832e-710b-11eb-0e66-01111d3070b5
-# filter out Alaska and Hawaii for plotting
-county_shapes_df = filter(:state => !in(["Hawaii", "Alaska"]), county_dict_shapes);
-
-# ╔═╡ 2f525ae6-7125-11eb-1254-3732191908e5
-fips, _df_ = let
-	_df_ = filter(:county => contains(county_name), county_shapes_df)
-	
-	if size(_df_, 1) == 1
-		fips = only(_df_.fips)
-	else
-		filter!(:state => ==(state), _df_)
-		if size(_df_, 1) == 1
-			fips = only(_df_.fips)
-		else
-			_df_
-		end
-	end
-	fips, _df_
-end
-
-# ╔═╡ de19a2a0-7125-11eb-230b-2fc866269553
-let
-	df = filter(:user_loc => ==(fips), county_df)
-	select!(df, :fr_loc => :fips, :scaled_sci)
-	
-	df = innerjoin(county_shapes_df, df, on=:fips)
-	
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Social Connectedness with $county_name")
-	
-	hidedecorations!(ax)
-	hidespines!(ax)
-	
-	color_variable = log.(df.scaled_sci)
-	attr = (tellwidth = true, width = 30)
-	
-	poly!(ax, df.shape, color = color_variable)
-	
-	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="log(scaled_sci)")
-	
-	fig
-end
-
-# ╔═╡ 4a641856-712f-11eb-34fe-eb9641c13f03
-concentration_df = let
-	df = innerjoin(county_shapes_df, concentration_df0, on=:fips => :user_loc)
-	
-	n = 40
-	q = quantile(df.concentration, Weights(df.pop), 0:1/n:1)
-	
-	df.conc_grp = cut(df.concentration, q, extend = true, labels = format)
-	df
-end;
-
-# ╔═╡ baebb396-7130-11eb-3ca2-1bb9e2d0826b
-let
-	fig = Figure()
-	ax_l = Axis(fig[1,1][1,1], xlabel = "network concentration", ylabel = "log(population)")
-	
-	df_co = concentration_df
-		
-	scatter!(ax_l, df_co.concentration, log.(df_co.pop), color = (:black, 0.1), strokewidth = 0, label = "scatter")
-	
-	var = [:pop, :concentration]
-	df = combine(
-		groupby(df_co, :conc_grp), 
-		([v, :pop] => ((x,p) -> dot(x,p) / sum(p)) => v for v in var)...
-	)
-	scatter!(ax_l, df.concentration, log.(df.pop), color = :deepskyblue, label = "binscatter")
-		
-	legend_attr = (orientation = :horizontal, tellheight = true, tellwidth = false)
-	Legend(fig[0,1], ax_l; legend_attr...)
-	fig
-end
-
-# ╔═╡ 7ca9c2ec-712b-11eb-229a-3322c8115255
-let
-	df = concentration_df
-		
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Network Concentration (% of friends closer than $distance mi)")
-	
-	hidedecorations!(ax)
-	hidespines!(ax)
-	
-	color_variable = df.concentration
-	attr = (tellwidth = true, width = 30)
-	
-	poly!(ax, df.shape, color = color_variable)
-	
-	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="concentration")
-	
-	fig
-end
-
-# ╔═╡ f583afc6-71f7-11eb-0241-a71a659b5313
-centrality_df = let
-	df = innerjoin(county_shapes_df, county_centrality_df, on = :fips)
-	
-	n = 40
-	q = quantile(df.eigv_c, Weights(df.pop), 0:1/n:1)
-	
-	df.conc_grp = cut(df.eigv_c, q, extend = true, labels = format)
-	df
-end;
-
-# ╔═╡ 281198fa-712f-11eb-02ae-99a2d48099eb
-df_elect = let
-	df = innerjoin(df_elect0, concentration_df, on = :county_fips => :fips)
-	innerjoin(df, centrality_df, on = :county_fips => :fips, makeunique = true)
-end
-
-# ╔═╡ 0243f610-7134-11eb-3b9b-e5474fd7d1cf
-let
-	df = df_elect
-		
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Trump vote share")
-	
-	hidedecorations!(ax)
-	hidespines!(ax)
-	
-	color_variable = df.per_gop
-	attr = (tellwidth = true, width = 30)
-	
-	poly!(ax, df.shape, color = color_variable)
-	
-	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="Trump vote share")
-	
-	fig
-end
-
-# ╔═╡ 8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
-let
-	var = [:pop, :per_gop, :concentration]
-	df = combine(
-		groupby(df_elect, :conc_grp), 
-		([v, :pop] => ((x,p) -> dot(x,p) / sum(p)) => v for v in var)...
-	)
-	scatter(df.concentration, df.per_gop, axis = (xlabel = "network concentration", ylabel = "vote share Trump"))
-end
-
-# ╔═╡ 109bb1ea-71f6-11eb-37f4-054f691b2f23
-let
-	var = [:pop, :per_gop, :eigv_c]
-	df = combine(
-		groupby(df_elect, :conc_grp), 
-		([v, :pop] => ((x,p) -> dot(x,p) / sum(p)) => v for v in var)...
-	)
-	scatter(log.(df.eigv_c), df.per_gop, axis = (xlabel = "log centrality", ylabel = "vote share Trump"))
-end
-
-# ╔═╡ 39d717a4-6c75-11eb-15f0-d537959a41b8
-md"""
-## Package Environment
-"""
+# ╔═╡ d1fd17dc-6fa6-11eb-245d-8bc905079f2f
+df_nodes1; sort(df_nodes, :eigv_c, rev = true)
 
 # ╔═╡ 3399e1f8-6cbb-11eb-329c-811efb68179f
 md"""
@@ -1074,32 +751,8 @@ md"""
 # ╠═b5464c40-6cbb-11eb-233a-b1557763e8d6
 # ╠═d38c51d4-6cbb-11eb-09dc-a92080dea6c7
 # ╟─d127df3e-710d-11eb-391a-89f3aeb8c219
-# ╠═b20ab98c-710d-11eb-0a6a-7de2477acf35
-# ╠═98e7519a-710d-11eb-3781-0d80ff87c17f
-# ╠═4a802f06-71f6-11eb-2c52-8d102b5abd55
-# ╠═bb9821ce-710d-11eb-31ad-63c31f90019b
-# ╠═cf24412e-7125-11eb-1c82-7f59f4640c72
-# ╠═2f525ae6-7125-11eb-1254-3732191908e5
-# ╠═de19a2a0-7125-11eb-230b-2fc866269553
 # ╟─e0d17116-710d-11eb-1719-e18f188a6229
-# ╠═aab55326-7127-11eb-2f03-e9d3f30d1947
-# ╠═30350a46-712a-11eb-1d4b-81de61879835
-# ╠═b9c0be22-7128-11eb-3da8-bb3a49e95fd7
-# ╠═2dc57ad0-712c-11eb-3051-599c21f00b38
-# ╠═99eb89dc-7129-11eb-0f61-79af19d18589
-# ╠═4a641856-712f-11eb-34fe-eb9641c13f03
-# ╠═f583afc6-71f7-11eb-0241-a71a659b5313
-# ╠═729469f6-7130-11eb-07da-d1a7eb14881a
-# ╠═baebb396-7130-11eb-3ca2-1bb9e2d0826b
-# ╠═e1dae81c-712b-11eb-0fb8-654147206526
-# ╠═7ca9c2ec-712b-11eb-229a-3322c8115255
 # ╟─f3b6d9be-712e-11eb-2f2d-af92e85304b5
-# ╠═825b52aa-712d-11eb-0eec-1561c87b7aac
-# ╠═1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
-# ╠═0243f610-7134-11eb-3b9b-e5474fd7d1cf
-# ╠═281198fa-712f-11eb-02ae-99a2d48099eb
-# ╠═8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
-# ╠═109bb1ea-71f6-11eb-37f4-054f691b2f23
 # ╟─7b50095c-6f9a-11eb-2cf5-31805fc10804
 # ╠═8a0e113c-6f9a-11eb-3c3b-bfb0c9220562
 # ╠═94895ab8-6f9a-11eb-3c04-dbe13f545acc
@@ -1161,21 +814,10 @@ md"""
 # ╠═fdc229f8-6c84-11eb-1ae9-d133fc05035e
 # ╠═34b2982a-6c89-11eb-2ae6-77e735c49966
 # ╟─d4b337f4-7124-11eb-0437-e1e4ec1a61c9
-# ╠═da19832e-710b-11eb-0e66-01111d3070b5
-# ╟─3ebcb4d8-7123-11eb-3b71-c107f5ecfa30
-# ╠═94c0fa82-7124-11eb-0fdd-c3cb8cc9311d
-# ╠═5400d658-7123-11eb-00c3-b70d622faf7b
-# ╟─fe752700-711a-11eb-1c13-3303010dfa48
-# ╠═3ec51950-711b-11eb-08fd-0d6ea3ee31ea
-# ╟─278f55b0-711c-11eb-36d9-05fff7161d82
-# ╠═754db298-711b-11eb-3b0f-07e1d984dbe0
-# ╟─a6b7545a-711c-11eb-13b4-6baf343485a0
-# ╠═14d721c4-711b-11eb-2fef-a986c8581f11
-# ╠═de30588c-7121-11eb-3781-b9412bd4b7ae
-# ╠═e7231bac-7115-11eb-1c7a-8f1b9c109dd0
-# ╠═38a2ac40-7122-11eb-1a80-edb0bc182b5c
 # ╟─39d717a4-6c75-11eb-15f0-d537959a41b8
-# ╠═53f814ac-7204-11eb-26e7-57398d26446f
+# ╠═69209f8a-6c75-11eb-228e-475c3fcde6e7
+# ╠═60483912-6c80-11eb-27ba-55477555f345
+# ╠═6b906ab0-6c80-11eb-29a9-ab1e42290019
 # ╟─3399e1f8-6cbb-11eb-329c-811efb68179f
 # ╠═1f7e15e2-6cbb-11eb-1e92-9f37d4f3df40
 # ╟─3bdf7df2-6cbb-11eb-2ea4-f5e465bd0e63
