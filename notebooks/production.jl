@@ -40,11 +40,13 @@ begin
 		PackageSpec(name = "XLSX",              version = "0.7"),
 		PackageSpec(name = "ZipFile",           version = "0.9"),
 		PackageSpec(name = "SimpleWeightedGraphs",version="1.1"),
-			Pkg.PackageSpec(name="Cairo", ),
-			Pkg.PackageSpec(name="Compose", ),
-			Pkg.PackageSpec(name="Images", ),
-			Pkg.PackageSpec(name="ImageIO", ),
+			#Pkg.PackageSpec(name="Cairo", ),
+			#Pkg.PackageSpec(name="Compose", ),
+			#Pkg.PackageSpec(name="Images", ),
+			#Pkg.PackageSpec(name="ImageIO", ),
 			Pkg.PackageSpec(name="Downloads", ),
+			Pkg.PackageSpec(name="Distributions", ),
+			
 			
 		#PackageSpec(name = "Plots", version = "1.10"),	
 			])
@@ -65,8 +67,9 @@ begin
 		#lines!, scatter!, poly!, vlines!, hlines!, image!, hist, hist!,
 		#hidedecorations!, hidespines!
 
-	import Cairo, Compose, Images
+	#import Cairo, Compose, Images
 	
+	using Distributions
 	using AxisKeys: KeyedArray
 	using NamedArrays: NamedArray
 	using CategoricalArrays: cut
@@ -130,12 +133,12 @@ end
 
 # ╔═╡ 38f5d048-7747-11eb-30f7-89bade5ed0a3
 md"""
-`production.jl` | **Version 1.0** | *last updated: Feb 25*
+`production.jl` | **Version 1.1** | *last updated: Feb 26*
 """
 
 # ╔═╡ f1749b26-774b-11eb-2b42-43ffcb5cd7ee
 md"""
-# The Economy As A Network of Sectors
+# The Economy as a Network of Sectors
 
 This notebook will be the basis for part of **Lectures 9 and 10** *and* **Assignment 4**. Here is what we will cover.
 
@@ -200,6 +203,9 @@ md"""
 
 Recall, ``G = W'``. Also, in order to satisfy the assumptions of the model, we have to normalize the row sums to 1.
 """
+
+# ╔═╡ 958f9f3e-77ac-11eb-323c-cd78c1fe4c23
+#gplot(unweighted_network) |> gplot_to_png
 
 # ╔═╡ 5aff086a-7751-11eb-039e-fd1b769b6fea
 md"""
@@ -286,9 +292,6 @@ function impulse_response(T, W, param, shocked_nodes, ε₀; T_shock = 0, T₀=3
 	(production = y_out, welfare = w_out)
 end
 
-# ╔═╡ 7c61283e-7770-11eb-0b87-07bf08836e58
-n = 40
-
 # ╔═╡ c2842ace-7751-11eb-240f-550286e812af
 md"""
 ## Simple Networks
@@ -344,12 +347,7 @@ node_colors[] = parent(production[:,t0])
 
 # ╔═╡ cbb1e550-7751-11eb-1313-7ff968453f36
 md"""
-## Intersectoral Network from Input-Output Tables
-"""
-
-# ╔═╡ e93837d2-77b0-11eb-17e9-c7f25b2c47ed
-md"""
-# (Lecture 10)
+## Big Network from Input-Output Tables
 """
 
 # ╔═╡ ee72ef4c-7751-11eb-1781-6f4d027a9e66
@@ -362,6 +360,77 @@ We will simulate ``\ln(``GDP``)``
 
 To be completed.
 """
+
+# ╔═╡ 3585b022-7853-11eb-1a05-7b4fe3921051
+function simulate_business_cycles(graph; dist = Normal(0, 1), T₀ = 15, T = 100)
+	N = nv(graph)
+	W = weighted_adjacency_matrix(graph)'
+	param = params(W)
+	y = y₀(W, param)
+		
+	t_indices = -T₀:T
+	
+	y_out = OffsetArray(zeros(N, length(t_indices)), 1:N, t_indices)
+	w_out = OffsetArray(zeros(length(t_indices)), t_indices)
+
+	ε = rand(dist, N, T)
+	
+	y_out[:, -T₀:0] .= y
+	w_out[-T₀:0]    .= welfare(y, param)
+	
+	for t in 1:T
+		y = y_next(y, @view(ε[:,t]), W, param)
+		
+		y_out[:, t] .= y
+		w_out[t]     = welfare(y, param)
+	end
+	
+	y_out .= y_out ./ -y_out[:,-T₀] .+ 1
+	w_out .= w_out ./ -w_out[-T₀] .+ 1
+	
+	(; y_out, w_out)	
+end
+
+# ╔═╡ ddfcd760-7853-11eb-38f7-298a4c1cb5aa
+let
+	fig = Figure()
+	
+	ax = Axis(fig[1,1])
+	
+	N = 400
+	
+	grph = my_out_StarGraph(N)
+	
+	fluc = simulate_business_cycles(grph)
+	
+	for (i, row) in enumerate(eachrow(fluc.y_out))
+		lines!(ax, collect(axes(fluc.y_out, 2)), collect(row), color = (:black, 0.1))
+	end
+	
+	lines!(ax, collect(axes(fluc.y_out, 2)), collect(fluc.w_out), linewidth = 2, color = :red)
+
+	ax0 = ax
+	
+	ax = Axis(fig[2,1])
+	
+	grph = CycleDiGraph(N)
+	
+	fluc = simulate_business_cycles(grph)
+	
+	for (i, row) in enumerate(eachrow(fluc.y_out))
+		lines!(ax, collect(axes(fluc.y_out, 2)), collect(row), color = (:black, 0.1))
+	end
+	
+	lines!(ax, collect(axes(fluc.y_out, 2)), collect(fluc.w_out), linewidth = 2, color = :red)
+	
+	linkaxes!(ax0, ax)
+	hidexdecorations!(ax0)
+	
+	fig
+	
+
+	
+end
 
 # ╔═╡ d0630e36-774b-11eb-0750-370f1b1327e6
 md"""
@@ -605,14 +674,13 @@ extrema(wgts)
 # ╔═╡ 6cec81a0-77ac-11eb-06e3-bd9dcb73a896
 network = SimpleWeightedDiGraph(wgts')
 
-# ╔═╡ 7ad898a8-7770-11eb-0f61-bd92af6fd5f8
-sorted_nodes = sortperm(eigenvector_centrality(network)[:], rev = true)
-
 # ╔═╡ 8212939e-7770-11eb-1f4e-9b698be25d1f
-bot_n = sorted_nodes[end-n+1:end]
-
-# ╔═╡ 98eb37de-77a6-11eb-1c92-8d305740a3c0
-top_n = sorted_nodes[1:n]
+begin
+	sorted_nodes = sortperm(eigenvector_centrality(network)[:], rev = true)
+	n = 40
+	bot_n = sorted_nodes[end-n+1:end]
+	top_n = sorted_nodes[1:n]
+end
 
 # ╔═╡ 9aa77c76-7770-11eb-35ed-9b83924e8176
 fig_welfare = let
@@ -871,9 +939,6 @@ function gplot_to_png(gp::Compose.Context)
 	Images.load(filename)
 end
 
-# ╔═╡ 958f9f3e-77ac-11eb-323c-cd78c1fe4c23
-gplot(unweighted_network) |> gplot_to_png
-
 # ╔═╡ Cell order:
 # ╟─38f5d048-7747-11eb-30f7-89bade5ed0a3
 # ╟─19b0fa00-774a-11eb-1ede-89eceed8b8ff
@@ -914,11 +979,6 @@ gplot(unweighted_network) |> gplot_to_png
 # ╠═5dbcbd44-7770-11eb-0f60-f74a9945477e
 # ╠═6378c2aa-7770-11eb-3edc-9d41e709750e
 # ╠═6ca12836-7770-11eb-271f-354367f89cb0
-# ╠═7ad898a8-7770-11eb-0f61-bd92af6fd5f8
-# ╠═7c61283e-7770-11eb-0b87-07bf08836e58
-# ╠═8212939e-7770-11eb-1f4e-9b698be25d1f
-# ╠═98eb37de-77a6-11eb-1c92-8d305740a3c0
-# ╠═9aa77c76-7770-11eb-35ed-9b83924e8176
 # ╟─c2842ace-7751-11eb-240f-550286e812af
 # ╠═bc30e12a-7770-11eb-3db2-b753ec458ce5
 # ╠═b48335da-7771-11eb-2b17-1507687e446c
@@ -932,8 +992,11 @@ gplot(unweighted_network) |> gplot_to_png
 # ╠═939fa06e-7772-11eb-086c-ff1bf54525f1
 # ╠═50194494-7772-11eb-20ff-419e874ec00c
 # ╟─cbb1e550-7751-11eb-1313-7ff968453f36
-# ╟─e93837d2-77b0-11eb-17e9-c7f25b2c47ed
+# ╠═8212939e-7770-11eb-1f4e-9b698be25d1f
+# ╠═9aa77c76-7770-11eb-35ed-9b83924e8176
 # ╟─ee72ef4c-7751-11eb-1781-6f4d027a9e66
+# ╠═3585b022-7853-11eb-1a05-7b4fe3921051
+# ╠═ddfcd760-7853-11eb-38f7-298a4c1cb5aa
 # ╟─d0630e36-774b-11eb-0750-370f1b1327e6
 # ╠═29f570c0-774b-11eb-2c1c-17a956c9fd27
 # ╠═2fa2a558-774b-11eb-396b-832d0ce9a130
