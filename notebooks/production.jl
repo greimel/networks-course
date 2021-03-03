@@ -133,7 +133,7 @@ end
 
 # ╔═╡ 38f5d048-7747-11eb-30f7-89bade5ed0a3
 md"""
-`production.jl` | **Version 1.1** | *last updated: Feb 26*
+`production.jl` | **Version 1.2** | *last updated: Mar 3*
 """
 
 # ╔═╡ f1749b26-774b-11eb-2b42-43ffcb5cd7ee
@@ -170,6 +170,11 @@ This plot shows how a shock to single sector propagates to other sectors.
 # ╔═╡ cb75f8ac-77aa-11eb-041c-4b3fe85ec22b
 md"""
 This plot shows how the aggregate economy reacts to shocking two groups of sectors. The groups are equally big, but differ by their centrality.
+"""
+
+# ╔═╡ 9b47991e-7c3d-11eb-1558-b5824ab10dc0
+md"""
+This plot shows how industry-specific iid shocks can either $(i)$ wash out, or $(ii)$ translate into aggregate fluctuations, depending on the network structure.
 """
 
 # ╔═╡ d9465a80-7750-11eb-2dd5-d3052d3d5c50
@@ -356,9 +361,7 @@ md"""
 
 Instead of studying shocks to individual sectors, we will now simulate shocks to the whole economy. We assume that for each sector ``i`` and time period ``t``, the sector specific log-productivity follows a *white noise* process: ``\varepsilon_{it} \sim N(0, \sigma^2)``.
 
-We will simulate ``\ln(``GDP``)``
-
-To be completed.
+We will simulate our welfare measure (flow utility).
 """
 
 # ╔═╡ 3585b022-7853-11eb-1a05-7b4fe3921051
@@ -392,7 +395,7 @@ function simulate_business_cycles(graph; dist = Normal(0, 1), T₀ = 15, T = 100
 end
 
 # ╔═╡ ddfcd760-7853-11eb-38f7-298a4c1cb5aa
-let
+fluct_fig = let
 	fig = Figure()
 	
 	ax = Axis(fig[1,1])
@@ -431,6 +434,9 @@ let
 
 	
 end
+
+# ╔═╡ d772a28a-7c3d-11eb-012f-9b81ad67f9a8
+fluct_fig
 
 # ╔═╡ d0630e36-774b-11eb-0750-370f1b1327e6
 md"""
@@ -947,6 +953,8 @@ end
 # ╠═94375d0e-77aa-11eb-3934-edb020ab0fd7
 # ╟─cb75f8ac-77aa-11eb-041c-4b3fe85ec22b
 # ╠═76e6f44e-77aa-11eb-1f12-438937941606
+# ╟─9b47991e-7c3d-11eb-1558-b5824ab10dc0
+# ╠═d772a28a-7c3d-11eb-012f-9b81ad67f9a8
 # ╟─d9465a80-7750-11eb-2dd5-d3052d3d5c50
 # ╟─cf680c48-7769-11eb-281c-d7a2d5ec8fe5
 # ╠═cbc03264-7769-11eb-345a-71ae30cc7526
