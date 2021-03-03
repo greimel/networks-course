@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.20
+# v0.12.21
 
 using Markdown
 using InteractiveUtils
@@ -59,9 +59,6 @@ There at least two ways to visualize social connectedness.
 2. Heatmaps allow visualizing social connectedness of the full network.
 """
 
-# ╔═╡ 710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
-country = "BE"
-
 # ╔═╡ 8bee74ea-7140-11eb-3441-330ab08a9f38
 md"""
 ## Visualizing the full network with a Heatmap
@@ -110,6 +107,17 @@ if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_m
 	"""
 end
 
+# ╔═╡ 96a5f952-7b3e-11eb-1669-e12bddde7aa8
+md"""
+* former Colonies
+   * France
+* Commonwealth
+* Nepalese workers in Quatar
+"""
+
+# ╔═╡ 710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
+country = "QA"
+
 # ╔═╡ 96e4482c-6f9a-11eb-0e47-c568006368b6
 md"""
 ### Task 1: Social connectedness is not distance (2 points)
@@ -151,9 +159,50 @@ Before we update our beliefs, let us think a bit about measuring centrality.
 
 # ╔═╡ d5c448e6-713c-11eb-1b3b-9b8e4af8ae5f
 answer21 = md"""
-Your answer
+#### Problems
 
-goes here ...
+* Population
+   * bias: one friendship has a higher weight in small countries
+   * limited number of facebook users
+* Weights in weighted network can be regarded as *intensities* or *distances*
+* Eigenvector centrality
+   * distance or intensity?
+   * don't need many links, but important links (Papua New Guinea and Vanuatu have few links, but Australia and New Zealand)
+   * measures local properties (isolated island clusters)
+"""
+
+# ╔═╡ 69e56a6c-7b41-11eb-2577-7f7088bfa427
+md"""
+#### Solutions
+
+1. Correct eigenvector centrality
+   * scale eigenvector centrality with population or GDP/capita
+2. Correct the network
+   * 
+3. Other centrality measure
+   * Closeness centrality (of distances)
+
+     ``closeness_i = 1 / \sum_j \frac{1}{sci_{i,j}}``
+
+   * Weighted degree centrality
+
+     ``wgtdegree_i = \sum_j sci_{i,j}``
+
+   * Transformed Weighted degree centrality
+
+     ``twgtdegree_i = \sum_j (sci_{i,j})^{1/4}``
+
+   * Weighted weighted degree centrality
+
+     ``wgtwgtdegree_i = \sum_j \#_j \cdot sci_{i,j}``
+
+   * Laplacian centrality: take into account global properties of the network
+
+
+
+
+
+
 """
 
 # ╔═╡ 55ab86e6-6fa8-11eb-2ac4-9f0548598014
@@ -223,6 +272,17 @@ answer32 = md"""
 Your answer
 
 goes here ...
+"""
+
+# ╔═╡ 43b1d8fe-7b43-11eb-1f36-a561e2fc06e2
+md"""
+#### Research Ideas
+
+* Capital Flows: stock price in friend's country increase, you might to invest there
+* Depencies of Stock markets indices (*similar argument*)
+* Business decision: where to expand?
+* SCI and conspiracy theories: e.g. skepticism about vaccinations
+
 """
 
 # ╔═╡ a81a894a-713d-11eb-0dd8-9d9e8dffee35
@@ -737,7 +797,6 @@ md"""
 # ╟─a4ff0fb8-71f3-11eb-1928-492c57739959
 # ╟─7f8a57f0-6c72-11eb-27dd-2dae50f00232
 # ╟─547d93f4-6c74-11eb-28fe-c5be4dc7aaa6
-# ╟─710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
 # ╟─6d30c04a-6cb2-11eb-220b-998e7d5cc469
 # ╠═4f14a79c-6cb3-11eb-3335-2bbb61da25d9
 # ╠═aa423d14-6cb3-11eb-0f1c-65ebbf99d539
@@ -760,13 +819,16 @@ md"""
 # ╟─50e332de-6f9a-11eb-3888-d15d986aca8e
 # ╟─96e4482c-6f9a-11eb-0e47-c568006368b6
 # ╟─ac0bbc28-6f9b-11eb-1467-6dbd9d2b763a
+# ╠═96a5f952-7b3e-11eb-1669-e12bddde7aa8
+# ╠═710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
 # ╠═6114ed16-6f9d-11eb-1bd4-1d1710b7f9df
 # ╟─b0f46e9c-6f9d-11eb-1ed0-0fddd637fb6c
 # ╟─7156d9ac-6f9d-11eb-36e1-77f5eda39e16
 # ╟─2338f91c-6f9e-11eb-0fb5-33421b7ae810
 # ╠═d1fd17dc-6fa6-11eb-245d-8bc905079f2f
 # ╟─da7f397a-6fa6-11eb-19d5-972c93f11f91
-# ╠═d5c448e6-713c-11eb-1b3b-9b8e4af8ae5f
+# ╟─d5c448e6-713c-11eb-1b3b-9b8e4af8ae5f
+# ╠═69e56a6c-7b41-11eb-2577-7f7088bfa427
 # ╟─477b9a84-713d-11eb-2b48-0553087b0735
 # ╟─55ab86e6-6fa8-11eb-2ac4-9f0548598014
 # ╟─dcb2cd6c-713c-11eb-1f3d-2de066d25c6f
@@ -783,6 +845,7 @@ md"""
 # ╟─4dd44354-713d-11eb-164b-0d143e507815
 # ╟─272f7770-6fab-11eb-32b9-01af616ae967
 # ╠═2a61d17a-713d-11eb-2457-11e5c4dd792f
+# ╠═43b1d8fe-7b43-11eb-1f36-a561e2fc06e2
 # ╟─54291450-713d-11eb-37d2-0db48a0e8a85
 # ╟─a81a894a-713d-11eb-0dd8-9d9e8dffee35
 # ╟─3062715a-6c75-11eb-30ef-2953bc64adb8
