@@ -47,59 +47,6 @@ begin
 	nothing
 end
 
-# ╔═╡ 5931a05c-6ab7-11eb-21e7-dd7584d6ba55
-md"""
-# Tutorial 1: Your Twitter Networks
-
-## Your hashtags
-"""
-
-# ╔═╡ ff9cedd2-6ab9-11eb-1dd6-bf12ccb11a80
-md"""
-* *#sneeuw*
-* **corona (measures)**: *#avondklok* (x2), *#rellen* (x2), *#corona*
-* **shorting gamestop**: *#gamestop*, *#wallstreetbets*
-* **other political issues**: *#myanmar*, *#navalny*, *#supermario*
-* *#breaking*
-"""
-
-# ╔═╡ 389c26d0-6ab9-11eb-31dd-072b34a72ba3
-md"""
-## Defining the network differently
-"""
-
-# ╔═╡ 87850faa-6ab9-11eb-1a60-35b939ecbf8a
-CSV.File(IOBuffer("""
-		nodes edges
-		users "same hashtag"
-		tweets "same hashtag"
-		hashtags "same tweet"
-		"""
-))
-
-# ╔═╡ 48324b38-6ab9-11eb-047c-3f2123fb0725
-md"""
-## Enrich network with more data
-"""
-
-# ╔═╡ 66c1ff76-6ab9-11eb-31fa-bdd80ee6f9ca
-md"""
-* use weights: number of tweets
-* use importance of user (number of followers, likes)
-* use geographical information (#sneeuw, #supermario, #myanmar, #navalny), possibly split networks
-* filter out bots (they retweet very fast, at strange times given location, etc.)
-"""
-
-# ╔═╡ 554962de-6ab9-11eb-3ee1-4957723a9ae7
-md"""
-## Other things to consider
-"""
-
-# ╔═╡ 5e5c0d3e-6ab9-11eb-2b25-eb1eb5e9467e
-md"""
-* time-zones
-"""
-
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
 `assignment-twitter.jl` | **Version 1.4** | *last changed: Feb 5*"
@@ -136,7 +83,7 @@ Now, it's your turn. Think of an interesting keyword or hashtag. And insert your
 """
 
 # ╔═╡ 8c5a33dc-6174-11eb-397a-43d67c7773e0
-keyword = "#breaking"
+keyword = "#econtwitter"
 
 # ╔═╡ 574747d4-617e-11eb-20e7-5760a3a3f3e9
 md"""
@@ -577,14 +524,6 @@ end
 TableOfContents()
 
 # ╔═╡ Cell order:
-# ╟─5931a05c-6ab7-11eb-21e7-dd7584d6ba55
-# ╟─ff9cedd2-6ab9-11eb-1dd6-bf12ccb11a80
-# ╟─389c26d0-6ab9-11eb-31dd-072b34a72ba3
-# ╟─87850faa-6ab9-11eb-1a60-35b939ecbf8a
-# ╟─48324b38-6ab9-11eb-047c-3f2123fb0725
-# ╟─66c1ff76-6ab9-11eb-31fa-bdd80ee6f9ca
-# ╟─554962de-6ab9-11eb-3ee1-4957723a9ae7
-# ╟─5e5c0d3e-6ab9-11eb-2b25-eb1eb5e9467e
 # ╟─8493134e-6183-11eb-0059-6d6ecf0f17bf
 # ╠═235bcd50-6183-11eb-1272-65c61cfbf961
 # ╠═f021cb3e-6177-11eb-20f6-b5f9c69ed186

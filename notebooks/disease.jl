@@ -90,7 +90,7 @@ begin
 	import CSV
 	using GeometryBasics: Point2f0
 	using NearestNeighbors: BallTree, knn
-	using LightGraphs#: SimpleGraph, add_edge!, StarGraph, CycleGraph, WheelGraph, betweenness_centrality, eigenvector_centrality, edges, adjacency_matrix, nv, ne
+	using LightGraphs: SimpleGraph, add_edge!, StarGraph, CycleGraph, WheelGraph, betweenness_centrality, eigenvector_centrality, edges, adjacency_matrix, nv, ne
 	using DataFrames: transform!, transform, DataFrame, ByRow, groupby, combine, rename!, Not, stack, unstack, leftjoin
 	using CategoricalArrays: CategoricalArrays, categorical, cut
 	using UnPack: @unpack
@@ -154,20 +154,8 @@ begin
 	struct S <: State end
 	struct I <: State end
 	struct R <: State end
-	struct D <: State end # (Assignment)
+	#struct D <: State end # (Assignment)
 end
-
-# ╔═╡ c9ad009e-6b96-11eb-16fc-b9e0df9ceb5e
-whatsays(x::R) = "great, I'm fine"
-
-# ╔═╡ 038c11a6-6b97-11eb-3a14-d549e06372d0
-whatsays(x::I) = "aarrghhh!!!"
-
-# ╔═╡ 107a18f4-6b97-11eb-29af-c7f6b32914d1
-whatsays(x::State) = "I don't know ..."
-
-# ╔═╡ fd06ce3e-6b96-11eb-0ca0-3d9487098e12
-whatsays(R())
 
 # ╔═╡ f48fa122-649a-11eb-2041-bbf0d0c4670c
 const States = Union{subtypes(State)...}
@@ -180,16 +168,16 @@ md"
 # ╔═╡ 8ddb6f1e-649e-11eb-3982-83d2d319b31f
 function transition(::I, par, node, args...; kwargs...)
 	## The following lines will be helpful for the assignment (task 2)
-	if length(par.δ) == 1
+	#if length(par.δ) == 1
 	 	δ = only(par.δ)
-	else
-	 	δ = par.δ[node]
-	end
+	#else
+	# 	δ = par.δ[node]
+	#end
 	x = rand()
-	if x < par.ρ # recover
+	if x < par.ρ + δ # recover or die
 		R()
-	elseif x < δ + par.ρ # die
-		D()
+	#elseif x < ...
+	#	...
 	else
 		I()
 	end
@@ -212,6 +200,26 @@ function transition(::S, par, node, adjacency_matrix, is_infected)
 	rand() < π ? I() : S()
 end
 
+# ╔═╡ f4c62f95-876d-4915-8372-258dfde835f7
+function iterate!(states_new, states, adjacency_matrix, par)
+
+	is_infected = findall(isa.(states, I))
+	
+	for i in 1:size(adjacency_matrix, 1)
+		states_new[i] = transition(states[i], par, i, adjacency_matrix, is_infected)
+	end
+	
+	states_new
+end
+
+# ╔═╡ 5d11a2df-3187-4509-ba7b-8388564573a6
+function iterate(states, adjacency_matrix, par)
+	states_new = Vector{States}(undef, N)
+	iterate!(states_new, states, adjacency_matrix, par)
+	
+	states_new
+end
+
 # ╔═╡ 50d9fb56-64af-11eb-06b8-eb56903084e2
 md"""
 ## Simulate on a Simple Network
@@ -222,7 +230,7 @@ md"""
 """
 
 # ╔═╡ 8d4cb5dc-6573-11eb-29c8-81baa6e3fffc
-simple_graph = StarGraph(10)
+simple_graph = CycleGraph(10)
 
 # ╔═╡ ce75fe16-6570-11eb-3f3a-577eac7f9ee8
 md"""
@@ -316,27 +324,7 @@ md"""
 """
 
 # ╔═╡ 809375ba-6960-11eb-29d7-f9ab3ee61367
-transition(::D, args...; kwargs...) = D() #= your code here =#
-
-# ╔═╡ f4c62f95-876d-4915-8372-258dfde835f7
-function iterate!(states_new, states, adjacency_matrix, par)
-
-	is_infected = findall(isa.(states, I))
-	
-	for i in 1:size(adjacency_matrix, 1)
-		states_new[i] = transition(states[i], par, i, adjacency_matrix, is_infected)
-	end
-	
-	states_new
-end
-
-# ╔═╡ 5d11a2df-3187-4509-ba7b-8388564573a6
-function iterate(states, adjacency_matrix, par)
-	states_new = Vector{States}(undef, N)
-	iterate!(states_new, states, adjacency_matrix, par)
-	
-	states_new
-end
+# transition(::D, args...; kwargs...) = #= your code here =#
 
 # ╔═╡ 945d67f6-6961-11eb-33cf-57ffe340b35f
 md"""
@@ -715,18 +703,10 @@ vacc = let
 	
 	graph, node_positions = spatial_graph(N)
 	
-	eigv_c = eigenvector_centrality(graph)
-	katz_c = katz_centrality(graph)
-	betw_c = betweenness_centrality(graph)
-	degree = degree(graph)
-	
 	vaccinated = [
 		"none"   => [],
 		"random" => pseudo_random(N, N ÷ 5, 3),	
-		"eigv_c" => sortperm(eigv_c, rev=true)[1:(N ÷ 5)],
-		"katz_c" => sortperm(katz_c, rev=true)[1:(N ÷ 5)],
-		"betw_c" => sortperm(betw_c, rev=true)[1:(N ÷ 5)],
-		"degree" => sortperm(degree, rev=true)[1:(N ÷ 5)]
+		# place for your suggestions
 		]
 	
 	infected_nodes = pseudo_random(N, N ÷ 5, 1)
@@ -773,7 +753,7 @@ fig_vaccc
 
 # ╔═╡ 29036938-69f4-11eb-09c1-63a7a75de61d
 vacc_age_graph = let
-	N = 5000
+	N = 1000
 	p = 0.5
 	ρ = ρ_new
 	
@@ -787,51 +767,25 @@ vacc_age_graph = let
 
 	graph, node_positions = spatial_graph(N)
 	
-	node_df = DataFrame(
-		id = 1:N,
-		deg = degree_centrality(graph, normalize = false),
-		ndeg = degree_centrality(graph, normalize = true),
-		δ = δ_per_node
-		)
+	bet_centr = betweenness_centrality(graph)
 	
-	(; par, graph, node_positions, node_df)
+	(; par, graph, node_positions, bet_centr)
 end;	
-
-# ╔═╡ c780bca2-7049-11eb-2eae-a9e99e85e299
-begin
-	node_df = vacc_age_graph.node_df
-	node_df.score1 = node_df.deg .* node_df.δ
-	node_df.score2 = node_df.ndeg .^ 2 .* node_df.δ
-	node_df.score3 = node_df.deg .^ 2 .* node_df.δ
-end
-
-# ╔═╡ a7318872-704c-11eb-33fc-33672596a7e3
-nv(vacc_age_graph.graph) ÷ 5
 
 # ╔═╡ dceb5318-69fc-11eb-2e1b-0b8cef279e05
 vacc_age = let
 		
-	@unpack par, graph, node_positions = vacc_age_graph
+	@unpack par, graph, node_positions, bet_centr = vacc_age_graph
 	N = nv(graph)
 	
 	N_vacc = N ÷ 5
 
-	split = 950 #N_vacc ÷ 2
-	
-	mixture = [
-		sort(node_df, :δ,   rev=true).id[1:split]; #old
-		sort(node_df, :deg, rev=true).id[1:N_vacc-split]
-		]
-	
+	split = 50
 	vaccinated = [
 		"none"   => [],
 		"random" => pseudo_random(N, N_vacc, 4),
-		"central"=> sort(node_df, :deg, rev=true).id[1:N_vacc],
-		"old"    => sort(node_df, :δ,   rev=true).id[1:N_vacc],
-		"old_cen"=> sort(node_df, [:δ,:deg], rev=true).id[1:N_vacc],
-		"score1" => sort(node_df, :score1, rev=true).id[1:N_vacc],
-		"score3" => sort(node_df, :score1, rev=true).id[1:N_vacc],
-		"mixture"=> mixture # place your suggestions here!
+		"central"=> sortperm(bet_centr, rev=true)[1:N_vacc],
+		# place your suggestions here!
 		]
 	
 	infected_nodes = pseudo_random(N, N ÷ 10, 1)
@@ -853,32 +807,7 @@ fig_vacc_age = let
 	fig = Figure()
 	ax = Axis(fig[1,1], title = "#$(state) when vaccinating different groups")
 	
-	colors = cgrad(:viridis, min(10, length(vacc_age.sims)), categorical=true)
-
-	for (i, (lab, sim)) in enumerate(vacc_age.sims)
-				
-		df0 = fractions_over_time(sim)
-		
-		filter!(:state => ==(state), df0)
-		
-		lines!(df0.t, df0.fraction, label = lab, color = colors[i])
-	end
-	
-	# some attributes to make the legend nicer
-	attr = (orientation = :horizontal, tellwidth = :false, tellheight = true)
-
-	leg = Legend(fig[2,1], ax; attr...)
-
-	fig
-end
-
-# ╔═╡ c4dcba44-7048-11eb-3849-cbfe702c7456
-let
-	state = "I"
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "#$(state) when vaccinating different groups")
-	
-	colors = cgrad(:viridis, min(10, length(vacc_age.sims)), categorical=true)
+	colors = cgrad(:viridis, min(5, length(vacc_age.sims)), categorical=true)
 
 	for (i, (lab, sim)) in enumerate(vacc_age.sims)
 				
@@ -1177,15 +1106,10 @@ md"""
 # ╟─c8f92204-64ac-11eb-0734-2df58e3373e8
 # ╟─2f9f008a-64aa-11eb-0d9a-0fdfc41d4657
 # ╠═b8d874b6-648d-11eb-251c-636c5ebc1f42
-# ╠═c9ad009e-6b96-11eb-16fc-b9e0df9ceb5e
-# ╠═038c11a6-6b97-11eb-3a14-d549e06372d0
-# ╠═107a18f4-6b97-11eb-29af-c7f6b32914d1
-# ╠═fd06ce3e-6b96-11eb-0ca0-3d9487098e12
 # ╠═f48fa122-649a-11eb-2041-bbf0d0c4670c
 # ╟─10dd6814-f796-42ea-8d40-287ed7c9d239
 # ╠═8ddb6f1e-649e-11eb-3982-83d2d319b31f
 # ╠═61a36e78-57f8-4ef0-83b4-90e5952c116f
-# ╠═6e31db10-6b97-11eb-1776-e1fb0db29e15
 # ╠═ffe07e00-0408-4986-9205-0fbb025a698c
 # ╠═5d11a2df-3187-4509-ba7b-8388564573a6
 # ╠═f4c62f95-876d-4915-8372-258dfde835f7
@@ -1241,12 +1165,9 @@ md"""
 # ╟─2e3413ae-6962-11eb-173c-6d53cfd8a968
 # ╠═29036938-69f4-11eb-09c1-63a7a75de61d
 # ╠═18e84a22-69ff-11eb-3909-7fd30fcf3040
-# ╠═c780bca2-7049-11eb-2eae-a9e99e85e299
 # ╟─0d2b1bdc-6a14-11eb-340a-3535d7bfbec1
-# ╠═a7318872-704c-11eb-33fc-33672596a7e3
 # ╠═dceb5318-69fc-11eb-2e1b-0b8cef279e05
-# ╠═da82d3ea-69f6-11eb-343f-a30cdc36228a
-# ╠═c4dcba44-7048-11eb-3849-cbfe702c7456
+# ╟─da82d3ea-69f6-11eb-343f-a30cdc36228a
 # ╟─297e4d74-6a12-11eb-0302-0f97bab2c906
 # ╠═d0f3064a-6a11-11eb-05bf-09f67a451510
 # ╟─e79e6ed4-6a11-11eb-2d68-69a814ec657c
