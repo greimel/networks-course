@@ -356,9 +356,7 @@ md"""
 
 Instead of studying shocks to individual sectors, we will now simulate shocks to the whole economy. We assume that for each sector ``i`` and time period ``t``, the sector specific log-productivity follows a *white noise* process: ``\varepsilon_{it} \sim N(0, \sigma^2)``.
 
-We will simulate ``\ln(``GDP``)``
-
-To be completed.
+We will simulate our welfare measure (flow utility).
 """
 
 # ╔═╡ 3585b022-7853-11eb-1a05-7b4fe3921051
