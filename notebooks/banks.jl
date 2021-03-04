@@ -156,6 +156,9 @@ function iterate_defaults(P)
 	end
 end
 
+# ╔═╡ bc2cca64-7d41-11eb-2bca-3920cdea2799
+defaulting_bank(P) = 1*(net_worth(P)[1:end-1].<0)
+
 # ╔═╡ cd476e30-30bb-11eb-3d74-3dfe163dd8d6
 md"""
 ## The model of Eisenberg & Noe (2001)
@@ -372,9 +375,6 @@ networth
 # ╔═╡ 33ac3a9c-2e74-11eb-29ca-1b58c4ad2b47
 nw = net_worth(P)[1:end-1]
 
-# ╔═╡ 5c53f38a-7ccc-11eb-22c8-df27b38fcff2
-P;
-
 # ╔═╡ 0c7ac7d8-7cd0-11eb-2efa-f1667a9260c6
 net_worth(P)
 
@@ -508,7 +508,7 @@ md"(You have used approximately **$(wordcount(answer22))** words.)"
 # ╠═481e1be4-3036-11eb-3c9f-854a269ffb7f
 # ╟─99b3e4fa-2fed-11eb-27d4-2d8fabc915df
 # ╠═040b3912-3038-11eb-2576-9b149ca43797
-# ╠═5c53f38a-7ccc-11eb-22c8-df27b38fcff2
+# ╠═bc2cca64-7d41-11eb-2bca-3920cdea2799
 # ╠═0c7ac7d8-7cd0-11eb-2efa-f1667a9260c6
 # ╠═1bcaecf2-303b-11eb-1eb0-e37ce6b6eeab
 # ╠═b663b536-3037-11eb-2404-8d2647d3b920
