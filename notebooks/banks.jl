@@ -22,6 +22,11 @@ begin
 	using LightGraphs, SimpleWeightedGraphs, MetaGraphs, GraphDataFrameBridge, SparseArrays, StatsPlots, DataFrames, PlutoUI, Underscores
 end
 
+# ╔═╡ ce3a72b2-81a4-11eb-1371-ddc513ce9d83
+md"""
+`banks.jl` | **Version 1.1** | *last updated: March 10*
+"""
+
 # ╔═╡ 1496f9b6-2e70-11eb-28ef-27fa4e2d12dc
 md"# Financial networks"
 
@@ -476,6 +481,7 @@ md"(You have used approximately **$(wordcount(answer21))** words.)"
 md"(You have used approximately **$(wordcount(answer22))** words.)"
 
 # ╔═╡ Cell order:
+# ╟─ce3a72b2-81a4-11eb-1371-ddc513ce9d83
 # ╟─1496f9b6-2e70-11eb-28ef-27fa4e2d12dc
 # ╟─e4369b64-2e5b-11eb-09f3-51b27a027763
 # ╟─8e69201a-7cf0-11eb-3428-cd15be95f091
