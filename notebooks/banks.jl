@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.21
+# v0.12.20
 
 using Markdown
 using InteractiveUtils
@@ -17,18 +17,19 @@ end
 begin
 	using Pkg
 	Pkg.activate(temp = true)
-	Pkg.add(["SimpleWeightedGraphs", "LightGraphs", "MetaGraphs", "GraphDataFrameBridge", "StatsPlots"])
-	using LightGraphs, SimpleWeightedGraphs, MetaGraphs, GraphDataFrameBridge, SparseArrays, StatsPlots
+	Pkg.add(PackageSpec(name = "DataAPI", version = "1.4"))
+		Pkg.add(["SimpleWeightedGraphs", "LightGraphs", "MetaGraphs", "GraphDataFrameBridge", "StatsPlots", "DataFrames", "PlutoUI", "Underscores"])
+	using LightGraphs, SimpleWeightedGraphs, MetaGraphs, GraphDataFrameBridge, SparseArrays, StatsPlots, DataFrames, PlutoUI, Underscores
 end
-
-# ╔═╡ 3d748476-2f1b-11eb-2503-ff4812a8e024
-using DataFrames, PlutoUI
-
-# ╔═╡ 605f3dc4-2fef-11eb-397b-7358dad589d3
-using Underscores
 
 # ╔═╡ 897916d0-30cb-11eb-19ba-c34c5c95e3b6
 using LinearAlgebra
+
+# ╔═╡ f8e7958e-2f75-11eb-1fbc-5d75c3f15774
+weighted_adjacency_matrix(g::AbstractGraph) = (adjacency_matrix(g) .> 0) .* sparse(weights(g))
+
+# ╔═╡ e610597e-819f-11eb-0873-77945a560e31
+
 
 # ╔═╡ 1496f9b6-2e70-11eb-28ef-27fa4e2d12dc
 md"# Financial networks"
@@ -70,11 +71,8 @@ end
 # ╔═╡ b811fe8c-2f6b-11eb-139d-99667df4dea2
 network = MetaDiGraph(df_edges, :from, :to, weight=:promise)
 
-# ╔═╡ f8e7958e-2f75-11eb-1fbc-5d75c3f15774
-LightGraphs.adjacency_matrix(g::MetaDiGraph) = adjacency_matrix(network.graph) .* sparse(LightGraphs.weights(network))
-
 # ╔═╡ 5010c036-2f73-11eb-2e20-c1048a6418ac
-P = adjacency_matrix(network)
+P = weighted_adjacency_matrix(network)
 
 # ╔═╡ d7d6c528-2e5c-11eb-29bd-a528fdfd0cea
 md"""
@@ -340,18 +338,17 @@ PP = diagm(.!default) * P̄ + diagm(default) * diagm(out.p) * A
 
 # ╔═╡ Cell order:
 # ╠═999f094a-2f6b-11eb-0092-35e5ba473d17
-# ╠═3d748476-2f1b-11eb-2503-ff4812a8e024
 # ╠═f8e7958e-2f75-11eb-1fbc-5d75c3f15774
+# ╟─e610597e-819f-11eb-0873-77945a560e31
 # ╟─1496f9b6-2e70-11eb-28ef-27fa4e2d12dc
 # ╟─e4369b64-2e5b-11eb-09f3-51b27a027763
 # ╠═c6421b54-2fed-11eb-0aff-65c50f94ef6f
-# ╟─c0f15350-3005-11eb-13c3-77f8606b7b01
+# ╠═c0f15350-3005-11eb-13c3-77f8606b7b01
 # ╠═002fa19c-2fee-11eb-340a-6761abf75578
 # ╠═510de79c-2fee-11eb-06c1-7d7b1ddc73e4
 # ╠═5493f9ea-2fee-11eb-116b-e39cece05885
 # ╠═55b91a04-300b-11eb-1109-c5d9bf0108aa
 # ╟─6a6caae6-2fee-11eb-0049-85482dc0bf42
-# ╠═605f3dc4-2fef-11eb-397b-7358dad589d3
 # ╟─c180072e-2fee-11eb-26b6-439de97c8e31
 # ╠═1a68b9bc-2f6a-11eb-2b3c-335990975b95
 # ╠═b811fe8c-2f6b-11eb-139d-99667df4dea2
