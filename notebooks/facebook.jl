@@ -1,36 +1,11 @@
 ### A Pluto.jl notebook ###
-# v0.12.20
+# v0.15.1
 
 using Markdown
 using InteractiveUtils
 
 # ╔═╡ 53f814ac-7204-11eb-26e7-57398d26446f
 begin
-	_a_ = 1 # make sure this cell is run as cell #1
-	using Pkg
-	Pkg.activate(temp = true)
-	
-	Pkg.add([
-		PackageSpec(name = "AbstractPlotting",  version = "0.15"),
-		PackageSpec(name = "CairoMakie",        version = "0.3"),
-		PackageSpec(name = "CategoricalArrays", version = "0.9"),
-		PackageSpec(name = "Colors",            version = "0.12"),
-		PackageSpec(name = "Chain",             version = "0.4"),
-		PackageSpec(name = "CSV",               version = "0.8"),
-		PackageSpec(name = "HTTP",              version = "0.9"),			
-		PackageSpec(name = "DataFrames",        version = "0.22"),			
-		PackageSpec(name = "DataAPI",           version = "1.4"),
-		PackageSpec(name = "LightGraphs",       version = "1.3"),
-		PackageSpec(name = "PlutoUI",           version = "0.6.11-0.6"),
-		PackageSpec(name = "UnPack",            version = "1"),
-		PackageSpec(name = "SimpleWeightedGraphs",version="1.1"),
-		PackageSpec(name = "StatsBase",         version = "0.33"),
-		PackageSpec(name = "ZipFile",           version = "0.9"),
-		#PackageSpec(name = "WorldBankData", version = "0.4.1-0.4"),
-		#PackageSpec(name = "Plots", version = "1.10"),	
-		PackageSpec(url = "https://github.com/greimel/Shapefile.jl", rev="multipolygon"),
-			])
-	
 	using Statistics: mean
 	using SparseArrays: sparse
 	using LinearAlgebra: I, dot, diag, Diagonal, norm
@@ -38,7 +13,7 @@ begin
 	import CairoMakie
 	CairoMakie.activate!(type = "png")
 	
-	using AbstractPlotting: 	
+	using Makie: 	
 		Legend, Figure, Axis, Colorbar,
 		lines!, scatter, scatter!, poly!, vlines!, hlines!, image!,
 		hidedecorations!, hidespines!
@@ -52,20 +27,16 @@ begin
 		leftjoin, innerjoin, rightjoin,
 		groupby, ByRow, Not,
 		disallowmissing!, dropmissing!, disallowmissing
-	import CSV, HTTP, Shapefile, ZipFile
+	import CSV, HTTP, ZipFile
+	import Shapefile # https://github.com/greimel/Shapefile.jl#multipolygon
 	using UnPack: @unpack
 	using StatsBase: quantile, Weights
-	#using Plots
-	#Plots.gr(fmt = :png)	
 	
 	using PlutoUI: TableOfContents
 end
 
 # ╔═╡ 1f7e15e2-6cbb-11eb-1e92-9f37d4f3df40
 begin
-	_b_ = _a_ + 1 # cell #2
-	nothing
-	
 	using LightGraphs
 	using SimpleWeightedGraphs: SimpleWeightedGraph
 	const LG = LightGraphs
@@ -91,9 +62,18 @@ begin
 	end
 end
 
+# ╔═╡ 19ecd707-b12e-438a-a3ce-ecb0ec38a64c
+md"""
+!!! danger "Reader beware!"
+	This is the version of the notebook was used in 2021 edition of the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
+
+	**The notebook will get updated for Spring 2022.**
+
+"""
+
 # ╔═╡ 47594b98-6c72-11eb-264f-e5416a8faa32
 md"""
-`facebook.jl` | **Version 1.0** | *last updated: Feb 18*
+`facebook.jl` | **Version 1.1** | *last updated: Aug 5 2021*
 """
 
 # ╔═╡ a4ff0fb8-71f3-11eb-1928-492c57739959
@@ -138,6 +118,9 @@ There at least two ways to visualize social connectedness.
 # ╔═╡ 710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
 country = "BE"
 
+# ╔═╡ aa423d14-6cb3-11eb-0f1c-65ebbf99d539
+@unpack node_names, wgts = make_sci_graph(country_df);
+
 # ╔═╡ 8bee74ea-7140-11eb-3441-330ab08a9f38
 md"""
 ## Visualizing the full network with a Heatmap
@@ -147,6 +130,9 @@ md"""
 md"""
 # Social Connectedness as Weights of a Network of Regions
 """
+
+# ╔═╡ 29479030-6c75-11eb-1b96-9fd35f6d0840
+g = SimpleWeightedGraph(wgts)
 
 # ╔═╡ d127df3e-710d-11eb-391a-89f3aeb8c219
 md"""
@@ -493,7 +479,7 @@ md"""
 """
 
 # ╔═╡ a91896c6-6c82-11eb-018e-e514ca265b1a
-url_country_codes = "https://datahub.io/core/country-codes/r/country-codes.csv"
+url_country_codes = "https://raw.githubusercontent.com/datasets/country-codes/master/data/country-codes.csv"
 
 # ╔═╡ 09109488-6c87-11eb-2d64-43fc9df7d8c8
 csv_from_url(url_country_codes)
@@ -515,17 +501,6 @@ iso2c_to_fips = begin
 	[df; missing_countries]
 end
 
-# ╔═╡ 15139994-6c82-11eb-147c-59013c36a518
-md"""
-## Matching SCI and Map Shapes
-"""
-
-# ╔═╡ 3dc97a66-6c82-11eb-20a5-635ac0b6bac1
-country_df = get_country_sci()
-
-# ╔═╡ aa423d14-6cb3-11eb-0f1c-65ebbf99d539
-@unpack node_names, wgts = make_sci_graph(country_df);
-
 # ╔═╡ baecfe58-6cb6-11eb-3a4e-31bbb8da02ae
 begin
 	df_nodes0 = DataFrame(; node_names, id = 1:length(node_names))
@@ -543,8 +518,13 @@ begin
 end
 
 
-# ╔═╡ 29479030-6c75-11eb-1b96-9fd35f6d0840
-g = SimpleWeightedGraph(wgts)
+# ╔═╡ 15139994-6c82-11eb-147c-59013c36a518
+md"""
+## Matching SCI and Map Shapes
+"""
+
+# ╔═╡ 3dc97a66-6c82-11eb-20a5-635ac0b6bac1
+country_df = get_country_sci()
 
 # ╔═╡ 60e9f650-6c83-11eb-270a-fb57f2449762
 begin
@@ -1055,6 +1035,7 @@ md"""
 """
 
 # ╔═╡ Cell order:
+# ╟─19ecd707-b12e-438a-a3ce-ecb0ec38a64c
 # ╟─47594b98-6c72-11eb-264f-e5416a8faa32
 # ╟─44ef5554-713f-11eb-35fc-1b93349ca7fa
 # ╟─a4ff0fb8-71f3-11eb-1928-492c57739959
