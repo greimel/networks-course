@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.21
+# v0.15.1
 
 using Markdown
 using InteractiveUtils
@@ -15,43 +15,8 @@ end
 
 # ╔═╡ 6526d6e4-774a-11eb-0b7a-bd644b5f7fea
 begin
-	_a_ = 1 # cell #1
-	
-	using Pkg
-	Pkg.activate(temp = true)
-	
-	Pkg.add(PackageSpec(name = "PlutoUI", version = "0.6.11-0.6"))
 	using PlutoUI: TableOfContents, Slider, CheckBox
-	
-	Pkg.add([
-		PackageSpec(name = "AbstractPlotting",  version = "0.15"),
-		PackageSpec(name = "AxisKeys",        ),
-			PackageSpec(name = "NamedArrays",        ),			
-		PackageSpec(name = "CairoMakie",        version = "0.3"),
-		PackageSpec(name = "CategoricalArrays", version = "0.9"),
-		PackageSpec(name = "Colors",            version = "0.12"),
-		PackageSpec(name = "Chain",             version = "0.4"),
-		PackageSpec(name = "CSV",               version = "0.8"),
-		PackageSpec(name = "HTTP",              version = "0.9"),			
-		PackageSpec(name = "DataFrames",        version = "0.22"),			
-		PackageSpec(name = "DataAPI",           version = "1.4"),
-		PackageSpec(name = "LightGraphs",       version = "1.3"),
-		PackageSpec(name = "UnPack",            version = "1"),
-		PackageSpec(name = "XLSX",              version = "0.7"),
-		PackageSpec(name = "ZipFile",           version = "0.9"),
-		PackageSpec(name = "SimpleWeightedGraphs",version="1.1"),
-			#Pkg.PackageSpec(name="Cairo", ),
-			#Pkg.PackageSpec(name="Compose", ),
-			#Pkg.PackageSpec(name="Images", ),
-			#Pkg.PackageSpec(name="ImageIO", ),
-			Pkg.PackageSpec(name="Downloads", ),
-			Pkg.PackageSpec(name="Distributions", ),
-			
-			
-		#PackageSpec(name = "Plots", version = "1.10"),	
-			])
-	
-	Pkg.add(["GraphPlot", "NetworkLayout", "OffsetArrays"])
+
 	using GraphPlot, NetworkLayout, OffsetArrays
 	
 	using Statistics: mean
@@ -62,7 +27,7 @@ begin
 	import CairoMakie
 	CairoMakie.activate!(type = "png")
 	
-	using AbstractPlotting#: 	
+	using Makie#: 	
 		#Legend, Figure, Axis, Colorbar,
 		#lines!, scatter!, poly!, vlines!, hlines!, image!, hist, hist!,
 		#hidedecorations!, hidespines!
@@ -89,10 +54,7 @@ begin
 end
 
 # ╔═╡ 579444bc-774a-11eb-1d80-0557b12da169
-begin
-	_b_ = _a_ + 1 # cell #2
-	nothing
-	
+begin	
 	using LightGraphs
 	using SimpleWeightedGraphs: AbstractSimpleWeightedGraph, SimpleWeightedDiGraph
 	const LG = LightGraphs
@@ -131,9 +93,18 @@ begin
 		
 end
 
+# ╔═╡ 55a868c8-0614-4074-9389-c957cf64cb20
+md"""
+!!! danger "Reader beware!"
+	This is the version of the notebook was used in 2021 edition of the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
+
+	**The notebook will get updated for Spring 2022.**
+
+"""
+
 # ╔═╡ 38f5d048-7747-11eb-30f7-89bade5ed0a3
 md"""
-`production.jl` | **Version 1.2** | *last updated: Mar 3*
+`production.jl` | **Version 1.3** | *last updated: Aug 5 2021*
 """
 
 # ╔═╡ f1749b26-774b-11eb-2b42-43ffcb5cd7ee
@@ -697,7 +668,7 @@ fig_welfare = let
 	
 	fig = Figure()
 	
-	col = AbstractPlotting.wong_colors
+	col = Makie.wong_colors()
 	
 	ax = Axis(fig[1,1], title = "Welfare loss after shock to different industries")
 	
@@ -722,7 +693,7 @@ fig_covid = let
 	
 	fig = Figure()
 	
-	col = AbstractPlotting.wong_colors
+	col = Makie.wong_colors()
 	
 	ax = Axis(fig[1,1], title = "Welfare loss after shock to different industries")
 	
@@ -834,7 +805,7 @@ end
 function nodes_edges(graph)
 	wgt = Matrix(weights(graph) .* adjacency_matrix(graph)) 
 	
-	node_positions = NetworkLayout.Spring.layout(wgt)
+	node_positions = NetworkLayout.Spring()(wgt)
 #	node_positions = NetworkLayout.Spectral.layout(wgt) # node_weights = eigenvector_centrality(graph)
 	
 	#cutoffs = [0.001,0.01,0.05,0.15,0.4,1.0]
@@ -861,7 +832,7 @@ fig = let
 	ax = Axis(fig[1,2][1,1])
 	
 	for i in 1:nv(graph)
-		lines!(ax, collect(axes(production, 2)), parent(production[i,:]), color = AbstractPlotting.wong_colors[rem(i, 7) + 1])
+		lines!(ax, collect(axes(production, 2)), parent(production[i,:]), color = Makie.wong_colors()[rem(i, 7) + 1])
 		vlines!(ax, t)
 	end
 	
@@ -946,6 +917,7 @@ function gplot_to_png(gp::Compose.Context)
 end
 
 # ╔═╡ Cell order:
+# ╟─55a868c8-0614-4074-9389-c957cf64cb20
 # ╟─38f5d048-7747-11eb-30f7-89bade5ed0a3
 # ╟─19b0fa00-774a-11eb-1ede-89eceed8b8ff
 # ╟─f1749b26-774b-11eb-2b42-43ffcb5cd7ee
