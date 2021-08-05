@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.20
+# v0.15.1
 
 using Markdown
 using InteractiveUtils
@@ -14,77 +14,10 @@ macro bind(def, element)
 end
 
 # ╔═╡ fdf43912-6623-11eb-2e6a-137c10342f32
-begin
-	_a_ = 1 # make sure this cell is run before other Pkg cell
-	
-	import Pkg
-	Pkg.activate(temp = true)
-	
-	Pkg.add("PlutoUI")
-	using PlutoUI: Slider, TableOfContents, CheckBox, NumberField
-end
-
-# ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
-md"""
-`disease.jl` | **Version 1.1** | *last updated: Feb 9*
-"""
-
-# ╔═╡ d0ee632c-6621-11eb-39ac-cb766429529f
-#
-
-# ╔═╡ 21be9262-6614-11eb-3ae6-79fdc6c56c3e
-_b_ = _a_ + 1; md"""
-Fancy version $(@bind fancy CheckBox(default=false)) (might not work)
-"""
-
-# ╔═╡ 3b444a90-64b3-11eb-0b8f-1facc32a4088
-begin
-	_c_ = _b_ + 1 # make sure this cell is run before other Pkg cell
-	
-	Pkg.add(Pkg.PackageSpec(name="AbstractPlotting", version = "0.15"))
-	
-	if fancy
-		Pkg.add([
-			Pkg.PackageSpec(name="JSServe"),
-			Pkg.PackageSpec(name="WGLMakie"),
-			])
-		import WGLMakie
-		using JSServe: Page
-		WGLMakie.activate!()
-		Page(exportable = true)
-	else
-		Pkg.add("CairoMakie")
-		import CairoMakie
-		CairoMakie.activate!(type = "png")
-	end
-
-	using AbstractPlotting: 
-		Figure, Axis, Legend,
-		lines!, scatter!, scatterlines, scatterlines!, vlines!, 
-		hidedecorations!, ylims!, cgrad,
-		@lift, Node
-	
-	Pkg.add("NetworkLayout")
-	using NetworkLayout: NetworkLayout
-end
+using PlutoUI: Slider, TableOfContents, CheckBox, NumberField
 
 # ╔═╡ 2b55141f-1cba-4a84-8811-98697d408d65
 begin
-	Pkg.add([
-			Pkg.PackageSpec(name="DataAPI", version="1.4"),
-			Pkg.PackageSpec(name="CSV", version="0.8"),
-			Pkg.PackageSpec(name="CategoricalArrays", version="0.9"),
-			Pkg.PackageSpec(name="Chain", version="0.4"),
-			Pkg.PackageSpec(name="DataFrames", version="0.22"),
-			Pkg.PackageSpec(name="Distributions", version="0.24"),
-			Pkg.PackageSpec(name="FreqTables", version="0.4"),
-			Pkg.PackageSpec(name="GeometryBasics", version="0.3"),
-			Pkg.PackageSpec(name="LightGraphs", version="1.3"),
-			Pkg.PackageSpec(name="NearestNeighbors", version="0.4"),
-			Pkg.PackageSpec(name="Plots", version="1"),
-			Pkg.PackageSpec(name="UnPack", version="1")
-			])
-
 	using Distributions: Distributions, LogNormal
 	using Chain: @chain
 	import CSV
@@ -97,14 +30,44 @@ begin
 	using Statistics: mean
 	
 	Base.show(io::IO, ::MIME"text/html", x::CategoricalArrays.CategoricalValue) = print(io, get(x))
-	
-	_c_
 end
 
+# ╔═╡ 51c0c3e2-1930-4859-87d7-99b1985c32e6
+md"""
+!!! danger "Reader beware!"
+	This is the version of the notebook was used in 2021 edition of the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
+
+	**The notebook will get updated for Spring 2022.**
+
+"""
+
+# ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
+md"""
+`disease.jl` | **Version 1.1** | *last updated: Aug 5 2021*
+"""
+
 # ╔═╡ c2940f90-661a-11eb-3d77-0fc1189e0960
+fancy = false; elegant = true;
+
+# ╔═╡ 3b444a90-64b3-11eb-0b8f-1facc32a4088
 begin
-	elegant = !fancy
-	(; elegant, fancy)
+	if fancy
+		#import WGLMakie
+		#using JSServe: Page
+		#WGLMakie.activate!()
+		#Page(exportable = true)
+	else
+		import CairoMakie
+		CairoMakie.activate!(type = "png")
+	end
+
+	using Makie: 
+		Figure, Axis, Legend,
+		lines!, scatter!, scatterlines, scatterlines!, vlines!, 
+		hidedecorations!, ylims!, cgrad,
+		@lift, Node
+	
+	using NetworkLayout: NetworkLayout
 end
 
 # ╔═╡ f4266196-64aa-11eb-3fc1-2bf0e099d19c
@@ -538,7 +501,7 @@ function tidy_simulation_output(sim)
 	sim1 = label.(sim)
 	
 	# make it a DataFrame with T columns and N rows
-	df0 = DataFrame(sim1)
+	df0 = DataFrame(sim1, :auto)
 	rename!(df0, string.(1:size(df0,2)))
 	
 	# add a column with node identifier
@@ -846,7 +809,7 @@ function edges_as_points(graph, node_positions)
 end
 
 # ╔═╡ c511f396-6579-11eb-18b1-df745093a116
-function compare_sir(sim1, sim2, graph, node_positions = NetworkLayout.Spring.layout(adjacency_matrix(graph), Point2f0))
+function compare_sir(sim1, sim2, graph, node_positions = NetworkLayout.Spring(dim=2)(adjacency_matrix(graph)))
 	t = Node(1)
 	
 	edges_as_pts = edges_as_points(graph, node_positions)
@@ -879,7 +842,7 @@ out_vacc = compare_sir(last.(vacc.sims[[1,2]])..., vacc.graph, vacc.node_positio
 fancy && out_vacc.fig
 
 # ╔═╡ 67e74a32-6578-11eb-245c-07894c89cc7c
-function sir_plot(sim, graph, node_positions = NetworkLayout.Spring.layout(adjacency_matrix(graph), Point2f0))
+function sir_plot(sim, graph, node_positions = NetworkLayout.Spring(dim=2)(adjacency_matrix(graph)))
 	t = Node(1)
 	
 	edges_as_pts = edges_as_points(graph, node_positions)
@@ -968,7 +931,7 @@ md"""
 out_vacc.t[] = t0_vacc
 
 # ╔═╡ 83b817d2-657d-11eb-3cd2-332a348142ea
-elegant && (t0_vacc; out_vacc.fig)
+!fancy && (t0_vacc; out_vacc.fig)
 
 # ╔═╡ a81f5244-64aa-11eb-1854-6dbb64c8eb6a
 md"""
@@ -1093,9 +1056,8 @@ md"""
 """
 
 # ╔═╡ Cell order:
+# ╟─51c0c3e2-1930-4859-87d7-99b1985c32e6
 # ╟─0e30624c-65fc-11eb-185d-1d018f68f82c
-# ╟─d0ee632c-6621-11eb-39ac-cb766429529f
-# ╟─21be9262-6614-11eb-3ae6-79fdc6c56c3e
 # ╟─c2940f90-661a-11eb-3d77-0fc1189e0960
 # ╟─f4266196-64aa-11eb-3fc1-2bf0e099d19c
 # ╟─43a25dc8-6574-11eb-3607-311aa8d5451e
