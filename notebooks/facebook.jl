@@ -147,22 +147,6 @@ md"""
 # Network Concentration
 """
 
-# ╔═╡ aab55326-7127-11eb-2f03-e9d3f30d1947
-begin
-	url500 = "https://nber.org/distance/2010/sf1/county/sf12010countydistance500miles.csv.zip"
-	
-	url100 = "https://data.nber.org/distance/2010/sf1/county/sf12010countydistance100miles.csv.zip"
-	
-	url = url500
-	
-	zipfile = download(url)	
-	
-	z = ZipFile.Reader(zipfile)	
-	file_in_zip = only(z.files)
-
-	dff = CSV.File(read(file_in_zip)) |> DataFrame
-end
-
 # ╔═╡ 30350a46-712a-11eb-1d4b-81de61879835
 add0_infty(from, to, dist) = from == to ? 0.0 : ismissing(dist) ? Inf : dist
 
@@ -338,6 +322,11 @@ md"""
 ## Specifying data deps
 """
 
+# ╔═╡ ea4d4bba-5f8b-48ee-a171-7e7b90c2b062
+dist_urls = [
+	"500mi" => "https://nber.org/distance/2010/sf1/county/sf12010countydistance500miles.csv.zip",
+	"100mi" => "https://data.nber.org/distance/2010/sf1/county/sf12010countydistance100miles.csv.zip"]
+
 # ╔═╡ b0fc1027-4a33-49c6-b0ac-bb4e4bfb9414
 sci_url_pre = "https://data.humdata.org/dataset/e9988552-74e4-4ff4-943f-c782ac8bca87/resource/"
 
@@ -381,6 +370,18 @@ begin
 		))
 	end
 	
+	for (id, url) in dist_urls
+		register(DataDep(
+    		"county_dist_$id",
+    		"""
+	
+			""",
+    		url,
+	    	#sci_checksums[id],
+		 	post_fetch_method = unpack
+		))
+	end
+	
 	register(DataDep(
     	"US-Elections",
     	"""
@@ -395,22 +396,49 @@ begin
 end
 
 # ╔═╡ 19528ac3-4dcd-49cd-934d-fb0392394b59
-sci_files = map(sci_urls) do (id, url)
-	file = split(url, "/") |> last |> string
-	id => replace(file, ".zip" => "")
-end |> Dict
+function urls_to_files(urls)
+	map(urls) do (id, url)
+		file = split(url, "/") |> last |> string
+		id => replace(file, ".zip" => "")
+	end |> Dict
+end
 
-# ╔═╡ 4ffaca67-8600-4f2c-a360-05c48a960cf2
-function SCI_data(id)
-	id = Symbol(id)
-	valid_ids = first.(sci_urls)
+# ╔═╡ 0a47261d-1061-4c3d-bda8-7e0106c4a1df
+function county_dist_data(id)
+	urls = dist_urls
+	id = string(id)
+	files = urls_to_files(urls)
+	valid_ids = first.(urls)
 	if id ∉ valid_ids
 		ArgumentError("provide one of $valid_ids") |> throw
 	end
-	path = joinpath(@datadep_str("SCI_$id"), sci_files[id])
+	path = joinpath(@datadep_str("county_dist_$id"), files[id])
 	
 	CSV.File(path) |> DataFrame
 end
+
+# ╔═╡ aab55326-7127-11eb-2f03-e9d3f30d1947
+dff = county_dist_data("500mi")
+
+# ╔═╡ 765fa3eb-2ffe-4b7d-8dbd-191f21ec0302
+#sci_files = urls_to_files(sci_urls)
+
+# ╔═╡ 4ffaca67-8600-4f2c-a360-05c48a960cf2
+function SCI_data(id)
+	urls = sci_urls
+	id = Symbol(id)
+	files = urls_to_files(urls)
+	valid_ids = first.(urls)
+	if id ∉ valid_ids
+		ArgumentError("provide one of $valid_ids") |> throw
+	end
+	path = joinpath(@datadep_str("SCI_$id"), files[id])
+	
+	CSV.File(path) |> DataFrame
+end
+
+# ╔═╡ b20ab98c-710d-11eb-0a6a-7de2477acf35
+county_df = SCI_data(:US_counties) #get_county_sci()
 
 # ╔═╡ f02674bc-ad32-4f03-b511-01627e927c52
 function elections_data(year)
@@ -441,9 +469,6 @@ get_country_sci() = SCI_data(:countries)
 
 # ╔═╡ be47304a-6c80-11eb-18ad-974bb077e53f
 get_county_sci() = SCI_data(:US_counties)
-
-# ╔═╡ b20ab98c-710d-11eb-0a6a-7de2477acf35
-county_df = get_county_sci()
 
 # ╔═╡ a6939ede-6c80-11eb-21ce-bdda8fe67acc
 md"""
@@ -2432,10 +2457,13 @@ version = "3.5.0+0"
 # ╟─a81a894a-713d-11eb-0dd8-9d9e8dffee35
 # ╟─3062715a-6c75-11eb-30ef-2953bc64adb8
 # ╟─0e556b16-5909-4853-9f78-76a071916f8d
+# ╠═ea4d4bba-5f8b-48ee-a171-7e7b90c2b062
+# ╠═0a47261d-1061-4c3d-bda8-7e0106c4a1df
 # ╠═b0fc1027-4a33-49c6-b0ac-bb4e4bfb9414
 # ╠═b6d47ef5-5a9a-4e36-9bb4-d0d8fa4bcb38
 # ╠═f5fdbf36-36e0-4714-9f35-ec538d3d447a
 # ╠═19528ac3-4dcd-49cd-934d-fb0392394b59
+# ╠═765fa3eb-2ffe-4b7d-8dbd-191f21ec0302
 # ╠═4ffaca67-8600-4f2c-a360-05c48a960cf2
 # ╠═5b4444ad-1156-4b8c-bf84-b6f993d9f52b
 # ╠═f02674bc-ad32-4f03-b511-01627e927c52
