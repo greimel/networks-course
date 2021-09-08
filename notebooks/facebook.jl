@@ -543,7 +543,7 @@ end
 
 # ╔═╡ 9b6dfc1a-6c81-11eb-194a-35cb323ef2af
 function download_country_shapes()
-	url = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_countries.zip"
+	url = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_countries.zip?version=4.0.0"
 	map_name = "ne_110m_admin_0_countries"
 	download_zipped_shapes(url, map_name)
 end
