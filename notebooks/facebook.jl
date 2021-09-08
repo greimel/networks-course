@@ -177,9 +177,6 @@ md"""
 # US Presidential Elections 2020
 """
 
-# ╔═╡ 825b52aa-712d-11eb-0eec-1561c87b7aac
-url_elect = "https://raw.githubusercontent.com/tonmcg/US_County_Level_Election_Results_08-20/master/2020_US_County_Level_Presidential_Results.csv"
-
 # ╔═╡ 7b50095c-6f9a-11eb-2cf5-31805fc10804
 md"""
 ## (End of Lecture)
@@ -336,16 +333,102 @@ md"""
 # Appendix
 """
 
+# ╔═╡ 0e556b16-5909-4853-9f78-76a071916f8d
+md"""
+## Specifying data deps
+"""
+
+# ╔═╡ b0fc1027-4a33-49c6-b0ac-bb4e4bfb9414
+sci_url_pre = "https://data.humdata.org/dataset/e9988552-74e4-4ff4-943f-c782ac8bca87/resource/"
+
+# ╔═╡ b6d47ef5-5a9a-4e36-9bb4-d0d8fa4bcb38
+sci_urls = [
+	:countries =>
+		"7c8f6c93-6272-4d39-9e5d-99cdc0053dfc/download/2020-12-16_country_country.tsv",
+	:US_counties =>
+		"3e3a1a7e-b557-4191-80cf-33d8e66c2e51/download/county_county_aug2020.tsv",
+	:US_counties__countries =>
+		"a9e327cc-d63f-4e61-b13d-d1968ee018bf/download/county_country_aug2020.tsv",
+	:GADM_NUTS2 =>
+		"7570bcc3-a208-49c4-8821-17f8df93c0e2/download/gadm1_nuts2_gadm1_nuts2_aug2020.tsv",
+	:GADM_NUTS3_counties =>
+		"3a98c06b-d373-45ed-a954-d93bdb12d5d0/download/gadm1_nuts3_counties_gadm1_nuts3_counties_aug2020.tsv.zip"
+	]
+
+# ╔═╡ f5fdbf36-36e0-4714-9f35-ec538d3d447a
+sci_checksums = Dict(
+	:US_counties => "46c14c23380683cb7cbc42ec70de8c1ddd1a5e866fe71bf6909f9b3fefaa2236",
+	:countries => "0b73834df260a21b0374dbd8f1b2bda90817e7b9698c2ae2fcd030351d03a303",
+	:US_counties__countries => "71869a6bcac1724bc14f322cbb2d127fbf021a2aa2db7e1c3a04a09786177b33",
+	:GADM_NUTS2 => "e1588fa4cfb6a0b06190dddc4276a8c13bd8f4998ae02bb9fb43c805edbd28cf",
+	:GADM_NUTS3_counties => "7225cc9b01234a65c9f0e40df33c046880c5510e33343f0a5cff08732e0513af"
+	)
+
+# ╔═╡ 5b4444ad-1156-4b8c-bf84-b6f993d9f52b
+begin
+	using DataDeps
+	ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
+	
+	for (id, url) in sci_urls
+		register(DataDep(
+    		"SCI_$id",
+    		"""
+	
+			""",
+    		sci_url_pre * url,
+	    	sci_checksums[id],
+		 	post_fetch_method = id == :GADM_NUTS3_counties ? unpack : identity 
+		))
+	end
+	
+	register(DataDep(
+    	"US-Elections",
+    	"""
+	
+		""",
+    	[
+				"https://raw.githubusercontent.com/tonmcg/US_County_Level_Election_Results_08-20/master/2016_US_County_Level_Presidential_Results.csv",
+					"https://raw.githubusercontent.com/tonmcg/US_County_Level_Election_Results_08-20/master/2020_US_County_Level_Presidential_Results.csv"
+		],
+		"5e31e327837c1c6459e4d65ad248913b7503c47ac17f777a4c3659c1fa30cfa4"
+	))
+end
+
+# ╔═╡ 19528ac3-4dcd-49cd-934d-fb0392394b59
+sci_files = map(sci_urls) do (id, url)
+	file = split(url, "/") |> last |> string
+	id => replace(file, ".zip" => "")
+end |> Dict
+
+# ╔═╡ 4ffaca67-8600-4f2c-a360-05c48a960cf2
+function SCI_data(id)
+	id = Symbol(id)
+	valid_ids = first.(sci_urls)
+	if id ∉ valid_ids
+		ArgumentError("provide one of $valid_ids") |> throw
+	end
+	path = joinpath(@datadep_str("SCI_$id"), sci_files[id])
+	
+	CSV.File(path) |> DataFrame
+end
+
+# ╔═╡ f02674bc-ad32-4f03-b511-01627e927c52
+function elections_data(year)
+	path = joinpath(
+		datadep"US-Elections",
+		"$(year)_US_County_Level_Presidential_Results.csv"
+	)
+	
+	CSV.File(path) |> DataFrame
+end
+
+# ╔═╡ 1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
+df_elect0 = elections_data(2020)
+
 # ╔═╡ 186246ce-6c80-11eb-016f-1b1abb9039bd
 md"""
 ## Downloading the SCI Data
 """
-
-# ╔═╡ 7f85031a-6c75-11eb-0d7b-31519ba1c2f9
-url_country_country = "https://data.humdata.org/dataset/e9988552-74e4-4ff4-943f-c782ac8bca87/resource/7c8f6c93-6272-4d39-9e5d-99cdc0053dfc/download/2020-12-16_country_country.tsv"
-
-# ╔═╡ 5427cfc6-6c80-11eb-24c8-e1a56dfd20f1
-url_county = "https://data.humdata.org/dataset/e9988552-74e4-4ff4-943f-c782ac8bca87/resource/3e3a1a7e-b557-4191-80cf-33d8e66c2e51/download/county_county_aug2020.tsv"
 
 # ╔═╡ 5a0d2490-6c80-11eb-0985-9de4f34412f1
 function csv_from_url(url)
@@ -353,14 +436,11 @@ function csv_from_url(url)
 	df = DataFrame(csv)
 end
 
-# ╔═╡ 1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
-df_elect0 = csv_from_url(url_elect)
-
 # ╔═╡ 9d80ae04-6c80-11eb-2c03-b7b45ca6e0bf
-get_country_sci() = csv_from_url(url_country_country)
+get_country_sci() = SCI_data(:countries)
 
 # ╔═╡ be47304a-6c80-11eb-18ad-974bb077e53f
-get_county_sci() = csv_from_url(url_county)
+get_county_sci() = SCI_data(:US_counties)
 
 # ╔═╡ b20ab98c-710d-11eb-0a6a-7de2477acf35
 county_df = get_county_sci()
@@ -1042,6 +1122,7 @@ CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
+DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
@@ -1062,11 +1143,13 @@ CairoMakie = "~0.6.3"
 CategoricalArrays = "~0.10.0"
 Chain = "~0.4.7"
 Colors = "~0.12.8"
+DataDeps = "~0.7.7"
 DataFrames = "~1.2.2"
 HTTP = "~0.9.13"
 LightGraphs = "~1.3.5"
 Makie = "~0.15.0"
 PlutoUI = "~0.7.9"
+Shapefile = "~0.6.2"
 SimpleWeightedGraphs = "~1.1.1"
 StatsBase = "~0.33.9"
 UnPack = "~1.0.2"
@@ -1077,7 +1160,7 @@ ZipFile = "~0.9.3"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.0-beta3.0"
+julia_version = "1.7.0-beta4"
 manifest_format = "2.0"
 
 [[deps.AbstractFFTs]]
@@ -1135,6 +1218,12 @@ version = "1.0.0"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+
+[[deps.BinaryProvider]]
+deps = ["Libdl", "Logging", "SHA"]
+git-tree-sha1 = "ecdec412a9abc8db54c0efc5548c64dfce072058"
+uuid = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
+version = "0.5.10"
 
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1249,6 +1338,12 @@ version = "0.2.3"
 git-tree-sha1 = "ee400abb2298bd13bfc3df1c412ed228061a2385"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.7.0"
+
+[[deps.DataDeps]]
+deps = ["BinaryProvider", "HTTP", "Libdl", "Reexport", "SHA", "p7zip_jll"]
+git-tree-sha1 = "4f0e41ff461d42cfc62ff0de4f1cd44c6e6b3771"
+uuid = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
+version = "0.7.7"
 
 [[deps.DataFrames]]
 deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Reexport", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
@@ -2298,7 +2393,6 @@ version = "3.5.0+0"
 # ╠═e1dae81c-712b-11eb-0fb8-654147206526
 # ╠═7ca9c2ec-712b-11eb-229a-3322c8115255
 # ╟─f3b6d9be-712e-11eb-2f2d-af92e85304b5
-# ╠═825b52aa-712d-11eb-0eec-1561c87b7aac
 # ╠═1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
 # ╠═0243f610-7134-11eb-3b9b-e5474fd7d1cf
 # ╠═281198fa-712f-11eb-02ae-99a2d48099eb
@@ -2337,9 +2431,15 @@ version = "3.5.0+0"
 # ╟─54291450-713d-11eb-37d2-0db48a0e8a85
 # ╟─a81a894a-713d-11eb-0dd8-9d9e8dffee35
 # ╟─3062715a-6c75-11eb-30ef-2953bc64adb8
+# ╟─0e556b16-5909-4853-9f78-76a071916f8d
+# ╠═b0fc1027-4a33-49c6-b0ac-bb4e4bfb9414
+# ╠═b6d47ef5-5a9a-4e36-9bb4-d0d8fa4bcb38
+# ╠═f5fdbf36-36e0-4714-9f35-ec538d3d447a
+# ╠═19528ac3-4dcd-49cd-934d-fb0392394b59
+# ╠═4ffaca67-8600-4f2c-a360-05c48a960cf2
+# ╠═5b4444ad-1156-4b8c-bf84-b6f993d9f52b
+# ╠═f02674bc-ad32-4f03-b511-01627e927c52
 # ╟─186246ce-6c80-11eb-016f-1b1abb9039bd
-# ╠═7f85031a-6c75-11eb-0d7b-31519ba1c2f9
-# ╠═5427cfc6-6c80-11eb-24c8-e1a56dfd20f1
 # ╠═5a0d2490-6c80-11eb-0985-9de4f34412f1
 # ╠═9d80ae04-6c80-11eb-2c03-b7b45ca6e0bf
 # ╠═be47304a-6c80-11eb-18ad-974bb077e53f
