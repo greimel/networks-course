@@ -585,18 +585,18 @@ end
 
 # ╔═╡ 713ce11e-6c85-11eb-12f7-d7fac18801fd
 function extract_shapes_df(shp_table)
-	#fips = shp_table.FIPS_10_
-	iso3c = shp_table.ADM0_A3
-	country = shp_table.ADMIN
-	population = shp_table.POP_EST
-	gdp = shp_table.GDP_MD_EST
-	#continent = shp_table.CONTINENT
-	shape = shp_table.Geometry
-	df = DataFrame(; shape, population, gdp, iso3c, country)
-	filter!(:shape => !ismissing, df)
-	disallowmissing!(df)
-	
-	df
+	@chain shp_table begin
+		DataFrame
+		@select begin
+			:shape = to_geometry(:geometry)
+			:population = :POP_EST
+			:gdp = :GDP_MD_EST
+			:iso3c = :ADM0_A3
+			:country = :ADMIN
+		end
+		@subset(!ismissing(:shape))
+		disallowmissing
+	end
 end
 
 # ╔═╡ 8ba27720-6c81-11eb-1a5b-47db233dce61
@@ -656,6 +656,19 @@ md"""
 ## Matching SCI and Map Shapes
 """
 
+# ╔═╡ 4b8fba92-6cb0-11eb-0c53-b96600bc760d
+function sci(country)
+	@chain country_df begin
+		@subset(:user_loc == country)
+		select!(Not(:user_loc))
+		leftjoin(_, iso2c_to_fips, on = :fr_loc => :iso2c)
+		leftjoin(_, shapes_df, on = :iso3c, makeunique = true)
+		@subset!(!ismissing(:shape))
+		@subset!(:fr_loc != country)
+		disallowmissing!
+	end
+end
+
 # ╔═╡ 3dc97a66-6c82-11eb-20a5-635ac0b6bac1
 country_df = get_country_sci()
 
@@ -687,8 +700,6 @@ let
 	ax.xticks = (labels.mid, labels.continent)
 	ax.yticks = (labels.mid, labels.continent)
 	
-	
-	
 	image!(ax, RGBA.(0,0,0, min.(1.0, wgts[df_nodes.id, df_nodes.id] .* 100)))
 	
 	fig
@@ -700,18 +711,6 @@ sort(df_nodes, :eigv_c, rev = true)
 # ╔═╡ d1fd17dc-6fa6-11eb-245d-8bc905079f2f
 df_nodes1; sort(df_nodes, :eigv_c, rev = true)
 
-# ╔═╡ 4b8fba92-6cb0-11eb-0c53-b96600bc760d
-function sci(country)
-	
-	df0 = filter(:user_loc => ==(country), country_df)
-	select!(df0, Not(:user_loc))
-	df = leftjoin(df0, iso2c_to_fips, on = :fr_loc => :iso2c)
-	df1 = leftjoin(df, shapes_df, on = :iso3c, makeunique = true)
-	filter!(:shape => !ismissing, df1)
-	filter!(:fr_loc => !=(country), df1)
-	disallowmissing!(df1, :shape)
-	
-end
 
 # ╔═╡ 4f14a79c-6cb3-11eb-3335-2bbb61da25d9
 sort(sci(country), :scaled_sci, rev=true)
