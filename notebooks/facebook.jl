@@ -101,8 +101,9 @@ end
 
 # ╔═╡ 19ecd707-b12e-438a-a3ce-ecb0ec38a64c
 md"""
-!!! danger "Reader beware!"
-	This is the version of the notebook was used in 2021 edition of the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
+!!! danger "Under construction!"
+
+	This notebook is used for the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
 
 	**The notebook will get updated for Spring 2022.**
 
@@ -110,13 +111,7 @@ md"""
 
 # ╔═╡ 47594b98-6c72-11eb-264f-e5416a8faa32
 md"""
-`facebook.jl` | **Version 1.1** | *last updated: Aug 5 2021*
-"""
-
-# ╔═╡ a4ff0fb8-71f3-11eb-1928-492c57739959
-md"""
-!!! note "Notebook too slow? Try facebook-light.jl"
-    This notebook loads a lot of packages and downloads lots of data. If the notebook is too laggy on your computer use `facebook-light.jl` instead. The *light* version omits some material from the lecture that you don't need for the assignment.
+`facebook.jl` | **Version 1.2** | *last updated: Sept 9 2021*
 """
 
 # ╔═╡ 7f8a57f0-6c72-11eb-27dd-2dae50f00232
@@ -2528,7 +2523,6 @@ version = "3.5.0+0"
 # ╟─19ecd707-b12e-438a-a3ce-ecb0ec38a64c
 # ╟─47594b98-6c72-11eb-264f-e5416a8faa32
 # ╟─44ef5554-713f-11eb-35fc-1b93349ca7fa
-# ╟─a4ff0fb8-71f3-11eb-1928-492c57739959
 # ╟─7f8a57f0-6c72-11eb-27dd-2dae50f00232
 # ╟─547d93f4-6c74-11eb-28fe-c5be4dc7aaa6
 # ╟─710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
