@@ -50,11 +50,14 @@ begin
 	import CairoMakie
 	CairoMakie.activate!(type = "png")
 	
+	using AlgebraOfGraphics
+	
 	using Makie: 	
+		Scatter, Poly, Lines,
 		Legend, Figure, Axis, Colorbar,
 		lines!, scatter, scatter!, poly!, vlines!, hlines!, image!,
 		hidedecorations!, hidespines!
-
+	
 	#using WorldBankData
 	using CategoricalArrays: cut
 	using Colors: RGBA
@@ -949,25 +952,17 @@ end
 
 # ╔═╡ de19a2a0-7125-11eb-230b-2fc866269553
 let
-	df = filter(:user_loc => ==(fips), county_df)
-	select!(df, :fr_loc => :fips, :scaled_sci)
+	df = @chain county_df begin
+		@subset(:user_loc == fips)
+		@select!(:fips = :fr_loc, :scaled_sci)
+		innerjoin(county_shapes_df, _, on=:fips)
+	end
 	
-	df = innerjoin(county_shapes_df, df, on=:fips)
+	axis = (; title = "Social Connectedness with $county_name")
 	
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Social Connectedness with $county_name")
+	aog = data(df) * visual(Poly) * mapping(:shape, color = :scaled_sci => log)
 	
-	hidedecorations!(ax)
-	hidespines!(ax)
-	
-	color_variable = log.(df.scaled_sci)
-	attr = (tellwidth = true, width = 30)
-	
-	poly!(ax, df.shape, color = color_variable)
-	
-	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="log(scaled_sci)")
-	
-	fig
+	draw(aog; axis)
 end
 
 # ╔═╡ 4a641856-712f-11eb-34fe-eb9641c13f03
@@ -1003,23 +998,12 @@ let
 end
 
 # ╔═╡ 7ca9c2ec-712b-11eb-229a-3322c8115255
-let
-	df = concentration_df
-		
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Network Concentration (% of friends closer than $distance mi)")
-	
-	hidedecorations!(ax)
-	hidespines!(ax)
-	
-	color_variable = df.concentration
-	attr = (tellwidth = true, width = 30)
-	
-	poly!(ax, df.shape, color = color_variable)
-	
-	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="concentration")
-	
-	fig
+let	
+	aog = data(concentration_df) * visual(Poly) * mapping(:shape, color = :concentration)
+
+	# Set plot attributes
+	axis = (; title = "Network Concentration (% of friends closer than $distance mi)")
+	draw(aog; axis)
 end
 
 # ╔═╡ f583afc6-71f7-11eb-0241-a71a659b5313
@@ -1041,42 +1025,47 @@ end
 
 # ╔═╡ 0243f610-7134-11eb-3b9b-e5474fd7d1cf
 let
-	df = df_elect
-		
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Trump vote share")
-	
-	hidedecorations!(ax)
-	hidespines!(ax)
-	
-	color_variable = df.per_gop
-	attr = (tellwidth = true, width = 30)
-	
-	poly!(ax, df.shape, color = color_variable)
-	
-	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="Trump vote share")
-	
-	fig
+	aog = data(df_elect) * visual(Poly) * mapping(:shape, color = :per_gop => "Trump vote share")
+
+	# Set plot attributes
+	axis = (; title = "Network concentration and Trump vote share")
+	draw(aog; axis)
 end
 
 # ╔═╡ 8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
 let
-	var = [:population, :per_gop, :concentration]
-	df = combine(
-		groupby(df_elect, :conc_grp), 
-		([v, :population] => ((x,p) -> dot(x,p) / sum(p)) => v for v in var)...
+	dta = @chain df_elect begin
+		groupby(:conc_grp)
+		@combine(
+			:vote_share = dot(:per_gop, :population) / sum(:population),
+			:concentration = dot(:concentration, :population) / sum(:population)
+		)
+	end
+	
+	aog = data(dta) * (visual(Scatter) + smooth()) * mapping(
+		:concentration => "network concentration",
+		:vote_share => "Trump's vote share"
 	)
-	scatter(df.concentration, df.per_gop, axis = (xlabel = "network concentration", ylabel = "vote share Trump"))
+	
+	draw(aog)
 end
 
 # ╔═╡ 109bb1ea-71f6-11eb-37f4-054f691b2f23
 let
-	var = [:population, :per_gop, :eigv_c]
-	df = combine(
-		groupby(df_elect, :conc_grp), 
-		([v, :population] => ((x,p) -> dot(x,p) / sum(p)) => v for v in var)...
+	dta = @chain df_elect begin
+		groupby(:conc_grp)
+		@combine(
+			:vote_share = dot(:per_gop, :population) / sum(:population),
+			:centrality = dot(:eigv_c, :population) / sum(:population)
+		)
+	end
+	
+	aog = data(dta) * (visual(Scatter) + linear()) * mapping(
+		:centrality => log => "log(eigenvector centrality)",
+		:vote_share => "Trump's vote share"
 	)
-	scatter(log.(df.eigv_c), df.per_gop, axis = (xlabel = "log centrality", ylabel = "vote share Trump"))
+	
+	draw(aog)
 end
 
 # ╔═╡ 39d717a4-6c75-11eb-15f0-d537959a41b8
@@ -1184,6 +1173,7 @@ md"""
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
@@ -1209,6 +1199,7 @@ UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [compat]
+AlgebraOfGraphics = "~0.5.3"
 CSV = "~0.8.5"
 CairoMakie = "~0.6.5"
 CategoricalArrays = "~0.10.0"
@@ -1254,6 +1245,12 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "84918055d15b3114ede17ac6a7182f68870c16f7"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 version = "3.3.1"
+
+[[deps.AlgebraOfGraphics]]
+deps = ["Colors", "Dates", "FileIO", "GLM", "GeoInterface", "GeometryBasics", "GridLayoutBase", "KernelDensity", "Loess", "Makie", "PlotUtils", "PooledArrays", "RelocatableFolders", "StatsBase", "StructArrays", "Tables"]
+git-tree-sha1 = "40446e661ffe7a33c31980ec6438181daa41deff"
+uuid = "cbdf2221-f076-402e-a563-3d30da359d67"
+version = "0.5.3"
 
 [[deps.Animations]]
 deps = ["Colors"]
@@ -1462,6 +1459,12 @@ git-tree-sha1 = "599dc32bae654fa78056b15fed9b2af36f04ee44"
 uuid = "3c3547ce-8d99-4f5e-a174-61eb10b00ae3"
 version = "0.2.11"
 
+[[deps.Distances]]
+deps = ["LinearAlgebra", "Statistics", "StatsAPI"]
+git-tree-sha1 = "9f46deb4d4ee4494ffb5a40a27a2aced67bdd838"
+uuid = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
+version = "0.10.4"
+
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
@@ -1605,6 +1608,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "45d0ddfd29620ac9b2d1072801e90fb016c5f94c"
 uuid = "d604d12d-fa86-5845-992e-78dc15976526"
 version = "3.9.0+0"
+
+[[deps.GLM]]
+deps = ["Distributions", "LinearAlgebra", "Printf", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "StatsModels"]
+git-tree-sha1 = "f564ce4af5e79bb88ff1f4488e64363487674278"
+uuid = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+version = "1.5.1"
 
 [[deps.GeoFormatTypes]]
 git-tree-sha1 = "bb75ce99c9d6fb2edd8ef8ee474991cdacf12221"
@@ -1872,6 +1881,12 @@ deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pk
 git-tree-sha1 = "110897e7db2d6836be22c18bffd9422218ee6284"
 uuid = "d3a379c0-f9a3-5b72-a4c0-6bf4d2e8af0f"
 version = "2.12.0+0"
+
+[[deps.Loess]]
+deps = ["Distances", "LinearAlgebra", "Statistics"]
+git-tree-sha1 = "b5254a86cf65944c68ed938e575f5c81d5dfe4cb"
+uuid = "4345ca2d-374a-55d4-8d30-97f9976e7612"
+version = "0.5.3"
 
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
@@ -2214,6 +2229,11 @@ version = "0.7.1"
 deps = ["Distributed", "Mmap", "Random", "Serialization"]
 uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
 
+[[deps.ShiftedArrays]]
+git-tree-sha1 = "22395afdcf37d6709a5a0766cc4a5ca52cb85ea0"
+uuid = "1277b4bf-5013-50f5-be3d-901d8477a67a"
+version = "1.0.0"
+
 [[deps.Showoff]]
 deps = ["Dates", "Grisu"]
 git-tree-sha1 = "91eddf657aca81df9ae6ceb20b959ae5653ad1de"
@@ -2295,6 +2315,12 @@ deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "Reexport", 
 git-tree-sha1 = "46d7ccc7104860c38b11966dd1f72ff042f382e4"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "0.9.10"
+
+[[deps.StatsModels]]
+deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Printf", "ShiftedArrays", "SparseArrays", "StatsBase", "StatsFuns", "Tables"]
+git-tree-sha1 = "3fa15c1f8be168e76d59097f66970adc86bfeb95"
+uuid = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
+version = "0.6.25"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
