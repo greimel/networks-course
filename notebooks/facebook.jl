@@ -153,9 +153,6 @@ There at least two ways to visualize social connectedness.
 # ╔═╡ 710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
 country = "BE"
 
-# ╔═╡ aa423d14-6cb3-11eb-0f1c-65ebbf99d539
-@unpack node_names, wgts = make_sci_graph(country_df);
-
 # ╔═╡ 8bee74ea-7140-11eb-3441-330ab08a9f38
 md"""
 ## Visualizing the full network with a Heatmap
@@ -165,9 +162,6 @@ md"""
 md"""
 # Social Connectedness as Weights of a Network of Regions
 """
-
-# ╔═╡ 29479030-6c75-11eb-1b96-9fd35f6d0840
-g = SimpleWeightedGraph(wgts)
 
 # ╔═╡ d127df3e-710d-11eb-391a-89f3aeb8c219
 md"""
@@ -634,6 +628,17 @@ iso2c_to_fips = begin
 	[df; missing_countries]
 end
 
+# ╔═╡ 15139994-6c82-11eb-147c-59013c36a518
+md"""
+## Matching SCI and Map Shapes
+"""
+
+# ╔═╡ 3dc97a66-6c82-11eb-20a5-635ac0b6bac1
+country_df = SCI_data(:countries)
+
+# ╔═╡ aa423d14-6cb3-11eb-0f1c-65ebbf99d539
+@unpack node_names, wgts = make_sci_graph(country_df);
+
 # ╔═╡ baecfe58-6cb6-11eb-3a4e-31bbb8da02ae
 begin
 	df_nodes0 = DataFrame(; node_names, id = 1:length(node_names))
@@ -651,10 +656,8 @@ begin
 end
 
 
-# ╔═╡ 15139994-6c82-11eb-147c-59013c36a518
-md"""
-## Matching SCI and Map Shapes
-"""
+# ╔═╡ 29479030-6c75-11eb-1b96-9fd35f6d0840
+g = SimpleWeightedGraph(wgts)
 
 # ╔═╡ 4b8fba92-6cb0-11eb-0c53-b96600bc760d
 function sci(country)
@@ -669,8 +672,8 @@ function sci(country)
 	end
 end
 
-# ╔═╡ 3dc97a66-6c82-11eb-20a5-635ac0b6bac1
-country_df = get_country_sci()
+# ╔═╡ 4f14a79c-6cb3-11eb-3335-2bbb61da25d9
+sort(sci(country), :scaled_sci, rev=true)
 
 # ╔═╡ 60e9f650-6c83-11eb-270a-fb57f2449762
 begin
@@ -710,10 +713,6 @@ sort(df_nodes, :eigv_c, rev = true)
 
 # ╔═╡ d1fd17dc-6fa6-11eb-245d-8bc905079f2f
 df_nodes1; sort(df_nodes, :eigv_c, rev = true)
-
-
-# ╔═╡ 4f14a79c-6cb3-11eb-3335-2bbb61da25d9
-sort(sci(country), :scaled_sci, rev=true)
 
 # ╔═╡ 64b321e8-6c84-11eb-35d4-b16736c24cea
 begin
