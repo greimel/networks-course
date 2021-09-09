@@ -666,29 +666,28 @@ end
 # ╔═╡ 29479030-6c75-11eb-1b96-9fd35f6d0840
 g = SimpleWeightedGraph(wgts)
 
-# ╔═╡ 4b8fba92-6cb0-11eb-0c53-b96600bc760d
-function sci(country, shapes_df = shapes_df)
-	@chain SCI_data(:countries) begin
-		@subset(:user_loc == country)
-		select!(Not(:user_loc))
-		leftjoin(_, iso2c_to_fips, on = :fr_loc => :iso2c)
-		leftjoin(_, shapes_df, on = :iso3c, makeunique = true)
-		@subset!(!ismissing(:shape))
-		@subset!(:fr_loc != country)
-		disallowmissing!
-	end
-end
-
-# ╔═╡ 4f14a79c-6cb3-11eb-3335-2bbb61da25d9
-sort(sci(country), :scaled_sci, rev=true)
-
 # ╔═╡ 60e9f650-6c83-11eb-270a-fb57f2449762
 begin
 	#tbl = download_country_shapes()
 	tbl = read_shapes() # temporary, local hack!
 	shapes_df = extract_shapes_df(tbl)
 	shapes_df = leftjoin(shapes_df, iso2c_to_fips, on = :iso3c, makeunique = true)
-end;
+	
+	function sci(country)
+		@chain SCI_data(:countries) begin
+			@subset(:user_loc == country)
+			select!(Not(:user_loc))
+			leftjoin(_, iso2c_to_fips, on = :fr_loc => :iso2c)
+			leftjoin(_, shapes_df, on = :iso3c, makeunique = true)
+			@subset!(!ismissing(:shape))
+			@subset!(:fr_loc != country)
+			disallowmissing!
+		end
+	end
+end
+
+# ╔═╡ 4f14a79c-6cb3-11eb-3335-2bbb61da25d9
+sort(sci(country), :scaled_sci, rev=true)
 
 # ╔═╡ 96cd1698-6cbb-11eb-0843-f9edd8f58c80
 begin
@@ -2658,7 +2657,6 @@ version = "3.5.0+0"
 # ╠═c8d9234a-6c82-11eb-0f81-c17abae3e1c7
 # ╟─15139994-6c82-11eb-147c-59013c36a518
 # ╠═3dc97a66-6c82-11eb-20a5-635ac0b6bac1
-# ╠═4b8fba92-6cb0-11eb-0c53-b96600bc760d
 # ╠═60e9f650-6c83-11eb-270a-fb57f2449762
 # ╠═64b321e8-6c84-11eb-35d4-b16736c24cea
 # ╠═05dcc1a2-6c83-11eb-3b62-2339a8e8863e
