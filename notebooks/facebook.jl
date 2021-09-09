@@ -494,7 +494,7 @@ function csv_from_url(url, args...; kwargs...)
 end
 
 # ╔═╡ 9d80ae04-6c80-11eb-2c03-b7b45ca6e0bf
-get_country_sci() = SCI_data(:countries)
+#get_country_sci() = SCI_data(:countries)
 
 # ╔═╡ be47304a-6c80-11eb-18ad-974bb077e53f
 get_county_sci() = SCI_data(:US_counties)
@@ -575,6 +575,13 @@ function download_country_shapes()
 	url = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_countries.zip?version=4.0.0"
 	map_name = "ne_110m_admin_0_countries"
 	download_zipped_shapes(url, map_name)
+end
+
+# ╔═╡ b463d10f-d944-42c8-aa00-1b99d4f8b51e
+# temporary local hack
+function read_shapes()
+	map_name = "ne_110m_admin_0_countries"
+	Shapefile.Table(joinpath(".", map_name))
 end
 
 # ╔═╡ 713ce11e-6c85-11eb-12f7-d7fac18801fd
@@ -660,8 +667,8 @@ end
 g = SimpleWeightedGraph(wgts)
 
 # ╔═╡ 4b8fba92-6cb0-11eb-0c53-b96600bc760d
-function sci(country)
-	@chain country_df begin
+function sci(country, shapes_df = shapes_df)
+	@chain SCI_data(:countries) begin
 		@subset(:user_loc == country)
 		select!(Not(:user_loc))
 		leftjoin(_, iso2c_to_fips, on = :fr_loc => :iso2c)
@@ -677,7 +684,8 @@ sort(sci(country), :scaled_sci, rev=true)
 
 # ╔═╡ 60e9f650-6c83-11eb-270a-fb57f2449762
 begin
-	tbl = download_country_shapes()
+	#tbl = download_country_shapes()
+	tbl = read_shapes() # temporary, local hack!
 	shapes_df = extract_shapes_df(tbl)
 	shapes_df = leftjoin(shapes_df, iso2c_to_fips, on = :iso3c, makeunique = true)
 end;
@@ -2642,6 +2650,7 @@ version = "3.5.0+0"
 # ╠═8ba27720-6c81-11eb-1a5b-47db233dce61
 # ╠═9b6dfc1a-6c81-11eb-194a-35cb323ef2af
 # ╠═ca30bfda-6c81-11eb-20fa-0defd9b240b2
+# ╠═b463d10f-d944-42c8-aa00-1b99d4f8b51e
 # ╠═713ce11e-6c85-11eb-12f7-d7fac18801fd
 # ╟─8575cb62-6c82-11eb-2a76-f9c1af6aab50
 # ╠═a91896c6-6c82-11eb-018e-e514ca265b1a
