@@ -105,7 +105,7 @@ md"""
 
 # ╔═╡ 38f5d048-7747-11eb-30f7-89bade5ed0a3
 md"""
-`production.jl` | **Version 1.3** | *last updated: Aug 5 2021*
+`production.jl` | **Version 1.3** | *last updated: Oct 14 2021*
 """
 
 # ╔═╡ f1749b26-774b-11eb-2b42-43ffcb5cd7ee
@@ -909,13 +909,6 @@ md"""
 
 *submitted by* **$members** (*group $(group_number)*)
 """
-
-# ╔═╡ 346fd998-77ad-11eb-0c0a-83a1290795af
-function gplot_to_png(gp::Compose.Context)
-	filename = tempname() * ".png"
-	gp |> Compose.PNG(filename)
-	Images.load(filename)
-end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2204,7 +2197,7 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═55a868c8-0614-4074-9389-c957cf64cb20
+# ╟─55a868c8-0614-4074-9389-c957cf64cb20
 # ╟─38f5d048-7747-11eb-30f7-89bade5ed0a3
 # ╟─19b0fa00-774a-11eb-1ede-89eceed8b8ff
 # ╟─f1749b26-774b-11eb-2b42-43ffcb5cd7ee
@@ -2315,6 +2308,5 @@ version = "3.5.0+0"
 # ╠═4a355496-774a-11eb-0bd2-b36814663229
 # ╠═47b5833e-774b-11eb-2209-cfa172c6425f
 # ╠═4d3c33c8-774b-11eb-2aac-4146015c9248
-# ╠═346fd998-77ad-11eb-0c0a-83a1290795af
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
