@@ -362,24 +362,26 @@ sci_url_pre = "https://data.humdata.org/dataset/e9988552-74e4-4ff4-943f-c782ac8b
 # ╔═╡ b6d47ef5-5a9a-4e36-9bb4-d0d8fa4bcb38
 sci_urls = [
 	:countries =>
-		"7c8f6c93-6272-4d39-9e5d-99cdc0053dfc/download/2020-12-16_country_country.tsv",
+		"35ca6ade-a5bd-4782-b266-797169dca74b/download/countries-countries-fb-social-connectedness-index-october-2021.tsv",
 	:US_counties =>
-		"3e3a1a7e-b557-4191-80cf-33d8e66c2e51/download/county_county_aug2020.tsv",
-	:US_counties__countries =>
-		"a9e327cc-d63f-4e61-b13d-d1968ee018bf/download/county_country_aug2020.tsv",
+		"c59fd5ac-0458-4e83-b6be-5334f0ea9a69/download/us-counties-us-counties-fb-social-connectedness-index-october-2021.zip",
+	:US_counties__countries => 
+		"868a2fdb-f5c8-4a98-af7c-cfc8bf0daeb3/download/us-counties-countries-fb-social-connectedness-index-october-2021.tsv",
 	:GADM_NUTS2 =>
-		"7570bcc3-a208-49c4-8821-17f8df93c0e2/download/gadm1_nuts2_gadm1_nuts2_aug2020.tsv",
+		"cc5b6046-c417-4e25-930a-3d31538dffc5/download/gadm1_nuts2-gadm1_nuts2-fb-social-connectedness-index-october-2021.zip",
 	:GADM_NUTS3_counties =>
-		"3a98c06b-d373-45ed-a954-d93bdb12d5d0/download/gadm1_nuts3_counties_gadm1_nuts3_counties_aug2020.tsv.zip"
+		"18bf46fe-7f84-47b7-9d7e-b79a9c491f52/download/gadm1_nuts3_counties-gadm1_nuts3_counties-fb-social-connectedness-index-october-2021.zip"
 	]
 
 # ╔═╡ f5fdbf36-36e0-4714-9f35-ec538d3d447a
 sci_checksums = Dict(
-	:US_counties => "46c14c23380683cb7cbc42ec70de8c1ddd1a5e866fe71bf6909f9b3fefaa2236",
-	:countries => "0b73834df260a21b0374dbd8f1b2bda90817e7b9698c2ae2fcd030351d03a303",
-	:US_counties__countries => "71869a6bcac1724bc14f322cbb2d127fbf021a2aa2db7e1c3a04a09786177b33",
-	:GADM_NUTS2 => "e1588fa4cfb6a0b06190dddc4276a8c13bd8f4998ae02bb9fb43c805edbd28cf",
-	:GADM_NUTS3_counties => "7225cc9b01234a65c9f0e40df33c046880c5510e33343f0a5cff08732e0513af"
+	:US_counties =>
+		"023cf8a522a4e15ca321113adf9dcda85b7796fee3a5688f825ffc71a0eeaa1f",
+	:countries =>
+		"222ac658d5d66f6ca927a4bbed36deb2c95100c7d033f27bfade0d0614b73499",
+	:US_counties__countries => nothing,
+	:GADM_NUTS2 => nothing,
+	:GADM_NUTS3_counties => nothing
 	)
 
 # ╔═╡ 5b4444ad-1156-4b8c-bf84-b6f993d9f52b
@@ -395,7 +397,7 @@ begin
 			""",
     		sci_url_pre * url,
 	    	sci_checksums[id],
-		 	post_fetch_method = id == :GADM_NUTS3_counties ? unpack : identity 
+		 	post_fetch_method = id ∉ [:US_counties__countries, :countries] ? unpack : identity 
 		))
 	end
 	
@@ -471,7 +473,11 @@ function SCI_data(id)
 	if id ∉ valid_ids
 		ArgumentError("provide one of $valid_ids") |> throw
 	end
-	path = joinpath(@datadep_str("SCI_$id"), files[id])
+	if id == :US_counties
+		path = joinpath(@datadep_str("SCI_$id"), "county_county.tsv")
+	else
+		path = joinpath(@datadep_str("SCI_$id"), files[id])
+	end
 	
 	CSV.File(path) |> DataFrame
 end
