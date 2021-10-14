@@ -34,7 +34,7 @@ jobs:
 
                   import PlutoSliderServer;
 
-                  PlutoSliderServer.github_action(; export_dir="."
+                  PlutoSliderServer.github_action(; Export_output_dir="."
                   );'
               shell: bash
             - name: Upload artifacts for preview
