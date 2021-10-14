@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.20
+# v0.16.1
 
 using Markdown
 using InteractiveUtils
@@ -47,9 +47,59 @@ begin
 	nothing
 end
 
+# ╔═╡ 6535e16c-6146-11eb-35c0-31aef62a631c
+begin
+	# Make sure Python is available - install if necessary
+	ENV["PYTHON"] = ""
+	Pkg.add(["PyCall", "Conda"])
+	Pkg.build("PyCall")
+	
+	# Install twint (1)
+	import Conda
+	Conda.pip_interop(true)
+	Conda.pip("install", "twint") # it could be so easy ...
+	
+	# ... but the above command installs twint 2.1.20 which doesn't work any more
+	# So we have to download it from github and install it manually.
+	
+	# One-liner that doesn't always work on Windows
+	# run(`$(Conda._pip(Conda.ROOTENV)) install --user --upgrade -e git+https://github.com/twintproject/twint.git@origin/master#egg=twint`)
+	
+	# Download twint
+	import LibGit2
+	twint_path = joinpath(@__DIR__(), "twint") # specify where to save twint
+	if !isdir(twint_path)
+		repo_url = "https://github.com/twintproject/twint"
+		repo = LibGit2.clone(repo_url, twint_path) # download twint from github
+	end
+	
+	# Install twint (2)
+	Conda.pip("install", "dataclasses") # manually install a dependency because that doesn't work automatically on windows
+	dir = pwd() # save current directory, before leaving it
+	cd(twint_path) # move to twint folder
+	run(`$(Conda._pip(Conda.ROOTENV)) install .`)
+	cd(dir) # move back
+	
+	# Load twint to Julia
+	import PyCall
+	twint = PyCall.pyimport("twint")
+	
+	_b_ = _a_ + 1 # make sure this is cell #2
+	nothing
+end
+
+# ╔═╡ b32a4b7a-6f4e-4cca-9183-9540fbb0a59f
+md"""
+!!! danger "Under construction!"
+
+	This notebook is used for the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
+
+	**The notebook will get updated for Spring 2022.**
+"""
+
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`assignment-twitter.jl` | **Version 1.4** | *last changed: Feb 5*"
+`assignment-twitter.jl` | **Version 1.5** | *last changed: Oct 14, 2021*"
 
 # ╔═╡ 235bcd50-6183-11eb-1272-65c61cfbf961
 group_number = 99
@@ -193,6 +243,52 @@ md"""
 If you are curious how the data are downloaded, look at the following function. You shouldn't change these two functions below unless you are absolutely sure what you are doing. The underlying Python package `twint` is very fragile and might hang forever if you don't specify the inputs correctly.
 """
 
+# ╔═╡ 85838053-8aa3-4e56-ae9d-17293937fe4f
+"Download tweets that contain `keyword` and save to csv file `filename`"
+function download_twitter_data(keyword::String;
+							   filename = joinpath(".", "twitter-data.csv"),
+							   n_tweets::Int = 500,
+							   language = missing,
+							   min_likes = 2
+							   )
+	# Configure twint query object
+	c = twint.Config()
+	c.Search = keyword
+	if !ismissing(language)
+		@assert language isa String
+		c.Lang = language
+	end
+	#c.Geo = "52.377956,4.897070,5km"
+	c.Limit = n_tweets
+	c.Output = filename
+	c.Store_csv = true
+	c.Min_likes = min_likes
+	
+	# if file exists, overwrite it
+	isfile(filename) && rm(filename)
+	twint.run.Search(c)
+	
+	filename
+end
+
+# ╔═╡ 32d55286-620c-11eb-2910-fd3e5b3fd78a
+"Download twitter data to csv and load data into a DataFrame"
+function twitter_data(file_data, args...; kwargs...)
+	# check if file was uploaded using the file picker
+	file_uploaded = !isnothing(file_data) 
+	
+	if file_uploaded
+		csv = CSV.File(file_data)
+	else
+		filename = download_twitter_data(args...; kwargs...)
+		csv = CSV.File(filename)
+	end
+	DataFrame(csv)
+end
+
+# ╔═╡ 14e6dece-60dc-11eb-2d5a-275b8c9e382d
+tweet_df0 = twitter_data(file_data, keyword)
+
 # ╔═╡ f998e4fc-60e3-11eb-0533-1717bea29668
 md"""
 # Constructing a network
@@ -244,93 +340,6 @@ end
 md"""
 ## Install Python and the package `twint`
 """
-
-# ╔═╡ 6535e16c-6146-11eb-35c0-31aef62a631c
-begin
-	# Make sure Python is available - install if necessary
-	ENV["PYTHON"] = ""
-	Pkg.add(["PyCall", "Conda"])
-	Pkg.build("PyCall")
-	
-	# Install twint (1)
-	import Conda
-	Conda.pip_interop(true)
-	Conda.pip("install", "twint") # it could be so easy ...
-	
-	# ... but the above command installs twint 2.1.20 which doesn't work any more
-	# So we have to download it from github and install it manually.
-	
-	# One-liner that doesn't always work on Windows
-	# run(`$(Conda._pip(Conda.ROOTENV)) install --user --upgrade -e git+https://github.com/twintproject/twint.git@origin/master#egg=twint`)
-	
-	# Download twint
-	import LibGit2
-	twint_path = joinpath(@__DIR__(), "twint") # specify where to save twint
-	if !isdir(twint_path)
-		repo_url = "https://github.com/twintproject/twint"
-		repo = LibGit2.clone(repo_url, twint_path) # download twint from github
-	end
-	
-	# Install twint (2)
-	Conda.pip("install", "dataclasses") # manually install a dependency because that doesn't work automatically on windows
-	dir = pwd() # save current directory, before leaving it
-	cd(twint_path) # move to twint folder
-	run(`$(Conda._pip(Conda.ROOTENV)) install .`)
-	cd(dir) # move back
-	
-	# Load twint to Julia
-	import PyCall
-	twint = PyCall.pyimport("twint")
-	
-	_b_ = _a_ + 1 # make sure this is cell #2
-	nothing
-end
-
-# ╔═╡ 85838053-8aa3-4e56-ae9d-17293937fe4f
-"Download tweets that contain `keyword` and save to csv file `filename`"
-function download_twitter_data(keyword::String;
-							   filename = joinpath(".", "twitter-data.csv"),
-							   n_tweets::Int = 500,
-							   language = missing,
-							   min_likes = 2
-							   )
-	# Configure twint query object
-	c = twint.Config()
-	c.Search = keyword
-	if !ismissing(language)
-		@assert language isa String
-		c.Lang = language
-	end
-	#c.Geo = "52.377956,4.897070,5km"
-	c.Limit = n_tweets
-	c.Output = filename
-	c.Store_csv = true
-	c.Min_likes = min_likes
-	
-	# if file exists, overwrite it
-	isfile(filename) && rm(filename)
-	twint.run.Search(c)
-	
-	filename
-end
-
-# ╔═╡ 32d55286-620c-11eb-2910-fd3e5b3fd78a
-"Download twitter data to csv and load data into a DataFrame"
-function twitter_data(file_data, args...; kwargs...)
-	# check if file was uploaded using the file picker
-	file_uploaded = length(file_data["data"]) > 0 
-	
-	if file_uploaded
-		csv = CSV.File(file_data["data"])
-	else
-		filename = download_twitter_data(args...; kwargs...)
-		csv = CSV.File(filename)
-	end
-	DataFrame(csv)
-end
-
-# ╔═╡ 14e6dece-60dc-11eb-2d5a-275b8c9e382d
-tweet_df0 = twitter_data(file_data, keyword)
 
 # ╔═╡ dee4b0da-67b1-11eb-0cdd-c70a310e3546
 md"""
@@ -410,6 +419,10 @@ answer2_2 = md"""
 ... Continue here ... The twitter network with $keyword has $n_nodes nodes and $n_edges edges. ...
 """
 
+# ╔═╡ 5dacc3c2-60e2-11eb-1352-0ddbe3405aec
+src.(edges(graph)), dst.(edges(graph))
+#, nodesize=0.1, NODESIZE=0.025, nodefillc = node_df.node_color) |> gplot_to_png
+
 # ╔═╡ 76c50e74-60f3-11eb-1e25-cdcaeae76c38
 begin
 	node_df = DataFrame(
@@ -424,10 +437,6 @@ begin
 	
 	node_df
 end
-
-# ╔═╡ 5dacc3c2-60e2-11eb-1352-0ddbe3405aec
-gplot(graph, nodesize=0.1, NODESIZE=0.025, nodefillc = node_df.node_color) |> gplot_to_png
-
 
 # ╔═╡ 91ccdec2-60f3-11eb-2d0e-a59ba5392e65
 sum(node_df.highlighted_nodes)
@@ -524,6 +533,7 @@ end
 TableOfContents()
 
 # ╔═╡ Cell order:
+# ╟─b32a4b7a-6f4e-4cca-9183-9540fbb0a59f
 # ╟─8493134e-6183-11eb-0059-6d6ecf0f17bf
 # ╠═235bcd50-6183-11eb-1272-65c61cfbf961
 # ╠═f021cb3e-6177-11eb-20f6-b5f9c69ed186
@@ -558,7 +568,7 @@ TableOfContents()
 # ╟─e4dcc0a6-60e3-11eb-2717-5347187c73c0
 # ╟─14e6dece-60dc-11eb-2d5a-275b8c9e382d
 # ╟─bdc32cf2-6611-11eb-080c-6fd828280754
-# ╟─02509edc-6611-11eb-2451-0fa79effbee7
+# ╠═02509edc-6611-11eb-2451-0fa79effbee7
 # ╟─ea8bc558-620d-11eb-24e8-57cd8d41e912
 # ╟─c76895aa-620e-11eb-3da2-b572953e6d34
 # ╠═85838053-8aa3-4e56-ae9d-17293937fe4f
