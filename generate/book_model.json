@@ -1,5 +1,28 @@
 [
     {
+        "title": "Networks Basics",
+        "contents": [
+            {
+                "name": "Basic Julia",
+                "notebook_path": "notebooks/basic-julia.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            },
+            {
+                "name": "First networks",
+                "notebook_path": "notebooks/first-networks.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            },
+            {
+                "name": "Assignment: A Twitter network",
+                "notebook_path": "notebooks/assignment-twitter.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            }
+        ]
+    },
+    {
         "title": "Diffusion on Networks",
         "contents": [
             {
