@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.16.1
+# v0.17.3
 
 using Markdown
 using InteractiveUtils
@@ -378,7 +378,7 @@ sci_checksums = Dict(
 	:US_counties =>
 		"023cf8a522a4e15ca321113adf9dcda85b7796fee3a5688f825ffc71a0eeaa1f",
 	:countries =>
-		"222ac658d5d66f6ca927a4bbed36deb2c95100c7d033f27bfade0d0614b73499",
+		"bc6269eb10da945e2327beb725e3ef4fa955fd430535b0357cc118a0b3c7cfd6",
 	:US_counties__countries => nothing,
 	:GADM_NUTS2 => nothing,
 	:GADM_NUTS3_counties => nothing
@@ -1137,12 +1137,10 @@ md"(You have used approximately **$(wordcount(answer32))** words.)"
 
 # ╔═╡ c79b5e38-6f9a-11eb-05d3-9bf4844896f8
 members = let
-	str = ""
-	for (first, last) in group_members
-		str *= str == "" ? "" : ", "
-		str *= first * " " * last
+	names = map(group_members) do (; firstname, lastname)
+		firstname * " " * lastname
 	end
-	str
+	join(names, ", ", " & ")
 end
 
 # ╔═╡ 44ef5554-713f-11eb-35fc-1b93349ca7fa
@@ -1211,7 +1209,7 @@ ZipFile = "~0.9.3"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.0-rc1"
+julia_version = "1.7.0"
 manifest_format = "2.0"
 
 [[deps.AbstractFFTs]]
@@ -1319,9 +1317,9 @@ version = "0.6.5"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "f2202b55d816427cd385a9a4f3ffb226bee80f99"
+git-tree-sha1 = "4b859a208b2397a7a623a03449e4636bdb17bcf2"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
-version = "1.16.1+0"
+version = "1.16.1+1"
 
 [[deps.CategoricalArrays]]
 deps = ["DataAPI", "Future", "JSON", "Missings", "Printf", "RecipesBase", "Statistics", "StructTypes", "Unicode"]
@@ -1625,9 +1623,9 @@ version = "0.21.0+0"
 
 [[deps.Glib_jll]]
 deps = ["Artifacts", "Gettext_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libiconv_jll", "Libmount_jll", "PCRE_jll", "Pkg", "Zlib_jll"]
-git-tree-sha1 = "7bf67e9a481712b3dbe9cb3dac852dc4b1162e02"
+git-tree-sha1 = "a32d672ac2c967f3deb8a81d828afc739c838a06"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
-version = "2.68.3+0"
+version = "2.68.3+2"
 
 [[deps.Graphics]]
 deps = ["Colors", "LinearAlgebra", "NaNMath"]
@@ -1660,9 +1658,9 @@ version = "0.9.14"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg"]
-git-tree-sha1 = "8a954fed8ac097d5be04921d595f741115c1b2ad"
+git-tree-sha1 = "129acf094d168394e80ee1dc4bc06ec835e510a3"
 uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
-version = "2.8.1+0"
+version = "2.8.1+1"
 
 [[deps.IfElse]]
 git-tree-sha1 = "28e837ff3e7a6c3cdb252ce49fb412c8eb3caeef"
@@ -1811,9 +1809,9 @@ uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 
 [[deps.Libffi_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "761a393aeccd6aa92ec3515e428c26bf99575b3b"
+git-tree-sha1 = "0b4a5d71f3e5200a7dff793393e09dfc2d874290"
 uuid = "e9f186c6-92d2-5b65-8a66-fee21dc1b490"
-version = "3.2.2+0"
+version = "3.2.2+1"
 
 [[deps.Libgcrypt_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgpg_error_jll", "Pkg"]
@@ -2126,7 +2124,7 @@ deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 
 [[deps.Random]]
-deps = ["Serialization"]
+deps = ["SHA", "Serialization"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [[deps.Ratios]]
@@ -2579,7 +2577,7 @@ version = "3.5.0+0"
 # ╠═8a0e113c-6f9a-11eb-3c3b-bfb0c9220562
 # ╠═94895ab8-6f9a-11eb-3c04-dbe13f545acc
 # ╟─a3176884-6f9a-11eb-1831-41486221dedb
-# ╟─50e332de-6f9a-11eb-3888-d15d986aca8e
+# ╠═50e332de-6f9a-11eb-3888-d15d986aca8e
 # ╟─96e4482c-6f9a-11eb-0e47-c568006368b6
 # ╟─ac0bbc28-6f9b-11eb-1467-6dbd9d2b763a
 # ╠═6114ed16-6f9d-11eb-1bd4-1d1710b7f9df

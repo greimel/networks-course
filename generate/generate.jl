@@ -99,7 +99,7 @@ end
 end
 
 # ╔═╡ 43969dd1-f175-4399-8758-5a69f94595e7
-book_model = JSON3.read(read("./book_model_small.json", String), Vector{Chapter})
+book_model = JSON3.read(read("./book_model.json", String), Vector{Chapter})
 
 # ╔═╡ 91ca4a45-137c-4378-803b-c6b2f036ac96
 import Pluto
@@ -160,7 +160,7 @@ SUBTITLE = "Theory, Computation and Data"
 INSTITUTION = "University of Amsterdam"
 
 # ╔═╡ ab7186a4-2287-41da-a939-70f142bfeacd
-TERM = "Spring 2022"
+TERM = "Spring 2021"
 
 # ╔═╡ fd5f6637-3223-4f0b-94a6-ace86f5a5926
 function instructors(INSTRUCTORS)
@@ -183,7 +183,6 @@ homepage = (page = "/index.html", href = "/$PREPATH/", title = "Welcome")
 
 # ╔═╡ 01a2336a-5c04-4d5a-bb0b-a9c704517dbf
 pages = [
-	(page = "/reviews", href = "/$PREPATH/reviews/", title = "Class Reviews"),
 	(page = "/logistics/", href = "/$PREPATH/logistics/", title = "Class Logistics"),
 	(page = "/syllabus/", href = "/$PREPATH/syllabus/", title = "Syllabus and videos"),
 	(page = "/installation/", href = "/$PREPATH/installation/", title = "Software installation"),

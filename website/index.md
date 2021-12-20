@@ -1,3 +1,7 @@
-# Submit A Short Clip
+# Course Website of _Economic and Financial Network Analysis_
 
-Did you have a favorite (or many favorite) 1-2 minute clips from one of the lectures in this course? Consider sending them to us and that way we can share them on Twitter so more people can get exposure to computational thinking. Use [this form](https://forms.gle/2Um6Sg8G83EdYEfB9) to upload clips.
+This is the course material of the 2021 edition of the course. The course is part of the Master in Econometrics at the Unversity of Amsterdam.
+
+The official course information can be found on Canvas.
+
+This website is under construction.

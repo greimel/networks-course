@@ -1,0 +1,80 @@
+[
+    {
+        "title": "Networks Basics",
+        "contents": [
+            {
+                "name": "Basic Julia",
+                "notebook_path": "notebooks/basic-julia.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            },
+            {
+                "name": "First networks",
+                "notebook_path": "notebooks/first-networks.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            },
+            {
+                "name": "Assignment: A Twitter network",
+                "notebook_path": "notebooks/assignment-twitter.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            }
+        ]
+    },
+    {
+        "title": "Diffusion on Networks",
+        "contents": [
+            {
+                "name": "Vaccinations and the spread of Covid in the SIR model",
+                "notebook_path": "notebooks/disease.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            }
+        ]
+    },
+    {
+        "title": "Social Connectedness",
+        "contents": [
+            {
+                "name": "What Facebook friendships tell us about the world",
+                "notebook_path": "notebooks/facebook.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            }
+        ]
+    },
+    {
+        "title": "Social Comparisons",
+        "contents": [
+            {
+                "name": "Social comparisons, inequality and the mortgage Boom",
+                "notebook_path": "notebooks/comparisons.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            }
+        ]
+    },
+    {
+        "title": "Production Networks",
+        "contents": [
+            {
+                "name": "The economy as a network of sectors",
+                "notebook_path": "notebooks/production.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            }
+        ]
+    },
+    {
+        "title": "Financial Networks",
+        "contents": [
+            {
+                "name": "Systemic risk, stability and resilience of financial markets",
+                "notebook_path": "notebooks/banks.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            }
+        ]
+    }
+]
