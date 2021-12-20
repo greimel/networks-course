@@ -45,7 +45,7 @@ using UUIDs
 using Chain
 
 # ╔═╡ 524bce46-ffbd-40a6-83ce-a938a73a5059
-PREPATH = "18S191-reduced"
+PREPATH = "networks-course"
 
 # ╔═╡ d83ee9b9-d255-4217-a776-3b0f4f168c8f
 @bind regenerate Button("Regenerate!")

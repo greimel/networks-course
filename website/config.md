@@ -27,12 +27,12 @@ The latter allows you to plug in values that you would have defined here.
              `prepath` to an empty string. Finally, adjust this if you want the
              deployed page to be in a subfolder e.g.: `YourPackage.jl/web/`.
 -->
-@def title       = "Introduction to Computational Thinking"
-@def prepath     = "18S191-reduced"
+@def title       = "Networks in Economics and Finance"
+@def prepath     = "networks-course"
 @def description = """
-                   Introduction to Computational thinking. Online course website.
+                   Networks in Economics and Finance. Online course website.
                    """
-@def authors     = "MIT"
+@def authors     = "University of Amsterdam"
 
 <!--  NAVBAR SPECS
   NOTE:
