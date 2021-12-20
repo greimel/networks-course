@@ -15,9 +15,9 @@ macro bind(def, element)
 end
 
 # ╔═╡ f5450eab-0f9f-4b7f-9b80-992d3c553ba9
-HTML("<div style=\"\nposition: absolute;\nwidth: calc(100% - 30px);\nborder: 50vw solid #282936;\nborder-top: 500px solid #282936;\nborder-bottom: none;\nbox-sizing: content-box;\nleft: calc(-50vw + 15px);\ntop: -500px;\nheight: 500px;\npointer-events: none;\n\"></div>\n\n<div style=\"\nheight: 500px;\nwidth: 100%;\nbackground: #282936;\ncolor: #fff;\npadding-top: 68px;\n\">\n<span style=\"\nfont-family: Vollkorn, serif;\nfont-weight: 700;\nfont-feature-settings: 'lnum', 'pnum';\n\"> <p style=\"\nfont-size: 1.5rem;\nopacity: .8;\n\"><em>Section 1.1</em></p>\n<p style=\"text-align: center; font-size: 2rem;\">\n<em> Vaccinations and the spread of Covid in the SIR model </em>\n</p>\n\n<p style=\"\nfont-size: 1.5rem;\ntext-align: center;\nopacity: .8;\n\"><em>Lecture Video</em></p>\n<div style=\"display: flex; justify-content: center;\">\n<div  notthestyle=\"position: relative; right: 0; top: 0; z-index: 300;\">\n<iframe src=\"https://www.youtube.com/embed/\" width=400 height=250  frameborder=\"0\" allow=\"accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe></div>\n</div>\n</div>\n\n<style>\nbody {\noverflow-x: hidden;\n}\n</style>")
+HTML("<div style=\"\nposition: absolute;\nwidth: calc(100% - 30px);\nborder: 50vw solid #282936;\nborder-top: 500px solid #282936;\nborder-bottom: none;\nbox-sizing: content-box;\nleft: calc(-50vw + 15px);\ntop: -500px;\nheight: 500px;\npointer-events: none;\n\"></div>\n\n<div style=\"\nheight: 500px;\nwidth: 100%;\nbackground: #282936;\ncolor: #fff;\npadding-top: 68px;\n\">\n<span style=\"\nfont-family: Vollkorn, serif;\nfont-weight: 700;\nfont-feature-settings: 'lnum', 'pnum';\n\"> <p style=\"\nfont-size: 1.5rem;\nopacity: .8;\n\"><em>Section 4.1</em></p>\n<p style=\"text-align: center; font-size: 2rem;\">\n<em> The economy as a network of sectors </em>\n</p>\n\n<p style=\"\nfont-size: 1.5rem;\ntext-align: center;\nopacity: .8;\n\"><em>Lecture Video</em></p>\n<div style=\"display: flex; justify-content: center;\">\n<div  notthestyle=\"position: relative; right: 0; top: 0; z-index: 300;\">\n<iframe src=\"https://www.youtube.com/embed/\" width=400 height=250  frameborder=\"0\" allow=\"accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe></div>\n</div>\n</div>\n\n<style>\nbody {\noverflow-x: hidden;\n}\n</style>")
 
-# ╔═╡ 51c0c3e2-1930-4859-87d7-99b1985c32e6
+# ╔═╡ 55a868c8-0614-4074-9389-c957cf64cb20
 md"""
 !!! danger "Under construction!"
 
@@ -27,373 +27,469 @@ md"""
 
 """
 
-# ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
+# ╔═╡ 38f5d048-7747-11eb-30f7-89bade5ed0a3
 md"""
-`disease.jl` | **Version 1.1** | *last updated: Oct 14 2021*
+`production.jl` | **Version 1.3** | *last updated: Oct 14 2021*
 """
 
-# ╔═╡ c2940f90-661a-11eb-3d77-0fc1189e0960
-fancy = false; elegant = true;
+# ╔═╡ 19b0fa00-774a-11eb-1ede-89eceed8b8ff
+md"*Assignment submitted by* **$members** (*group $(group_number)*)"
 
-# ╔═╡ f4266196-64aa-11eb-3fc1-2bf0e099d19c
+# ╔═╡ f1749b26-774b-11eb-2b42-43ffcb5cd7ee
 md"""
-# Diffusion on Networks: Modeling Transmission of Disease
+# The Economy as a Network of Sectors
 
-This notebook will be the basis for part of **Lecture 3** *and* **Assignment 2**. Here is what we will cover.
+This notebook will be the basis for part of **Lectures 9 and 10** *and* **Assignment 4**. Here is what we will cover.
 
-1. We will model the diffusion of disease on a network. We will analyze how the parameters of the model change the outcomes.
-"""
+#### Lecture 9
+1. Introduce Input-Output Tables. Re-interpret them as a network of economic sectors connected by input-output linkages
+2. Visualize and analyze this *intersectoral network*
+3. Simulate the *dynamic* production network model of [Long & Plosser (1987)](https://www.jstor.org/stable/1840430)
+4. Visualize propagation of shocks in the model of Long & Plosser. Discuss the role of centrality
 
-# ╔═╡ 43a25dc8-6574-11eb-3607-311aa8d5451e
-md"""
-``t``: $(@bind t0_intro Slider(out_big.T_range, show_value = true, default = 20))
-"""
+#### Lecture 10
 
-# ╔═╡ 3e9af1f4-6575-11eb-21b2-453dc18d1b7b
-fancy && out_big.fig
+5. Solve the *static* production network model of [Acemoglu, Carvalho, Ozdaglar & Tahbaz-Salehi (2012)](https://economics.mit.edu/files/8135)
+6. Show that sector-specific shocks don't necessarily wash out in equilibrium. 
+7. Show by simulation that iid industry-specific shocks will lead to aggregate flucuations
 
-# ╔═╡ 5eafd0f0-6619-11eb-355d-f9de3ae53f6a
-elegant && (t0_intro; out_big.fig)
+#### Assignment
 
-# ╔═╡ b36832aa-64ab-11eb-308a-8f031686c8d6
-md"""
-2. We will show how various policies mitigate the spread of the disease. We will see how we can map *social distancing* and *vaccination programs* into the model. 
-
-   The plot below shows how the number of infected people decreases when we randomly pick 20% of the population. *(Can we improve the efficacy of the vaccination program by targeting specific people?)*
-"""
-
-# ╔═╡ 7ed6b942-695f-11eb-38a1-e79655aedfa2
-fig_vaccc
-
-# ╔═╡ c8f92204-64ac-11eb-0734-2df58e3373e8
-md"""
-3. In your assignment you will make to model a little richer by ``(i)`` separating the `R` state into *dead* and *immune* (which includes recovered and vaccinated) and ``(ii)`` taking into account age-specific death (case-fatality) rates.
-
-   *(Can we now improve the efficacy of the vaccination program even more?)*
-
-4. **Is this economics?** Yes and no. There have been many papers studying the economic impact of Covid. Many of them integrate some version of the SIR model into a macroeconomic model.
-
-   If you are interested, you can have a look at the [collection of covid economics resources](https://cepr.org/content/covid-19) by the CEPR, this [blogpost](https://johnhcochrane.blogspot.com/2020/05/an-sir-model-with-behavior.html) by John Cochrane or this [paper](https://www.aeaweb.org/articles?id=10.1257/jep.34.4.105) by an epidemiologist in the *Journal of Economic Perspectives*.
+8. Simulate how the Covid shocks propagates through the economy
 
 """
 
-# ╔═╡ 2f9f008a-64aa-11eb-0d9a-0fdfc41d4657
+# ╔═╡ a771e504-77aa-11eb-199c-8778965769b6
 md"""
-# The SIR Model
+## Appetizers
 
-In the simplest case, there are three states.
-
-1. `S`usceptible
-2. `I`nfected
-3. `R`emoved (recovered or dead)
-
-(For your assignment you will split up the `R` state into immune and dead.)
+This plot shows how a shock to single sector propagates to other sectors.
 """
 
-# ╔═╡ b8d874b6-648d-11eb-251c-636c5ebc1f42
+# ╔═╡ 94375d0e-77aa-11eb-3934-edb020ab0fd7
+fig
+
+# ╔═╡ cb75f8ac-77aa-11eb-041c-4b3fe85ec22b
+md"""
+This plot shows how the aggregate economy reacts to shocking two groups of sectors. The groups are equally big, but differ by their centrality.
+"""
+
+# ╔═╡ 76e6f44e-77aa-11eb-1f12-438937941606
+fig_welfare
+
+# ╔═╡ 9b47991e-7c3d-11eb-1558-b5824ab10dc0
+md"""
+This plot shows how industry-specific iid shocks can either $(i)$ wash out, or $(ii)$ translate into aggregate fluctuations, depending on the network structure.
+"""
+
+# ╔═╡ d772a28a-7c3d-11eb-012f-9b81ad67f9a8
+fluct_fig
+
+# ╔═╡ d9465a80-7750-11eb-2dd5-d3052d3d5c50
+md"""
+# Input-Output Tables: *Production Recipes* for the Economy
+"""
+
+# ╔═╡ cf680c48-7769-11eb-281c-d7a2d5ec8fe5
+md"""
+#### The list of industries
+"""
+
+# ╔═╡ cbc03264-7769-11eb-345a-71ae30cc7526
+filter(:code => in(node_names), df_all)
+
+# ╔═╡ dd41fe96-7769-11eb-06a6-3d6298f6e6fc
+md"""
+#### The Input-Output Table
+"""
+
+# ╔═╡ 278c829c-7767-11eb-1d04-cb38ee52b79b
+df_io
+
+# ╔═╡ 128bb9e8-776a-11eb-3786-83531bd2dffb
+md"""
+#### The Input-Output table as a sparse matrix
+"""
+
+# ╔═╡ 5d85143c-7765-11eb-1a1c-29f3421fe857
 begin
-	abstract type State end
-	struct S <: State end
-	struct I <: State end
-	struct R <: State end
-	#struct D <: State end # (Assignment)
-end
-
-# ╔═╡ f48fa122-649a-11eb-2041-bbf0d0c4670c
-const States = Union{subtypes(State)...}
-
-# ╔═╡ 10dd6814-f796-42ea-8d40-287ed7c9d239
-md"
-## Define the transitions
-"
-
-# ╔═╡ 8ddb6f1e-649e-11eb-3982-83d2d319b31f
-function transition(::I, par, node, args...; kwargs...)
-	## The following lines will be helpful for the assignment (task 2)
-	#if length(par.δ) == 1
-	 	δ = only(par.δ)
-	#else
-	# 	δ = par.δ[node]
-	#end
-	x = rand()
-	if x < par.ρ + δ # recover or die
-		R()
-	#elseif x < ...
-	#	...
-	else
-		I()
-	end
-end
-
-# ╔═╡ 61a36e78-57f8-4ef0-83b4-90e5952c116f
-transition(::R, args...; kwargs...) = R()
-
-# ╔═╡ ffe07e00-0408-4986-9205-0fbb025a698c
-function transition(::S, par, node, adjacency_matrix, is_infected)
-	inv_prob = 1.0
-	for i in is_infected
-	 	inv_prob *= 1 - par.p * adjacency_matrix[i, node]
-	end
+	node_names, wgts = nodes_weights_from_edges(io_edges0, :input, :output, :value)
+	droptol!(wgts, 0.0)
 	
-	#inv_prob = prod(1 - par.p * adjacency_matrix[i, node] for i in is_infected, init = 1.0)
-	
-	π =	1.0 - inv_prob
-	
-	rand() < π ? I() : S()
-end
-
-# ╔═╡ 5d11a2df-3187-4509-ba7b-8388564573a6
-function iterate(states, adjacency_matrix, par)
-	states_new = Vector{States}(undef, N)
-	iterate!(states_new, states, adjacency_matrix, par)
-	
-	states_new
-end
-
-# ╔═╡ f4c62f95-876d-4915-8372-258dfde835f7
-function iterate!(states_new, states, adjacency_matrix, par)
-
-	is_infected = findall(isa.(states, I))
-	
-	for i in 1:size(adjacency_matrix, 1)
-		states_new[i] = transition(states[i], par, i, adjacency_matrix, is_infected)
-	end
-	
-	states_new
-end
-
-# ╔═╡ 50d9fb56-64af-11eb-06b8-eb56903084e2
-md"""
-## Simulate on a Simple Network
-
-* ``\rho_s``: $(@bind ρ_simple Slider(0.0:0.25:1.0, default = 0.0, show_value =true)) (recovery probability)
-* ``\delta_s``: $(@bind δ_simple Slider(0.0:0.25:1.0, default = 0.0, show_value =true)) (death rate)
-* ``p_s``: $(@bind p_simple Slider(0.0:0.25:1.0, default = 0.5, show_value =true)) (infection probability)
-"""
-
-# ╔═╡ 9302b00c-656f-11eb-25b3-495ae1c843cc
-md"""
-``t``: $(@bind t0_simple NumberField(out_simple.T_range, default=1))
-"""
-
-# ╔═╡ 657c3a98-6573-11eb-1ccb-b1d974414647
-fancy && out_simple.fig
-
-# ╔═╡ 3aeb0106-661b-11eb-362f-6b9af20f71d7
-elegant && (a; t0_simple; out_simple.fig)
-
-# ╔═╡ d2813d40-656d-11eb-2cfc-e389ed2a0d84
-out_simple.t[] = t0_simple; a=1
-
-# ╔═╡ 8d4cb5dc-6573-11eb-29c8-81baa6e3fffc
-simple_graph = CycleGraph(10)
-
-# ╔═╡ d6694c32-656c-11eb-0796-5f485cccccf0
-out_simple = let
-	T = 15
-	
-	par = (ρ = ρ_simple, δ = δ_simple, p = p_simple)
-	
-	sim = simulate(simple_graph, par, T)
-	
-	sir_plot(sim, simple_graph)
-	
-end;	
-
-# ╔═╡ ce75fe16-6570-11eb-3f3a-577eac7f9ee8
-md"""
-## Simulate on a Big Network
-"""
-
-# ╔═╡ 37972f08-db05-4e84-9528-fe16cd86efbf
-md"""
-* ``\rho``: $(@bind ρ0 Slider(0.1:0.1:0.9, default = 0.1, show_value =true)) (recovery probability)
-* ``\delta``: $(@bind δ0 Slider(0.0:0.02:0.2, default = 0.04, show_value =true)) (death rate)
-* ``p``: $(@bind p0 Slider(0.1:0.1:0.9, default = 0.3, show_value =true)) (infection probability)
-"""
-
-# ╔═╡ 6948e6c6-661b-11eb-141c-370fc6ffe618
-fancy && out_big.fig
-
-# ╔═╡ 1bd2c660-6572-11eb-268c-732fd2210a58
-elegant && (t0_big; out_big.fig)
-
-# ╔═╡ f4cd5fb2-6574-11eb-37c4-73d4b21c1883
-md"""
-Check to activate slider: $(@bind past_intro CheckBox(default = false))
-
-``t``: $(@bind t0_big Slider(out_big.T_range, show_value = true, default = 1))
-"""
-
-# ╔═╡ 0b35f73f-6976-4d85-b61f-b4188440043e
-out_big = let
-	T = 100
-	
-	par = (ρ = ρ0, δ = δ0, p = p0)
-	
-	graph, node_positions = spatial_graph(1000)
-	sim = simulate(graph, par, T)	
-	
-	out_big = sir_plot(sim, graph, node_positions)
+	node_names, wgts
 end;
 
-# ╔═╡ 373cb47e-655e-11eb-2751-0150985d98c1
-out_big.t[] = past_intro ? t0_big : t0_intro
+# ╔═╡ 280e8390-776a-11eb-0aed-19b0ba929c84
+wgts
 
-# ╔═╡ 4dee5da9-aa4b-4551-974a-f7268d016617
+# ╔═╡ 22c3abde-7767-11eb-0b6f-93ad1055bbae
+extrema(wgts)
+
+# ╔═╡ 44929fe0-7767-11eb-0318-e720b844f710
+begin
+	used_inputs = sum(wgts, dims=2) |> vec # row sums
+	hist(used_inputs, axis = (title = "Inputs Used per Dollar of Output", ))
+end
+
+# ╔═╡ f6144074-7768-11eb-3624-51bbc44be7ec
+begin
+	used_as_input = sum(wgts, dims=1) |> vec # col sums
+	#filter!(>(√eps()), used_as_input)
+	hist(used_as_input, axis = (title = "Used as Inputs in Other Sectors", ))
+end
+
+# ╔═╡ f65f7f8c-7769-11eb-3399-79bde01513cd
 md"""
-# A First Look at Policies
-
-We understand now how to model the spread of a disease using the SIR model.
-
-#### Live Exercise 1: Corona policies
-
-I will randomly assign you to break-out rooms.
-
-👉 Think about one or two Corona policies. How would you evaluate them with our model?
-
-👉 *(We'll talk later about social distancing and vaccinations. Probably you can come up with at least one other policy.)*
+#### Important industries
 """
 
-# ╔═╡ 04227a80-5d28-43db-929e-1cdc5b31796d
-md"""
-#### Place to collect your ideas
+# ╔═╡ bd27268e-7766-11eb-076b-71688ecb4ae3
+begin
+	df_nodes = filter(:code => in(node_names), df_all)
+	df_nodes.inputs_used    = sum(wgts, dims=2) |> vec
+	df_nodes.used_as_input = sum(wgts, dims=1) |> vec
+	
+	df_nodes
+end;
 
-*
-*
-*
+# ╔═╡ d9fd6bb0-7766-11eb-150b-410bb7d09d20
+sort(df_nodes, :inputs_used, rev = true)
+
+# ╔═╡ 04e731d0-7751-11eb-21fd-e7f9b022cdc9
+md"""
+# Analyzing the *Intersectoral Network* 
+
+Recall, ``G = W'``. Also, in order to satisfy the assumptions of the model, we have to normalize the row sums to 1.
 """
 
-# ╔═╡ 78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
+# ╔═╡ 775f99b8-77a9-11eb-2ebf-7bbe0d398306
+extrema(wgts)
+
+# ╔═╡ 6cec81a0-77ac-11eb-06e3-bd9dcb73a896
+network = SimpleWeightedDiGraph(wgts')
+
+# ╔═╡ 834669c4-776c-11eb-29b7-77dc465077d7
+begin
+	wgts_n = wgts ./ sum(wgts, dims=2) |> dropzeros!
+	network_n = SimpleWeightedDiGraph(wgts_n')
+	extrema(wgts_n)
+end
+
+# ╔═╡ b43f6b02-776c-11eb-2685-655705eb1681
+begin
+	df_nodes1 = df_nodes
+	df_nodes1.eigv_c = eigenvector_centrality(network, dir = :in)
+	df_nodes1.eigv_c_out = eigenvector_centrality(network, dir = :out)
+	df_nodes1.katz_c = katz_centrality(network)
+	df_nodes1.katz_c = katz_centrality(network, dir = :out)
+end
+
+# ╔═╡ ffdbb91c-776c-11eb-3b28-51314d40f7a2
+sort(df_nodes1, :eigv_c_out, rev = true)
+
+# ╔═╡ 5c2ef34e-776f-11eb-2a6f-ff99b5d24997
+unweighted_network = SimpleDiGraph(wgts .> 0.01)
+
+# ╔═╡ 958f9f3e-77ac-11eb-323c-cd78c1fe4c23
+#gplot(unweighted_network) |> gplot_to_png
+
+# ╔═╡ 5aff086a-7751-11eb-039e-fd1b769b6fea
 md"""
-## Social Distancing
+# Simulating a *Dynamic* Production Network Model
+
+The model solution comes from equations (10b), (12), (14), (15) in [Long & Plosser (1987, p. 48)](https://www.jstor.org/stable/1840430)
 """
 
-# ╔═╡ 49b21e4e-6577-11eb-38b2-45d30b0f9c80
-graph, node_positions = spatial_graph(1000)
+# ╔═╡ 2e7630ee-7770-11eb-32ae-112b4b282eaf
+function params(W)
+	N = size(W, 1)
+	θ = fill(1/(N+1), N) # utility weights of commodities
+	θ₀ = 1/(N+1) # utility weight of leisure
+	β = 0.95
+	H = 1
+	α = 0.3
+	param = (; α, β, θ, θ₀, H)
+end
 
-# ╔═╡ 7b43d3d6-03a0-4e0b-96e2-9de420d3187f
-p_range = 0.1:0.1:0.9
+# ╔═╡ 4341e8cc-7770-11eb-04d5-c5d33d9a9e52
+get_γ(W, param) = (I - param.β * W) \ param.θ
 
-# ╔═╡ c5f48079-f52e-4134-8e6e-6cd4c9ee915d
-let
-	state = "I"
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "#$(state) when varying the infection probability")
-	for p in p_range
-		par = (p = p, ρ = ρ0, δ = δ0)
-		
-		sim = simulate(graph, par, 100)
-		
-		df0 = fractions_over_time(sim)
-		
-		filter!(:state => ==(state), df0)
-		
-		lines!(df0.t, df0.fraction, label = "p = $p", color = (:blue, 1 - p))
+# ╔═╡ 486d0372-7770-11eb-1956-1d3314be6753
+function L(W, param)
+	@unpack α, β, θ, θ₀, H = param
+	γ = get_γ(W, param)
+	L = β .* γ .* (1-α) ./ (θ₀ + (1-α) * β * sum(γ)) .* H
+end
+
+# ╔═╡ 4e17451a-7770-11eb-3c41-6d98b73d410b
+C(Y, W, param) = param.θ ./ get_γ(W, param) .* Y
+
+# ╔═╡ 56a4c272-7770-11eb-0626-131942edd52d
+function welfare(y, param)
+	dot(y, param.θ)
+end
+
+# ╔═╡ 5bb435cc-7770-11eb-33b6-cb78835406bc
+function κ(W, param)
+	N = size(W, 1)
+	@unpack α, β = param
+	γ = get_γ(W, param)
+	
+	κ = (1 - α) .* log.(L(W, param))
+	for i in 1:N
+		tmp = sum(W[i,j] == 0 ? 0 : W[i,j] * log(β * γ[i] * W[i,j] / γ[j]) for j in 1:N)
+		κ[i] = κ[i] + α * tmp
 	end
+	κ
+end
+
+# ╔═╡ 5dbcbd44-7770-11eb-0f60-f74a9945477e
+y₀(W, param) = (I - param.α * W) \ κ(W, param)
+
+# ╔═╡ 6378c2aa-7770-11eb-3edc-9d41e709750e
+y_next(y, ε, W, param) = κ(W, param) + param.α * W * y + ε
+
+# ╔═╡ 6ca12836-7770-11eb-271f-354367f89cb0
+function impulse_response(T, W, param, shocked_nodes, ε₀; T_shock = 0, T₀=3)
+	y = y₀(W, param)
+	N = size(W, 2)
+	
+	t_indices = -T₀:T
+	
+	y_out = OffsetArray(zeros(N, length(t_indices)), 1:N, t_indices)
+	w_out = OffsetArray(zeros(length(t_indices)), t_indices)
+	
+	y_out[:, -T₀] .= y
+	w_out[-T₀]     = welfare(y, param)
+	
+	for t in (-T₀+1):T
+		ε = zeros(N)
+		if t ∈ T_shock 
+			ε[shocked_nodes] .= ε₀
+		end
+		y = y_next(y, ε, W, param)
+		
+		y_out[:, t] .= y
+		w_out[t]     = welfare(y, param)
+	end
+	
+	y_out .= y_out ./ -y_out[:,-T₀] .+ 1
+	w_out .= w_out ./ -w_out[-T₀] .+ 1
+	(production = y_out, welfare = w_out)
+end
+
+# ╔═╡ c2842ace-7751-11eb-240f-550286e812af
+md"""
+## Simple Networks
+"""
+
+# ╔═╡ bc30e12a-7770-11eb-3db2-b753ec458ce5
+function my_out_StarGraph(N)
+	A = zeros(N, N)
+	A[:,1] .= 1
+	
+	SimpleWeightedDiGraph(A')
+end	
+
+# ╔═╡ b48335da-7771-11eb-2b17-1507687e446c
+function my_complete_DiGraph(N)
+	A = fill(1/(N-1), N, N)
+	A = A - 1/(N-1) * I
+		
+	SimpleWeightedDiGraph(A')
+end
+
+# ╔═╡ 9a89d9b4-7772-11eb-0c86-9b5f5f1ab23e
+begin
+	#grph = my_complete_DiGraph(10)
+	#grph = my_out_StarGraph(10)
+	grph = CycleDiGraph(10)
+end	
+
+# ╔═╡ 7db9fa00-7773-11eb-0942-ed884b67533c
+node_colors[] = parent(production[:,t0])
+
+# ╔═╡ 36334032-7774-11eb-170f-5b7f9b7e0ec7
+t = Node(0)
+
+# ╔═╡ 3843a2c2-7774-11eb-1bf5-5178a9014ae2
+t[] = t0
+
+# ╔═╡ f534c32c-7772-11eb-201c-233b5b7a27a4
+@bind t0 Slider(axes(production, 2), default = 1, show_value = true)
+
+# ╔═╡ 95f4f0d0-7772-11eb-1b2a-d179e76950fe
+t0; fig
+
+# ╔═╡ 15334fc2-7773-11eb-303e-67e90901f850
+begin
+	AA = weighted_adjacency_matrix(grph) |> Matrix |> transpose
+	param = params(AA)
+	
+	@unpack production = impulse_response(10, AA, param, [1], -0.3, T_shock = 0:2)
+	
+	color_extr = extrema(production)
+end
+
+# ╔═╡ 939fa06e-7772-11eb-086c-ff1bf54525f1
+node_colors = Node(rand(nv(grph)))
+
+# ╔═╡ 50194494-7772-11eb-20ff-419e874ec00c
+fig = let
+	graph = grph
+	node_positions, edges = nodes_edges(graph)
+	
+	#colormap = CairoMakie.AbstractPlotting.ColorSchemes.linear_bmy_10_95_c78_n256
+	
+	fig = network_plot(node_positions, edges; 
+		scatter = (; color = node_colors, colorrange = color_extr, strokewidth = 0 ),
+		lines = (; arrowcolor = (:black, 0.5), linecolor = (:black, 0.5)), 
+		colorbar = (; limits = color_extr),
+		axis = (title = "Production network", )
+	)
+	
+	ax = Axis(fig[1,2][1,1])
+	
+	for i in 1:nv(graph)
+		lines!(ax, collect(axes(production, 2)), parent(production[i,:]), color = Makie.wong_colors()[rem(i, 7) + 1])
+		vlines!(ax, t)
+	end
+	
+	fig
+end;
+
+# ╔═╡ cbb1e550-7751-11eb-1313-7ff968453f36
+md"""
+## Big Network from Input-Output Tables
+"""
+
+# ╔═╡ 8212939e-7770-11eb-1f4e-9b698be25d1f
+begin
+	sorted_nodes = sortperm(eigenvector_centrality(network)[:], rev = true)
+	n = 40
+	bot_n = sorted_nodes[end-n+1:end]
+	top_n = sorted_nodes[1:n]
+end
+
+# ╔═╡ 9aa77c76-7770-11eb-35ed-9b83924e8176
+fig_welfare = let
+	nodes_vec = [bot_n => "bottom", top_n => "top"]
+	#nodes = [bot_n, top_n]
+	
+	A = weighted_adjacency_matrix(network)'
+	
+	fig = Figure()
+	
+	col = Makie.wong_colors()
+	
+	ax = Axis(fig[1,1], title = "Welfare loss after shock to different industries")
+	
+	for (i, nodes) in enumerate(nodes_vec)
+		@unpack welfare = impulse_response(10, A, params(A), nodes[1], -0.5, T_shock = 0:2)
+		lines!(ax, collect(axes(welfare, 1)), parent(welfare), color = col[i], label = nodes[2] * " $(length(nodes[1]))")
+	end
+	
 	Legend(fig[1,2], ax)
-	
+
 	fig
 end
 
-# ╔═╡ 99a1f078-657a-11eb-2183-1b6a0598ffcd
-out_vacc.t[] = t0_vacc
-
-# ╔═╡ 34b1a3ba-657d-11eb-17fc-5bf325945dce
+# ╔═╡ ee72ef4c-7751-11eb-1781-6f4d027a9e66
 md"""
-``t``: $(@bind t0_vacc Slider(out_big.T_range, show_value = true, default = 1))
+## Network Origins of Aggregate Fluctuations
+
+Instead of studying shocks to individual sectors, we will now simulate shocks to the whole economy. We assume that for each sector ``i`` and time period ``t``, the sector specific log-productivity follows a *white noise* process: ``\varepsilon_{it} \sim N(0, \sigma^2)``.
+
+We will simulate our welfare measure (flow utility).
 """
 
-# ╔═╡ bf2c5f5a-661b-11eb-01c5-51740fba63e3
-fancy && out_vacc.fig
-
-# ╔═╡ 83b817d2-657d-11eb-3cd2-332a348142ea
-!fancy && (t0_vacc; out_vacc.fig)
-
-# ╔═╡ bb924b8e-69f9-11eb-1e4e-7f841ac1c1bd
-vacc = let
-	N = 1000
-
-	par = (p = 0.1, ρ = ρ0, δ = δ0)
-	
-	graph, node_positions = spatial_graph(N)
-	
-	vaccinated = [
-		"none"   => [],
-		"random" => pseudo_random(N, N ÷ 5, 3),	
-		# place for your suggestions
-		]
-	
-	infected_nodes = pseudo_random(N, N ÷ 5, 1)
-
-	sims = map(vaccinated) do (label, vacc_nodes)
-		init = initial_state(N, infected_nodes, vacc_nodes)
+# ╔═╡ 3585b022-7853-11eb-1a05-7b4fe3921051
+function simulate_business_cycles(graph; dist = Normal(0, 1), T₀ = 15, T = 100)
+	N = nv(graph)
+	W = weighted_adjacency_matrix(graph)'
+	param = params(W)
+	y = y₀(W, param)
 		
-		sim = simulate(graph, par, 100, init)
+	t_indices = -T₀:T
+	
+	y_out = OffsetArray(zeros(N, length(t_indices)), 1:N, t_indices)
+	w_out = OffsetArray(zeros(length(t_indices)), t_indices)
+
+	ε = rand(dist, N, T)
+	
+	y_out[:, -T₀:0] .= y
+	w_out[-T₀:0]    .= welfare(y, param)
+	
+	for t in 1:T
+		y = y_next(y, @view(ε[:,t]), W, param)
 		
-		label => sim
+		y_out[:, t] .= y
+		w_out[t]     = welfare(y, param)
 	end
 	
-	(; graph, node_positions, sims=sims)
-end;
-
-# ╔═╡ 0d610e80-661e-11eb-3b9a-93af6b0ad5de
-out_vacc = compare_sir(last.(vacc.sims[[1,2]])..., vacc.graph, vacc.node_positions);
-
-# ╔═╡ e8b7861e-661c-11eb-1c06-bfedd6ab563f
-md"""
-It's really hard to see the difference, so let's use an alternative visualization.
-"""
-
-# ╔═╡ 02b1e334-661d-11eb-3194-b382045810ef
-fig_vaccc = let
-	state = "I"
+	y_out .= y_out ./ -y_out[:,-T₀] .+ 1
+	w_out .= w_out ./ -w_out[-T₀] .+ 1
 	
+	(; y_out, w_out)	
+end
+
+# ╔═╡ ddfcd760-7853-11eb-38f7-298a4c1cb5aa
+fluct_fig = let
 	fig = Figure()
-	ax = Axis(fig[1,1], title = "#$(state) when vaccinating different groups")
 	
-	colors = cgrad(:viridis, max(3, length(vacc.sims)), categorical=true)
-
-	for (i, (lab, sim)) in enumerate(vacc.sims)
-				
-		df0 = fractions_over_time(sim)
-		
-		filter!(:state => ==(state), df0)
-		
-		lines!(df0.t, df0.fraction, label = lab, color = colors[i])
+	ax = Axis(fig[1,1])
+	
+	N = 400
+	
+	grph = my_out_StarGraph(N)
+	
+	fluc = simulate_business_cycles(grph)
+	
+	for (i, row) in enumerate(eachrow(fluc.y_out))
+		lines!(ax, collect(axes(fluc.y_out, 2)), collect(row), color = (:black, 0.1))
 	end
 	
-	# some attributes to make the legend nicer
-	attr = (orientation = :horizontal, tellwidth = :false, tellheight = true)
+	lines!(ax, collect(axes(fluc.y_out, 2)), collect(fluc.w_out), linewidth = 2, color = :red)
 
-	leg = Legend(fig[2,1], ax; attr...)
-
+	ax0 = ax
+	
+	ax = Axis(fig[2,1])
+	
+	grph = CycleDiGraph(N)
+	
+	fluc = simulate_business_cycles(grph)
+	
+	for (i, row) in enumerate(eachrow(fluc.y_out))
+		lines!(ax, collect(axes(fluc.y_out, 2)), collect(row), color = (:black, 0.1))
+	end
+	
+	lines!(ax, collect(axes(fluc.y_out, 2)), collect(fluc.w_out), linewidth = 2, color = :red)
+	
+	linkaxes!(ax0, ax)
+	hidexdecorations!(ax0)
+	
 	fig
+	
+
+	
 end
 
-# ╔═╡ 1978febe-657c-11eb-04ac-e19b2d0e5a85
-md"""
-#### Live Exercise 2: Can we do better?
-
-Can you think of a way to improve the effectiveness of the vaccination program? If you have 100 doses at your disposal, whom would you vaccinate?
-"""
-
-# ╔═╡ 12d7647e-6a13-11eb-2b1e-9f77bdb3a87a
+# ╔═╡ d0630e36-774b-11eb-0750-370f1b1327e6
 md"""
 ## (End of Lecture)
 """
 
-# ╔═╡ b402b1e2-6a12-11eb-16ac-7b19064562b8
+# ╔═╡ 29f570c0-774b-11eb-2c1c-17a956c9fd27
 group_members = ([
 	(firstname = "Ella-Louise", lastname = "Flores"),
 	(firstname = "Padraig", 	lastname = "Cope"),
 	(firstname = "Christy",  	lastname = "Denton")
 	]);
 
-# ╔═╡ e7d47230-6a12-11eb-0392-4360f36222b8
+# ╔═╡ 2fa2a558-774b-11eb-396b-832d0ce9a130
 group_number = 99
 
-# ╔═╡ eea88902-6a12-11eb-3a63-df8979fbdd55
+# ╔═╡ 3cd55fca-774b-11eb-307a-61b685db1b54
 if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
 	md"""
 !!! danger "Note!"
@@ -401,642 +497,400 @@ if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_m
 	"""
 end
 
-# ╔═╡ fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
+# ╔═╡ cebdd63e-774a-11eb-3cd5-951c43b3c3ff
 md"""
-# Assignment 2: Whom to Vaccinate When Death Rates are Age-Specfic
+# Assignment 4: The Covid Crisis
 
 *submitted by* **$members** (*group $(group_number)*)
 """
 
-# ╔═╡ 98d449ac-695f-11eb-3daf-dffb377aa5e2
+# ╔═╡ 04e5b93a-77ae-11eb-0240-ad7517f0fde3
 md"""
-#### Task 1: Distinguish between `R`ecovered and `D`ead (3 points)
+For this problem set you will simulate a Covid crisis using the model from the lecture.
 
-👉 Add a new state `D`ead.
-"""
+### Task 1: Which industries were hit by Covid? (3 points)
 
-# ╔═╡ b9c7df54-6a0c-11eb-1982-d7157b2c5b92
-if @isdefined D
-	if hasproperty(States.b.b, :b)
-		correct(md"You've successfully defined type `D`.")
-	else
-		almost(md"You've successfully defined `D`. But you need to do it in the right place. Go **The SIR Model** and uncomment the line that defines `D`.")
-	end
-else
-	keep_working(md"Go **The SIR Model** and uncomment the line that defines `D`.")
-end
+👉 Find 5 (groups of) industries and explain how they have been hit by the Corona crisis *directly* (that is, not through propagation within the production network.)
 
-# ╔═╡ 8a2c223e-6960-11eb-3d8a-516474e6653c
-md"""
-👉 Add a transition rule for `D`.
-"""
-
-# ╔═╡ 809375ba-6960-11eb-29d7-f9ab3ee61367
-# transition(::D, args...; kwargs...) = #= your code here =#
-
-# ╔═╡ dc9ac0c0-6a0a-11eb-2ca8-ada347bffa85
-try
-	transition(D())
-	if transition(D()) == D()
-		correct(md"You've successfully specified the transition rule for `D`.")
-	else
-		keey_working(md"The transition rule for `D` doesn't seem to work correctly")
-	end
-catch e
-	if e isa MethodError
-		keep_working(md"The transition rule for `D` is not yet defined.")
-	else
-		keep_working(md"The transition rule for `D` doesn't seem to work correctly")
-	end
-end
-
-# ╔═╡ 1be1ac8a-6961-11eb-2736-79c77025255d
-hint(md"You can look at the section **Define the transitions** for inspiration.")
-
-# ╔═╡ 945d67f6-6961-11eb-33cf-57ffe340b35f
-md"""
-👉 Go to section **Define the transtions** and adjust the transition rules for the other states if necessary.
-"""
-
-# ╔═╡ 11c507a2-6a0f-11eb-35bf-55e1116a3c72
-begin
-	try
-		test1 = transition(I(), (δ = 1, ρ = 0), 0) == D()
-		test2 = transition(I(), (δ = 0, ρ = 1), 0) == R()
-		test3 = transition(I(), (δ = 0, ρ = 0), 0) == I()
-	
-		if test1 && test2 && test3
-			correct(md"It seems that you've successfully adjusted the transition rule for `I`. *(Note: the other rules are not checked)*")
-		else
-			keep_working()
-		end
-	catch
-		keep_working()
-	end
-end
-
-# ╔═╡ 48818cf0-6962-11eb-2024-8fca0690dd78
-md"""
-Great! You can now have a look how the simulations from the lecture have automatically updated.
-"""
-
-# ╔═╡ fac414f6-6961-11eb-03bb-4f58826b0e61
-md"""
-#### Task 2: Introduce age-specific death rates (2 points)
-
-The death probabilities are highly heterogeneous across age groups. See for example [this article in Nature.](https://www.nature.com/articles/s41586-020-2918-0)
-
->  We find that age-specific IFRs estimated by the ensemble model range from 0.001% (95% credible interval, 0–0.001) in those aged 5–9 years old (range, 0–0.002% across individual national-level seroprevalence surveys) to 8.29% (95% credible intervals, 7.11–9.59%) in those aged 80+ (range, 2.49–15.55% across individual national-level seroprevalence surveys).
-
-Below find the data from supplementary table S3 from this article.
-"""
-
-# ╔═╡ d18f1b0c-69ee-11eb-2fc0-4f14873847fb
-scatterlines(ifr_df.age, ifr_df.IFR_pc, 
-			 axis = (xlabel="age group", ylabel = "infection fatality ratio (%)")
-			)
-
-# ╔═╡ 75b4c0c2-69f3-11eb-1ebc-75efd2d0bf1f
-md"""
-Let us assume there are the following age groups with age specific $\delta$. *(Feel free to experiment a bit and change how these are computed.)*
+You can look through the industry definitions in `df_nodes1` (below) or go to [the BEA website](https://www.bea.gov/data/industries).
 
 """
 
-# ╔═╡ 98b2eefe-69f2-11eb-36f4-7b19a55cfe78
-begin
-	ρ_new = 1/7
-	transform(ifr_df2, :IFR_pc => ByRow(x -> get_δ_from_ifr(x, ρ_new)) => "δ")
-end
+# ╔═╡ 5df355b6-77b1-11eb-120f-9bb529b208df
+answer1 = md"""
+Your answer
 
-# ╔═╡ 33c4ea42-6a10-11eb-094c-75343532f835
-md"""
-We want to adjust the code so that it can handle node-specific $\delta$. The way we are going to do it is to pass a vector $\vec \delta = (\delta_1, \ldots, \delta_N)$ that holds the death probability for each node.
-
-👉 Go the the definition of `transition(::I, ...)`, make sure you understand the code snippet in the comment and uncomment the lines.
-
+goes here ...
 """
 
-# ╔═╡ e64300dc-6a10-11eb-1f68-57120286535b
-begin
-	try
-		test1 = transition(I(), (δ = (1, 0), ρ = 0), 1) == D()
-		test2 = transition(I(), (δ = (0, 1), ρ = 0), 1) == I()
-		test3 = transition(I(), (δ = (0, 0), ρ = 1), 1) == R()
-		test4 = transition(I(), (δ = (0, 0), ρ = 0), 1) == I()
-	
-		if test1 && test2 && test3 && test4
-			correct(md"It seems that you've successfully adjusted the transition rule for `I`.")
-		else
-			keep_working()
-		end
-	catch
-		keep_working()
-	end
-end
+# ╔═╡ 664efcec-77b1-11eb-2301-5da84a5de423
+md"(You have used approximately **$(wordcount(answer1))** words.)"
 
-# ╔═╡ 2e3413ae-6962-11eb-173c-6d53cfd8a968
+# ╔═╡ ebfcbb8e-77ae-11eb-37fc-e798175197d0
+df_nodes1
+
+# ╔═╡ 85e7546c-77ae-11eb-0d0c-618c3669c903
 md"""
-#### Task 3: Whom to vaccinate? (5 points)
+### Task 2: Simulate a Covid crisis (4 points)
 
-In the lecture we've figured out, how we can improve on vaccinating random people. Now there is more structure in the model. Can you improve on the situation?
+👉 Adapt the code in simulates the the welfare effect of central industries by specifying the set of shocked nodes (from **Task 1**) and the length of the shock (assume a period is a quarter).
 
-First, let's construct the graph and specify the death rates. *(You don't need to change this.)*
+👉 Explain your findings in <200 words. Think about how much of the welfare loss is due to the directly hit industries, how much is due to network effects?
 """
 
-# ╔═╡ 29036938-69f4-11eb-09c1-63a7a75de61d
-vacc_age_graph = let
-	N = 1000
-	p = 0.5
-	ρ = ρ_new
-	
-	# age specfic death rates
-	age_groups = rand(Distributions.Categorical([0.4, 0.35, 0.25]), N)
-		
-	δ_vec = get_δ_from_ifr.(ifr_df2.IFR_pc, ρ) .* 20 # we scale this up to remove some randomness
-	δ_per_node = δ_vec[age_groups]
-	
-	par = (p = p, ρ = ρ, δ = δ_per_node)
+# ╔═╡ 811e741e-77b1-11eb-000e-93a9a19a9f60
+answer2 = md"""
+Your answer
 
-	graph, node_positions = spatial_graph(N)
-	
-	bet_centr = betweenness_centrality(graph)
-	
-	(; par, graph, node_positions, bet_centr)
-end;	
-
-# ╔═╡ 18e84a22-69ff-11eb-3909-7fd30fcf3040
-function pseudo_random(N, n, offset = 1)
-	step = N ÷ n
-	range(offset, step = step, length = n)
-end
-
-# ╔═╡ 0d2b1bdc-6a14-11eb-340a-3535d7bfbec1
-md"""
-
-Now it's your turn.
-
-👉 Decide which nodes you want to vaccinate and adjust the cell below. Make sure you only vaccinate `N_vacc` nodes.
+goes here ...
 """
 
-# ╔═╡ dceb5318-69fc-11eb-2e1b-0b8cef279e05
-vacc_age = let
-		
-	@unpack par, graph, node_positions, bet_centr = vacc_age_graph
-	N = nv(graph)
-	
-	N_vacc = N ÷ 5
+# ╔═╡ 9298e2de-77b1-11eb-0a56-1f50bb0f4dc3
+md"(You have used approximately **$(wordcount(answer2))** words.)"
 
-	split = 50
-	vaccinated = [
-		"none"   => [],
-		"random" => pseudo_random(N, N_vacc, 4),
-		"central"=> sortperm(bet_centr, rev=true)[1:N_vacc],
-		# place your suggestions here!
-		]
-	
-	infected_nodes = pseudo_random(N, N ÷ 10, 1)
+# ╔═╡ 3ec33a62-77b1-11eb-0821-e547d1422e6f
+# your
 
-	sims = map(vaccinated) do (label, vacc_nodes)
-		init = initial_state(N, infected_nodes, vacc_nodes)
-		
-		sim = simulate(graph, par, 100, init)
-		
-		label => sim
-	end
-	
-	(; graph, node_positions, sims=sims)
-end;
+# ╔═╡ 4359dbee-77b1-11eb-3755-e1c1532212bb
+# code
 
-# ╔═╡ da82d3ea-69f6-11eb-343f-a30cdc36228a
-fig_vacc_age = let
-	state = "D"
+# ╔═╡ 45db03f2-77b1-11eb-2edd-6104bc85915b
+# goes
+
+# ╔═╡ 486cd850-77b1-11eb-1dd2-15ca68d98173
+# here
+
+# ╔═╡ ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6
+fig_covid = let
+	nodes_vec = [bot_n => "bottom", top_n => "top"]
+	
+	A = weighted_adjacency_matrix(network)'
+	
 	fig = Figure()
-	ax = Axis(fig[1,1], title = "#$(state) when vaccinating different groups")
 	
-	colors = cgrad(:viridis, min(5, length(vacc_age.sims)), categorical=true)
-
-	for (i, (lab, sim)) in enumerate(vacc_age.sims)
-				
-		df0 = fractions_over_time(sim)
-		
-		filter!(:state => ==(state), df0)
-		
-		lines!(df0.t, df0.fraction, label = lab, color = colors[i])
+	col = Makie.wong_colors()
+	
+	ax = Axis(fig[1,1], title = "Welfare loss after shock to different industries")
+	
+	for (i, nodes) in enumerate(nodes_vec)
+		@unpack welfare = impulse_response(10, A, params(A), nodes[1], -0.5, T_shock = 0:2)
+		lines!(ax, collect(axes(welfare, 1)), parent(welfare), color = col[i], label = nodes[2] * " $(length(nodes[1]))")
 	end
 	
-	# some attributes to make the legend nicer
-	attr = (orientation = :horizontal, tellwidth = :false, tellheight = true)
-
-	leg = Legend(fig[2,1], ax; attr...)
+	Legend(fig[1,2], ax)
 
 	fig
 end
 
-# ╔═╡ 297e4d74-6a12-11eb-0302-0f97bab2c906
+# ╔═╡ 4e891b56-77b1-11eb-116d-e94250f1d70e
+
+
+# ╔═╡ 48f0ffd4-77b0-11eb-04ab-43eac927ac9d
 md"""
-Now write a short essay describing your choice. *(Your simulation results are subject to random noise. Make sure you run you simulations multiple times to make sure they are robust.)*
+### Task 3: Is this model suitable for this exercise? (3 points)
 
-👉 Describe how you would select nodes to be vaccinated
-
-👉 Be accurate but concise. Aim at no more than 500 words.
+👉 Explain in <200 words how well you think that the model simulation can capture the real-world Covid crisis?
 """
 
-# ╔═╡ d0f3064a-6a11-11eb-05bf-09f67a451510
+# ╔═╡ 9fb0a0a8-77b1-11eb-011f-7fc7a549f552
 answer3 = md"""
 Your answer
 
 goes here ...
 """
 
-# ╔═╡ e79e6ed4-6a11-11eb-2d68-69a814ec657c
-if answer3 == md"""
-Your answer
+# ╔═╡ 9da09070-77b1-11eb-0d2e-e9a4433bf34e
+md"(You have used approximately **$(wordcount(answer3))** words.)"
 
-goes here ...
-"""
-	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
-elseif wordcount(answer3) > 1.1 * 500
-	almost(md"Try to shorten your text a bit, to get below 500 words.")
-else
-	correct(md"Great, we are looking forward to reading your answer!")
-end
-
-# ╔═╡ 9c562b8c-6a12-11eb-1e07-c378e9304a1d
-md"""
-#### Before you submit ...
-
-👉 Make sure you have added your names and your group number at the top.
-
-👉 Make sure that that **all group members proofread** your submission (especially your little essay).
-
-👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. In addition, **upload the source code** of the notebook (the .jl file).
-"""
-
-# ╔═╡ 515edb16-69f3-11eb-0bc9-a3504565b80b
-md"""
-### Details on age-specific infection fatality rates
-"""
-
-# ╔═╡ 1abd6992-6962-11eb-3db0-f3dbe5f095eb
-ifr_csv = CSV.File(IOBuffer(
-		"""
-from	to	IFR_pc
-0	4	0.003
-5	9	0.001
-10	14	0.001
-15	19	0.003
-20	24	0.006
-25	29	0.013
-30	34	0.024
-35	39	0.040
-40	44	0.075
-45	49	0.121
-50	54	0.207
-55	59	0.323
-60	64	0.456
-65	69	1.075
-70	74	1.674
-75	79	3.203
-80	95	8.292
-""" # note: the oldest age group is actually 80+
-		));
-
-# ╔═╡ 07c102c2-69ee-11eb-3b29-25e612df6911
-ifr_df = @chain ifr_csv begin
-	DataFrame
-	transform!([:from, :to] => ByRow(mean ∘ tuple) => :age)
-	transform!(:to => (x -> cut(x, [0, 40, 75, 100])) => :age_group)
-end
-
-# ╔═╡ 57a72310-69ef-11eb-251b-c5b8ab2c6082
-ifr_df2 = @chain ifr_df begin
-	groupby(:age_group)
-	combine(:IFR_pc => mean, renamecols = false)
-	
-end
-
-# ╔═╡ 74c35594-69f0-11eb-015e-2bf4b55e658c
-md"""
-### Get from infection fatality ratio to $\delta$
-
-When the recovery rate is $\rho$, the expected time infected is $T_I = 1/\rho$. So we want the survival probability to 
-
-$$(1-IFR) = (1 - \delta)^{T_I}.$$ 
-"""
-
-# ╔═╡ 6ffb63bc-69f0-11eb-3f84-d3fca5526a3e
-get_δ_from_ifr(ifr, ρ) = 1 - (1 - ifr/100)^(ρ)
-
-# ╔═╡ 1b8c26b6-64aa-11eb-2d9a-47db5469a654
+# ╔═╡ 24c076d2-774a-11eb-2412-f3747af382a2
 md"""
 # Appendix
 """
 
-# ╔═╡ 07a66c72-6576-11eb-26f3-810607ca7e51
+# ╔═╡ 7122605e-7753-11eb-09b8-4f0066353d17
 md"""
-## Functions for the simulation
+## Downloading the Input-Output Table for the US
 """
 
-# ╔═╡ ca77fa78-657a-11eb-0faf-15ffd3fdc540
-function initial_state(N, infected_nodes, recovered_nodes)
-	# fill with "Susceptible"
-	init = States[S() for i in 1:N]
-	
-	init[infected_nodes] .= Ref(I())
-	init[recovered_nodes] .= Ref(R())
-	
-	init
+# ╔═╡ b223523e-7753-11eb-1d9a-67c0281ae473
+begin
+	url = "https://apps.bea.gov/industry/xls/io-annual/CxI_DR_2007_2012_DOM_DET.xlsx"
+	file = Downloads.download(url)
+	f = XLSX.readxlsx(file)
+	sh = f["2007"]
 end
 
-# ╔═╡ fecf62c5-2c1d-4709-8c17-d4b6e0565617
-function initial_state(N, n_infected)
-	
-	# spread out the desired number of infected people
-	infected_nodes = 1:(N÷n_infected):N
-	
-	initial_state(N, infected_nodes, [])
-end
-
-# ╔═╡ 208445c4-5359-4442-9b9b-bde5e55a8c23
-function simulate(graph, par, T, init = initial_state(nv(graph), max(nv(graph) ÷ 100, 1)))
-	mat = adjacency_matrix(graph)
-	N = nv(graph)
-	
-	sim = Matrix{States}(undef, N, T)
-	sim[:,1] .= init
-	
-	for t = 2:T
-		iterate!(view(sim, :, t), view(sim, :, t-1), mat, par)
-	end
-	sim
-end
-
-# ╔═╡ e4d016cc-64ae-11eb-1ca2-259e5a262f33
+# ╔═╡ 356d2016-7754-11eb-2e6f-07d1c12831b5
 md"""
-## Processing the Simulated Data
+Data is usually messy. Here is some evidence.
 """
 
-# ╔═╡ bf18bef2-649d-11eb-3e3c-45b41a3fa6e5
-function fractions_over_time(sim)
-	tidy_sim = tidy_simulation_output(sim)
-	N, T = size(sim)
+# ╔═╡ 12798090-7754-11eb-3fdf-852bc740ed2a
+begin
+	code_column = sh["A6:A410"] |> vec .|> string # output == row
+	name_column = sh["B6:B410"] |> vec .|> string
+	code_row    = sh["C5:OQ5"]  |> vec .|> string  # input == column
+	name_row    = sh["C4:OQ4"]  |> vec .|> string
+	io_matrix   = sh["C6:OQ410"] .|> float
 	
+	df_in = DataFrame(
+		:code => vec(code_row),
+		:name => vec(name_row)		
+	)
+	df_out = DataFrame(
+		:code => vec(code_column),
+		:name => vec(name_column),
+	)
 	
-	combine(groupby(tidy_sim, [:t, :state]), :node_id => (x -> length(x)/N) => :fraction)
+	io1 = NamedArray(io_matrix, (code_row, code_column), (:output, :input))
+	io2 = KeyedArray(io_matrix, output = code_row, input = code_column)
+	
+	io1
 end
 
-# ╔═╡ 11ea4b84-649c-11eb-00a4-d93af0bd31c8
-function tidy_simulation_output(sim)
-	# go from type to symbol (S() => "S")
-	sim1 = label.(sim)
-	
-	# make it a DataFrame with T columns and N rows
-	df0 = DataFrame(sim1, :auto)
-	rename!(df0, string.(1:size(df0,2)))
-	
-	# add a column with node identifier
-	df0.node_id = 1:size(df0, 1)
-	
-	# stack df to
-	# node_id | t | state
-	df = stack(df0, Not(:node_id), variable_name = :t, value_name = :state)
-	# make t numeric
-	transform!(df, :t => ByRow(x -> parse(Int, eval(x))),
-			       :state => categorical,
-				   renamecols = false)
-	
-	df
-end
-
-# ╔═╡ b0d34450-6497-11eb-01e3-27582a9f1dcc
-label(x::DataType) = string(Base.typename(x).name)
-
-# ╔═╡ 63b2882e-649b-11eb-28de-bd418b43a35f
-label(x) = label(typeof(x))
-
-# ╔═╡ 47ac6d3c-6556-11eb-209d-f7a8219512ee
+# ╔═╡ ad8a6380-7755-11eb-1542-9972c0daa480
 md"""
-## Constructing the Figures
+**The vector of input industries is not the vector of output industries.**
 """
 
-# ╔═╡ c511f396-6579-11eb-18b1-df745093a116
-function compare_sir(sim1, sim2, graph, node_positions = NetworkLayout.Spring(dim=2)(adjacency_matrix(graph)))
-	t = Node(1)
-	
-	edges_as_pts = edges_as_points(graph, node_positions)
-	
-	fig = Figure(padding = (0,0,0,0))
-	legpos = fig[1:2,2]
-	panel1 = fig[1,1]
-	panel2 = fig[2,1]
-	
-	axs1 = sir_plot!(panel1, legpos,  sim1, edges_as_pts, node_positions, t)
-	axs2 = sir_plot!(panel2, nothing, sim2, edges_as_pts, node_positions, t)
-	
-	hidedecorations!(axs1.ax_f, grid = false)
-	hidedecorations!(axs2.ax_f, grid = false)
-	
-	axs1.leg.orientation[] = :vertical
-	axs1.leg.tellwidth[]   = true
-	axs1.leg.tellheight[]  = false
-	
-	
-	@assert axes(sim1, 2) == axes(sim2, 2)
-	
-	(; fig, t, T_range = axes(sim1, 2))
+# ╔═╡ 5bbac0ac-7754-11eb-0ec0-7d564524afe6
+all(code_column .== code_row)
+
+# ╔═╡ 724dc756-7754-11eb-3a22-a309a77b2f28
+md"""
+Here are the industries that are *only outputs*.
+"""
+
+# ╔═╡ 75b9fd42-7754-11eb-3219-c57ef876f04b
+out_not_in = @chain df_out begin
+	filter(:code => !in(df_in.code), _)
+    select(:code, :name)
 end
 
-# ╔═╡ 67e74a32-6578-11eb-245c-07894c89cc7c
-function sir_plot(sim, graph, node_positions = NetworkLayout.Spring(dim=2)(adjacency_matrix(graph)))
-	t = Node(1)
-	
-	edges_as_pts = edges_as_points(graph, node_positions)
+# ╔═╡ 7658c6d2-7754-11eb-32a9-41bf10cd7f6b
+md"""
+Here are the industries that are *only inputs*.
+"""
 
-	fig = Figure()
-	main_fig = fig[2,1]
-	leg_pos = fig[1,1]
-
-	sir_plot!(main_fig, leg_pos, sim, edges_as_pts, node_positions, t)
-	
-	(; fig, t, T_range = axes(sim, 2))
-	
+# ╔═╡ ade0d2f4-7754-11eb-2693-074c67837de3
+in_not_out = @chain df_in begin
+	filter(:code => !in(df_out.code), _)
+    select([:code, :name])
 end
 
-# ╔═╡ 51a16fcc-6556-11eb-16cc-71a978e02ef0
-function sir_plot!(figpos, legpos, sim, edges_as_pts, node_positions, t)
-	
-	
-	df = fractions_over_time(sim)
-			
-	states = label.(subtypes(State))
-	colors = cgrad(:viridis, length(states), categorical=true)
-	color_dict = Dict(s => colors[i] for (i,s) in enumerate(states))
-	
-	ax_f, leg = plot_fractions!(figpos[1,2], t, df, color_dict, legpos)
-	ax_d = plot_diffusion!(figpos[1,1], edges_as_pts, node_positions, sim, t, color_dict)
+# ╔═╡ 83bdf67e-7753-11eb-06a2-cf39291d8a87
+md"""
+## Cleaning the Input-Output Table
+"""
 
-	(; ax_f, ax_d, leg)
+# ╔═╡ 0fe4809c-7758-11eb-2569-33b178bfccca
+begin
+	df_io = DataFrame(io_matrix, code_column)
+	df_io[!,:output] = code_row
+	select!(df_io, :output, :)
+end
 
-end 
+# ╔═╡ 6197cf52-7758-11eb-2c66-b7df9d59cbf7
+begin
+	io_edges0 = stack(df_io, Not("output"), variable_name = "input")
+	filter!(:value => >(0), io_edges0)
+end
 
-# ╔═╡ f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
-function plot_fractions!(figpos, t, df, color_dict, legpos = nothing)	
-	ax = Axis(figpos)
-	
-	for (i, gdf) in enumerate(groupby(df, :state))
-		s = only(unique(gdf.state)) |> string
+# ╔═╡ c312d5d6-775a-11eb-24cd-f1cf36f3dd40
+begin
+	function nodes_weights_from_edges(from, to, weight)
+		# get the list of nodes
+		node_names = unique([from; to]) |> sort
+		# enumerate the nodes (node_id == index)
+		node_dict = Dict(n => i for (i,n) in enumerate(node_names))
+		# add columns with node_id
+		i_from = [node_dict[n] for n in from]
+		i_to   = [node_dict[n] for n in to]
 		
-		lines!(ax, gdf.t, gdf.fraction, label = s, color = color_dict[s])
+		N = length(node_names)
+		# create the weight matrix
+		wgts = sparse(i_from, i_to, weight, N, N)
+		
+		# drop industries that are not used as inputs
+		drop = findall(dropdims(sum(wgts, dims=2), dims=2) .≈ 0)
+			
+		(node_names = node_names[Not(drop)], sparse_wgts = wgts[Not(drop), Not(drop)])
 	end
 	
-	vlines!(ax, @lift([$t]), color = :gray50, linestyle=(:dash, :loose))
-	
-	ylims!(ax, -0.05, 1.05)
-	
-	# some attributes to make the legend nicer
-	attr = (orientation = :horizontal, tellwidth = :false, tellheight = true)
-	
-	if !isnothing(legpos)
-		leg = Legend(legpos, ax; attr...)
-	else
-		leg = nothing
-	end
-	
-	(; ax, leg)
+	nodes_weights_from_edges(df, from, to, weight) = 
+		nodes_weights_from_edges(df[!,from], df[!,to], df[!,weight]) 
 end
 
-# ╔═╡ 4a9b5d8a-64b3-11eb-0028-898635af227c
-function plot_diffusion!(figpos, edges_as_pts, node_positions, sim, t, color_dict)
-	sim_colors = [color_dict[label(s)] for s in sim]
-	state_as_color_t = @lift(sim_colors[:,$t])
-	
-    ax = Axis(figpos)
+# ╔═╡ 48dc654c-7765-11eb-313a-c598a7d09fb7
+md"""
+## List of Sectors
+"""
 
+# ╔═╡ d6a23266-7757-11eb-346c-534caaf657fb
+begin
+	df_all = outerjoin(df_in, df_out, on = [:code, :name])
+	n_rows = size(df_all, 1)
+	
+	@assert length(unique(df_all.code)) == n_rows
+	@assert length(unique(df_all.name)) == n_rows
+	
+	df_all
+end
+
+# ╔═╡ 66d81066-7772-11eb-21f3-9568518636c2
+md"""
+## Function for Plotting
+"""
+
+# ╔═╡ bb783ac4-7772-11eb-365a-1fd1b6847e27
+function nodes_edges(graph)
+	wgt = Matrix(weights(graph) .* adjacency_matrix(graph)) 
+	
+	node_positions = NetworkLayout.Spring()(wgt)
+#	node_positions = NetworkLayout.Spectral.layout(wgt) # node_weights = eigenvector_centrality(graph)
+	
+	#cutoffs = [0.001,0.01,0.05,0.15,0.4,1.0]
+	
+	edge_arrows = edges_as_arrows(edges(graph), node_positions)
+	
+	(; node_positions, edge_arrows)
+end
+
+# ╔═╡ cb5e1b02-7772-11eb-2d21-dfe6c49aa7d0
+function network_plot(node_positions, edges_as_pts; axis = (;), scatter = (;), lines = (;), colorbar = (;))
+	fig = Figure()
+	
+	ax = Axis(fig[1,1][1,1]; spinewidth = 0, axis...)
+	
 	hidedecorations!(ax)
 
-	N, T = size(sim)
-	msize = N < 20 ? 10 : N < 100 ? 5 : 3
-		
-	lines!(ax, edges_as_pts, linewidth = 0.5, color = (:black, 0.3))
-    scatter!(ax, node_positions, markersize=msize, strokewidth = 0, color = state_as_color_t);
+	lp = arrows!(ax, edges_as_pts...; arrowsize = 15, lengthscale=0.85, lines...)
+	sp = scatter!(ax, node_positions; scatter...)
+
+	cb = Colorbar(fig[1,1][1,2]; colorbar...)
+	cb.width = 30
 	
-	ax
+	fig
 end
 
-# ╔═╡ e82d5b7f-5f37-4696-9917-58b117b9c1d6
-md"
-## Spatial graph
-"
+# ╔═╡ c3b13010-7772-11eb-0ba3-0d82c76c6a49
+function edges_as_arrows(edges, node_positions;
+			    		 weights = missing, min_wgt = -Inf, max_wgt = Inf)
+	from = Point2f0[]
+	dir  = Point2f0[]
 
-# ╔═╡ 95b67e4d-5d41-4b86-bb9e-5de97f5d8957
-# adapted from David Gleich, Purdue University
-# https://www.cs.purdue.edu/homes/dgleich/cs515-2020/julia/viral-spreading.html
-function spatial_graph(node_positions; degreedist = LogNormal(log(2),1))
-  	n = length(node_positions)
-	
-	coords_matrix = hcat(Vector.(node_positions)...)
-  	T = BallTree(coords_matrix)
-	
-	g = SimpleGraph(n)
-	
-	for i = 1:n
-		# draw the number of links `deg`
-    	deg = min(ceil(Int, rand(degreedist)), n - 1)
-    	# use the `deg` closest nodes as neighbours
-		idxs, dists = knn(T, coords_matrix[:,i], deg + 1)
-    	for j in idxs
-      		if i != j
-				add_edge!(g, i, j)
-      		end
-    	end
-  	end
-	
-	g
-end
-
-# ╔═╡ c1971734-2299-4038-8bb6-f62d020f92cb
-function spatial_graph(N::Int)
-	id = 1:N
-	x = rand(N)
-	y = rand(N)
-	node_positions = Point2f0.(x, y)
-	
-	spatial_graph(node_positions), node_positions
-end
-
-# ╔═╡ 5fe4d47c-64b4-11eb-2a44-473ef5b19c6d
-md"""
-## Utils
-"""
-
-# ╔═╡ 66d78eb4-64b4-11eb-2d30-b9cee7370d2a
-# generate a list of points that can be used to plot the graph
-function edges_as_points(graph, node_positions)
-	edges_as_pts = Point2f0[]
-
-	for e in edges(graph)
-		push!(edges_as_pts, node_positions[e.src])
-        push!(edges_as_pts, node_positions[e.dst])
-        push!(edges_as_pts, Point2f0(NaN, NaN))
+	for e in edges
+		if ismissing(weights) || (min_wgt < weights[e.src, e.dst] < max_wgt)
+			push!(from, node_positions[e.src])
+    	    push!(dir,   node_positions[e.dst] .- node_positions[e.src])
+		end
     end
 	
-	edges_as_pts
+	from, dir
 end
 
-# ╔═╡ a81f5244-64aa-11eb-1854-6dbb64c8eb6a
+# ╔═╡ 42b21fce-774a-11eb-2d00-c3bfd55a35fc
 md"""
 ## Package Environment
 """
 
-# ╔═╡ fdf43912-6623-11eb-2e6a-137c10342f32
-using PlutoUI: Slider, TableOfContents, CheckBox, NumberField
-
-# ╔═╡ 3b444a90-64b3-11eb-0b8f-1facc32a4088
+# ╔═╡ 6526d6e4-774a-11eb-0b7a-bd644b5f7fea
 begin
-	if fancy
-		#import WGLMakie
-		#using JSServe: Page
-		#WGLMakie.activate!()
-		#Page(exportable = true)
-	else
-		import CairoMakie
-		CairoMakie.activate!(type = "png")
-	end
+	using PlutoUI: TableOfContents, Slider, CheckBox
 
-	using Makie: 
-		Figure, Axis, Legend,
-		lines!, scatter!, scatterlines, scatterlines!, vlines!, 
-		hidedecorations!, ylims!, cgrad,
-		@lift, Node
+	using GraphPlot, NetworkLayout, OffsetArrays
 	
-	using NetworkLayout: NetworkLayout
-end
-
-# ╔═╡ 2b55141f-1cba-4a84-8811-98697d408d65
-begin
-	using Distributions: Distributions, LogNormal
-	using Chain: @chain
-	import CSV
-	using GeometryBasics: Point2f0
-	using NearestNeighbors: BallTree, knn
-	using LightGraphs: SimpleGraph, add_edge!, StarGraph, CycleGraph, WheelGraph, betweenness_centrality, eigenvector_centrality, edges, adjacency_matrix, nv, ne
-	using DataFrames: transform!, transform, DataFrame, ByRow, groupby, combine, rename!, Not, stack, unstack, leftjoin
-	using CategoricalArrays: CategoricalArrays, categorical, cut
-	using UnPack: @unpack
 	using Statistics: mean
+	using SparseArrays#: sparse
+	using LinearAlgebra: I, dot, diag, Diagonal, norm
+	import Downloads
 	
-	Base.show(io::IO, ::MIME"text/html", x::CategoricalArrays.CategoricalValue) = print(io, get(x))
+	import CairoMakie
+	CairoMakie.activate!(type = "png")
+	
+	using Makie#: 	
+		#Legend, Figure, Axis, Colorbar,
+		#lines!, scatter!, poly!, vlines!, hlines!, image!, hist, hist!,
+		#hidedecorations!, hidespines!
+
+	#import Cairo, Compose, Images
+	
+	using Distributions
+	using AxisKeys: KeyedArray
+	using NamedArrays: NamedArray
+	using CategoricalArrays: cut
+	using Colors: RGBA
+	using Chain: @chain
+	using DataFrames: DataFrames, DataFrame,
+		select, select!, transform, transform!, combine,
+		leftjoin, innerjoin, rightjoin, outerjoin,
+		groupby, ByRow, Not, stack, unstack,
+		disallowmissing!, dropmissing!, disallowmissing
+	import CSV, HTTP, ZipFile
+	import XLSX
+	using UnPack: @unpack
+	#using Plots
+	#Plots.gr(fmt = :png)	
+	
 end
 
-# ╔═╡ bed07322-64b1-11eb-3324-7b7ac5e8fba2
+# ╔═╡ 5a931c10-774a-11eb-05cb-d7ed3da85835
 md"""
-## Other Stuff
+## Patch 1: Weights and Centralities
 """
 
-# ╔═╡ 31bbc540-68cd-4d4a-b87a-d648e003524c
+# ╔═╡ 579444bc-774a-11eb-1d80-0557b12da169
+begin	
+	using LightGraphs
+	using SimpleWeightedGraphs: AbstractSimpleWeightedGraph, SimpleWeightedDiGraph
+	const LG = LightGraphs
+	
+	function weighted_adjacency_matrix(graph::LightGraphs.AbstractGraph; dir = :in)
+		A = LG.weights(graph) .* adjacency_matrix(graph)
+		if dir == :in
+			return A
+		elseif dir == :out
+			return A'
+		else
+			@error "provide dir ∈ [:in, :out]"
+		end
+	end
+	
+	LG.adjacency_matrix(graph::AbstractSimpleWeightedGraph) = LG.weights(graph) .> 0
+	
+	function LG.katz_centrality(graph::AbstractGraph, α::Real=0.3; dir = :in,  node_weights = ones(nv(graph)))
+		v = node_weights
+
+	    A = weighted_adjacency_matrix(graph; dir)
+    	v = (I - α * A) \ v
+    	v /=  norm(v)
+	end
+	
+	function LG.eigenvector_centrality(graph::AbstractGraph; dir = :in)
+		A = weighted_adjacency_matrix(graph; dir)
+		eig = LightGraphs.eigs(A, which=LightGraphs.LM(), nev=1)
+		eigenvector = eig[2]
+	
+		centrality = abs.(vec(eigenvector))
+	end
+	
+	LG.indegree(graph::AbstractSimpleWeightedGraph) = sum(weighted_adjacency_matrix(graph), dims = 1) # column sum
+	LG.outdegree(graph::AbstractSimpleWeightedGraph) = sum(weighted_adjacency_matrix(graph), dims = 2) # row sum
+		
+end
+
+# ╔═╡ 8cf29922-7759-11eb-3584-6d0d967b83b7
+
+
+# ╔═╡ 4779bd0a-774a-11eb-2548-038fcb0f7644
+md"""
+## Other stuff
+"""
+
+# ╔═╡ 4a355496-774a-11eb-0bd2-b36814663229
 TableOfContents()
 
-# ╔═╡ 9c0ee044-6a0b-11eb-1899-bbb75f5ba57d
+# ╔═╡ 47b5833e-774b-11eb-2209-cfa172c6425f
 begin
 	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
 	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
@@ -1045,12 +899,12 @@ begin
 	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
 	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
 	function wordcount(text)
-    	words=split(string(text), (' ','\n','\t','-','.',',',':','_','"',';','!'))
+    	words=split(string(text), (' ','\n','\t','-'))
     	length(words)
 	end
 end
 
-# ╔═╡ d14a8860-6a12-11eb-013e-d39bc64de8b2
+# ╔═╡ 4d3c33c8-774b-11eb-2aac-4146015c9248
 members = let
 	str = ""
 	for (first, last) in group_members
@@ -1063,35 +917,52 @@ end
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
+Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
+GraphPlot = "a2cc645c-3eea-5389-862e-a155d0052231"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-NearestNeighbors = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
+NamedArrays = "86f7a689-2022-50b4-a561-43c23ac3c673"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
+OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
+XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
+ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [compat]
+AxisKeys = "~0.1.18"
 CSV = "~0.8.5"
 CairoMakie = "~0.6.3"
 CategoricalArrays = "~0.10.0"
 Chain = "~0.4.7"
+Colors = "~0.12.8"
 DataFrames = "~1.2.2"
 Distributions = "~0.25.11"
-GeometryBasics = "~0.3.13"
+GraphPlot = "~0.4.4"
+HTTP = "~0.9.13"
 LightGraphs = "~1.3.5"
 Makie = "~0.15.0"
-NearestNeighbors = "~0.4.9"
+NamedArrays = "~0.9.6"
 NetworkLayout = "~0.4.0"
+OffsetArrays = "~1.10.4"
 PlutoUI = "~0.7.9"
+SimpleWeightedGraphs = "~1.1.1"
 UnPack = "~1.0.2"
+XLSX = "~0.7.6"
+ZipFile = "~0.9.3"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -1153,6 +1024,12 @@ deps = ["LinearAlgebra", "Random", "SparseArrays", "WoodburyMatrices"]
 git-tree-sha1 = "a4d07a1c313392a77042855df46c5f534076fab9"
 uuid = "13072b0f-2c55-5437-9ae7-d433b7a33950"
 version = "1.0.0"
+
+[[deps.AxisKeys]]
+deps = ["AbstractFFTs", "CovarianceEstimation", "IntervalSets", "InvertedIndices", "LazyStack", "LinearAlgebra", "NamedDims", "OffsetArrays", "Statistics", "StatsBase", "Tables"]
+git-tree-sha1 = "f7a17e0381cd8e627d9793433074823a2c1d7096"
+uuid = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5"
+version = "0.1.18"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -1239,6 +1116,11 @@ git-tree-sha1 = "417b0ed7b8b838aa6ca0a87aadf1bb9eb111ce40"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.8"
 
+[[deps.Combinatorics]]
+git-tree-sha1 = "08c8b6831dc00bfea825826be0bc8336fc369860"
+uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
+version = "1.0.2"
+
 [[deps.Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "SHA", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
 git-tree-sha1 = "344f143fa0ec67e47917848795ab19c6a455f32c"
@@ -1249,11 +1131,23 @@ version = "3.32.0"
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 
+[[deps.Compose]]
+deps = ["Base64", "Colors", "DataStructures", "Dates", "IterTools", "JSON", "LinearAlgebra", "Measures", "Printf", "Random", "Requires", "Statistics", "UUIDs"]
+git-tree-sha1 = "c6461fc7c35a4bb8d00905df7adafcff1fe3a6bc"
+uuid = "a81c6b42-2e10-5240-aca2-a61377ecd94b"
+version = "0.9.2"
+
 [[deps.Contour]]
 deps = ["StaticArrays"]
 git-tree-sha1 = "9f02045d934dc030edad45944ea80dbd1f0ebea7"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.5.7"
+
+[[deps.CovarianceEstimation]]
+deps = ["LinearAlgebra", "Statistics", "StatsBase"]
+git-tree-sha1 = "bc3930158d2be029e90b7c40d1371c4f54fa04db"
+uuid = "587fd27a-f159-11e8-2dae-1979310e6154"
+version = "0.2.6"
 
 [[deps.Crayons]]
 git-tree-sha1 = "3f71217b538d7aaee0b69ab47d9b7724ca8afa0d"
@@ -1289,12 +1183,6 @@ uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 [[deps.DelimitedFiles]]
 deps = ["Mmap"]
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
-
-[[deps.Distances]]
-deps = ["LinearAlgebra", "Statistics"]
-git-tree-sha1 = "a5b88815e6984e9f3256b6ca0dc63109b16a506f"
-uuid = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
-version = "0.9.2"
 
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
@@ -1333,6 +1221,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "b3bfd02e98aedfa5cf885665493c5598c350cd2f"
 uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
 version = "2.2.10+0"
+
+[[deps.EzXML]]
+deps = ["Printf", "XML2_jll"]
+git-tree-sha1 = "0fa3b52a04a4e210aeb1626def9c90df3ae65268"
+uuid = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
+version = "1.1.0"
 
 [[deps.FFMPEG]]
 deps = ["FFMPEG_jll"]
@@ -1418,9 +1312,9 @@ uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
-git-tree-sha1 = "15ff9a14b9e1218958d3530cc288cf31465d9ae2"
+git-tree-sha1 = "82853ebc70db4f5a3084853738c68fd497b22c7c"
 uuid = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
-version = "0.3.13"
+version = "0.3.10"
 
 [[deps.Gettext_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "XML2_jll"]
@@ -1433,6 +1327,12 @@ deps = ["Artifacts", "Gettext_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libic
 git-tree-sha1 = "7bf67e9a481712b3dbe9cb3dac852dc4b1162e02"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.68.3+0"
+
+[[deps.GraphPlot]]
+deps = ["ArnoldiMethod", "ColorTypes", "Colors", "Compose", "DelimitedFiles", "LightGraphs", "LinearAlgebra", "Random", "SparseArrays"]
+git-tree-sha1 = "dd8f15128a91b0079dfe3f4a4a1e190e54ac7164"
+uuid = "a2cc645c-3eea-5389-862e-a155d0052231"
+version = "0.4.4"
 
 [[deps.Graphics]]
 deps = ["Colors", "LinearAlgebra", "NaNMath"]
@@ -1456,6 +1356,12 @@ version = "0.5.7"
 git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
 uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
 version = "1.0.2"
+
+[[deps.HTTP]]
+deps = ["Base64", "Dates", "IniFile", "Logging", "MbedTLS", "NetworkOptions", "Sockets", "URIs"]
+git-tree-sha1 = "44e3b40da000eab4ccb1aecdc4801c040026aeb5"
+uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+version = "0.9.13"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg"]
@@ -1489,6 +1395,12 @@ version = "0.5.1"
 git-tree-sha1 = "f5fc07d4e706b84f72d54eedcc1c13d92fb0871c"
 uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.2"
+
+[[deps.IniFile]]
+deps = ["Test"]
+git-tree-sha1 = "098e4d2c533924c921f9f9847274f2ad89e018b8"
+uuid = "83e8ac13-25f8-5344-8a64-a9f2b223428f"
+version = "0.5.0"
 
 [[deps.IntelOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1572,6 +1484,12 @@ version = "1.2.1"
 [[deps.LazyArtifacts]]
 deps = ["Artifacts", "Pkg"]
 uuid = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
+
+[[deps.LazyStack]]
+deps = ["LinearAlgebra", "NamedDims", "OffsetArrays", "Test", "ZygoteRules"]
+git-tree-sha1 = "a8bf67afad3f1ee59d367267adb7c44ccac7fdee"
+uuid = "1fad7336-0346-5a1a-a56f-a06ba010965b"
+version = "0.0.7"
 
 [[deps.LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
@@ -1691,9 +1609,20 @@ git-tree-sha1 = "69b565c0ca7bf9dae18498b52431f854147ecbf3"
 uuid = "0a4f8689-d25c-4efe-a92b-7142dfc1aa53"
 version = "0.1.2"
 
+[[deps.MbedTLS]]
+deps = ["Dates", "MbedTLS_jll", "Random", "Sockets"]
+git-tree-sha1 = "1c38e51c3d08ef2278062ebceade0e46cefc96fe"
+uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
+version = "1.0.3"
+
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
+
+[[deps.Measures]]
+git-tree-sha1 = "e498ddeee6f9fdb4551ce855a46f54dbd900245f"
+uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
+version = "0.3.1"
 
 [[deps.Missings]]
 deps = ["DataAPI"]
@@ -1718,11 +1647,17 @@ git-tree-sha1 = "bfe47e760d60b82b66b61d2d44128b62e3a369fb"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "0.3.5"
 
-[[deps.NearestNeighbors]]
-deps = ["Distances", "StaticArrays"]
-git-tree-sha1 = "16baacfdc8758bc374882566c9187e785e85c2f0"
-uuid = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
-version = "0.4.9"
+[[deps.NamedArrays]]
+deps = ["Combinatorics", "DataStructures", "DelimitedFiles", "InvertedIndices", "LinearAlgebra", "Random", "Requires", "SparseArrays", "Statistics"]
+git-tree-sha1 = "2fd5787125d1a93fbe30961bd841707b8a80d75b"
+uuid = "86f7a689-2022-50b4-a561-43c23ac3c673"
+version = "0.9.6"
+
+[[deps.NamedDims]]
+deps = ["AbstractFFTs", "LinearAlgebra", "Pkg", "Requires", "Statistics"]
+git-tree-sha1 = "52985b34519b12fd0dcebbe34e74b2dbe6d03183"
+uuid = "356022a1-0364-5f58-8944-0da4b18d706f"
+version = "0.2.35"
 
 [[deps.Netpbm]]
 deps = ["ColorVectorSpace", "FileIO", "ImageCore"]
@@ -1978,6 +1913,12 @@ git-tree-sha1 = "5d7e3f4e11935503d3ecaf7186eac40602e7d231"
 uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 version = "0.9.4"
 
+[[deps.SimpleWeightedGraphs]]
+deps = ["LightGraphs", "LinearAlgebra", "Markdown", "SparseArrays", "Test"]
+git-tree-sha1 = "f3f7396c2d5e9d4752357894889a87340262f904"
+uuid = "47aef6b3-ad0c-573a-a1e2-d07658019622"
+version = "1.1.1"
+
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
@@ -2037,10 +1978,10 @@ uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "0.9.8"
 
 [[deps.StructArrays]]
-deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
-git-tree-sha1 = "000e168f5cc9aded17b6999a560b7c11dda69095"
+deps = ["DataAPI", "Tables"]
+git-tree-sha1 = "ad1f5fd155426dcc879ec6ede9f74eb3a2d582df"
 uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-version = "0.6.0"
+version = "0.4.2"
 
 [[deps.StructTypes]]
 deps = ["Dates", "UUIDs"]
@@ -2093,6 +2034,11 @@ git-tree-sha1 = "7c53c35547de1c5b9d46a4797cf6d8253807108c"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 version = "0.9.5"
 
+[[deps.URIs]]
+git-tree-sha1 = "97bbe755a53fe859669cd907f2d96aee8d2c1355"
+uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
+version = "1.3.0"
+
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
@@ -2116,6 +2062,12 @@ deps = ["LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "59e2ad8fd1591ea019a5259bd012d7aee15f995c"
 uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
 version = "0.5.3"
+
+[[deps.XLSX]]
+deps = ["Dates", "EzXML", "Printf", "Tables", "ZipFile"]
+git-tree-sha1 = "7744a996cdd07b05f58392eb1318bca0c4cc1dc7"
+uuid = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
+version = "0.7.6"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "Zlib_jll"]
@@ -2177,9 +2129,21 @@ git-tree-sha1 = "79c31e7844f6ecf779705fbc12146eb190b7d845"
 uuid = "c5fb5394-a638-5e4d-96e5-b29de1b5cf10"
 version = "1.4.0+3"
 
+[[deps.ZipFile]]
+deps = ["Libdl", "Printf", "Zlib_jll"]
+git-tree-sha1 = "c3a5637e27e914a7a445b8d0ad063d701931e9f7"
+uuid = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
+version = "0.9.3"
+
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
+
+[[deps.ZygoteRules]]
+deps = ["MacroTools"]
+git-tree-sha1 = "9e7a1e8ca60b742e508a315c17eef5211e7fbfd7"
+uuid = "700de1a5-db45-46bc-99cf-38207098b444"
+version = "0.2.1"
 
 [[deps.isoband_jll]]
 deps = ["Libdl", "Pkg"]
@@ -2238,118 +2202,116 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╟─f5450eab-0f9f-4b7f-9b80-992d3c553ba9
-# ╟─51c0c3e2-1930-4859-87d7-99b1985c32e6
-# ╟─0e30624c-65fc-11eb-185d-1d018f68f82c
-# ╟─c2940f90-661a-11eb-3d77-0fc1189e0960
-# ╟─f4266196-64aa-11eb-3fc1-2bf0e099d19c
-# ╟─43a25dc8-6574-11eb-3607-311aa8d5451e
-# ╟─3e9af1f4-6575-11eb-21b2-453dc18d1b7b
-# ╟─5eafd0f0-6619-11eb-355d-f9de3ae53f6a
-# ╟─b36832aa-64ab-11eb-308a-8f031686c8d6
-# ╟─7ed6b942-695f-11eb-38a1-e79655aedfa2
-# ╟─c8f92204-64ac-11eb-0734-2df58e3373e8
-# ╟─2f9f008a-64aa-11eb-0d9a-0fdfc41d4657
-# ╠═b8d874b6-648d-11eb-251c-636c5ebc1f42
-# ╠═f48fa122-649a-11eb-2041-bbf0d0c4670c
-# ╟─10dd6814-f796-42ea-8d40-287ed7c9d239
-# ╠═8ddb6f1e-649e-11eb-3982-83d2d319b31f
-# ╠═61a36e78-57f8-4ef0-83b4-90e5952c116f
-# ╠═ffe07e00-0408-4986-9205-0fbb025a698c
-# ╠═5d11a2df-3187-4509-ba7b-8388564573a6
-# ╠═f4c62f95-876d-4915-8372-258dfde835f7
-# ╟─50d9fb56-64af-11eb-06b8-eb56903084e2
-# ╟─9302b00c-656f-11eb-25b3-495ae1c843cc
-# ╟─657c3a98-6573-11eb-1ccb-b1d974414647
-# ╟─3aeb0106-661b-11eb-362f-6b9af20f71d7
-# ╟─d2813d40-656d-11eb-2cfc-e389ed2a0d84
-# ╠═8d4cb5dc-6573-11eb-29c8-81baa6e3fffc
-# ╠═d6694c32-656c-11eb-0796-5f485cccccf0
-# ╟─ce75fe16-6570-11eb-3f3a-577eac7f9ee8
-# ╟─37972f08-db05-4e84-9528-fe16cd86efbf
-# ╟─6948e6c6-661b-11eb-141c-370fc6ffe618
-# ╟─1bd2c660-6572-11eb-268c-732fd2210a58
-# ╟─f4cd5fb2-6574-11eb-37c4-73d4b21c1883
-# ╠═0b35f73f-6976-4d85-b61f-b4188440043e
-# ╟─373cb47e-655e-11eb-2751-0150985d98c1
-# ╟─4dee5da9-aa4b-4551-974a-f7268d016617
-# ╟─04227a80-5d28-43db-929e-1cdc5b31796d
-# ╟─78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
-# ╠═49b21e4e-6577-11eb-38b2-45d30b0f9c80
-# ╠═7b43d3d6-03a0-4e0b-96e2-9de420d3187f
-# ╠═c5f48079-f52e-4134-8e6e-6cd4c9ee915d
-# ╠═99a1f078-657a-11eb-2183-1b6a0598ffcd
-# ╟─34b1a3ba-657d-11eb-17fc-5bf325945dce
-# ╟─bf2c5f5a-661b-11eb-01c5-51740fba63e3
-# ╟─83b817d2-657d-11eb-3cd2-332a348142ea
-# ╠═bb924b8e-69f9-11eb-1e4e-7f841ac1c1bd
-# ╠═0d610e80-661e-11eb-3b9a-93af6b0ad5de
-# ╟─e8b7861e-661c-11eb-1c06-bfedd6ab563f
-# ╠═02b1e334-661d-11eb-3194-b382045810ef
-# ╟─1978febe-657c-11eb-04ac-e19b2d0e5a85
-# ╟─12d7647e-6a13-11eb-2b1e-9f77bdb3a87a
-# ╠═b402b1e2-6a12-11eb-16ac-7b19064562b8
-# ╠═e7d47230-6a12-11eb-0392-4360f36222b8
-# ╟─eea88902-6a12-11eb-3a63-df8979fbdd55
-# ╟─fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
-# ╠═98d449ac-695f-11eb-3daf-dffb377aa5e2
-# ╟─b9c7df54-6a0c-11eb-1982-d7157b2c5b92
-# ╟─8a2c223e-6960-11eb-3d8a-516474e6653c
-# ╠═809375ba-6960-11eb-29d7-f9ab3ee61367
-# ╟─dc9ac0c0-6a0a-11eb-2ca8-ada347bffa85
-# ╟─1be1ac8a-6961-11eb-2736-79c77025255d
-# ╟─945d67f6-6961-11eb-33cf-57ffe340b35f
-# ╟─11c507a2-6a0f-11eb-35bf-55e1116a3c72
-# ╟─48818cf0-6962-11eb-2024-8fca0690dd78
-# ╟─fac414f6-6961-11eb-03bb-4f58826b0e61
-# ╠═d18f1b0c-69ee-11eb-2fc0-4f14873847fb
-# ╟─75b4c0c2-69f3-11eb-1ebc-75efd2d0bf1f
-# ╠═98b2eefe-69f2-11eb-36f4-7b19a55cfe78
-# ╟─33c4ea42-6a10-11eb-094c-75343532f835
-# ╟─e64300dc-6a10-11eb-1f68-57120286535b
-# ╟─2e3413ae-6962-11eb-173c-6d53cfd8a968
-# ╠═29036938-69f4-11eb-09c1-63a7a75de61d
-# ╠═18e84a22-69ff-11eb-3909-7fd30fcf3040
-# ╟─0d2b1bdc-6a14-11eb-340a-3535d7bfbec1
-# ╠═dceb5318-69fc-11eb-2e1b-0b8cef279e05
-# ╟─da82d3ea-69f6-11eb-343f-a30cdc36228a
-# ╟─297e4d74-6a12-11eb-0302-0f97bab2c906
-# ╠═d0f3064a-6a11-11eb-05bf-09f67a451510
-# ╟─e79e6ed4-6a11-11eb-2d68-69a814ec657c
-# ╟─9c562b8c-6a12-11eb-1e07-c378e9304a1d
-# ╟─515edb16-69f3-11eb-0bc9-a3504565b80b
-# ╠═1abd6992-6962-11eb-3db0-f3dbe5f095eb
-# ╠═07c102c2-69ee-11eb-3b29-25e612df6911
-# ╟─57a72310-69ef-11eb-251b-c5b8ab2c6082
-# ╟─74c35594-69f0-11eb-015e-2bf4b55e658c
-# ╠═6ffb63bc-69f0-11eb-3f84-d3fca5526a3e
-# ╟─1b8c26b6-64aa-11eb-2d9a-47db5469a654
-# ╟─07a66c72-6576-11eb-26f3-810607ca7e51
-# ╠═ca77fa78-657a-11eb-0faf-15ffd3fdc540
-# ╠═fecf62c5-2c1d-4709-8c17-d4b6e0565617
-# ╠═208445c4-5359-4442-9b9b-bde5e55a8c23
-# ╟─e4d016cc-64ae-11eb-1ca2-259e5a262f33
-# ╠═bf18bef2-649d-11eb-3e3c-45b41a3fa6e5
-# ╠═11ea4b84-649c-11eb-00a4-d93af0bd31c8
-# ╠═b0d34450-6497-11eb-01e3-27582a9f1dcc
-# ╠═63b2882e-649b-11eb-28de-bd418b43a35f
-# ╟─47ac6d3c-6556-11eb-209d-f7a8219512ee
-# ╠═c511f396-6579-11eb-18b1-df745093a116
-# ╠═67e74a32-6578-11eb-245c-07894c89cc7c
-# ╠═51a16fcc-6556-11eb-16cc-71a978e02ef0
-# ╠═f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
-# ╠═4a9b5d8a-64b3-11eb-0028-898635af227c
-# ╟─e82d5b7f-5f37-4696-9917-58b117b9c1d6
-# ╠═95b67e4d-5d41-4b86-bb9e-5de97f5d8957
-# ╠═c1971734-2299-4038-8bb6-f62d020f92cb
-# ╟─5fe4d47c-64b4-11eb-2a44-473ef5b19c6d
-# ╠═66d78eb4-64b4-11eb-2d30-b9cee7370d2a
-# ╟─a81f5244-64aa-11eb-1854-6dbb64c8eb6a
-# ╠═fdf43912-6623-11eb-2e6a-137c10342f32
-# ╠═3b444a90-64b3-11eb-0b8f-1facc32a4088
-# ╠═2b55141f-1cba-4a84-8811-98697d408d65
-# ╟─bed07322-64b1-11eb-3324-7b7ac5e8fba2
-# ╠═31bbc540-68cd-4d4a-b87a-d648e003524c
-# ╠═9c0ee044-6a0b-11eb-1899-bbb75f5ba57d
-# ╠═d14a8860-6a12-11eb-013e-d39bc64de8b2
+# ╟─55a868c8-0614-4074-9389-c957cf64cb20
+# ╟─38f5d048-7747-11eb-30f7-89bade5ed0a3
+# ╟─19b0fa00-774a-11eb-1ede-89eceed8b8ff
+# ╟─f1749b26-774b-11eb-2b42-43ffcb5cd7ee
+# ╟─a771e504-77aa-11eb-199c-8778965769b6
+# ╠═94375d0e-77aa-11eb-3934-edb020ab0fd7
+# ╟─cb75f8ac-77aa-11eb-041c-4b3fe85ec22b
+# ╠═76e6f44e-77aa-11eb-1f12-438937941606
+# ╟─9b47991e-7c3d-11eb-1558-b5824ab10dc0
+# ╠═d772a28a-7c3d-11eb-012f-9b81ad67f9a8
+# ╟─d9465a80-7750-11eb-2dd5-d3052d3d5c50
+# ╟─cf680c48-7769-11eb-281c-d7a2d5ec8fe5
+# ╠═cbc03264-7769-11eb-345a-71ae30cc7526
+# ╟─dd41fe96-7769-11eb-06a6-3d6298f6e6fc
+# ╠═278c829c-7767-11eb-1d04-cb38ee52b79b
+# ╟─128bb9e8-776a-11eb-3786-83531bd2dffb
+# ╠═5d85143c-7765-11eb-1a1c-29f3421fe857
+# ╠═280e8390-776a-11eb-0aed-19b0ba929c84
+# ╠═22c3abde-7767-11eb-0b6f-93ad1055bbae
+# ╠═44929fe0-7767-11eb-0318-e720b844f710
+# ╠═f6144074-7768-11eb-3624-51bbc44be7ec
+# ╟─f65f7f8c-7769-11eb-3399-79bde01513cd
+# ╠═bd27268e-7766-11eb-076b-71688ecb4ae3
+# ╠═d9fd6bb0-7766-11eb-150b-410bb7d09d20
+# ╟─04e731d0-7751-11eb-21fd-e7f9b022cdc9
+# ╠═775f99b8-77a9-11eb-2ebf-7bbe0d398306
+# ╠═6cec81a0-77ac-11eb-06e3-bd9dcb73a896
+# ╠═834669c4-776c-11eb-29b7-77dc465077d7
+# ╠═b43f6b02-776c-11eb-2685-655705eb1681
+# ╠═ffdbb91c-776c-11eb-3b28-51314d40f7a2
+# ╠═5c2ef34e-776f-11eb-2a6f-ff99b5d24997
+# ╠═958f9f3e-77ac-11eb-323c-cd78c1fe4c23
+# ╟─5aff086a-7751-11eb-039e-fd1b769b6fea
+# ╠═2e7630ee-7770-11eb-32ae-112b4b282eaf
+# ╠═4341e8cc-7770-11eb-04d5-c5d33d9a9e52
+# ╠═486d0372-7770-11eb-1956-1d3314be6753
+# ╠═4e17451a-7770-11eb-3c41-6d98b73d410b
+# ╠═56a4c272-7770-11eb-0626-131942edd52d
+# ╠═5bb435cc-7770-11eb-33b6-cb78835406bc
+# ╠═5dbcbd44-7770-11eb-0f60-f74a9945477e
+# ╠═6378c2aa-7770-11eb-3edc-9d41e709750e
+# ╠═6ca12836-7770-11eb-271f-354367f89cb0
+# ╟─c2842ace-7751-11eb-240f-550286e812af
+# ╠═bc30e12a-7770-11eb-3db2-b753ec458ce5
+# ╠═b48335da-7771-11eb-2b17-1507687e446c
+# ╠═9a89d9b4-7772-11eb-0c86-9b5f5f1ab23e
+# ╠═7db9fa00-7773-11eb-0942-ed884b67533c
+# ╠═36334032-7774-11eb-170f-5b7f9b7e0ec7
+# ╠═3843a2c2-7774-11eb-1bf5-5178a9014ae2
+# ╠═f534c32c-7772-11eb-201c-233b5b7a27a4
+# ╠═95f4f0d0-7772-11eb-1b2a-d179e76950fe
+# ╠═15334fc2-7773-11eb-303e-67e90901f850
+# ╠═939fa06e-7772-11eb-086c-ff1bf54525f1
+# ╠═50194494-7772-11eb-20ff-419e874ec00c
+# ╟─cbb1e550-7751-11eb-1313-7ff968453f36
+# ╠═8212939e-7770-11eb-1f4e-9b698be25d1f
+# ╠═9aa77c76-7770-11eb-35ed-9b83924e8176
+# ╟─ee72ef4c-7751-11eb-1781-6f4d027a9e66
+# ╠═3585b022-7853-11eb-1a05-7b4fe3921051
+# ╠═ddfcd760-7853-11eb-38f7-298a4c1cb5aa
+# ╟─d0630e36-774b-11eb-0750-370f1b1327e6
+# ╠═29f570c0-774b-11eb-2c1c-17a956c9fd27
+# ╠═2fa2a558-774b-11eb-396b-832d0ce9a130
+# ╟─3cd55fca-774b-11eb-307a-61b685db1b54
+# ╟─cebdd63e-774a-11eb-3cd5-951c43b3c3ff
+# ╟─04e5b93a-77ae-11eb-0240-ad7517f0fde3
+# ╠═5df355b6-77b1-11eb-120f-9bb529b208df
+# ╠═664efcec-77b1-11eb-2301-5da84a5de423
+# ╠═ebfcbb8e-77ae-11eb-37fc-e798175197d0
+# ╟─85e7546c-77ae-11eb-0d0c-618c3669c903
+# ╠═811e741e-77b1-11eb-000e-93a9a19a9f60
+# ╠═9298e2de-77b1-11eb-0a56-1f50bb0f4dc3
+# ╠═3ec33a62-77b1-11eb-0821-e547d1422e6f
+# ╠═4359dbee-77b1-11eb-3755-e1c1532212bb
+# ╠═45db03f2-77b1-11eb-2edd-6104bc85915b
+# ╠═486cd850-77b1-11eb-1dd2-15ca68d98173
+# ╠═ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6
+# ╟─4e891b56-77b1-11eb-116d-e94250f1d70e
+# ╟─48f0ffd4-77b0-11eb-04ab-43eac927ac9d
+# ╠═9fb0a0a8-77b1-11eb-011f-7fc7a549f552
+# ╠═9da09070-77b1-11eb-0d2e-e9a4433bf34e
+# ╟─24c076d2-774a-11eb-2412-f3747af382a2
+# ╟─7122605e-7753-11eb-09b8-4f0066353d17
+# ╠═b223523e-7753-11eb-1d9a-67c0281ae473
+# ╟─356d2016-7754-11eb-2e6f-07d1c12831b5
+# ╠═12798090-7754-11eb-3fdf-852bc740ed2a
+# ╟─ad8a6380-7755-11eb-1542-9972c0daa480
+# ╠═5bbac0ac-7754-11eb-0ec0-7d564524afe6
+# ╟─724dc756-7754-11eb-3a22-a309a77b2f28
+# ╠═75b9fd42-7754-11eb-3219-c57ef876f04b
+# ╟─7658c6d2-7754-11eb-32a9-41bf10cd7f6b
+# ╠═ade0d2f4-7754-11eb-2693-074c67837de3
+# ╟─83bdf67e-7753-11eb-06a2-cf39291d8a87
+# ╠═0fe4809c-7758-11eb-2569-33b178bfccca
+# ╠═6197cf52-7758-11eb-2c66-b7df9d59cbf7
+# ╠═c312d5d6-775a-11eb-24cd-f1cf36f3dd40
+# ╟─48dc654c-7765-11eb-313a-c598a7d09fb7
+# ╠═d6a23266-7757-11eb-346c-534caaf657fb
+# ╟─66d81066-7772-11eb-21f3-9568518636c2
+# ╠═bb783ac4-7772-11eb-365a-1fd1b6847e27
+# ╠═cb5e1b02-7772-11eb-2d21-dfe6c49aa7d0
+# ╠═c3b13010-7772-11eb-0ba3-0d82c76c6a49
+# ╟─42b21fce-774a-11eb-2d00-c3bfd55a35fc
+# ╠═6526d6e4-774a-11eb-0b7a-bd644b5f7fea
+# ╟─5a931c10-774a-11eb-05cb-d7ed3da85835
+# ╠═579444bc-774a-11eb-1d80-0557b12da169
+# ╠═8cf29922-7759-11eb-3584-6d0d967b83b7
+# ╟─4779bd0a-774a-11eb-2548-038fcb0f7644
+# ╠═4a355496-774a-11eb-0bd2-b36814663229
+# ╠═47b5833e-774b-11eb-2209-cfa172c6425f
+# ╠═4d3c33c8-774b-11eb-2aac-4146015c9248
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
