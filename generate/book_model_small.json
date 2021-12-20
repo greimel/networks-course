@@ -1,0 +1,24 @@
+[
+    {
+        "title": "Spread of Disease",
+        "contents": [
+            {
+                "name": "Covid and vaccinations in the SIR model",
+                "notebook_path": "notebooks/disease.jl",
+                "video_id": "Wjcx9sNSLP8",
+                "preview_image_url": "https://user-images.githubusercontent.com/6933510/136196605-b6119b9d-223c-44bc-97d5-ef7cfce66483.gif"
+            }
+        ]
+    },
+    {
+        "title": "Social Connectedness",
+        "contents": [
+            {
+                "name": "What Facebook Friendships Tell Us About the World",
+                "notebook_path": "notebooks/facebook",
+                "video_id": "7N9Vvc8amGM",
+                "preview_image_url": "https://user-images.githubusercontent.com/6933510/136199704-ba6d0586-34bf-490c-8fd0-6959ab42cd23.png"
+            }
+        ]
+    }
+]

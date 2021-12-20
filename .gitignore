@@ -2,3 +2,8 @@
 .DS_Store
 
 lecture-notes/
+
+pluto_state_cache
+
+website/__site/
+build/
