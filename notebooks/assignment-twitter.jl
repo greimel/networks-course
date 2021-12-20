@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.16.1
+# v0.17.3
 
 using Markdown
 using InteractiveUtils
@@ -7,8 +7,9 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
 end
@@ -18,30 +19,29 @@ begin
 	import Pkg
 	Pkg.activate(temp = true)
 	Pkg.add([
-			Pkg.PackageSpec(name="DataAPI",           version="1.4"),
-			Pkg.PackageSpec(name="DataFrames",        version="0.22"),
+			Pkg.PackageSpec(name="Chain"),
+			Pkg.PackageSpec(name="DataAPI",           version="1"),
+			Pkg.PackageSpec(name="DataFrames",        version="1"),
+			Pkg.PackageSpec(name="DataFrameMacros"),
 			Pkg.PackageSpec(name="CSV",               version="0.8"),
 			Pkg.PackageSpec(name="CategoricalArrays", version="0.9"),
-			Pkg.PackageSpec(name="Plots",             version="1.10"),
-			Pkg.PackageSpec(name="Cairo", ),
-			Pkg.PackageSpec(name="Compose", ),
-			Pkg.PackageSpec(name="Images", ),
-			Pkg.PackageSpec(name="ImageIO", ),
 			
 			])
 	
-	Pkg.add(["PlutoUI", "LightGraphs", "GraphPlot", "GraphDataFrameBridge", "FreqTables", "Colors"])
+	Pkg.add(["PlutoUI", "Graphs", "GraphMakie", "CairoMakie", "SimpleWeightedGraphs", "FreqTables", "Colors"])
+
+	using SparseArrays, LinearAlgebra
 	
 	using PlutoUI: FilePicker, TableOfContents
+	using Chain: @chain
 	import CSV
+	using DataAPI: refarray
 	using DataFrames: DataFrames, DataFrame, groupby, select, select!, combine, transform, transform!, ByRow, leftjoin
+	using DataFrameMacros: @transform!
 	using CategoricalArrays: CategoricalArrays, categorical
-	using LightGraphs
-	using GraphPlot, Colors
-	using GraphDataFrameBridge
+	using Graphs, SimpleWeightedGraphs
+	using GraphMakie, CairoMakie, Colors
 	using FreqTables
-	using Cairo, Compose, Images
-	using Plots
 	
 	_a_ = 1 # make sure that this is cell #1
 	nothing
@@ -341,18 +341,6 @@ md"""
 ## Install Python and the package `twint`
 """
 
-# ╔═╡ dee4b0da-67b1-11eb-0cdd-c70a310e3546
-md"""
-## PNG output for `gplot`
-"""
-
-# ╔═╡ 8de96054-67b1-11eb-0e55-a35a1f821d8a
-function gplot_to_png(gp::Context)
-	filename = tempname() * ".png"
-	gp |> PNG(filename)
-	load(filename)
-end
-
 # ╔═╡ 1f927f3c-60e5-11eb-0304-f1639b68468d
 md"""
 ## Useful functions
@@ -397,15 +385,24 @@ begin
 			end
 		end
 	end
+
+	levels = edge_list.user1 ∪ edge_list.user2 
+
+	@transform!(edge_list, :user1 = @c categorical(:user1; levels))
+	@transform!(edge_list, :user2 = @c categorical(:user2; levels))
 	
 	edge_list
 end
 
 # ╔═╡ 15ecf0aa-60e2-11eb-1ef4-ebfc215e5ca7
-graph = MetaGraph(edge_list, :user1, :user2, weight = :common_hashtags)
+graph = @chain edge_list begin
+	sparse(refarray(_.user1), refarray(_.user2), _.common_hashtags, length(levels), length(levels))
+	Symmetric
+	SimpleWeightedGraph
+end
 
 # ╔═╡ 41f4f6cc-6173-11eb-104f-69c755afd266
-gplot(graph) |> gplot_to_png
+graphplot(graph)
 
 # ╔═╡ dc41336a-647f-11eb-3ca3-cb3ab8a6a024
 # some dummy analysis
@@ -426,8 +423,8 @@ src.(edges(graph)), dst.(edges(graph))
 # ╔═╡ 76c50e74-60f3-11eb-1e25-cdcaeae76c38
 begin
 	node_df = DataFrame(
-		username = GraphDataFrameBridge.MetaGraphs.get_prop.(Ref(graph), vertices(graph), :name)
-		)
+		username = levels
+	)
 	
 	node_df = leftjoin(node_df, user_df, on = :username)
 	
@@ -452,12 +449,10 @@ end
 
 # ╔═╡ eeb99bfe-6178-11eb-04f7-bf04d3c10eeb
 members = let
-	str = ""
-	for (first, last) in group_members
-		str *= str == "" ? "" : ", "
-		str *= first * " " * last
+	names = map(group_members) do (; firstname, lastname)
+		firstname * " " * lastname
 	end
-	str
+	join(names, ", ", " & ")
 end
 
 # ╔═╡ da51e362-6176-11eb-15b2-b7bcebc2cbb6
@@ -593,10 +588,8 @@ TableOfContents()
 # ╟─d07dc2ac-67b1-11eb-1bee-c52695fb4f28
 # ╠═400cc04e-4784-11eb-11a2-ff8e245cad27
 # ╠═87b7bc86-60df-11eb-3f9f-2375449c77f6
-# ╟─a1d99d9e-60dc-11eb-391c-b52c2e16aedd
+# ╠═a1d99d9e-60dc-11eb-391c-b52c2e16aedd
 # ╠═6535e16c-6146-11eb-35c0-31aef62a631c
-# ╟─dee4b0da-67b1-11eb-0cdd-c70a310e3546
-# ╠═8de96054-67b1-11eb-0e55-a35a1f821d8a
 # ╟─1f927f3c-60e5-11eb-0304-f1639b68468d
 # ╠═620c76e4-60de-11eb-2c82-d364f55fbe4d
 # ╠═eeb99bfe-6178-11eb-04f7-bf04d3c10eeb
