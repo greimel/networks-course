@@ -1,5 +1,5 @@
-# This is the _Spring 2022_ edition
+# This is the _2022_ edition
 
 For previous versions of this class, see:
 
--   [Spring 2021]()
+-   [2021]()

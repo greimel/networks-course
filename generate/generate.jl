@@ -160,7 +160,7 @@ SUBTITLE = "Theory, Computation and Data"
 INSTITUTION = "University of Amsterdam"
 
 # ╔═╡ ab7186a4-2287-41da-a939-70f142bfeacd
-TERM = "Spring 2021"
+TERM = "2022"
 
 # ╔═╡ fd5f6637-3223-4f0b-94a6-ace86f5a5926
 function instructors(INSTRUCTORS)
@@ -184,7 +184,7 @@ homepage = (page = "/index.html", href = "/$PREPATH/", title = "Welcome")
 # ╔═╡ 01a2336a-5c04-4d5a-bb0b-a9c704517dbf
 pages = [
 	(page = "/logistics/", href = "/$PREPATH/logistics/", title = "Class Logistics"),
-	(page = "/syllabus/", href = "/$PREPATH/syllabus/", title = "Syllabus and videos"),
+	(page = "/syllabus/", href = "/$PREPATH/syllabus/", title = "Syllabus"),
 	(page = "/installation/", href = "/$PREPATH/installation/", title = "Software installation"),
 	(page = "/cheatsheets/", href = "/$PREPATH/cheatsheets/", title = "Cheatsheets"),
 	(page = "/semesters/", href = "/$PREPATH/semesters/", title = "Previous semesters")
@@ -233,7 +233,7 @@ function sidebar_code(book_model)
     <div class="sidebar-about">
     <br>
     <img src="/$PREPATH/assets/uva_logo.svg" style="width: 160px; height: auto; display: inline">
-    <div style="font-weight: bold; margin-bottom: 0.5em"><a href="/semesters/">$(TERM)</a> <span style="opacity: 0.6;">| $(INSTITUTION)</span></div>
+    <div style="font-weight: bold; margin-bottom: 0.5em"><a href="/$PREPATH/semesters/">$(TERM)</a> <span style="opacity: 0.6;">| $(INSTITUTION)</span></div>
     <h1><a href="/">$(TITLE)</a></h1>
     <h2>$(SUBTITLE)</h2>
     <div style="line-height:18px; font-size: 15px; opacity: 0.85">by $(INSTRUCTORS)</div>
