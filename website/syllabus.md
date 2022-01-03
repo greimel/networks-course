@@ -2,7 +2,7 @@
 
 ## Course Links
 
-[official Canvas course page](https://discord.gg/Z5qnVf8)
+[official Canvas course page](https://canvas.uva.nl/courses/29557)
 
 ## Class schedule
 
