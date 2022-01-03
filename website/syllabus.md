@@ -2,28 +2,29 @@
 
 ## Course Links
 
-[![Discord Chat](/assets/discord_logo.svg#badge)](https://discord.gg/Z5qnVf8)
+[official Canvas course page](https://discord.gg/Z5qnVf8)
 
-### MIT Students Only
-[![Zoom Meeting](/assets/zoom_logo.svg#badge)](https://zoom.us/j/96183959527)
-[![Piazza Forum](/assets/piazza_logo.svg#badge)](https://piazza.com/mit/spring2021/6s083)
-[![Canvas LMS](/assets/canvas_logo.svg#badge)](https://canvas.mit.edu/courses/7590)
-[![MITx LMS](/assets/mitx_logo.svg#badge)](https://lms.mitx.mit.edu/courses/course-v1:MITx+6.S083r+2021_Spring/course/)
+## Class schedule
+
+| Lecture | Title | Date | Lecturer | Notebooks | Reading |
+|:-------:|:-----:|:----:|:--------:|:---------:|:-------:|
+| 1A | Network Basics 1      | Feb  7, 2022 | Cees   | [notebook](/first-networks/) | Jackson Ch. 1 & 2 |
+| 1B | Network Basics 2      | Feb 10, 2022 | Cees   |  | Jackson Ch. 3 |
+| 1C | Random Networks       | Feb 11, 2022 | Cees   |  | Jackson Ch. 4--6 & 11 |
+| 2A | Tutorial 1: Basics    | Feb 14, 2022 | Cees   |  | |
+| 2B | Learning on Networks  | Feb 17, 2022 | Cees   |  | Jackson Ch. 8 |
+| 2C | Disease Transmission  | Feb 18, 2022 | Cees   | [notebook](/disease/)  | |
+| 3A | no lecture            | Feb 21, 2022 |        |                        | |
+| 3B | Financial networks 1  | Feb 24, 2022 | Fabian | [notebook](/banks/)    | [Acemoglu et al. (2015)](https://www.aeaweb.org/articles?id=10.1257/aer.20130456) |
+| 3C | Financial networks 2  | Feb 25, 2022 | Fabian | [notebook](/banks/)    | [Allen & Gale (2000)](https://www.jstor.org/stable/10.1086/262109) |
+| 4A | Tutorial 2            | Feb 28, 2022 | Cees   |                        | |
+| 4B | Social Connectedness  | Mar  3, 2022 | Fabian | [notebook](/facebook/) | [Bailey et al. (2018)](https://www.aeaweb.org/articles?id=10.1257/jep.32.3.259) | 
+| 4C | Network Games         | Mar  4, 2022 | Fabian | | Jackson Ch. 9 |
+| 5A | Tutorial 3            | Mar  7, 2022 | Fabian | | |
+| 5B | Production networks 1 | Mar 10, 2022 | Fabian | [notebook](/production/) | [Carvalho (2014)](https://www.aeaweb.org/articles.php?doi=10.1257/jep.28.4.23), [Long & Plosser (1982)](https://www.jstor.org/stable/1840430) |
+| 5C | Production networks 2 | Mar 11, 2022 | Fabian | [notebook](/production/) | [Carvalho (2014)](https://www.aeaweb.org/articles.php?doi=10.1257/jep.28.4.23), [Acemoglu et al. (2012)](https://economics.mit.edu/files/8135) |
+| 6A | Econometrics          | Mar 14, 2022 | Cees   | | |
+| 6B | Tutorial 4            | Mar 17, 2022 | Fabian | | |
+| 6C | Tutorial 5            | Mar 18, 2022 | Fabian | | |
 
 
-| Lecture | Title | Date | Notebooks | Recording | Announcements |
-|:-------:|:-----:|:----:|:---------:|:---------:|:-----:|
-| 1 | Images, Data, Arrays, Abstractions | Feb 17, 2021 | [1.1](/week1/), [1.2](/abstraction/) | [video](https://www.youtube.com/watch?v=3zTO3LEY-cM) | HW0 released |
-| 2 | Image Transformations | Feb 22, 2021 | [1.4](/transforming_images/) | [video](https://www.youtube.com/watch?v=uZYVjDDZW9A) | HW1 released |
-| 3 | More Transformations and Automatic Differentiation | Feb 24, 2021 | [1.3](/transformation_autodiff/) | [video](https://www.youtube.com/watch?v=AAREeuaKCic) | |
-| 4 | Transformations: Composability and Linearity | Mar 1, 2021 | [1.5](/more_transformations/) | [video](https://www.youtube.com/watch?v=VDPf3RjoCpY) | |
-| 5 | Inverses and Newton's Method | Mar 3, 2021 | [1.6](/newton_method/) | [video](https://www.youtube.com/watch?v=Wjcx9sNSLP8) | HW3 released |
-| 6 | Dyanmic Programming and Seam Carving | Mar 9, 2021 | [1.7](/dynamic_programming/), [1.8](seam_carving)| [video](https://www.youtube.com/watch?v=KyBXJV1zFlo) | Week 3 Problem MITx released |
-| 7 | Structure in Data and PCA| Mar 10, 2021 | [1.9](/structure/) |[video](https://www.youtube.com/watch?v=wZrVxbmX218)  | |
-| 8 | More PCA| Mar 15, 2021 | [2.1](/pca/) | [video](https://www.youtube.com/watch?v=iuKrM_NzxCk) | |
-| 9 | Sampling & Random Variables | Mar 15, 2021 | [2.2](/random_vars/) |[video](https://www.youtube.com/watch?v=7HrpoFZzITI)  | |
-| 10 | Modeling with Stochastic Simulation | Mar 24, 2021 | [2.3](/simulating_component_failure/) | [video](https://www.youtube.com/watch?v=d8BohH76C7E) | |
-| 11 | Random Variables as Types | Mar 29, 2021 | [2.4](/random_variables_as_types/) | [video](https://www.youtube.com/watch?v=xKAO38UsXo0) | |
-| 12 | Random Walks | Mar 31, 2021 | [2.5](/random_walks/) | [video](https://www.youtube.com/watch?v=WLQ1l75jSwU) | |
-| 13 | Random Walks II | Apr 5, 2021 | [2.6](/random_walks_II/)  | [video](https://www.youtube.com/watch?v=pIAFHyLmwbM) | |
-| 14 | Discrete & Continuous | Apr 7, 2021 | [2.7](/discrete_and_continuous/) | [video](https://www.youtube.com/watch?v=H6Dcx3YeTkE) | |
