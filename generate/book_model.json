@@ -13,12 +13,6 @@
                 "notebook_path": "notebooks/first-networks.jl",
                 "video_id": "",
                 "preview_image_url": ""
-            },
-            {
-                "name": "Assignment: A Twitter network",
-                "notebook_path": "notebooks/assignment-twitter.jl",
-                "video_id": "",
-                "preview_image_url": ""
             }
         ]
     },
