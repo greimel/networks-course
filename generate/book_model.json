@@ -28,6 +28,17 @@
         ]
     },
     {
+        "title": "Financial Networks",
+        "contents": [
+            {
+                "name": "Systemic risk, stability and resilience of financial markets",
+                "notebook_path": "notebooks/banks-new.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            }
+        ]
+    },
+    {
         "title": "Social Connectedness",
         "contents": [
             {
@@ -39,33 +50,11 @@
         ]
     },
     {
-        "title": "Social Comparisons",
-        "contents": [
-            {
-                "name": "Social comparisons, inequality and the mortgage Boom",
-                "notebook_path": "notebooks/comparisons.jl",
-                "video_id": "",
-                "preview_image_url": ""
-            }
-        ]
-    },
-    {
         "title": "Production Networks",
         "contents": [
             {
                 "name": "The economy as a network of sectors",
                 "notebook_path": "notebooks/production.jl",
-                "video_id": "",
-                "preview_image_url": ""
-            }
-        ]
-    },
-    {
-        "title": "Financial Networks",
-        "contents": [
-            {
-                "name": "Systemic risk, stability and resilience of financial markets",
-                "notebook_path": "notebooks/banks.jl",
                 "video_id": "",
                 "preview_image_url": ""
             }
