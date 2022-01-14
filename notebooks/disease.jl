@@ -14,6 +14,12 @@ macro bind(def, element)
     end
 end
 
+# ╔═╡ cf30ace3-1c08-4ef3-8986-a27df7f1799d
+using AlgebraOfGraphics
+
+# ╔═╡ c5a427bc-9ab4-45aa-a1d7-cc8a30b0ab0e
+using Makie: Lines
+
 # ╔═╡ 345b272a-0ea4-46fc-b1a0-93dbc809366d
 using GraphMakie
 
@@ -66,7 +72,7 @@ begin
 		CairoMakie.activate!(type = "png")
 	end
 
-	using Makie: 
+	using Makie: Makie,
 		Figure, Axis, Legend,
 		lines!, scatter!, scatterlines, scatterlines!, vlines!, 
 		hidedecorations!, ylims!, cgrad,
@@ -538,33 +544,35 @@ md"""
 """
 
 # ╔═╡ f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
-function plot_fractions!(figpos, t, df, color_dict, legpos = nothing)	
-	ax = Axis(figpos)
+function plot_fractions!(figpos, t, sim, color_dict, legpos = nothing)	
+	df = fractions_over_time(sim)
 	
-	for (i, gdf) in enumerate(groupby(df, :state))
-		s = only(unique(gdf.state)) |> string
-		
-		lines!(ax, gdf.t, gdf.fraction, label = s, color = color_dict[s])
-	end
+	plt = data(df) * visual(Lines) * mapping(
+		:t => AlgebraOfGraphics.L"t", :fraction, color = :state => ""
+	) * visual(Lines)
+	
+	fg = draw!(figpos, plt, palettes = (; color = collect(color_dict)))
+
+	ax = only(fg)
 	
 	vlines!(ax, @lift([$t]), color = :gray50, linestyle=(:dash, :loose))
 	
 	ylims!(ax, -0.05, 1.05)
-	
+
 	# some attributes to make the legend nicer
-	attr = (orientation = :horizontal, tellwidth = :false, tellheight = true)
+	attr = (orientation = :horizontal, titleposition = :left, framevisible = false)
 	
 	if !isnothing(legpos)
-		leg = Legend(legpos, ax; attr...)
+		leg = legend!(legpos, fg; attr...)
 	else
 		leg = nothing
 	end
-	
-	(; ax, leg)
+ 
+	(; ax=fg, leg)
 end
 
 # ╔═╡ 4a9b5d8a-64b3-11eb-0028-898635af227c
-function plot_diffusion!(figpos, graph, sim, t, color_dict)
+function plot_diffusion!(figpos, graph, sim, t, color_dict; kwargs...)
 	sim_colors = [color_dict[label(s)] for s in sim]
 	state_as_color_t = @lift(sim_colors[:,$t])
 	
@@ -575,35 +583,34 @@ function plot_diffusion!(figpos, graph, sim, t, color_dict)
 	N, T = size(sim)
 	msize = N < 20 ? 10 : N < 100 ? 5 : 3
 
-	graphplot!(ax, graph,
+	graphplot!(ax, graph;
 		node_size  = msize,
 		node_color = state_as_color_t,
-		node_attr  = (; strokewidth = 0),
-		edge_width = 0.5,
-		edge_color = (:black, 0.3)
+		kwargs...
 	)
 	
 	ax
 end
 
 # ╔═╡ 51a16fcc-6556-11eb-16cc-71a978e02ef0
-function sir_plot!(figpos, legpos, sim, graph, t)
+function sir_plot!(figpos, legpos, sim, graph, t; kwargs...)
 	
-	df = fractions_over_time(sim)
+		#Makie.wong_colors()
 			
 	states = label.(subtypes(State))
-	colors = cgrad(:viridis, length(states), categorical=true)
+	colors = Makie.wong_colors()
+	#cgrad(:viridis, length(states), categorical=true)
 	color_dict = Dict(s => colors[i] for (i,s) in enumerate(states))
 	
-	ax_f, leg = plot_fractions!(figpos[1,2], t, df, color_dict, legpos)
-	ax_d = plot_diffusion!(figpos[1,1], graph, sim, t, color_dict)
+	ax_f, leg = plot_fractions!(figpos[1,2], t, sim, color_dict, legpos)
+	ax_d = plot_diffusion!(figpos[1,1], graph, sim, t, color_dict; kwargs...)
 
 	(; ax_f, ax_d, leg)
 
 end 
 
 # ╔═╡ c511f396-6579-11eb-18b1-df745093a116
-function compare_sir(sim1, sim2, graph)
+function compare_sir(sim1, sim2, graph; kwargs...)
 	t = Observable(1)
 		
 	fig = Figure(padding = (0,0,0,0))
@@ -611,15 +618,15 @@ function compare_sir(sim1, sim2, graph)
 	panel1 = fig[1,1]
 	panel2 = fig[2,1]
 	
-	axs1 = sir_plot!(panel1, legpos,  sim1, graph, t)
-	axs2 = sir_plot!(panel2, nothing, sim2, graph, t)
+	axs1 = sir_plot!(panel1, legpos,  sim1, graph, t; kwargs...)
+	axs2 = sir_plot!(panel2, nothing, sim2, graph, t; kwargs...)
 	
 	hidedecorations!(axs1.ax_f, grid = false)
 	hidedecorations!(axs2.ax_f, grid = false)
 	
 	axs1.leg.orientation[] = :vertical
-	axs1.leg.tellwidth[]   = true
-	axs1.leg.tellheight[]  = false
+	#axs1.leg.tellwidth[]   = true
+	#axs1.leg.tellheight[]  = false
 	
 	
 	@assert axes(sim1, 2) == axes(sim2, 2)
@@ -628,16 +635,14 @@ function compare_sir(sim1, sim2, graph)
 end
 
 # ╔═╡ 67e74a32-6578-11eb-245c-07894c89cc7c
-function sir_plot(sim, graph)
+function sir_plot(sim, graph; kwargs...)
 	t = Observable(1)
 	
-	#edges_as_pts = edges_as_points(graph, node_positions)
-
 	fig = Figure()
 	main_fig = fig[2,1]
 	leg_pos = fig[1,1]
 
-	sir_plot!(main_fig, leg_pos, sim, graph, t)
+	sir_plot!(main_fig, leg_pos, sim, graph, t; kwargs...)
 	
 	(; fig, t, T_range = axes(sim, 2))
 	
@@ -650,10 +655,10 @@ out_simple = let
 	par = (ρ = ρ_simple, δ = δ_simple, p = p_simple)
 	
 	sim = simulate(simple_graph, par, T)
-	
+
 	sir_plot(sim, simple_graph)
 	
-end;	
+end	
 
 # ╔═╡ 9302b00c-656f-11eb-25b3-495ae1c843cc
 md"""
@@ -668,9 +673,6 @@ out_simple.t[] = t0_simple; a=1
 
 # ╔═╡ 3aeb0106-661b-11eb-362f-6b9af20f71d7
 elegant && (a; t0_simple; out_simple.fig)
-
-# ╔═╡ 5b28918c-39ba-44a6-a37d-1bccc610d45b
-
 
 # ╔═╡ e82d5b7f-5f37-4696-9917-58b117b9c1d6
 md"
@@ -720,9 +722,16 @@ out_big = let
 	par = (ρ = ρ0, δ = δ0, p = p0)
 	
 	graph, node_positions = spatial_graph(1000)
-	sim = simulate(graph, par, T)	
+	sim = simulate(graph, par, T)
+
+	attr = (
+		layout = _ -> node_positions,
+		node_attr  = (; strokewidth = 0.1),
+		edge_width = 0.5,
+		edge_color = (:black, 0.3),
+	)
 	
-	out_big = sir_plot(sim, graph, node_positions)
+	out_big = sir_plot(sim, graph; attr...)
 end;
 
 # ╔═╡ 43a25dc8-6574-11eb-3607-311aa8d5451e
@@ -743,7 +752,7 @@ fancy && out_big.fig
 md"""
 Check to activate slider: $(@bind past_intro CheckBox(default = false))
 
-``t``: $(@bind t0_big Slider(out_big.T_range, show_value = true, default = 1))
+``t``: $(@bind t0_big NumberField(out_big.T_range, default=1))
 """
 
 # ╔═╡ 1bd2c660-6572-11eb-268c-732fd2210a58
@@ -754,7 +763,7 @@ out_big.t[] = past_intro ? t0_big : t0_intro
 
 # ╔═╡ 34b1a3ba-657d-11eb-17fc-5bf325945dce
 md"""
-``t``: $(@bind t0_vacc Slider(out_big.T_range, show_value = true, default = 1))
+``t``: $(@bind t0_vacc NumberField(out_big.T_range, default=1))
 """
 
 # ╔═╡ 49b21e4e-6577-11eb-38b2-45d30b0f9c80
@@ -809,7 +818,16 @@ vacc = let
 end;
 
 # ╔═╡ 0d610e80-661e-11eb-3b9a-93af6b0ad5de
-out_vacc = compare_sir(last.(vacc.sims[[1,2]])..., vacc.graph, vacc.node_positions);
+out_vacc = let
+	attr = (
+		layout = _ -> vacc.node_positions,
+		node_attr  = (; strokewidth = 0.1),
+		edge_width = 0.5,
+		edge_color = (:black, 0.3),
+	)
+	
+	compare_sir(last.(vacc.sims[[1,2]])..., vacc.graph; attr...)
+end;
 
 # ╔═╡ 99a1f078-657a-11eb-2183-1b6a0598ffcd
 out_vacc.t[] = t0_vacc
@@ -827,19 +845,17 @@ fig_vaccc = let
 	fig = Figure()
 	ax = Axis(fig[1,1], title = "#$(state) when vaccinating different groups")
 	
-	colors = cgrad(:viridis, max(3, length(vacc.sims)), categorical=true)
-
 	for (i, (lab, sim)) in enumerate(vacc.sims)
 				
 		df0 = fractions_over_time(sim)
 		
 		filter!(:state => ==(state), df0)
 		
-		lines!(df0.t, df0.fraction, label = lab, color = colors[i])
+		lines!(df0.t, df0.fraction, label = lab)#, color = colors[i])
 	end
 	
 	# some attributes to make the legend nicer
-	attr = (orientation = :horizontal, tellwidth = :false, tellheight = true)
+	attr = (orientation = :horizontal, titleposition = :left, framevisible = false)
 
 	leg = Legend(fig[2,1], ax; attr...)
 
@@ -1068,6 +1084,7 @@ md"""
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
@@ -1085,6 +1102,7 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 
 [compat]
+AlgebraOfGraphics = "~0.6.0"
 CSV = "~0.9.11"
 CairoMakie = "~0.6.6"
 CategoricalArrays = "~0.10.2"
@@ -1130,6 +1148,12 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "af92965fb30777147966f58acb05da51c5616b5f"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 version = "3.3.3"
+
+[[deps.AlgebraOfGraphics]]
+deps = ["Colors", "Dates", "FileIO", "GLM", "GeoInterface", "GeometryBasics", "GridLayoutBase", "KernelDensity", "Loess", "Makie", "PlotUtils", "PooledArrays", "RelocatableFolders", "StatsBase", "StructArrays", "Tables"]
+git-tree-sha1 = "a79d1facb9fb0cd858e693088aa366e328109901"
+uuid = "cbdf2221-f076-402e-a563-3d30da359d67"
+version = "0.6.0"
 
 [[deps.Animations]]
 deps = ["Colors"]
@@ -1453,6 +1477,18 @@ version = "1.0.10+0"
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
+[[deps.GLM]]
+deps = ["Distributions", "LinearAlgebra", "Printf", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "StatsModels"]
+git-tree-sha1 = "acb98ca3e21f630d620db02936de567a8a4fc064"
+uuid = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+version = "1.6.0"
+
+[[deps.GeoInterface]]
+deps = ["RecipesBase"]
+git-tree-sha1 = "f63297cb6a2d2c403d18b3a3e0b7fcb01c0a3f40"
+uuid = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
+version = "0.5.6"
+
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
 git-tree-sha1 = "58bcdf5ebc057b085e58d95c138725628dd7453c"
@@ -1719,6 +1755,12 @@ version = "2.36.0+0"
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
+[[deps.Loess]]
+deps = ["Distances", "LinearAlgebra", "Statistics"]
+git-tree-sha1 = "46efcea75c890e5d820e670516dc156689851722"
+uuid = "4345ca2d-374a-55d4-8d30-97f9976e7612"
+version = "0.5.4"
 
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
@@ -2004,6 +2046,11 @@ git-tree-sha1 = "01d341f502250e81f6fec0afe662aa861392a3aa"
 uuid = "c84ed2f1-dad5-54f0-aa8e-dbefe2724439"
 version = "0.4.2"
 
+[[deps.RecipesBase]]
+git-tree-sha1 = "6bf3f380ff52ce0832ddd3a2a7b9538ed1bcca7d"
+uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+version = "1.2.1"
+
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
 uuid = "189a3867-3050-52da-a836-e630ba90ab69"
@@ -2065,6 +2112,11 @@ uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 [[deps.SharedArrays]]
 deps = ["Distributed", "Mmap", "Random", "Serialization"]
 uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
+
+[[deps.ShiftedArrays]]
+git-tree-sha1 = "22395afdcf37d6709a5a0766cc4a5ca52cb85ea0"
+uuid = "1277b4bf-5013-50f5-be3d-901d8477a67a"
+version = "1.0.0"
 
 [[deps.Showoff]]
 deps = ["Dates", "Grisu"]
@@ -2141,6 +2193,12 @@ deps = ["ChainRulesCore", "InverseFunctions", "IrrationalConstants", "LogExpFunc
 git-tree-sha1 = "bedb3e17cc1d94ce0e6e66d3afa47157978ba404"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "0.9.14"
+
+[[deps.StatsModels]]
+deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Printf", "REPL", "ShiftedArrays", "SparseArrays", "StatsBase", "StatsFuns", "Tables"]
+git-tree-sha1 = "677488c295051568b0b79a77a8c44aa86e78b359"
+uuid = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
+version = "0.6.28"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
@@ -2364,18 +2422,20 @@ version = "3.5.0+0"
 # ╠═5d11a2df-3187-4509-ba7b-8388564573a6
 # ╠═f4c62f95-876d-4915-8372-258dfde835f7
 # ╟─50d9fb56-64af-11eb-06b8-eb56903084e2
-# ╟─9302b00c-656f-11eb-25b3-495ae1c843cc
+# ╠═9302b00c-656f-11eb-25b3-495ae1c843cc
 # ╟─657c3a98-6573-11eb-1ccb-b1d974414647
 # ╟─3aeb0106-661b-11eb-362f-6b9af20f71d7
 # ╟─d2813d40-656d-11eb-2cfc-e389ed2a0d84
 # ╠═8d4cb5dc-6573-11eb-29c8-81baa6e3fffc
+# ╠═cf30ace3-1c08-4ef3-8986-a27df7f1799d
+# ╠═c5a427bc-9ab4-45aa-a1d7-cc8a30b0ab0e
 # ╠═d6694c32-656c-11eb-0796-5f485cccccf0
 # ╠═345b272a-0ea4-46fc-b1a0-93dbc809366d
 # ╟─ce75fe16-6570-11eb-3f3a-577eac7f9ee8
 # ╟─37972f08-db05-4e84-9528-fe16cd86efbf
 # ╟─6948e6c6-661b-11eb-141c-370fc6ffe618
-# ╟─1bd2c660-6572-11eb-268c-732fd2210a58
-# ╟─f4cd5fb2-6574-11eb-37c4-73d4b21c1883
+# ╠═1bd2c660-6572-11eb-268c-732fd2210a58
+# ╠═f4cd5fb2-6574-11eb-37c4-73d4b21c1883
 # ╠═0b35f73f-6976-4d85-b61f-b4188440043e
 # ╟─373cb47e-655e-11eb-2751-0150985d98c1
 # ╟─4dee5da9-aa4b-4551-974a-f7268d016617
@@ -2445,7 +2505,6 @@ version = "3.5.0+0"
 # ╠═51a16fcc-6556-11eb-16cc-71a978e02ef0
 # ╠═f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
 # ╠═4a9b5d8a-64b3-11eb-0028-898635af227c
-# ╠═5b28918c-39ba-44a6-a37d-1bccc610d45b
 # ╟─e82d5b7f-5f37-4696-9917-58b117b9c1d6
 # ╠═95b67e4d-5d41-4b86-bb9e-5de97f5d8957
 # ╠═c1971734-2299-4038-8bb6-f62d020f92cb
