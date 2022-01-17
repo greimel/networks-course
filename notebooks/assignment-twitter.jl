@@ -36,8 +36,8 @@ begin
 	using Chain: @chain
 	import CSV
 	using DataAPI: refarray
-	using DataFrames: DataFrames, DataFrame, groupby, select, select!, combine, transform, transform!, ByRow, leftjoin
-	using DataFrameMacros: @transform!
+	using DataFrames: DataFrames, DataFrame, groupby, leftjoin#, #select, select!, combine, transform, transform!, ByRow
+	using DataFrameMacros: @transform!, @subset, @combine, @transform, @select
 	using CategoricalArrays: CategoricalArrays, categorical
 	using Graphs, SimpleWeightedGraphs
 	using GraphMakie, CairoMakie, Colors
@@ -68,9 +68,13 @@ begin
 	# Download twint
 	import LibGit2
 	twint_path = joinpath(@__DIR__(), "twint") # specify where to save twint
+	#isdir(twint_path) && rm(twint_path, recursive = true)
 	if !isdir(twint_path)
-		repo_url = "https://github.com/twintproject/twint"
-		repo = LibGit2.clone(repo_url, twint_path) # download twint from github
+		repo_url = "https://github.com/Museum-Barberini/twint"
+		#repo_url = "https://github.com/nouseforacode/twint"
+		#repo_url = "https://github.com/moxak/twint"
+		#repo_url = "https://github.com/twintproject/twint"
+		repo = LibGit2.clone(repo_url, twint_path, branch = "fix/RefreshTokenException") # download twint from github
 	end
 	
 	# Install twint (2)
@@ -99,7 +103,7 @@ md"""
 
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`assignment-twitter.jl` | **Version 1.5** | *last changed: Oct 14, 2021*"
+`assignment-twitter.jl` | **Version 1.6** | *last changed: Jan 17, 2022*"
 
 # ╔═╡ 235bcd50-6183-11eb-1272-65c61cfbf961
 group_number = 99
@@ -118,14 +122,6 @@ if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_m
     **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in the top cell.
 	"""
 end
-
-# ╔═╡ fa27f93c-67b4-11eb-0bcb-c39ff0c3bcaf
-md"""
-!!! note "Note"
-    Some students experienced lagging browers because the output of `gplot` is shown as a vector graphic (svg) by default. By appending `|> gplot_to_png` the output will be shown as a pixel graphic (png) instead.
-
-    If you have a performant browser, feel free to remove `|> gplot_to_png`.
-"""
 
 # ╔═╡ 39feff38-617d-11eb-0682-874b2f747ff8
 md"""
@@ -358,18 +354,19 @@ function parse_hashtags(hashtags)
 end
 
 # ╔═╡ 5401181c-60dd-11eb-0844-9b4b7b35693c
-tweet_df = select(tweet_df0, :hashtags => ByRow(parse_hashtags),
-				 # "parse_hashtags" is defined in the appendix
-	   		     :user_id,
-				 :username => categorical,
-				 :language => categorical,
-			renamecols = false)
+tweet_df = @select(tweet_df0, 
+	 # "parse_hashtags" is defined in the appendix
+	:hashtags = parse_hashtags(:hashtags),
+    :user_id,
+	:username = @c(categorical(:username)),
+	:language = @c(categorical(:language))
+)
 
 # ╔═╡ 9d5c72ca-60df-11eb-262d-6f0803d386f5
-user_df = combine(
-		groupby(tweet_df, :username), # group the data by user. Each group consists of all tweets of one user
-		:hashtags => ∪ # for each group, take the union (∪) of hashtags
-		)
+user_df = @chain tweet_df begin
+	groupby(:username) # group the data by user. Each group consists of all tweets of one user
+	@combine(:hashtags = [∪(:hashtags...)]) # for each group, take the union (∪) of hashtags
+end
 
 # ╔═╡ 241b8206-60e0-11eb-08bd-f748c90e49c7
 begin
@@ -386,17 +383,17 @@ begin
 		end
 	end
 
-	levels = edge_list.user1 ∪ edge_list.user2 
+	node_names = edge_list.user1 ∪ edge_list.user2 
 
-	@transform!(edge_list, :user1 = @c categorical(:user1; levels))
-	@transform!(edge_list, :user2 = @c categorical(:user2; levels))
+	@transform!(edge_list, :user1 = @c categorical(:user1; levels = node_names))
+	@transform!(edge_list, :user2 = @c categorical(:user2; levels = node_names))
 	
 	edge_list
 end
 
 # ╔═╡ 15ecf0aa-60e2-11eb-1ef4-ebfc215e5ca7
 graph = @chain edge_list begin
-	sparse(refarray(_.user1), refarray(_.user2), _.common_hashtags, length(levels), length(levels))
+	sparse(refarray(_.user1), refarray(_.user2), _.common_hashtags, length(node_names), length(node_names))
 	Symmetric
 	SimpleWeightedGraph
 end
@@ -416,24 +413,18 @@ answer2_2 = md"""
 ... Continue here ... The twitter network with $keyword has $n_nodes nodes and $n_edges edges. ...
 """
 
-# ╔═╡ 5dacc3c2-60e2-11eb-1352-0ddbe3405aec
-src.(edges(graph)), dst.(edges(graph))
-#, nodesize=0.1, NODESIZE=0.025, nodefillc = node_df.node_color) |> gplot_to_png
-
 # ╔═╡ 76c50e74-60f3-11eb-1e25-cdcaeae76c38
-begin
-	node_df = DataFrame(
-		username = levels
-	)
-	
-	node_df = leftjoin(node_df, user_df, on = :username)
-	
-	transform!(node_df, :hashtags_union => ByRow(x -> "covid19" in x) => :highlighted_nodes)
-	
-	transform!(node_df, :highlighted_nodes => ByRow(x -> x ? colorant"red" : colorant"blue") => :node_color)
-	
-	node_df
+node_df = @chain user_df begin
+	@subset(:username ∈ node_names)
+	@transform!(:highlighted_nodes = "covid19" ∈ :hashtags)
+	@transform!(:node_color = :highlighted_nodes == true ? colorant"red" : colorant"blue")
 end
+
+# ╔═╡ eb9773ea-c66f-4079-b625-9e483413171a
+node_df
+
+# ╔═╡ 94e542c2-a3f0-453f-a40c-545a412510b9
+graphplot(graph; node_color=node_df.node_color)
 
 # ╔═╡ 91ccdec2-60f3-11eb-2d0e-a59ba5392e65
 sum(node_df.highlighted_nodes)
@@ -535,7 +526,6 @@ TableOfContents()
 # ╟─849cd5bc-617b-11eb-12eb-a7f0907fc718
 # ╟─da51e362-6176-11eb-15b2-b7bcebc2cbb6
 # ╠═41f4f6cc-6173-11eb-104f-69c755afd266
-# ╟─fa27f93c-67b4-11eb-0bcb-c39ff0c3bcaf
 # ╟─39feff38-617d-11eb-0682-874b2f747ff8
 # ╠═8c5a33dc-6174-11eb-397a-43d67c7773e0
 # ╟─09d66db0-617c-11eb-1b92-b3ed2e5f68f6
@@ -579,16 +569,17 @@ TableOfContents()
 # ╟─01e4ac58-60e5-11eb-39f3-b5f613ecee35
 # ╟─0b70f90c-60e5-11eb-18da-25e3302a74a8
 # ╠═15ecf0aa-60e2-11eb-1ef4-ebfc215e5ca7
-# ╠═5dacc3c2-60e2-11eb-1352-0ddbe3405aec
 # ╟─4df1e8ae-60ef-11eb-3772-1154f708eecb
 # ╠═5ceea932-60ef-11eb-3c13-37ddf8e09f6f
 # ╠═76c50e74-60f3-11eb-1e25-cdcaeae76c38
+# ╠═eb9773ea-c66f-4079-b625-9e483413171a
+# ╠═94e542c2-a3f0-453f-a40c-545a412510b9
 # ╠═91ccdec2-60f3-11eb-2d0e-a59ba5392e65
 # ╟─eea5accc-60db-11eb-3889-c992db2ec8ec
-# ╟─d07dc2ac-67b1-11eb-1bee-c52695fb4f28
+# ╠═d07dc2ac-67b1-11eb-1bee-c52695fb4f28
 # ╠═400cc04e-4784-11eb-11a2-ff8e245cad27
 # ╠═87b7bc86-60df-11eb-3f9f-2375449c77f6
-# ╠═a1d99d9e-60dc-11eb-391c-b52c2e16aedd
+# ╟─a1d99d9e-60dc-11eb-391c-b52c2e16aedd
 # ╠═6535e16c-6146-11eb-35c0-31aef62a631c
 # ╟─1f927f3c-60e5-11eb-0304-f1639b68468d
 # ╠═620c76e4-60de-11eb-2c82-d364f55fbe4d
