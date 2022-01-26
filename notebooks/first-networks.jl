@@ -11,12 +11,11 @@ let
 	using Graphs # for analyzing networks
 	using SimpleWeightedGraphs # for handling weighted graphs
 	using MetaGraphs
-	using GraphMakie # graphplot, random_layout, spring_layout   # for plotting networks
-	using SNAPDatasets: loadsnap  # cool datasets of *big* networks
+	using GraphMakie # for plotting networks
+	using NetworkLayout# layout algorithms
+	using SNAPDatasets # cool datasets of *big* networks
 
-	using CairoMakie: hist
-	using AlgebraOfGraphics
-	#using Plots: histogram, plot
+	using CairoMakie# hist
 	
 	# Basic statistical analysis
 	using Statistics: mean, std
@@ -100,21 +99,11 @@ md"""
 Note, that you can build directed graphs using `SimpleDiGraph`. Replace `SimpleDiGraph` by `SimpleGraph` to get an undirected graph.
 """
 
+# ╔═╡ 4cff10cc-ef1b-4ce6-bf9b-7d25c975f091
+
+
 # ╔═╡ d3feb786-2c69-416f-8fda-e2b4da0c0c1c
-gplot(my_network, layout = random_layout)
-
-# ╔═╡ 51528bcb-0dac-4e32-8b8a-772fa964cbd8
-md"""
-You will probably realize that many graph drawing algorithms are not deterministic. The plot may look different if you re-execute it.
-
-I've chosen the `random_layout` because the default options sometimes "hides" the links of the network when there are very few nodes and links.
-"""
-
-# ╔═╡ 99c5a7ee-9d4b-4bbf-9ddb-29f5778438d9
-graphplot(my_network,
-	layout = spring_layout,
-	node_size = 0.05,
-)
+graphplot(my_network, layout = Shell())
 
 # ╔═╡ 7057b8a6-91a9-495f-ac29-669d5652c8d0
 md"""
@@ -131,13 +120,20 @@ big_network = loadsnap(:facebook_combined)
 # ╔═╡ c3946663-eddf-4bc1-bb52-9c82c8f7258c
 md"Even though the dataset is rather small compared to others from this collection, we already run into problems when we want to visualize the network. 
 
-Don't run the following cell on an old computer. The plot takes around 1 minute on my recent MacBook Pro.
+The time it takes to plot a big network is mainly driven by the layout algorithm. That's why I choose the *boring* Shell algorithm, where all nodes are placed on a circle. This is very fast.
 
-**NOTE** `gplot` creates vector graphics (svg), which is not recommended for plots with many components (here: 88234 lines). That is why your browser might get stuck when you run this command.
+If you want, you can try to plot this with the default layout algorithm. I stopped the computation after two minutes on my recent MacBook Pro.
 "
 
 # ╔═╡ 07f7ed69-3e9a-4a6b-a10f-de8d09aa0db5
-#gplot(big_network)
+graphplot(big_network,
+	layout=Shell(),
+#	layout=SquareGrid(),
+	node_size = 2,
+	edge_width = 1,
+	node_color = :blue,
+	edge_color = (:orange, 0.01)
+)
 
 # ╔═╡ 541303e2-02b3-4537-ab92-e3947652f6f6
 md"""
@@ -161,7 +157,7 @@ For illustration, let's plot the degree of each node for the `simple_network` fr
 graphplot(
 	simple_network,
 	nlabels = string.(degree(simple_network)),
-	nlabels_offset = GraphMakie.Point(0.01, 0.05)
+	nlabels_offset = Point(0.01, 0.05)
 )
 
 # ╔═╡ 7dead69c-36c1-4676-a072-3442d20ba899
@@ -193,7 +189,7 @@ We can have a look at the full degree distribution by plotting a histogram.
 """
 
 # ╔═╡ a1fe05e9-b3e3-4055-831c-ca6289086fbe
-histogram(degrees)
+hist(degrees)
 
 # ╔═╡ a5a085cf-b4dd-48c0-a3c2-967abc1445c2
 mean(degrees)
@@ -255,8 +251,9 @@ graphplot(subgraph)
 # ╔═╡ ef85efd2-da5c-4197-831e-110aebe5a1d7
 let
 	x_vec = range(1, 250)
-	y_vec = log.(1 .- ecdf(degrees).(xvec))
-	GraphMakie.Makie.lines(x_vec, y_vec)
+	f(x) = log(1 - ecdf(degrees)(x))
+
+	lines(x_vec, f.(x_vec))
 end
 
 # ╔═╡ 62063f20-4041-454d-964b-e2e89a8634f0
@@ -393,12 +390,12 @@ TableOfContents()
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 FreqTables = "da1fdf0e-e0ff-5433-a45f-9bb5ff651cb1"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
+NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 SNAPDatasets = "fc66bc1b-447b-53fc-8f09-bc9cfb0b0c10"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
@@ -406,12 +403,12 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
-AlgebraOfGraphics = "~0.6.0"
 CairoMakie = "~0.6.6"
 FreqTables = "~0.4.5"
 GraphMakie = "~0.3.1"
 Graphs = "~1.5.1"
 MetaGraphs = "~0.7.1"
+NetworkLayout = "~0.4.4"
 PlutoUI = "~0.7.32"
 SNAPDatasets = "~0.2.0"
 SimpleWeightedGraphs = "~1.2.1"
@@ -447,12 +444,6 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "af92965fb30777147966f58acb05da51c5616b5f"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 version = "3.3.3"
-
-[[deps.AlgebraOfGraphics]]
-deps = ["Colors", "Dates", "FileIO", "GLM", "GeoInterface", "GeometryBasics", "GridLayoutBase", "KernelDensity", "Loess", "Makie", "PlotUtils", "PooledArrays", "RelocatableFolders", "StatsBase", "StructArrays", "Tables"]
-git-tree-sha1 = "a79d1facb9fb0cd858e693088aa366e328109901"
-uuid = "cbdf2221-f076-402e-a563-3d30da359d67"
-version = "0.6.0"
 
 [[deps.Animations]]
 deps = ["Colors"]
@@ -621,12 +612,6 @@ git-tree-sha1 = "80c3e8639e3353e5d2912fb3a1916b8455e2494b"
 uuid = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 version = "0.4.0"
 
-[[deps.Distances]]
-deps = ["LinearAlgebra", "SparseArrays", "Statistics", "StatsAPI"]
-git-tree-sha1 = "3258d0659f812acde79e8a74b11f17ac06d0ca04"
-uuid = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
-version = "0.10.7"
-
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
@@ -752,18 +737,6 @@ version = "1.0.10+0"
 [[deps.Future]]
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
-
-[[deps.GLM]]
-deps = ["Distributions", "LinearAlgebra", "Printf", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "StatsModels"]
-git-tree-sha1 = "fb764dacfa30f948d52a6a4269ae293a479bbc62"
-uuid = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
-version = "1.6.1"
-
-[[deps.GeoInterface]]
-deps = ["RecipesBase"]
-git-tree-sha1 = "6b1a29c757f56e0ae01a35918a2c39260e2c4b98"
-uuid = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
-version = "0.5.7"
 
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
@@ -1032,12 +1005,6 @@ version = "2.36.0+0"
 deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
-[[deps.Loess]]
-deps = ["Distances", "LinearAlgebra", "Statistics"]
-git-tree-sha1 = "46efcea75c890e5d820e670516dc156689851722"
-uuid = "4345ca2d-374a-55d4-8d30-97f9976e7612"
-version = "0.5.4"
-
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
 git-tree-sha1 = "e5718a00af0ab9756305a0392832c8952c7426c1"
@@ -1280,12 +1247,6 @@ git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
 uuid = "647866c9-e3ac-4575-94e7-e3d426903924"
 version = "0.1.2"
 
-[[deps.PooledArrays]]
-deps = ["DataAPI", "Future"]
-git-tree-sha1 = "db3a23166af8aebf4db5ef87ac5b00d36eb771e2"
-uuid = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
-version = "1.4.0"
-
 [[deps.Preferences]]
 deps = ["TOML"]
 git-tree-sha1 = "2cf929d64681236a2e074ffafb8d568733d2e6af"
@@ -1321,11 +1282,6 @@ deps = ["Requires"]
 git-tree-sha1 = "01d341f502250e81f6fec0afe662aa861392a3aa"
 uuid = "c84ed2f1-dad5-54f0-aa8e-dbefe2724439"
 version = "0.4.2"
-
-[[deps.RecipesBase]]
-git-tree-sha1 = "6bf3f380ff52ce0832ddd3a2a7b9538ed1bcca7d"
-uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
-version = "1.2.1"
 
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
@@ -1388,11 +1344,6 @@ uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 [[deps.SharedArrays]]
 deps = ["Distributed", "Mmap", "Random", "Serialization"]
 uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
-
-[[deps.ShiftedArrays]]
-git-tree-sha1 = "22395afdcf37d6709a5a0766cc4a5ca52cb85ea0"
-uuid = "1277b4bf-5013-50f5-be3d-901d8477a67a"
-version = "1.0.0"
 
 [[deps.Showoff]]
 deps = ["Dates", "Grisu"]
@@ -1475,12 +1426,6 @@ deps = ["ChainRulesCore", "InverseFunctions", "IrrationalConstants", "LogExpFunc
 git-tree-sha1 = "f35e1879a71cca95f4826a14cdbf0b9e253ed918"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "0.9.15"
-
-[[deps.StatsModels]]
-deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Printf", "REPL", "ShiftedArrays", "SparseArrays", "StatsBase", "StatsFuns", "Tables"]
-git-tree-sha1 = "677488c295051568b0b79a77a8c44aa86e78b359"
-uuid = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
-version = "0.6.28"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
@@ -1684,9 +1629,8 @@ version = "3.5.0+0"
 # ╟─5f1e3589-48fe-418a-958b-74b5dc0d7eff
 # ╠═b01cef89-6258-4050-9d35-7628eaf54010
 # ╟─67a2e792-647a-11eb-208e-4df018d00425
+# ╠═4cff10cc-ef1b-4ce6-bf9b-7d25c975f091
 # ╠═d3feb786-2c69-416f-8fda-e2b4da0c0c1c
-# ╟─51528bcb-0dac-4e32-8b8a-772fa964cbd8
-# ╠═99c5a7ee-9d4b-4bbf-9ddb-29f5778438d9
 # ╟─7057b8a6-91a9-495f-ac29-669d5652c8d0
 # ╠═c28b2d55-63dc-4794-bfcd-a03172cb7f25
 # ╟─c3946663-eddf-4bc1-bb52-9c82c8f7258c
