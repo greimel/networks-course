@@ -322,23 +322,10 @@ function notebook_header(section::Section, chapter_number::Integer, section_numb
     font-family: Vollkorn, serif;
     font-weight: 700;
     font-feature-settings: 'lnum', 'pnum';
-    "> <p style="
-    font-size: 1.5rem;
-    opacity: .8;
-    "><em>Section $(chapter_number).$(section_number)</em></p>
+    "> 
     <p style="text-align: center; font-size: 2rem;">
     <em> $(section.name) </em>
     </p>
-
-    <p style="
-    font-size: 1.5rem;
-    text-align: center;
-    opacity: .8;
-    "><em>Lecture Video</em></p>
-    <div style="display: flex; justify-content: center;">
-    <div  notthestyle="position: relative; right: 0; top: 0; z-index: 300;">
-    <iframe src="https://www.youtube.com/embed/$(section.video_id)" width=400 height=250  frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>
-    </div>
     </div>
 
     <style>
@@ -746,8 +733,8 @@ TableOfContents()
 # ╠═f731fc20-2660-484c-bcc7-fbc1809a3b4a
 # ╠═48570953-88d3-4010-a5e3-2034bda26413
 # ╟─9979265f-60dd-42d4-9384-afaf4bf53ba2
-# ╟─b007e5cc-d7c3-4275-86fd-9098bc398b23
-# ╟─5f93b932-6739-4b7e-bfdb-1bc1f7d57e65
+# ╠═b007e5cc-d7c3-4275-86fd-9098bc398b23
+# ╠═5f93b932-6739-4b7e-bfdb-1bc1f7d57e65
 # ╟─96aa002c-cebc-41f7-97cf-ecd02081b6ce
 # ╠═866746a1-8102-431c-94e5-f93f6c98e825
 # ╟─d15f2d13-0885-4da2-950d-fbbdd83f3907
