@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.3
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -34,8 +34,9 @@ begin
 	using GeometryBasics: Point2f0
 	using NearestNeighbors: BallTree, knn
 	using Graphs: SimpleGraph, add_edge!, StarGraph, CycleGraph, WheelGraph, betweenness_centrality, eigenvector_centrality, edges, adjacency_matrix, nv, ne
-	using DataFrames: transform!, transform, DataFrame, ByRow, groupby, combine, rename!, Not, stack, unstack, leftjoin
-	using CategoricalArrays: CategoricalArrays, categorical, cut
+	using DataFrames: DataFrame, ByRow, groupby, rename!, Not, stack, unstack, leftjoin
+	using DataFrameMacros: @combine, @transform!, @transform, @groupby
+	using CategoricalArrays: CategoricalArrays, categorical, cut, levels!
 	using UnPack: @unpack
 	using Statistics: mean
 	
@@ -54,7 +55,7 @@ md"""
 
 # ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
 md"""
-`disease.jl` | **Version 1.1** | *last updated: Oct 14 2021*
+`disease.jl` | **Version 1.2** | *last updated: Jan 26, 2022*
 """
 
 # ╔═╡ c2940f90-661a-11eb-3d77-0fc1189e0960
@@ -205,6 +206,12 @@ md"""
 
 # ╔═╡ 8d4cb5dc-6573-11eb-29c8-81baa6e3fffc
 simple_graph = CycleGraph(10)
+
+# ╔═╡ 77e3a468-6cb8-4883-8f16-66044ed393af
+fieldnames(AlgebraOfGraphics.AxisEntries)
+
+# ╔═╡ 000ac0d1-46ad-4724-8d5c-0a36d938eff0
+
 
 # ╔═╡ ce75fe16-6570-11eb-3f3a-577eac7f9ee8
 md"""
@@ -417,8 +424,10 @@ from	to	IFR_pc
 # ╔═╡ 07c102c2-69ee-11eb-3b29-25e612df6911
 ifr_df = @chain ifr_csv begin
 	DataFrame
-	transform!([:from, :to] => ByRow(mean ∘ tuple) => :age)
-	transform!(:to => (x -> cut(x, [0, 40, 75, 100])) => :age_group)
+	@transform!(
+		:age = mean(tuple(:from, :to)),
+		:age_group = @c cut(:to, [0, 40, 75, 100])
+	)
 end
 
 # ╔═╡ d18f1b0c-69ee-11eb-2fc0-4f14873847fb
@@ -429,8 +438,7 @@ scatterlines(ifr_df.age, ifr_df.IFR_pc,
 # ╔═╡ 57a72310-69ef-11eb-251b-c5b8ab2c6082
 ifr_df2 = @chain ifr_df begin
 	groupby(:age_group)
-	combine(:IFR_pc => mean, renamecols = false)
-	
+	@combine(:IFR_pc = mean(:IFR_pc))
 end
 
 # ╔═╡ 74c35594-69f0-11eb-015e-2bf4b55e658c
@@ -448,7 +456,7 @@ get_δ_from_ifr(ifr, ρ) = 1 - (1 - ifr/100)^(ρ)
 # ╔═╡ 98b2eefe-69f2-11eb-36f4-7b19a55cfe78
 begin
 	ρ_new = 1/7
-	transform(ifr_df2, :IFR_pc => ByRow(x -> get_δ_from_ifr(x, ρ_new)) => "δ")
+	@transform(ifr_df2, :δ = get_δ_from_ifr(:IFR_pc, ρ_new))
 end
 
 # ╔═╡ 1b8c26b6-64aa-11eb-2d9a-47db5469a654
@@ -500,6 +508,17 @@ md"""
 ## Processing the Simulated Data
 """
 
+# ╔═╡ c112f585-489a-4feb-bc12-0122738f9f33
+function ordered_states(states)
+	levels = unique(states)
+	order  = ["S", "I", "R", "D"]
+	if levels ⊆ order
+		return sorted = order ∩ levels
+	else
+		return levels
+	end
+end
+
 # ╔═╡ b0d34450-6497-11eb-01e3-27582a9f1dcc
 label(x::DataType) = string(Base.typename(x).name)
 
@@ -522,10 +541,10 @@ function tidy_simulation_output(sim)
 	# node_id | t | state
 	df = stack(df0, Not(:node_id), variable_name = :t, value_name = :state)
 	# make t numeric
-	transform!(df, :t => ByRow(x -> parse(Int, eval(x))),
-			       :state => categorical,
-				   renamecols = false)
+	@transform!(df, :t = parse(Int, eval(:t)),
+					 :state = @c categorical(:state)
 	
+				)	
 	df
 end
 
@@ -534,8 +553,12 @@ function fractions_over_time(sim)
 	tidy_sim = tidy_simulation_output(sim)
 	N, T = size(sim)
 	
-	
-	combine(groupby(tidy_sim, [:t, :state]), :node_id => (x -> length(x)/N) => :fraction)
+	return @chain tidy_sim begin
+		@groupby(:t, :state)
+		@combine(:fraction = length(:node_id) / N)
+		# put states into nice order
+		@transform(:state = @c levels!(:state, ordered_states(:state)))
+	end
 end
 
 # ╔═╡ 47ac6d3c-6556-11eb-209d-f7a8219512ee
@@ -546,17 +569,15 @@ md"""
 # ╔═╡ f6f71c0e-6553-11eb-1a6a-c96f38c7f17b
 function plot_fractions!(figpos, t, sim, color_dict, legpos = nothing)	
 	df = fractions_over_time(sim)
-	
+			
 	plt = data(df) * visual(Lines) * mapping(
 		:t => AlgebraOfGraphics.L"t", :fraction, color = :state => ""
 	) * visual(Lines)
 	
 	fg = draw!(figpos, plt, palettes = (; color = collect(color_dict)))
 
-	ax = only(fg)
-	
-	vlines!(ax, @lift([$t]), color = :gray50, linestyle=(:dash, :loose))
-	
+	ax = only(fg).axis
+	vlines!(ax, @lift([$t]), color = :gray50, linestyle=(:dash, :loose))	
 	ylims!(ax, -0.05, 1.05)
 
 	# some attributes to make the legend nicer
@@ -594,12 +615,11 @@ end
 
 # ╔═╡ 51a16fcc-6556-11eb-16cc-71a978e02ef0
 function sir_plot!(figpos, legpos, sim, graph, t; kwargs...)
+				
+	states = ordered_states(label.(subtypes(State)))
+
+	colors = Makie.wong_colors()[[5,2,3,1,6,4,7]]
 	
-		#Makie.wong_colors()
-			
-	states = label.(subtypes(State))
-	colors = Makie.wong_colors()
-	#cgrad(:viridis, length(states), categorical=true)
 	color_dict = Dict(s => colors[i] for (i,s) in enumerate(states))
 	
 	ax_f, leg = plot_fractions!(figpos[1,2], t, sim, color_dict, legpos)
@@ -620,14 +640,8 @@ function compare_sir(sim1, sim2, graph; kwargs...)
 	
 	axs1 = sir_plot!(panel1, legpos,  sim1, graph, t; kwargs...)
 	axs2 = sir_plot!(panel2, nothing, sim2, graph, t; kwargs...)
-	
-	hidedecorations!(axs1.ax_f, grid = false)
-	hidedecorations!(axs2.ax_f, grid = false)
-	
-	axs1.leg.orientation[] = :vertical
-	#axs1.leg.tellwidth[]   = true
-	#axs1.leg.tellheight[]  = false
-	
+		
+	axs1.leg.orientation[] = :vertical	
 	
 	@assert axes(sim1, 2) == axes(sim2, 2)
 	
@@ -736,7 +750,7 @@ end;
 
 # ╔═╡ 43a25dc8-6574-11eb-3607-311aa8d5451e
 md"""
-``t``: $(@bind t0_intro Slider(out_big.T_range, show_value = true, default = 20))
+``t``: $(@bind t0_intro NumberField(out_big.T_range, default=20))
 """
 
 # ╔═╡ 3e9af1f4-6575-11eb-21b2-453dc18d1b7b
@@ -849,7 +863,7 @@ fig_vaccc = let
 				
 		df0 = fractions_over_time(sim)
 		
-		filter!(:state => ==(state), df0)
+		@subset!(df0, :state == state)
 		
 		lines!(df0.t, df0.fraction, label = lab)#, color = colors[i])
 	end
@@ -1089,6 +1103,7 @@ CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
+DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
@@ -1107,6 +1122,7 @@ CSV = "~0.9.11"
 CairoMakie = "~0.6.6"
 CategoricalArrays = "~0.10.2"
 Chain = "~0.4.10"
+DataFrameMacros = "~0.2.1"
 DataFrames = "~1.3.1"
 Distributions = "~0.25.37"
 GeometryBasics = "~0.4.1"
@@ -1313,6 +1329,12 @@ version = "4.1.0"
 git-tree-sha1 = "cc70b17275652eb47bc9e5f81635981f13cea5c8"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.9.0"
+
+[[deps.DataFrameMacros]]
+deps = ["DataFrames"]
+git-tree-sha1 = "cff70817ef73acb9882b6c9b163914e19fad84a9"
+uuid = "75880514-38bc-4a95-a458-c2aea5a3a702"
+version = "0.2.1"
 
 [[deps.DataFrames]]
 deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Reexport", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
@@ -2376,9 +2398,9 @@ version = "1.6.38+0"
 
 [[deps.libvorbis_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Ogg_jll", "Pkg"]
-git-tree-sha1 = "c45f4e40e7aafe9d086379e5578947ec8b95a8fb"
+git-tree-sha1 = "b910cb81ef3fe6e78bf6acee440bda86fd6ae00c"
 uuid = "f27f6e37-5d2b-51aa-960f-b287f2bc3b7a"
-version = "1.3.7+0"
+version = "1.3.7+1"
 
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -2430,12 +2452,14 @@ version = "3.5.0+0"
 # ╠═cf30ace3-1c08-4ef3-8986-a27df7f1799d
 # ╠═c5a427bc-9ab4-45aa-a1d7-cc8a30b0ab0e
 # ╠═d6694c32-656c-11eb-0796-5f485cccccf0
+# ╠═77e3a468-6cb8-4883-8f16-66044ed393af
+# ╠═000ac0d1-46ad-4724-8d5c-0a36d938eff0
 # ╠═345b272a-0ea4-46fc-b1a0-93dbc809366d
 # ╟─ce75fe16-6570-11eb-3f3a-577eac7f9ee8
 # ╟─37972f08-db05-4e84-9528-fe16cd86efbf
 # ╟─6948e6c6-661b-11eb-141c-370fc6ffe618
 # ╠═1bd2c660-6572-11eb-268c-732fd2210a58
-# ╠═f4cd5fb2-6574-11eb-37c4-73d4b21c1883
+# ╟─f4cd5fb2-6574-11eb-37c4-73d4b21c1883
 # ╠═0b35f73f-6976-4d85-b61f-b4188440043e
 # ╟─373cb47e-655e-11eb-2751-0150985d98c1
 # ╟─4dee5da9-aa4b-4551-974a-f7268d016617
@@ -2495,6 +2519,7 @@ version = "3.5.0+0"
 # ╠═fecf62c5-2c1d-4709-8c17-d4b6e0565617
 # ╠═208445c4-5359-4442-9b9b-bde5e55a8c23
 # ╟─e4d016cc-64ae-11eb-1ca2-259e5a262f33
+# ╠═c112f585-489a-4feb-bc12-0122738f9f33
 # ╠═bf18bef2-649d-11eb-3e3c-45b41a3fa6e5
 # ╠═11ea4b84-649c-11eb-00a4-d93af0bd31c8
 # ╠═b0d34450-6497-11eb-01e3-27582a9f1dcc
