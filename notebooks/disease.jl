@@ -35,7 +35,7 @@ begin
 	using NearestNeighbors: BallTree, knn
 	using Graphs: SimpleGraph, add_edge!, StarGraph, CycleGraph, WheelGraph, betweenness_centrality, eigenvector_centrality, edges, adjacency_matrix, nv, ne
 	using DataFrames: DataFrame, ByRow, groupby, rename!, Not, stack, unstack, leftjoin
-	using DataFrameMacros: @combine, @transform!, @transform, @groupby
+	using DataFrameMacros: @combine, @transform!, @transform, @groupby, @subset, @subset!
 	using CategoricalArrays: CategoricalArrays, categorical, cut, levels!
 	using UnPack: @unpack
 	using Statistics: mean
