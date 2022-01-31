@@ -4,40 +4,50 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ c5b3e888-3b6f-449b-8f72-455fe86743d2
+using CategoricalArrays
+
+# ╔═╡ f5e85900-1ea7-4dd3-8999-2e121efa9447
+using PlutoUI
+
+# ╔═╡ bff18f1e-9ec9-4f52-b800-7ecd631f39fa
+using Graphs, SimpleWeightedGraphs
+
+# ╔═╡ af67ffba-216c-480e-8523-b7236bf1fe83
+using SparseArrays
+
+# ╔═╡ 2e2e455b-9ba2-4c22-b7db-a014b9384935
+using Colors: @colorant_str
+
 # ╔═╡ 1f8b5ffc-cc22-41f1-bf87-9a58e16ea2b5
-using DataFrames, DataFrameMacros, Chain
+using DataFrames, DataFrameMacros
+
+# ╔═╡ ff3f0580-0b8f-40c0-9e8d-ddf556745354
+using Chain: @chain
 
 # ╔═╡ 64031dfe-3f01-4ec1-aff7-5646cfde96f0
 using GraphMakie, AlgebraOfGraphics, CairoMakie
 
-# ╔═╡ 2e2e455b-9ba2-4c22-b7db-a014b9384935
-using Colors
-
-# ╔═╡ d36f343a-3a4c-4261-81c7-7a14a45d7fba
-using LinearAlgebra
-
-# ╔═╡ bff18f1e-9ec9-4f52-b800-7ecd631f39fa
-using SimpleWeightedGraphs
-
-# ╔═╡ 065c0b3c-d738-4581-b9f8-6446a20d0c0a
-using SparseArrays
-
-# ╔═╡ 027a151c-5556-4027-b831-d0435b35679f
-using Graphs
+# ╔═╡ 84a3ad96-4854-4ab8-be5c-b4859d1a2e39
+using MarkdownLiteral: @markdown
 
 # ╔═╡ 08abc77a-814a-11ec-3d54-439126a38a85
 md"""
 # School closures & Covid-19
 """
 
-# ╔═╡ a67c0c60-5b22-44ef-b89c-19843a20d196
-locations = [1:4]
+# ╔═╡ 3d85c3c6-9303-47e6-9fa6-5fc975cf750a
+setup = (; N_locations = 6, N_hh = 200, N_employers = 20)
 
-# ╔═╡ 5b469239-2dd7-4f8f-b5dc-d625c1285bea
-N = 100
+# ╔═╡ cd6c5481-ccc7-47d8-acda-4e90fc98b10e
+@markdown("""
+## Constructing the network
 
-# ╔═╡ e72b8673-8064-4e5a-910b-18e8a441e288
-household_size = rand(1:4, N)
+* `N = $(setup.N_hh)` households in `N_locations = $(setup.N_locations)` different locations
+* **households** (families) are modeled as *complete networks*, variable family size (with and without children, sometimes single-parents)
+* all children of same location go to same **school** (modeled as a *complete network*)
+*  **adults** are linked through their **job** (there are `N_employers = $(setup.N_employers)` employers, each modeled as a _complete network_)
+""")
 
 # ╔═╡ 5b944c23-442c-4f02-924c-2bad76b7970d
 function member_type(member_id)
@@ -46,7 +56,7 @@ function member_type(member_id)
 	elseif member_id == 2
 		if rand() < 2/3
 			return "adult"
-		else
+		else # single-parent
 			return "child"
 		end
 	else
@@ -54,32 +64,47 @@ function member_type(member_id)
 	end
 end
 
+# ╔═╡ e4bf4d41-9568-42a1-b01b-e22fc5c39ec1
+md"""
+### Nodes
+"""
+
 # ╔═╡ 223a560f-fc61-4432-9409-5cb2cb3d9789
-node_df = @chain begin
-	DataFrame(:hh_id => 1:N)
-	@transform(:school_district = @c rand(1:4, N))
-	@groupby(:hh_id, :school_district)
-	@combine(:member_id = 1:rand(1:4))
-	@transform!(:member_type = member_type(:member_id))
-	@transform!(:node_id = @c 1:length(:hh_id))
-	@transform!(:employer = :member_type == "adult" ? rand(5:20) : :school_district)
-	@transform!(:node_color = :member_type == "adult" ? colorant"green" : colorant"red")
+node_df = let
+	(; N_hh, N_locations, N_employers) = setup
+	household_size = rand(1:4, N_hh)
+
+	@chain begin
+		DataFrame(:hh_id => 1:N_hh)
+		@transform(:school_district = @c rand(1:N_locations, N_hh))
+		@groupby(:hh_id, :school_district)
+		@combine(:member_id = 1:rand(1:4))
+		@transform!(:member_type = member_type(:member_id))
+		@transform!(:node_id = @c 1:length(:hh_id))
+		@transform!(:employer = :member_type == "adult" ? N_locations + rand(1:N_employers) : :school_district)
+		@transform!(:node_color = :member_type == "adult" ? colorant"green" : colorant"red")
+	end
 end
 
+# ╔═╡ bf5ca480-d913-4b21-a85b-b1b2c0b4c2f9
+md"""
+### Edges
+"""
+
 # ╔═╡ 9a930158-15bb-44e7-baca-672517759044
-family_weight = Observable(0.5)
+family_weight = 0.5
 
 # ╔═╡ 8fc85dae-e393-41b0-b41d-eccc63909891
-school_weight = Observable(0.5)
+school_weight = 0.5
 
 # ╔═╡ 877d8633-d8ab-4772-ad20-8072d6409c08
-job_weight = Observable(0.5)
+job_weight = 0.5
 
 # ╔═╡ 0da25924-c89b-4a1b-b63e-7cb2d17fcbc3
 begin
 	g = SimpleGraph()
 
-	T = typeof((i = 1, j = 1, v = family_weight))
+	T = typeof((i = 1, j = 1, weight = family_weight, linktype = :family))
 
 	edge_list = T[]
 	
@@ -90,7 +115,7 @@ begin
 
 	for df in gdf
 		for (i,j) ∈ Iterators.product(df.node_id, df.node_id)
-			i ≠ j && push!(edge_list, (; i, j, v = family_weight))
+			i ≠ j && push!(edge_list, (; i, j, weight = family_weight, linktype = :family))
 		end
 	end
 
@@ -102,15 +127,18 @@ begin
 	for df in gdf
 		for (i,j) ∈ Iterators.product(df.node_id, df.node_id)
 			if only(unique(df.employer)) ≤ 4
-				i ≠ j && push!(edge_list, (; i, j, v = school_weight))
+				linktype = :school
+				weight = school_weight
+				i ≠ j && push!(edge_list, (; i, j, weight, linktype))
 			else
-				i ≠ j && push!(edge_list, (; i, j, v = job_weight))
+				linktype = :job
+				weight = job_weight
+				i ≠ j && push!(edge_list, (; i, j, weight, linktype))
 			end
 		end
 	end
 
-	
-	nv = size(node_df, 1)
+	n_v = size(node_df, 1)
 
 	edge_df00 = DataFrame(edge_list)
 	edge_df0 = @chain edge_df00 begin
@@ -118,9 +146,7 @@ begin
 		combine(first, _)
 	end
 	
-	@transform!(edge_df0, :weight = (:v)[])
-
-	g = SimpleWeightedGraph(sparse(edge_df0.i, edge_df0.j, edge_df0.weight, nv, nv))
+	g = SimpleWeightedGraph(sparse(edge_df0.i, edge_df0.j, edge_df0.weight, n_v, n_v))
 
 	edge_df = @chain edges(g) begin
 		DataFrame
@@ -129,71 +155,443 @@ begin
 end
 
 
-# ╔═╡ 2337a5dd-a3b5-43e2-b3b5-a5e1b5ff98a8
-edge_df
+# ╔═╡ 065c0b3c-d738-4581-b9f8-6446a20d0c0a
+md"""
+## Plotting the network
+"""
 
-# ╔═╡ 0a330f88-b0cb-45ad-82aa-973c698c717b
-edges(g)
-
-# ╔═╡ 950b03a3-d864-43e6-9129-703684f80075
-family_weight[] = 1
-
-# ╔═╡ 0c01674f-6691-42ce-8eed-9c25abf90424
-function collect_observables(vec_of_obs)
-	lift(vec_of_obs...) do (obs...)
-		collect(obs)
+# ╔═╡ 3a06eccc-9826-4b42-9641-0db6def631f6
+function transmission_probability(weight, linktype, lockdown=:none)
+	if lockdown == :none || linktype == :family
+		return weight
+	elseif lockdown == :schools && linktype == :school
+		return 0
+	elseif lockdown == :general
+		return 0
+	else
+		return weight
 	end
-end
+end	
 
-# ╔═╡ 27e42694-225e-41aa-8ac8-cae044874d36
-fg1 = scatter(edge_df.src, edge_df.dst, markersize = collect_observables(edge_df.v))
+# ╔═╡ c56aec1e-ba49-4455-b6de-b2d821c6682c
+lockdown = :schools
 
-# ╔═╡ bc22e8ee-2174-4c19-aafa-98feaac0e34a
-fg1
-
-# ╔═╡ 2a7cc963-dae5-4f3c-b2bc-6af17d2407cd
-
+# ╔═╡ 9a14ffa8-5833-4dc7-a286-6f23e3e10492
+@assert lockdown ∈ [:schools, :general, :none]
 
 # ╔═╡ 36edee11-497d-415c-b589-8a333573bb8c
 fg = graphplot(g; 
 	node_df.node_color, node_size = 7,
-	edge_width = collect_observables(edge_df.v)[],
+	edge_width = transmission_probability.(edge_df.weight, edge_df.linktype, lockdown),
 	edge_color = (:black, 0.5)
 )
 
-# ╔═╡ 536333ee-8f99-4c55-b71d-425d644a5440
-collect_observables(edge_df.v)[]
+# ╔═╡ 6ec1f66b-f61d-4c72-b992-0c99cae71494
+edge_df_sorted = @chain edge_df begin
+	@sort(:src, :dst)
+end
 
-# ╔═╡ 3ca7e25f-751b-446d-8cc4-55b61502891f
-school_weight[] = 20
+# ╔═╡ 993546ec-5dbe-4c08-9c11-072bc343390a
+function get_edge(i, j, edge_df_sorted)
+	i, j = minmax(i, j)
+	@subset(edge_df_sorted, :src == i, :dst == j)
+end
 
-# ╔═╡ ff1142c2-1cab-4e2e-89b1-adeeaf813a57
-fg
+# ╔═╡ 56ca0088-97e0-493b-95fb-88bc35610d6d
+function get_edge_fast(i, j, edge_df_sorted)
+	#let i = 1, j = 161
+	src, dst = minmax(i, j)
+
+	i_src_from = findfirst(==(src), edge_df_sorted.src)
+
+	if isnothing(i_src_from)
+		@info i, j
+	end
+	i_src_to = findfirst(>(src), edge_df_sorted.src[i_src_from:end])
+
+	src_rows = edge_df_sorted[i_src_from:end,:]
+	if !isnothing(i_src_to)
+		src_rows = src_rows[1:i_src_to - 1,:]
+	end
+
+	i_row = findfirst(==(dst), src_rows.dst)
+
+	if isnothing(i_row)
+		@info i, j
+	end
+
+	src_rows[i_row, :]
+	
+end
+
+# ╔═╡ 891e5c60-468a-44c7-9b5a-609dcdb02cc2
+begin
+	i, j = 478, 479 #1, 161
+	t1 = @elapsed get_edge(i, j, edge_df_sorted)
+	t2 = @elapsed get_edge_fast(i, j, edge_df_sorted)
+
+	t2 / t1 - 1
+end
+
+# ╔═╡ 6eaa89f6-ab3c-4375-ac72-0084d0a36398
+@subset(edge_df_sorted, :src == 4, :dst == 16)
+
+# ╔═╡ 8c133759-f2ca-4c0c-a5e5-19f5ff188436
+md"""
+## Setting up the SIR model
+"""
+
+# ╔═╡ f1664b58-75c1-4a79-9540-85303ed3a42f
+begin
+	abstract type State end
+	struct S <: State end
+	struct I <: State end
+	struct R <: State end
+	#struct D <: State end # (Assignment)
+end
+
+# ╔═╡ d1b16bec-ae19-4740-80fe-a711fd145089
+const States = Union{subtypes(State)...}
+
+# ╔═╡ ade7f9b5-cf6e-4278-95e0-651691baa892
+md"
+### Define the transitions
+"
+
+# ╔═╡ ca1610dc-653a-4df9-bfc7-0366576ded08
+function transition(::I, par, node, args...; kwargs...)
+	## The following lines will be helpful for the assignment (task 2)
+	if length(par.δ) == 1
+	 	δ = only(par.δ)
+	else
+	 	δ = par.δ[node]
+	end
+	x = rand()
+	if x < par.ρ + δ # recover or die
+		R()
+	#elseif x < ...
+	#	...
+	else
+		I()
+	end
+end
+
+# ╔═╡ 5cb8fa66-9a1e-4d27-a1c6-f26c1b7f3532
+transition(::R, args...; kwargs...) = R()
+
+# ╔═╡ baad47a0-398e-4f9f-9af6-7686acdc25e4
+function transition(::S, par, node, adjacency_matrix, is_infected, edge_df_sorted::DataFrame, lockdown)
+	inv_prob = 1.0
+	for i in is_infected
+		if adjacency_matrix[node, i] == 0
+			p = 0
+		else
+			(; weight, linktype) = get_edge_fast(node, i, edge_df_sorted)
+			p = transmission_probability(weight, linktype, lockdown)
+		end
+	 	inv_prob *= 1 - p
+	end
+	
+	#inv_prob = prod(1 - par.p * adjacency_matrix[i, node] for i in is_infected, init = 1.0)
+	
+	π =	1.0 - inv_prob
+	
+	rand() < π ? I() : S()
+end
+
+# ╔═╡ d600e317-61a8-4b7e-a5ab-706b175f5765
+function iterate!(states_new, states, adjacency_matrix, par, edge_df_sorted, lockdown)
+
+	is_infected = findall(isa.(states, I))
+	
+	for i in 1:size(adjacency_matrix, 1)
+		states_new[i] = transition(states[i], par, i, adjacency_matrix, is_infected, edge_df_sorted, lockdown)
+	end
+	
+	states_new
+end
+
+# ╔═╡ 396f4c50-1b1e-449e-bf39-557018f2dd78
+function iterate(states, adjacency_matrix, par, lockdown)
+	states_new = Vector{States}(undef, N)
+	iterate!(states_new, states, adjacency_matrix, par, lockdown)
+	
+	states_new
+end
+
+# ╔═╡ 19c68050-596c-4604-99b2-eb5fc045db10
+md"""
+### Functions for the simulation
+"""
+
+# ╔═╡ 2ef4585f-7c76-4382-bdc6-455a08448c6f
+function initial_state(N, infected_nodes, recovered_nodes)
+	# fill with "Susceptible"
+	init = States[S() for i in 1:N]
+	
+	init[infected_nodes] .= Ref(I())
+	init[recovered_nodes] .= Ref(R())
+	
+	init
+end
+
+# ╔═╡ acaa8906-56e8-4202-8a82-98afb4c2f458
+function initial_state(N, n_infected)
+	
+	# spread out the desired number of infected people
+	infected_nodes = 1:(N÷n_infected):N
+	
+	initial_state(N, infected_nodes, [])
+end
+
+# ╔═╡ 58228108-6500-443b-8350-3d4e10f75988
+function simulate(graph, par, T, edge_df_sorted, init = initial_state(nv(graph), max(nv(graph) ÷ 100, 1)); lockdown = fill(:none, T))
+	mat = adjacency_matrix(graph)
+	N = nv(graph)
+	
+	sim = Matrix{States}(undef, N, T)
+	sim[:,1] .= init
+	
+	for t = 2:T
+		iterate!(view(sim, :, t), view(sim, :, t-1), mat, par, edge_df_sorted, lockdown[t])
+	end
+	sim
+end
+
+# ╔═╡ 6fb0e547-f592-4765-bf6f-70e441119ea0
+md"""
+## Processing the Simulated Data
+"""
+
+# ╔═╡ a9ed4bc1-f943-456f-b122-484b9455a90a
+function ordered_states(states)
+	levels = unique(states)
+	order  = ["S", "I", "R", "D"]
+	if levels ⊆ order
+		return sorted = order ∩ levels
+	else
+		return levels
+	end
+end
+
+# ╔═╡ b0000ea5-8d36-42f8-9416-8d1a3737c401
+label(x::DataType) = string(Base.typename(x).name)
+
+# ╔═╡ 0a023b5e-d5f3-4a0f-b1f8-b3bf9d715074
+label(x) = label(typeof(x))
+
+# ╔═╡ 02daff76-2eeb-4f87-ba0c-3632180b2e2b
+function tidy_simulation_output(sim)
+	# go from type to symbol (S() => "S")
+	sim1 = label.(sim)
+	
+	# make it a DataFrame with T columns and N rows
+	df0 = DataFrame(sim1, :auto)
+	rename!(df0, string.(1:size(df0,2)))
+	
+	# add a column with node identifier
+	df0.node_id = 1:size(df0, 1)
+	
+	# stack df to
+	# node_id | t | state
+	df = stack(df0, Not(:node_id), variable_name = :t, value_name = :state)
+	# make t numeric
+	@transform!(df, :t = parse(Int, eval(:t)),
+					 :state = @c categorical(:state)
+	
+				)	
+	df
+end
+
+# ╔═╡ 486fc0c3-b4fe-4f3a-b434-fe6dbb7181a3
+function fractions_over_time(sim)
+	tidy_sim = tidy_simulation_output(sim)
+	N, T = size(sim)
+	
+	return @chain tidy_sim begin
+		@groupby(:t, :state)
+		@combine(:fraction = length(:node_id) / N)
+		# put states into nice order
+		@transform(:state = @c levels!(:state, ordered_states(:state)))
+	end
+end
+
+# ╔═╡ b15bf71d-3062-49d6-a3cc-4ce2f1cb83df
+md"""
+## Constructing the Figures
+"""
+
+# ╔═╡ bde45cf6-a0f7-4ebb-b361-adc8d0e6aad6
+function plot_fractions!(figpos, t, sim, color_dict, legpos = nothing)	
+	df = fractions_over_time(sim)
+			
+	plt = data(df) * visual(Lines) * mapping(
+		:t => AlgebraOfGraphics.L"t", :fraction, color = :state => ""
+	) * visual(Lines)
+	
+	fg = draw!(figpos, plt, palettes = (; color = collect(color_dict)))
+
+	ax = only(fg).axis
+	vlines!(ax, @lift([$t]), color = :gray50, linestyle=(:dash, :loose))	
+	ylims!(ax, -0.05, 1.05)
+
+	# some attributes to make the legend nicer
+	attr = (orientation = :horizontal, titleposition = :left, framevisible = false)
+	
+	if !isnothing(legpos)
+		leg = legend!(legpos, fg; attr...)
+	else
+		leg = nothing
+	end
+ 
+	(; ax=fg, leg)
+end
+
+# ╔═╡ 94d1cfd9-8e2d-42d3-9968-c84b89e1bfc3
+function plot_diffusion!(figpos, graph, sim, t, color_dict; kwargs...)
+	sim_colors = [color_dict[label(s)] for s in sim]
+	state_as_color_t = @lift(sim_colors[:,$t])
+	
+    ax = Axis(figpos)
+
+	hidedecorations!(ax)
+
+	N, T = size(sim)
+	msize = N < 20 ? 10 : N < 100 ? 5 : 3
+
+	graphplot!(ax, graph;
+		node_size  = msize,
+		node_color = state_as_color_t,
+		kwargs...
+	)
+	
+	ax
+end
+
+# ╔═╡ dd4e214a-0d9b-446b-be65-ff4c0817e87e
+function sir_plot!(figpos, legpos, sim, graph, t; kwargs...)
+				
+	states = ordered_states(label.(subtypes(State)))
+
+	colors = Makie.wong_colors()[[5,2,3,1,6,4,7]]
+	
+	color_dict = Dict(s => colors[i] for (i,s) in enumerate(states))
+	
+	ax_f, leg = plot_fractions!(figpos[1,2], t, sim, color_dict, legpos)
+	ax_d = plot_diffusion!(figpos[1,1], graph, sim, t, color_dict; kwargs...)
+
+	(; ax_f, ax_d, leg)
+
+end
+
+# ╔═╡ a7d3635a-846f-42a1-bb0c-1a132b15aeb0
+function compare_sir(sim1, sim2, graph; kwargs...)
+	t = Observable(1)
+		
+	fig = Figure(padding = (0,0,0,0))
+	legpos = fig[1:2,2]
+	panel1 = fig[1,1]
+	panel2 = fig[2,1]
+	
+	axs1 = sir_plot!(panel1, legpos,  sim1, graph, t; kwargs...)
+	axs2 = sir_plot!(panel2, nothing, sim2, graph, t; kwargs...)
+		
+	axs1.leg.orientation[] = :vertical	
+	
+	@assert axes(sim1, 2) == axes(sim2, 2)
+	
+	(; fig, t, T_range = axes(sim1, 2))
+end
+
+# ╔═╡ 9c3605bb-a0c6-4c7f-ae62-942733c2e3c1
+function sir_plot(sim, graph; kwargs...)
+	t = Observable(1)
+	
+	fig = Figure()
+	main_fig = fig[2,1]
+	leg_pos = fig[1,1]
+
+	sir_plot!(main_fig, leg_pos, sim, graph, t; kwargs...)
+	
+	(; fig, t, T_range = axes(sim, 2))
+	
+end
+
+# ╔═╡ 2875a129-ac48-4bae-8f18-d70a5f8b16a8
+md"""
+## Simulate
+"""
+
+# ╔═╡ cba2a2cb-c2d5-4cb5-a3d1-a2a5d02bb336
+out_big = let
+	T = 30
+	
+	par = (ρ = 0.2, δ = 0.1)
+
+	graph = g
+
+	lockdown = fill(:none, T)
+	t₀ = 5
+	t = 3
+	lockdown[t:t₀ + t] .= :schools
+	
+	sim = simulate(graph, par, T, edge_df_sorted; lockdown)
+
+	attr = (
+		#layout = _ -> node_positions,
+		node_attr  = (; strokewidth = 0.1),
+		edge_width = 0.5,
+		edge_color = (:black, 0.3),
+	)
+	
+	out_big = sir_plot(sim, graph; attr...)
+end
+
+# ╔═╡ b9ea2229-6b11-403b-ab14-13cb91c856ee
+out_big.fig
+
+# ╔═╡ 338a5dc3-7099-4163-948e-ee1f0e362481
+md"""
+# Appendix
+"""
+
+# ╔═╡ 337e73e7-5454-4f1f-9d5e-9b01a5c2cd10
+TableOfContents()
+
+# ╔═╡ 311110d0-f62e-49e1-bf27-ebf09e1c08a1
+md"""
+## Package environment
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
-LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 AlgebraOfGraphics = "~0.6.0"
 CairoMakie = "~0.6.6"
+CategoricalArrays = "~0.10.2"
 Chain = "~0.4.10"
 Colors = "~0.12.8"
 DataFrameMacros = "~0.2.1"
 DataFrames = "~1.3.2"
 GraphMakie = "~0.3.1"
 Graphs = "~1.5.1"
+MarkdownLiteral = "~0.1.1"
+PlutoUI = "~0.7.32"
 SimpleWeightedGraphs = "~1.2.1"
 """
 
@@ -209,6 +607,12 @@ deps = ["ChainRulesCore", "LinearAlgebra"]
 git-tree-sha1 = "6f1d9bc1c08f9f4a8fa92e3ea3cb50153a1b40d4"
 uuid = "621f4979-c628-5d54-868e-fcf4e3e8185c"
 version = "1.1.0"
+
+[[deps.AbstractPlutoDingetjes]]
+deps = ["Pkg"]
+git-tree-sha1 = "8eaf9f1b4921132a4cff3f36a1d9ba923b14a481"
+uuid = "6e696c72-6542-2067-7265-42206c756150"
+version = "1.1.4"
 
 [[deps.AbstractTrees]]
 git-tree-sha1 = "03e0550477d86222521d254b741d470ba17ea0b5"
@@ -295,6 +699,12 @@ git-tree-sha1 = "4b859a208b2397a7a623a03449e4636bdb17bcf2"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.16.1+1"
 
+[[deps.CategoricalArrays]]
+deps = ["DataAPI", "Future", "Missings", "Printf", "Requires", "Statistics", "Unicode"]
+git-tree-sha1 = "c308f209870fdbd84cb20332b6dfaf14bf3387f8"
+uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
+version = "0.10.2"
+
 [[deps.Chain]]
 git-tree-sha1 = "339237319ef4712e6e5df7758d0bccddf5c237d9"
 uuid = "8be319e6-bccf-4806-a6f7-6fae938471bc"
@@ -341,6 +751,12 @@ deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
 git-tree-sha1 = "417b0ed7b8b838aa6ca0a87aadf1bb9eb111ce40"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.8"
+
+[[deps.CommonMark]]
+deps = ["Crayons", "JSON", "URIs"]
+git-tree-sha1 = "4aff51293dbdbd268df314827b7f409ea57f5b70"
+uuid = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
+version = "0.8.5"
 
 [[deps.Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "SHA", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
@@ -602,6 +1018,23 @@ git-tree-sha1 = "129acf094d168394e80ee1dc4bc06ec835e510a3"
 uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "2.8.1+1"
 
+[[deps.Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.4"
+
+[[deps.HypertextLiteral]]
+git-tree-sha1 = "2b078b5a615c6c0396c77810d92ee8c6f470d238"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.3"
+
+[[deps.IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "0.2.2"
+
 [[deps.IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
 uuid = "615f187c-cbe4-4ef1-ba3b-2fcf58d6d173"
@@ -835,6 +1268,12 @@ version = "0.4.1"
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
+[[deps.MarkdownLiteral]]
+deps = ["CommonMark", "HypertextLiteral"]
+git-tree-sha1 = "0d3fa2dd374934b62ee16a4721fe68c418b92899"
+uuid = "736d6165-7244-6769-4267-6b50796e6954"
+version = "0.1.1"
+
 [[deps.Match]]
 git-tree-sha1 = "1d9bc5c1a6e7ee24effb93f175c9342f9154d97f"
 uuid = "7eb4fadd-790c-5f42-8a69-bfa0b872bfbf"
@@ -1011,6 +1450,12 @@ deps = ["ColorSchemes", "Colors", "Dates", "Printf", "Random", "Reexport", "Stat
 git-tree-sha1 = "6f1b25e8ea06279b5689263cc538f51331d7ca17"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.1.3"
+
+[[deps.PlutoUI]]
+deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
+git-tree-sha1 = "ae6145ca68947569058866e443df69587acc1806"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.32"
 
 [[deps.PolygonOps]]
 git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
@@ -1271,6 +1716,11 @@ git-tree-sha1 = "216b95ea110b5972db65aa90f88d8d89dcb8851c"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 version = "0.9.6"
 
+[[deps.URIs]]
+git-tree-sha1 = "97bbe755a53fe859669cd907f2d96aee8d2c1355"
+uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
+version = "1.3.0"
+
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
@@ -1411,32 +1861,65 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╟─08abc77a-814a-11ec-3d54-439126a38a85
-# ╠═1f8b5ffc-cc22-41f1-bf87-9a58e16ea2b5
-# ╠═64031dfe-3f01-4ec1-aff7-5646cfde96f0
-# ╠═a67c0c60-5b22-44ef-b89c-19843a20d196
-# ╠═5b469239-2dd7-4f8f-b5dc-d625c1285bea
-# ╠═e72b8673-8064-4e5a-910b-18e8a441e288
+# ╟─cd6c5481-ccc7-47d8-acda-4e90fc98b10e
+# ╠═3d85c3c6-9303-47e6-9fa6-5fc975cf750a
 # ╠═5b944c23-442c-4f02-924c-2bad76b7970d
-# ╠═2e2e455b-9ba2-4c22-b7db-a014b9384935
+# ╟─e4bf4d41-9568-42a1-b01b-e22fc5c39ec1
 # ╠═223a560f-fc61-4432-9409-5cb2cb3d9789
-# ╠═d36f343a-3a4c-4261-81c7-7a14a45d7fba
+# ╟─bf5ca480-d913-4b21-a85b-b1b2c0b4c2f9
 # ╠═9a930158-15bb-44e7-baca-672517759044
 # ╠═8fc85dae-e393-41b0-b41d-eccc63909891
 # ╠═877d8633-d8ab-4772-ad20-8072d6409c08
-# ╠═bff18f1e-9ec9-4f52-b800-7ecd631f39fa
 # ╠═0da25924-c89b-4a1b-b63e-7cb2d17fcbc3
-# ╠═2337a5dd-a3b5-43e2-b3b5-a5e1b5ff98a8
-# ╠═0a330f88-b0cb-45ad-82aa-973c698c717b
-# ╠═27e42694-225e-41aa-8ac8-cae044874d36
-# ╠═950b03a3-d864-43e6-9129-703684f80075
-# ╠═bc22e8ee-2174-4c19-aafa-98feaac0e34a
-# ╠═0c01674f-6691-42ce-8eed-9c25abf90424
-# ╠═2a7cc963-dae5-4f3c-b2bc-6af17d2407cd
-# ╠═065c0b3c-d738-4581-b9f8-6446a20d0c0a
-# ╠═027a151c-5556-4027-b831-d0435b35679f
+# ╟─065c0b3c-d738-4581-b9f8-6446a20d0c0a
+# ╠═3a06eccc-9826-4b42-9641-0db6def631f6
+# ╠═c56aec1e-ba49-4455-b6de-b2d821c6682c
+# ╠═9a14ffa8-5833-4dc7-a286-6f23e3e10492
 # ╠═36edee11-497d-415c-b589-8a333573bb8c
-# ╠═536333ee-8f99-4c55-b71d-425d644a5440
-# ╠═3ca7e25f-751b-446d-8cc4-55b61502891f
-# ╠═ff1142c2-1cab-4e2e-89b1-adeeaf813a57
+# ╠═6ec1f66b-f61d-4c72-b992-0c99cae71494
+# ╠═993546ec-5dbe-4c08-9c11-072bc343390a
+# ╠═56ca0088-97e0-493b-95fb-88bc35610d6d
+# ╠═891e5c60-468a-44c7-9b5a-609dcdb02cc2
+# ╠═6eaa89f6-ab3c-4375-ac72-0084d0a36398
+# ╟─8c133759-f2ca-4c0c-a5e5-19f5ff188436
+# ╠═f1664b58-75c1-4a79-9540-85303ed3a42f
+# ╠═d1b16bec-ae19-4740-80fe-a711fd145089
+# ╟─ade7f9b5-cf6e-4278-95e0-651691baa892
+# ╠═ca1610dc-653a-4df9-bfc7-0366576ded08
+# ╠═5cb8fa66-9a1e-4d27-a1c6-f26c1b7f3532
+# ╠═baad47a0-398e-4f9f-9af6-7686acdc25e4
+# ╠═396f4c50-1b1e-449e-bf39-557018f2dd78
+# ╠═d600e317-61a8-4b7e-a5ab-706b175f5765
+# ╟─19c68050-596c-4604-99b2-eb5fc045db10
+# ╠═2ef4585f-7c76-4382-bdc6-455a08448c6f
+# ╠═acaa8906-56e8-4202-8a82-98afb4c2f458
+# ╠═58228108-6500-443b-8350-3d4e10f75988
+# ╟─6fb0e547-f592-4765-bf6f-70e441119ea0
+# ╠═a9ed4bc1-f943-456f-b122-484b9455a90a
+# ╠═486fc0c3-b4fe-4f3a-b434-fe6dbb7181a3
+# ╠═02daff76-2eeb-4f87-ba0c-3632180b2e2b
+# ╠═b0000ea5-8d36-42f8-9416-8d1a3737c401
+# ╠═0a023b5e-d5f3-4a0f-b1f8-b3bf9d715074
+# ╟─b15bf71d-3062-49d6-a3cc-4ce2f1cb83df
+# ╠═a7d3635a-846f-42a1-bb0c-1a132b15aeb0
+# ╠═9c3605bb-a0c6-4c7f-ae62-942733c2e3c1
+# ╠═dd4e214a-0d9b-446b-be65-ff4c0817e87e
+# ╠═bde45cf6-a0f7-4ebb-b361-adc8d0e6aad6
+# ╠═94d1cfd9-8e2d-42d3-9968-c84b89e1bfc3
+# ╟─2875a129-ac48-4bae-8f18-d70a5f8b16a8
+# ╠═c5b3e888-3b6f-449b-8f72-455fe86743d2
+# ╠═cba2a2cb-c2d5-4cb5-a3d1-a2a5d02bb336
+# ╠═b9ea2229-6b11-403b-ab14-13cb91c856ee
+# ╟─338a5dc3-7099-4163-948e-ee1f0e362481
+# ╠═f5e85900-1ea7-4dd3-8999-2e121efa9447
+# ╠═337e73e7-5454-4f1f-9d5e-9b01a5c2cd10
+# ╟─311110d0-f62e-49e1-bf27-ebf09e1c08a1
+# ╠═bff18f1e-9ec9-4f52-b800-7ecd631f39fa
+# ╠═af67ffba-216c-480e-8523-b7236bf1fe83
+# ╠═2e2e455b-9ba2-4c22-b7db-a014b9384935
+# ╠═1f8b5ffc-cc22-41f1-bf87-9a58e16ea2b5
+# ╠═ff3f0580-0b8f-40c0-9e8d-ddf556745354
+# ╠═64031dfe-3f01-4ec1-aff7-5646cfde96f0
+# ╠═84a3ad96-4854-4ab8-be5c-b4859d1a2e39
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
