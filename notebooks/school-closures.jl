@@ -36,6 +36,19 @@ md"""
 # School closures & Covid-19
 """
 
+# ╔═╡ 8eb38c3b-3ab1-42a9-ae6c-a6d2e707162c
+md"""
+#### Ideas
+
+* Given network structure
+* hospital capacity
+* add state `H`ospitalized
+* without intervention, get above threshold
+* what to do get below threshold
+
+(use separate notebook, show how to add death in class)
+"""
+
 # ╔═╡ 3d85c3c6-9303-47e6-9fa6-5fc975cf750a
 setup = (; N_locations = 6, N_hh = 200, N_employers = 20)
 
@@ -1862,6 +1875,7 @@ version = "3.5.0+0"
 # ╔═╡ Cell order:
 # ╟─08abc77a-814a-11ec-3d54-439126a38a85
 # ╟─cd6c5481-ccc7-47d8-acda-4e90fc98b10e
+# ╠═8eb38c3b-3ab1-42a9-ae6c-a6d2e707162c
 # ╠═3d85c3c6-9303-47e6-9fa6-5fc975cf750a
 # ╠═5b944c23-442c-4f02-924c-2bad76b7970d
 # ╟─e4bf4d41-9568-42a1-b01b-e22fc5c39ec1
