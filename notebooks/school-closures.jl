@@ -7,6 +7,9 @@ using InteractiveUtils
 # ╔═╡ c5b3e888-3b6f-449b-8f72-455fe86743d2
 using CategoricalArrays
 
+# ╔═╡ e35ed6b2-3e18-40b5-b9fd-c6bb216ed2a0
+using Random
+
 # ╔═╡ f5e85900-1ea7-4dd3-8999-2e121efa9447
 using PlutoUI
 
@@ -50,7 +53,7 @@ md"""
 """
 
 # ╔═╡ 3d85c3c6-9303-47e6-9fa6-5fc975cf750a
-setup = (; N_locations = 6, N_hh = 200, N_employers = 20)
+setup = (; N_locations = 6, N_hh = 200, N_employers = 50)
 
 # ╔═╡ cd6c5481-ccc7-47d8-acda-4e90fc98b10e
 @markdown("""
@@ -112,6 +115,15 @@ school_weight = 0.5
 
 # ╔═╡ 877d8633-d8ab-4772-ad20-8072d6409c08
 job_weight = 0.5
+
+# ╔═╡ 5dbd3897-4707-451e-91c3-12127123705b
+transitions = [
+	(member_type = "child", δ = 0.0, χ = 0.0, ρ = 0.2),
+ 	(member_type = "adult", δ = 0.5, χ = 0.5, ρ = 0.2)
+] |> DataFrame
+
+# ╔═╡ 02360e4c-e79f-41d0-8656-838bd2277727
+leftjoin(node_df, transitions, on = :member_type)
 
 # ╔═╡ 0da25924-c89b-4a1b-b63e-7cb2d17fcbc3
 begin
@@ -259,6 +271,7 @@ begin
 	abstract type State end
 	struct S <: State end
 	struct I <: State end
+	struct H <: State end # hospitalized
 	struct R <: State end
 	#struct D <: State end # (Assignment)
 end
@@ -273,19 +286,28 @@ md"
 
 # ╔═╡ ca1610dc-653a-4df9-bfc7-0366576ded08
 function transition(::I, par, node, args...; kwargs...)
-	## The following lines will be helpful for the assignment (task 2)
-	if length(par.δ) == 1
-	 	δ = only(par.δ)
-	else
-	 	δ = par.δ[node]
-	end
+	(; δ, ρ, χ) = node
 	x = rand()
-	if x < par.ρ + δ # recover or die
+	if x < ρ # recover
+		R()
+	elseif x < (ρ + χ) # hospitalized
+		H()
+	else # infected
+		I()
+	end
+end
+
+# ╔═╡ 5bfce3c7-5fe4-43e8-9987-3a7764be243c
+function transition(::H, par, node, args...; kwargs...)
+	(; δ, ρ) = node
+	
+	x = rand()
+	if x < ρ + δ # recover or die
 		R()
 	#elseif x < ...
 	#	...
 	else
-		I()
+		H()
 	end
 end
 
@@ -294,12 +316,13 @@ transition(::R, args...; kwargs...) = R()
 
 # ╔═╡ baad47a0-398e-4f9f-9af6-7686acdc25e4
 function transition(::S, par, node, adjacency_matrix, is_infected, edge_df_sorted::DataFrame, lockdown)
+	(; node_id) = node
 	inv_prob = 1.0
 	for i in is_infected
-		if adjacency_matrix[node, i] == 0
+		if adjacency_matrix[node_id, i] == 0
 			p = 0
 		else
-			(; weight, linktype) = get_edge_fast(node, i, edge_df_sorted)
+			(; weight, linktype) = get_edge_fast(node_id, i, edge_df_sorted)
 			p = transmission_probability(weight, linktype, lockdown)
 		end
 	 	inv_prob *= 1 - p
@@ -313,12 +336,14 @@ function transition(::S, par, node, adjacency_matrix, is_infected, edge_df_sorte
 end
 
 # ╔═╡ d600e317-61a8-4b7e-a5ab-706b175f5765
-function iterate!(states_new, states, adjacency_matrix, par, edge_df_sorted, lockdown)
+function iterate!(states_new, states, adjacency_matrix, par, edge_df_sorted,  node_df1, lockdown)
 
 	is_infected = findall(isa.(states, I))
 	
 	for i in 1:size(adjacency_matrix, 1)
-		states_new[i] = transition(states[i], par, i, adjacency_matrix, is_infected, edge_df_sorted, lockdown)
+		node_row = node_df1[i,:]
+		@assert node_row.node_id == i
+		states_new[i] = transition(states[i], par, node_row, adjacency_matrix, is_infected, edge_df_sorted, lockdown)
 	end
 	
 	states_new
@@ -358,7 +383,7 @@ function initial_state(N, n_infected)
 end
 
 # ╔═╡ 58228108-6500-443b-8350-3d4e10f75988
-function simulate(graph, par, T, edge_df_sorted, init = initial_state(nv(graph), max(nv(graph) ÷ 100, 1)); lockdown = fill(:none, T))
+function simulate(graph, par, T, edge_df_sorted, node_df1, init = initial_state(nv(graph), max(nv(graph) ÷ 100, 1)); lockdown = fill(:none, T))
 	mat = adjacency_matrix(graph)
 	N = nv(graph)
 	
@@ -366,7 +391,7 @@ function simulate(graph, par, T, edge_df_sorted, init = initial_state(nv(graph),
 	sim[:,1] .= init
 	
 	for t = 2:T
-		iterate!(view(sim, :, t), view(sim, :, t-1), mat, par, edge_df_sorted, lockdown[t])
+		iterate!(view(sim, :, t), view(sim, :, t-1), mat, par, edge_df_sorted, node_df1, lockdown[t])
 	end
 	sim
 end
@@ -530,6 +555,9 @@ function sir_plot(sim, graph; kwargs...)
 	
 end
 
+# ╔═╡ c56601ce-2d9e-45e9-b8a3-77626553bfab
+
+
 # ╔═╡ 2875a129-ac48-4bae-8f18-d70a5f8b16a8
 md"""
 ## Simulate
@@ -539,16 +567,25 @@ md"""
 out_big = let
 	T = 30
 	
-	par = (ρ = 0.2, δ = 0.1)
+	par = (;) #ρ = 0.2, δ = 0.1)
 
 	graph = g
 
 	lockdown = fill(:none, T)
-	t₀ = 5
-	t = 3
-	lockdown[t:t₀ + t] .= :schools
+	t₀ = 1
+	t = 10
+	lockdown[t₀:t₀ + t] .= :none
 	
-	sim = simulate(graph, par, T, edge_df_sorted; lockdown)
+	
+	transitions = [
+		(member_type = "child", δ = 0.0, χ = 0.0, ρ = 0.2),
+ 		(member_type = "adult", δ = 0.5, χ = 0.5, ρ = 0.2)
+	] |> DataFrame
+
+	node_df1 = leftjoin(node_df, transitions, on = :member_type)
+
+	Random.seed!(1234)
+	sim = simulate(graph, par, T, edge_df_sorted, node_df1; lockdown)
 
 	attr = (
 		#layout = _ -> node_positions,
@@ -590,6 +627,7 @@ GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
@@ -1884,6 +1922,8 @@ version = "3.5.0+0"
 # ╠═9a930158-15bb-44e7-baca-672517759044
 # ╠═8fc85dae-e393-41b0-b41d-eccc63909891
 # ╠═877d8633-d8ab-4772-ad20-8072d6409c08
+# ╠═5dbd3897-4707-451e-91c3-12127123705b
+# ╠═02360e4c-e79f-41d0-8656-838bd2277727
 # ╠═0da25924-c89b-4a1b-b63e-7cb2d17fcbc3
 # ╟─065c0b3c-d738-4581-b9f8-6446a20d0c0a
 # ╠═3a06eccc-9826-4b42-9641-0db6def631f6
@@ -1900,6 +1940,7 @@ version = "3.5.0+0"
 # ╠═d1b16bec-ae19-4740-80fe-a711fd145089
 # ╟─ade7f9b5-cf6e-4278-95e0-651691baa892
 # ╠═ca1610dc-653a-4df9-bfc7-0366576ded08
+# ╠═5bfce3c7-5fe4-43e8-9987-3a7764be243c
 # ╠═5cb8fa66-9a1e-4d27-a1c6-f26c1b7f3532
 # ╠═baad47a0-398e-4f9f-9af6-7686acdc25e4
 # ╠═396f4c50-1b1e-449e-bf39-557018f2dd78
@@ -1920,9 +1961,11 @@ version = "3.5.0+0"
 # ╠═dd4e214a-0d9b-446b-be65-ff4c0817e87e
 # ╠═bde45cf6-a0f7-4ebb-b361-adc8d0e6aad6
 # ╠═94d1cfd9-8e2d-42d3-9968-c84b89e1bfc3
+# ╠═c56601ce-2d9e-45e9-b8a3-77626553bfab
 # ╟─2875a129-ac48-4bae-8f18-d70a5f8b16a8
 # ╠═c5b3e888-3b6f-449b-8f72-455fe86743d2
 # ╠═cba2a2cb-c2d5-4cb5-a3d1-a2a5d02bb336
+# ╠═e35ed6b2-3e18-40b5-b9fd-c6bb216ed2a0
 # ╠═b9ea2229-6b11-403b-ab14-13cb91c856ee
 # ╟─338a5dc3-7099-4163-948e-ee1f0e362481
 # ╠═f5e85900-1ea7-4dd3-8999-2e121efa9447
