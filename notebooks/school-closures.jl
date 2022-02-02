@@ -133,7 +133,7 @@ begin
 
 	for df in gdf
 		for (i,j) ∈ Iterators.product(df.node_id, df.node_id)
-			if only(unique(df.employer)) ≤ 4
+			if only(unique(df.employer)) ≤ setup.N_locations
 				linktype = :school
 				i ≠ j && push!(edge_list, (; i, j, linktype))
 			else
