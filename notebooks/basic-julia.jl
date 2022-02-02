@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.16.1
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -7,30 +7,25 @@ using InteractiveUtils
 # ╔═╡ ddf87b12-5cc5-11eb-0d4f-f3dd09839034
 using PlutoUI
 
-# ╔═╡ 5fc127d7-4055-41f6-8445-2f66d97581d4
-md"""
-!!! danger "Under construction!"
-
-	This notebook is used for the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
-
-	**The notebook will get updated for Spring 2022.**
-
-"""
-
 # ╔═╡ 8501e2eb-4616-4cc8-a5b5-dfcd546c6ff3
 md"""
-`basic-julia.jl` | **Version 1.1** | *last updated: Oct 14 2021*
+`basic-julia.jl` | **Version 1.2** | *last updated: Feb 3 2022*
 """
 
 # ╔═╡ 0d3aec92-edeb-11ea-3adb-cd0dc17cbdab
 md"# A first glance at the Julia language
 
 This notebook briefly summarizes some of the basic Julia syntax that we will need for the problem sets.
-
-*NOTE:* This notebook is taken from [a notebook](https://github.com/mitmath/18S191/blob/Fall20/lecture_notebooks/Basic%20Julia%20syntax.jl) from the [MIT course Computional Thinking](https://computationalthinking.mit.edu/Fall20/).
-
 "
 
+# ╔═╡ 942f6b02-7f84-48ae-a129-4b97901a18c1
+Markdown.MD(
+	Markdown.Admonition("warning", "This notebook is taken from", 
+[md"""
+		
+_**Computational Thinking**, a live online Julia/Pluto textbook._ ([computationalthinking.mit.edu](https://computationalthinking.mit.edu), [original notebook](https://github.com/mitmath/18S191/blob/Fall20/lecture_notebooks/Basic%20Julia%20syntax.jl))
+"""] 
+	))
 
 # ╔═╡ 3b038ee0-edeb-11ea-0977-97cc30d1c6ff
 md"## Variables
@@ -252,7 +247,7 @@ PlutoUI = "~0.7.16"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.0-rc1"
+julia_version = "1.7.0"
 manifest_format = "2.0"
 
 [[deps.Base64]]
@@ -316,7 +311,7 @@ deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [[deps.Random]]
-deps = ["Serialization"]
+deps = ["SHA", "Serialization"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [[deps.Reexport]]
@@ -343,9 +338,9 @@ uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 """
 
 # ╔═╡ Cell order:
-# ╟─5fc127d7-4055-41f6-8445-2f66d97581d4
 # ╟─8501e2eb-4616-4cc8-a5b5-dfcd546c6ff3
 # ╟─0d3aec92-edeb-11ea-3adb-cd0dc17cbdab
+# ╟─942f6b02-7f84-48ae-a129-4b97901a18c1
 # ╟─3b038ee0-edeb-11ea-0977-97cc30d1c6ff
 # ╠═3e8e0ea0-edeb-11ea-22e0-c58f7c2168ce
 # ╠═59b66862-edeb-11ea-2d62-71dcc79dbfab
