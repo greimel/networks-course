@@ -15,8 +15,8 @@
                 "preview_image_url": ""
             },
             {
-                "name": "A Twitter network",
-                "notebook_path": "notebooks/assignment-twitter.jl",
+                "name": "Assignment 1: A Twitter network",
+                "notebook_path": "notebooks/twitter.jl",
                 "video_id": "",
                 "preview_image_url": ""
             }

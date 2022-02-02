@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.3
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -70,9 +70,9 @@ begin
 	twint_path = joinpath(@__DIR__(), "twint") # specify where to save twint
 	#isdir(twint_path) && rm(twint_path, recursive = true)
 	if !isdir(twint_path)
-		repo_url = "https://github.com/Museum-Barberini/twint"
-		#repo_url = "https://github.com/nouseforacode/twint"
-		#repo_url = "https://github.com/moxak/twint"
+		repo_url = "https://github.com/greimel/twint"
+		# fork of 
+		#repo_url = "https://github.com/Museum-Barberini/twint"
 		#repo_url = "https://github.com/twintproject/twint"
 		repo = LibGit2.clone(repo_url, twint_path, branch = "fix/RefreshTokenException") # download twint from github
 	end
@@ -92,6 +92,9 @@ begin
 	nothing
 end
 
+# ╔═╡ ba5e6141-9927-41e4-8688-cbbb17b8093c
+using PlutoUI
+
 # ╔═╡ b32a4b7a-6f4e-4cca-9183-9540fbb0a59f
 md"""
 !!! danger "Under construction!"
@@ -103,25 +106,7 @@ md"""
 
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`assignment-twitter.jl` | **Version 1.6** | *last changed: Jan 17, 2022*"
-
-# ╔═╡ 235bcd50-6183-11eb-1272-65c61cfbf961
-group_number = 99
-
-# ╔═╡ f021cb3e-6177-11eb-20f6-b5f9c69ed186
-group_members = ([
-	(firstname = "Ella-Louise", lastname = "Flores"),
-	(firstname = "Padraig", 	lastname = "Cope"),
-	(firstname = "Christy",  	lastname = "Denton")
-	]);
-
-# ╔═╡ 849cd5bc-617b-11eb-12eb-a7f0907fc718
-if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
-	md"""
-!!! danger "Note!"
-    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in the top cell.
-	"""
-end
+`twitter.jl` | **Version 1.7** | *last changed: Feb 2, 2022*"
 
 # ╔═╡ 39feff38-617d-11eb-0682-874b2f747ff8
 md"""
@@ -184,7 +169,7 @@ answer2_3 = md"""
 
 # ╔═╡ 840f84aa-6180-11eb-03bb-71fa9a6e9d17
 md"""
-#### Task 3: Look under the hood (3 points)
+#### Task 3: Looking under the hood (3 points)
 
 Now look at section **Constructing a network** of this notebook. Make sure you understand what data are available to us and how we created the network from the data. 
 
@@ -200,12 +185,30 @@ Your answer goes here ...
 md"""
 #### Before you submit ...
 
-👉 Make sure you have added your names and your group number at the top.
+👉 Make sure you have added your names and your group number [in the cells below](#f021cb3e-6177-11eb-20f6-b5f9c69ed186).
 
-👉 Make sure that that **all group members proofread** your submission (especially your little essays).
+👉 Make sure that that **all group members proofread** your submission (especially your little essay).
 
-👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. In addition, **upload the source code** of the notebook (the .jl file).
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
 """
+
+# ╔═╡ 235bcd50-6183-11eb-1272-65c61cfbf961
+group_number = 99
+
+# ╔═╡ f021cb3e-6177-11eb-20f6-b5f9c69ed186
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]);
+
+# ╔═╡ 849cd5bc-617b-11eb-12eb-a7f0907fc718
+if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
+	md"""
+!!! danger "Note!"
+    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number [in this cell](#f021cb3e-6177-11eb-20f6-b5f9c69ed186).
+	"""
+end
 
 # ╔═╡ b201cb56-60e3-11eb-302c-4180510aacf8
 md"""
@@ -304,13 +307,13 @@ md"Then aggregate the list of hashtags for each user."
 # ╔═╡ edc6da66-60e4-11eb-1aeb-fb9dbb7ccc88
 md"Create a list of edges."
 
-# ╔═╡ 01e4ac58-60e5-11eb-39f3-b5f613ecee35
-md"Create the graph."
-
 # ╔═╡ 0b70f90c-60e5-11eb-18da-25e3302a74a8
 md"""
 # Analyzing the network
 """
+
+# ╔═╡ 01e4ac58-60e5-11eb-39f3-b5f613ecee35
+md"Create the graph."
 
 # ╔═╡ 4df1e8ae-60ef-11eb-3772-1154f708eecb
 md"""
@@ -438,7 +441,15 @@ let
 	sort!(df_hashtags, :freqs, rev = true)
 end
 
-# ╔═╡ eeb99bfe-6178-11eb-04f7-bf04d3c10eeb
+# ╔═╡ c7ed3a0c-faaa-48c1-b442-67e603d99d97
+md"""
+## Infrastructure
+"""
+
+# ╔═╡ af4b0571-e522-4d00-963b-5f1f13adc619
+TableOfContents()
+
+# ╔═╡ 31a80c8f-ae90-4dbf-8a3d-e91f316758f2
 members = let
 	names = map(group_members) do (; firstname, lastname)
 		firstname * " " * lastname
@@ -457,35 +468,26 @@ In this assignment you will download a set of *tweets* from social network *Twit
 This network consists of twitter users that have used the keyword *$(keyword)* in on of their recent tweets. Two nodes (users) are connected if they have used another hashtag in common. See the plot below.
 """
 
-# ╔═╡ 40b2c2c6-617b-11eb-3a05-bdab1ba79ad4
-hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
-
-# ╔═╡ 496b1990-617b-11eb-17ba-9725950334f2
-almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
-
-# ╔═╡ 50d3b41c-617b-11eb-3555-1126c30932d5
-still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
-
-# ╔═╡ 59833e0c-617b-11eb-36f8-3371b7483ba6
-keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
-
-# ╔═╡ 5f434c54-617b-11eb-0dc3-650499285995
-yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
-
-# ╔═╡ 873ad282-617c-11eb-2b60-6782461922fe
-correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
+# ╔═╡ 4b22ab6b-5b3a-47c3-b054-2bc4c4b2f1b0
+begin
+	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
+	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
+	still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
+	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
+	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
+	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
+	function wordcount(text)
+		stripped_text = strip(replace(string(text), r"\s" => " "))
+    	words = split(stripped_text, ('-','.',',',':','_','"',';','!'))
+    	length(words)
+	end
+end
 
 # ╔═╡ 09d66db0-617c-11eb-1b92-b3ed2e5f68f6
 if keyword == "#econtwitter"
 	keep_working(md""" *#econtwitter* is a bit boring. Replace it with a keyword of your choice.""")
 else
 	correct(md"Go and analyse the tweets on *$(keyword)*!")
-end
-
-# ╔═╡ c97c33c8-617e-11eb-31a8-e3fec23ace37
-function wordcount(text)
-    words=split(string(text), (' ','\n','\t','-','.',',',':','_','"',';','!'))
-    length(words)
 end
 
 # ╔═╡ d7046f24-617e-11eb-0571-ebcacb3a39e9
@@ -501,10 +503,10 @@ else
 end
 
 # ╔═╡ 163ef7aa-6480-11eb-2ead-e9fb9a35f490
-sum(wordcount.([answer2_1, answer2_2, answer2_3]))
+md"*approx. $(sum(wordcount.([answer2_1, answer2_2, answer2_3]))) words*"
 
 # ╔═╡ 0cbb406e-6181-11eb-015d-d582e3a9b175
-md" ~ $(wordcount(answer3)) words"
+md"_approx. $(wordcount(answer3)) words_"
 
 # ╔═╡ f1c8a53a-6180-11eb-2e05-179bfab97223
 if answer3 == md"Your answer goes here ..."
@@ -515,15 +517,24 @@ else
 	correct(md"Great, we are looking forward to reading your answer!")
 end
 
-# ╔═╡ e5a741e8-60dc-11eb-317e-cfdd650ae5f0
-TableOfContents()
+# ╔═╡ bef961a8-caa3-4360-8b35-d945b7e030d9
+md"""
+## Acknowledgement
+"""
+
+# ╔═╡ 052ab5c3-51a9-43ca-9d95-37f41e283a31
+Markdown.MD(
+	Markdown.Admonition("warning", "The design of this notebook is based on", 
+[md"""
+		
+_**Computational Thinking**, a live online Julia/Pluto textbook._ [(computationalthinking.mit.edu)](https://computationalthinking.mit.edu)
+"""]
+	))
 
 # ╔═╡ Cell order:
 # ╟─b32a4b7a-6f4e-4cca-9183-9540fbb0a59f
-# ╟─8493134e-6183-11eb-0059-6d6ecf0f17bf
-# ╠═235bcd50-6183-11eb-1272-65c61cfbf961
-# ╠═f021cb3e-6177-11eb-20f6-b5f9c69ed186
 # ╟─849cd5bc-617b-11eb-12eb-a7f0907fc718
+# ╟─8493134e-6183-11eb-0059-6d6ecf0f17bf
 # ╟─da51e362-6176-11eb-15b2-b7bcebc2cbb6
 # ╠═41f4f6cc-6173-11eb-104f-69c755afd266
 # ╟─39feff38-617d-11eb-0682-874b2f747ff8
@@ -543,12 +554,14 @@ TableOfContents()
 # ╠═f5e4f31a-647f-11eb-11c0-87221d14576e
 # ╠═05854c34-6480-11eb-021a-07c21ae697ba
 # ╠═0ee478fe-6480-11eb-3d3d-1bc21388754f
-# ╠═163ef7aa-6480-11eb-2ead-e9fb9a35f490
+# ╟─163ef7aa-6480-11eb-2ead-e9fb9a35f490
 # ╟─840f84aa-6180-11eb-03bb-71fa9a6e9d17
 # ╠═e96b54dc-6180-11eb-027f-a9db3a83aa99
 # ╟─0cbb406e-6181-11eb-015d-d582e3a9b175
 # ╟─f1c8a53a-6180-11eb-2e05-179bfab97223
 # ╟─3fcf627c-6182-11eb-3a6c-851a6f96bd4a
+# ╠═235bcd50-6183-11eb-1272-65c61cfbf961
+# ╠═f021cb3e-6177-11eb-20f6-b5f9c69ed186
 # ╟─b201cb56-60e3-11eb-302c-4180510aacf8
 # ╟─e4dcc0a6-60e3-11eb-2717-5347187c73c0
 # ╟─14e6dece-60dc-11eb-2d5a-275b8c9e382d
@@ -566,8 +579,8 @@ TableOfContents()
 # ╠═9d5c72ca-60df-11eb-262d-6f0803d386f5
 # ╟─edc6da66-60e4-11eb-1aeb-fb9dbb7ccc88
 # ╠═241b8206-60e0-11eb-08bd-f748c90e49c7
-# ╟─01e4ac58-60e5-11eb-39f3-b5f613ecee35
 # ╟─0b70f90c-60e5-11eb-18da-25e3302a74a8
+# ╟─01e4ac58-60e5-11eb-39f3-b5f613ecee35
 # ╠═15ecf0aa-60e2-11eb-1ef4-ebfc215e5ca7
 # ╟─4df1e8ae-60ef-11eb-3772-1154f708eecb
 # ╠═5ceea932-60ef-11eb-3c13-37ddf8e09f6f
@@ -576,19 +589,17 @@ TableOfContents()
 # ╠═94e542c2-a3f0-453f-a40c-545a412510b9
 # ╠═91ccdec2-60f3-11eb-2d0e-a59ba5392e65
 # ╟─eea5accc-60db-11eb-3889-c992db2ec8ec
-# ╠═d07dc2ac-67b1-11eb-1bee-c52695fb4f28
+# ╟─d07dc2ac-67b1-11eb-1bee-c52695fb4f28
 # ╠═400cc04e-4784-11eb-11a2-ff8e245cad27
 # ╠═87b7bc86-60df-11eb-3f9f-2375449c77f6
 # ╟─a1d99d9e-60dc-11eb-391c-b52c2e16aedd
 # ╠═6535e16c-6146-11eb-35c0-31aef62a631c
 # ╟─1f927f3c-60e5-11eb-0304-f1639b68468d
 # ╠═620c76e4-60de-11eb-2c82-d364f55fbe4d
-# ╠═eeb99bfe-6178-11eb-04f7-bf04d3c10eeb
-# ╠═40b2c2c6-617b-11eb-3a05-bdab1ba79ad4
-# ╠═496b1990-617b-11eb-17ba-9725950334f2
-# ╠═50d3b41c-617b-11eb-3555-1126c30932d5
-# ╠═59833e0c-617b-11eb-36f8-3371b7483ba6
-# ╠═5f434c54-617b-11eb-0dc3-650499285995
-# ╠═873ad282-617c-11eb-2b60-6782461922fe
-# ╠═c97c33c8-617e-11eb-31a8-e3fec23ace37
-# ╠═e5a741e8-60dc-11eb-317e-cfdd650ae5f0
+# ╟─c7ed3a0c-faaa-48c1-b442-67e603d99d97
+# ╠═ba5e6141-9927-41e4-8688-cbbb17b8093c
+# ╠═af4b0571-e522-4d00-963b-5f1f13adc619
+# ╠═31a80c8f-ae90-4dbf-8a3d-e91f316758f2
+# ╠═4b22ab6b-5b3a-47c3-b054-2bc4c4b2f1b0
+# ╟─bef961a8-caa3-4360-8b35-d945b7e030d9
+# ╟─052ab5c3-51a9-43ca-9d95-37f41e283a31
