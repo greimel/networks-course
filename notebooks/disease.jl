@@ -44,6 +44,9 @@ end
 # ╔═╡ cf30ace3-1c08-4ef3-8986-a27df7f1799d
 using AlgebraOfGraphics, GraphMakie
 
+# ╔═╡ c03fbf6b-436f-4a9b-b0e1-830e1b7849b7
+using CairoMakie
+
 # ╔═╡ b6c688d0-5954-4f9b-a559-ad28a585c651
 using Makie: Makie,
 		Figure, Axis, Legend, Lines,
@@ -122,7 +125,7 @@ begin
 	struct S <: State end
 	struct I <: State end
 	struct R <: State end
-	struct D <: State end # (Assignment)
+	# struct D <: State end # (Assignment)
 end
 
 # ╔═╡ f48fa122-649a-11eb-2041-bbf0d0c4670c
@@ -138,10 +141,11 @@ function transition(::I, par, node, args...; kwargs...)
 	(; δ, ρ) = node
 
 	x = rand()
-	if x < ρ #+ δ # recover or die
-		R()
-	elseif x < ρ + δ
+	#= if x < δ # die
 		D()
+	else=#
+	if x < ρ + δ # recover or die
+		R()
 	else
 		I()
 	end
@@ -163,6 +167,27 @@ function transition(::S, par, node, adjacency_matrix, is_infected)
 	π =	1.0 - inv_prob
 	
 	rand() < π ? I() : S()
+end
+
+# ╔═╡ f4c62f95-876d-4915-8372-258dfde835f7
+function iterate!(states_new, states, adjacency_matrix, par, node_df)
+
+	is_infected = findall(isa.(states, I))
+
+	for node_row ∈ eachrow(node_df)
+		(; node_id) = node_row
+		states_new[node_id] = transition(states[node_id], par, node_row, adjacency_matrix, is_infected)
+	end
+	
+	states_new
+end
+
+# ╔═╡ 5d11a2df-3187-4509-ba7b-8388564573a6
+function iterate(states, adjacency_matrix, par, node_df)
+	states_new = Vector{States}(undef, N)
+	iterate!(states_new, states, adjacency_matrix, par, node_df)
+	
+	states_new
 end
 
 # ╔═╡ 50d9fb56-64af-11eb-06b8-eb56903084e2
@@ -247,28 +272,7 @@ md"""
 """
 
 # ╔═╡ 809375ba-6960-11eb-29d7-f9ab3ee61367
-transition(::D, args...; kwargs...) = D() #= your code here =#
-
-# ╔═╡ f4c62f95-876d-4915-8372-258dfde835f7
-function iterate!(states_new, states, adjacency_matrix, par, node_df)
-
-	is_infected = findall(isa.(states, I))
-
-	for node_row ∈ eachrow(node_df)
-		(; node_id) = node_row
-		states_new[node_id] = transition(states[node_id], par, node_row, adjacency_matrix, is_infected)
-	end
-	
-	states_new
-end
-
-# ╔═╡ 5d11a2df-3187-4509-ba7b-8388564573a6
-function iterate(states, adjacency_matrix, par, node_df)
-	states_new = Vector{States}(undef, N)
-	iterate!(states_new, states, adjacency_matrix, par, node_df)
-	
-	states_new
-end
+# transition(::D, args...; kwargs...) = #= your code here =#
 
 # ╔═╡ 945d67f6-6961-11eb-33cf-57ffe340b35f
 md"""
@@ -932,16 +936,10 @@ ifr_df = @chain ifr_df0 begin
 	@transform(:δ = get_δ_from_ifr(:IFR_pc, :ρ))
 end
 
-# ╔═╡ 8cf2a18b-220a-4e63-9182-c84b7e13e985
-
-
 # ╔═╡ 7f57095f-88c5-4d65-b758-3bc928ea8d76
 md"""
 #### Plotting
 """
-
-# ╔═╡ c03fbf6b-436f-4a9b-b0e1-830e1b7849b7
-import CairoMakie
 
 # ╔═╡ 17989c8e-ff35-4900-bb0c-63298a87e3fb
 md"""
@@ -2457,7 +2455,6 @@ version = "3.5.0+0"
 # ╠═642e0095-21f1-444e-a733-1345c7b5e1cc
 # ╠═98d4da42-a067-4918-beb0-93147e9f5f7d
 # ╠═159ebefa-49b0-44f6-bb96-5ab816b3fc98
-# ╠═8cf2a18b-220a-4e63-9182-c84b7e13e985
 # ╠═5f2782dd-390c-4ebf-8dfe-6b24fdc7c844
 # ╟─7f57095f-88c5-4d65-b758-3bc928ea8d76
 # ╠═cf30ace3-1c08-4ef3-8986-a27df7f1799d
