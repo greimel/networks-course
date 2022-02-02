@@ -7,30 +7,25 @@ using InteractiveUtils
 # ╔═╡ f5450eab-0f9f-4b7f-9b80-992d3c553ba9
 HTML("<div style=\"\nposition: absolute;\nwidth: calc(100% - 30px);\nborder: 50vw solid #282936;\nborder-top: 500px solid #282936;\nborder-bottom: none;\nbox-sizing: content-box;\nleft: calc(-50vw + 15px);\ntop: -500px;\nheight: 500px;\npointer-events: none;\n\"></div>\n\n<div style=\"\nheight: 500px;\nwidth: 100%;\nbackground: #282936;\ncolor: #fff;\npadding-top: 68px;\n\">\n<span style=\"\nfont-family: Vollkorn, serif;\nfont-weight: 700;\nfont-feature-settings: 'lnum', 'pnum';\n\"> \n<p style=\"text-align: center; font-size: 2rem;\">\n<em> Basic Julia </em>\n</p>\n</div>\n\n<style>\nbody {\noverflow-x: hidden;\n}\n</style>")
 
-# ╔═╡ 5fc127d7-4055-41f6-8445-2f66d97581d4
-md"""
-!!! danger "Under construction!"
-
-	This notebook is used for the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
-
-	**The notebook will get updated for Spring 2022.**
-
-"""
-
 # ╔═╡ 8501e2eb-4616-4cc8-a5b5-dfcd546c6ff3
 md"""
-`basic-julia.jl` | **Version 1.1** | *last updated: Oct 14 2021*
+`basic-julia.jl` | **Version 1.2** | *last updated: Feb 3 2022*
 """
 
 # ╔═╡ 0d3aec92-edeb-11ea-3adb-cd0dc17cbdab
 md"# A first glance at the Julia language
 
 This notebook briefly summarizes some of the basic Julia syntax that we will need for the problem sets.
-
-*NOTE:* This notebook is taken from [a notebook](https://github.com/mitmath/18S191/blob/Fall20/lecture_notebooks/Basic%20Julia%20syntax.jl) from the [MIT course Computional Thinking](https://computationalthinking.mit.edu/Fall20/).
-
 "
 
+# ╔═╡ 942f6b02-7f84-48ae-a129-4b97901a18c1
+Markdown.MD(
+	Markdown.Admonition("warning", "This notebook is taken from", 
+[md"""
+		
+_**Computational Thinking**, a live online Julia/Pluto textbook._ ([computationalthinking.mit.edu](https://computationalthinking.mit.edu), [original notebook](https://github.com/mitmath/18S191/blob/Fall20/lecture_notebooks/Basic%20Julia%20syntax.jl))
+"""] 
+	))
 
 # ╔═╡ 3b038ee0-edeb-11ea-0977-97cc30d1c6ff
 md"## Variables
@@ -255,7 +250,7 @@ PlutoUI = "~0.7.16"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.0-rc1"
+julia_version = "1.7.0"
 manifest_format = "2.0"
 
 [[deps.Base64]]
@@ -319,7 +314,7 @@ deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [[deps.Random]]
-deps = ["Serialization"]
+deps = ["SHA", "Serialization"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [[deps.Reexport]]
@@ -347,9 +342,9 @@ uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
 # ╔═╡ Cell order:
 # ╟─f5450eab-0f9f-4b7f-9b80-992d3c553ba9
-# ╟─5fc127d7-4055-41f6-8445-2f66d97581d4
 # ╟─8501e2eb-4616-4cc8-a5b5-dfcd546c6ff3
 # ╟─0d3aec92-edeb-11ea-3adb-cd0dc17cbdab
+# ╟─942f6b02-7f84-48ae-a129-4b97901a18c1
 # ╟─3b038ee0-edeb-11ea-0977-97cc30d1c6ff
 # ╠═3e8e0ea0-edeb-11ea-22e0-c58f7c2168ce
 # ╠═59b66862-edeb-11ea-2d62-71dcc79dbfab
