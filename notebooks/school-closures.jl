@@ -4,12 +4,6 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ c5b3e888-3b6f-449b-8f72-455fe86743d2
-using CategoricalArrays
-
-# ╔═╡ e35ed6b2-3e18-40b5-b9fd-c6bb216ed2a0
-using Random
-
 # ╔═╡ bff18f1e-9ec9-4f52-b800-7ecd631f39fa
 using Graphs, SimpleWeightedGraphs
 
@@ -31,152 +25,65 @@ using GraphMakie, AlgebraOfGraphics, CairoMakie
 # ╔═╡ 84a3ad96-4854-4ab8-be5c-b4859d1a2e39
 using MarkdownLiteral: @markdown
 
+# ╔═╡ c5b3e888-3b6f-449b-8f72-455fe86743d2
+using CategoricalArrays
+
+# ╔═╡ e35ed6b2-3e18-40b5-b9fd-c6bb216ed2a0
+using Random
+
 # ╔═╡ f5e85900-1ea7-4dd3-8999-2e121efa9447
 using PlutoUI
 
-# ╔═╡ 08abc77a-814a-11ec-3d54-439126a38a85
+# ╔═╡ 12cc3372-8400-4b77-abaf-af92698684b3
 md"""
-# School closures & Covid-19
+!!! danger "Under construction!"
+
+	This notebook is used for the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
+
+	**The notebook will get updated for Spring 2022.**
+
 """
 
-# ╔═╡ 8eb38c3b-3ab1-42a9-ae6c-a6d2e707162c
+# ╔═╡ 13313236-502d-46ca-bf24-a4defd6d792f
 md"""
-#### Ideas
-
-* Given: network structure and hospital capacity
-* add state `H`ospitalized
-* different node (children, adults) and link types (school, job, family)
-* hospitalization, death, recovery  ``(\chi, \delta, \rho)`` depend on node type
-* infection probability ``(p)`` depends on link type
-* Scenario: without intervention, get above threshold
-* Task: What to do get below threshold
-
-(use separate notebook, show how to add death in class)
+`school-closures.jl` | **Version 0.1** | *last updated: Feb 2, 2022*
 """
 
-# ╔═╡ e4bf4d41-9568-42a1-b01b-e22fc5c39ec1
+# ╔═╡ f45eb218-92d8-4bfe-87f6-e128c17db7c2
 md"""
-## Nodes
+In this assignment we want to understand the effect of school closures on the dynamics of the pandemic. Children have a much lower probability of getting hospitalized. **Would it still make sense to close schools to keep hospitalizations low?**
+
+We construct a network of adults and children, where children are linked via schools, adults in their jobs and parents are linked to children.
 """
 
-# ╔═╡ 3d85c3c6-9303-47e6-9fa6-5fc975cf750a
-setup = (; N_locations = 6, N_hh = 200, N_employers = 50)
-
-# ╔═╡ cd6c5481-ccc7-47d8-acda-4e90fc98b10e
-@markdown("""
-# Constructing the network
-
-* `N = $(setup.N_hh)` households in `N_locations = $(setup.N_locations)` different locations
-* **households** (families) are modeled as *complete networks*, variable family size (with and without children, sometimes single-parents)
-* all children of same location go to same **school** (modeled as a *complete network*)
-*  **adults** are linked through their **job** (there are `N_employers = $(setup.N_employers)` employers, each modeled as a _complete network_)
-""")
-
-# ╔═╡ 5b944c23-442c-4f02-924c-2bad76b7970d
-function member_type(member_id)
-	if member_id == 1
-		return "adult"
-	elseif member_id == 2
-		if rand() < 2/3
-			return "adult"
-		else # single-parent
-			return "child"
-		end
-	else
-		return "child"
-	end
-end
-
-# ╔═╡ 223a560f-fc61-4432-9409-5cb2cb3d9789
-node_df = let
-	(; N_hh, N_locations, N_employers) = setup
-	household_size = rand(1:4, N_hh)
-
-	@chain begin
-		DataFrame(:hh_id => 1:N_hh)
-		@transform(:school_district = @c rand(1:N_locations, N_hh))
-		@groupby(:hh_id, :school_district)
-		@combine(:member_id = 1:rand(1:4))
-		@transform!(:member_type = member_type(:member_id))
-		@transform!(:node_id = @c 1:length(:hh_id))
-		@transform!(:employer = :member_type == "adult" ? N_locations + rand(1:N_employers) : :school_district)
-		@transform!(:node_color = :member_type == "adult" ? colorant"green" : colorant"red")
-	end
-end
-
-# ╔═╡ bf5ca480-d913-4b21-a85b-b1b2c0b4c2f9
+# ╔═╡ edbf2ae4-237d-4755-9419-b98b8ef52fc2
 md"""
-## Edges
+We assume that `child`ren and `adult`s differ by their transition probabilities. Children do not get hospitalized (``\chi = 0``) and don't die (``\delta = 0``). (All these parameters are made up.)
 """
 
-# ╔═╡ 0da25924-c89b-4a1b-b63e-7cb2d17fcbc3
-begin
-	T = typeof((i = 1, j = 1, linktype = :family))
+# ╔═╡ aba35d11-a5da-4e48-ace5-d7f317198b3e
+	transitions_df = DataFrame([
+		(member_type = "child", δ = 0.0, χ = 0.0, ρ = 0.2),
+ 		(member_type = "adult", δ = 0.5, χ = 0.5, ρ = 0.2)
+	])
 
-	edge_list = T[]
-	
-	# families
-	gdf = @chain node_df begin
-		@groupby(:hh_id)
-	end
-
-	for df in gdf
-		for (i,j) ∈ Iterators.product(df.node_id, df.node_id)
-			i ≠ j && push!(edge_list, (; i, j, linktype = :family))
-		end
-	end
-
-	# schools / employers
-	gdf = @chain node_df begin
-		@groupby(:employer)
-	end
-
-	for df in gdf
-		for (i,j) ∈ Iterators.product(df.node_id, df.node_id)
-			if only(unique(df.employer)) ≤ setup.N_locations
-				linktype = :school
-				i ≠ j && push!(edge_list, (; i, j, linktype))
-			else
-				linktype = :job
-				i ≠ j && push!(edge_list, (; i, j, linktype))
-			end
-		end
-	end
-
-	n_v = size(node_df, 1)
-
-	edge_df00 = DataFrame(edge_list)
-	edge_df0 = @chain edge_df00 begin
-		@groupby(:i, :j)
-		combine(first, _)
-	end
-
-	g = SimpleGraph(sparse(edge_df0.i, edge_df0.j, 1, n_v, n_v))
-
-	edge_df = @chain edges(g) begin
-		DataFrame
-		leftjoin!(_, edge_df0, on = [:src => :i, :dst => :j])
-	end
-end
-
-# ╔═╡ 065c0b3c-d738-4581-b9f8-6446a20d0c0a
+# ╔═╡ bd986adf-2688-470f-8d62-9b66ed3f3d0f
 md"""
-## Plotting the network
+We also make assumptions about the transmission probabilities within families, workplaces and schools.
 """
 
-# ╔═╡ 36edee11-497d-415c-b589-8a333573bb8c
-fg = graphplot(g; 
-	node_df.node_color, node_size = 7,
-	edge_width = 0.3,# transmission_probability.(edge_df.p, edge_df.linktype, lockdown),
-	edge_color = (:black, 0.5)
-)
+# ╔═╡ 0aa33258-a8c2-403f-b466-95dbaee2cc75
+transmission_df = DataFrame([
+		(linktype = :family, p = 0.5),
+ 		(linktype = :school, p = 0.5),
+ 		(linktype = :work,   p = 0.5)
+	])
 
-# ╔═╡ eaf1fd63-5977-4b99-9c11-ec301fba8078
-fg
-
-# ╔═╡ 8c133759-f2ca-4c0c-a5e5-19f5ff188436
+# ╔═╡ a35ae69d-6c82-4ac0-bbd9-0f443747b3e6
 md"""
-# Setting up the SIR model
+### Task 1: Introduce *hospitalized* into the model (3 points)
+
+👉 Add a new state `H`ospitalized.
 """
 
 # ╔═╡ f1664b58-75c1-4a79-9540-85303ed3a42f
@@ -186,8 +93,150 @@ begin
 	struct I <: State end
 	struct H <: State end # hospitalized
 	struct R <: State end
-	#struct D <: State end # (Assignment)
 end
+
+# ╔═╡ e73f7e86-eaac-493c-b34d-8f08ba5d3c6a
+md"""
+👉 Add a transition rule for `H`.
+"""
+
+# ╔═╡ 5bfce3c7-5fe4-43e8-9987-3a7764be243c
+function transition(::H, node, args...; kwargs...)
+	(; δ, ρ) = node
+
+	x = rand()
+	if x < ρ + δ # recover or die
+		R()
+	else
+		H()
+	end
+end
+
+# ╔═╡ 444ecb80-138e-43ef-8feb-4a8b1b40e4eb
+#try
+#	transition(H())
+#	if transition(H()) == H()
+#		correct(md"You've successfully specified the transition rule for `D`.")
+#	else
+#		keey_working(md"The transition rule for `D` doesn't seem to work correctly")
+#	end
+#catch e
+#	if e isa MethodError
+#		keep_working(md"The transition rule for `D` is not yet defined.")
+#	else
+#		keep_working(md"The transition rule for `D` doesn't seem to work correctly")
+#	end
+#end
+
+# ╔═╡ edb73532-2868-452c-afe2-e1fce60abb77
+md"""
+👉 Go to section [**Define the transitions**](#ade7f9b5-cf6e-4278-95e0-651691baa892) and adjust the transition rules for the other states if necessary.
+"""
+
+# ╔═╡ 2e2f0ad7-d3c7-4a91-abe7-817f399783c3
+md"""
+Great! You can now have a look how the simulations from the lecture have automatically updated.
+"""
+
+# ╔═╡ 5fe6969a-2453-4ac9-bf15-c2d9310115f1
+md"""
+### Task 2: Flatten the curve (of `H`ospitalized)
+
+bla bla bla
+"""
+
+# ╔═╡ fd9cdd83-d12c-49d6-9521-02b15f692f70
+T = 30
+
+# ╔═╡ 9fadd61c-2532-4ad5-9c60-f17c18821624
+md"""
+
+Now it's your turn.
+
+👉 Decide which when you want to lockdown schools and adjust the cell above. Make sure you close schools not longer than **5??** days.
+"""
+
+# ╔═╡ 80350d9e-ace6-4970-8861-0e767030f3d6
+begin
+	lockdown = fill(Symbol[], T)
+	for t in (1:4) .+ 1
+		#lockdown[t] = [:work]
+	end
+	#lockdown[20] = [:school]
+end
+
+# ╔═╡ 14991792-4dee-472a-a331-23be55edc92c
+@assert all(lockdown .⊆ Ref([:school, :work, :family]))
+
+# ╔═╡ 3945ab48-4d4a-41d1-80bb-75038aab4f7e
+md"""
+Now write a short essay describing your choice.
+
+👉 Describe how you selected the lockdown period.
+
+👉 Why are hospitalizations decreasing even though children never get hospitalized?
+
+👉 Be accurate but concise. Aim at no more than 500 words.
+"""
+
+# ╔═╡ c3537e04-800f-4fa8-9320-a64db4391287
+answer2 = md"""
+Your answer
+
+goes here ...
+"""
+
+# ╔═╡ c140b224-c10d-437b-85c0-2755c8d72970
+md"""
+### Task 3: Discussing real-world policies
+
+Now write a short essay describing ...
+
+👉 Describe ...
+
+👉 Be accurate but concise. Aim at no more than 500 words.
+"""
+
+# ╔═╡ 5b53a9c1-d176-4740-95e8-98283ad57cf9
+answer3 = md"""
+Your answer
+
+goes here ...
+"""
+
+# ╔═╡ 064bfd13-944a-4d3b-8075-cf5d92018878
+md"""
+### Before you submit ...
+
+👉 Make sure you have added your names and your group number [in the cells below](#d73b9db2-742d-4c75-9ff0-2cdce26a8ec8).
+
+👉 Make sure that that **all group members proofread** your submission (especially your little essay).
+
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
+"""
+
+# ╔═╡ d73b9db2-742d-4c75-9ff0-2cdce26a8ec8
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]);
+
+# ╔═╡ 5c85f4fb-4431-4196-9663-c5ddbc719a0a
+group_number = 99
+
+# ╔═╡ d7ab1943-d456-400d-b4c3-dda9f6c1fe26
+if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
+	md"""
+!!! danger "Note!"
+    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in [this cell](#d73b9db2-742d-4c75-9ff0-2cdce26a8ec8).
+	"""
+end
+
+# ╔═╡ 8c133759-f2ca-4c0c-a5e5-19f5ff188436
+md"""
+# Setting up the SIR model
+"""
 
 # ╔═╡ d1b16bec-ae19-4740-80fe-a711fd145089
 const States = Union{subtypes(State)...}
@@ -207,20 +256,6 @@ function transition(::I, node, args...; kwargs...)
 		H()
 	else # infected
 		I()
-	end
-end
-
-# ╔═╡ 5bfce3c7-5fe4-43e8-9987-3a7764be243c
-function transition(::H, node, args...; kwargs...)
-	(; δ, ρ) = node
-	
-	x = rand()
-	if x < ρ + δ # recover or die
-		R()
-	#elseif x < ...
-	#	...
-	else
-		H()
 	end
 end
 
@@ -310,6 +345,123 @@ function iterate(states, adjacency_matrix, par, lockdown)
 	states_new
 end
 
+# ╔═╡ 08abc77a-814a-11ec-3d54-439126a38a85
+md"""
+# Behind the Scenes: Constructing the Network
+"""
+
+# ╔═╡ e4bf4d41-9568-42a1-b01b-e22fc5c39ec1
+md"""
+## Nodes
+"""
+
+# ╔═╡ 3d85c3c6-9303-47e6-9fa6-5fc975cf750a
+setup = (; N_locations = 6, N_hh = 200, N_employers = 50)
+
+# ╔═╡ cd6c5481-ccc7-47d8-acda-4e90fc98b10e
+@markdown("""
+<details> <summary> Click on arrow for details </summary>
+
+* `N = $(setup.N_hh)` households in `N_locations = $(setup.N_locations)` different locations
+* **households** (families) are modeled as *complete networks*, variable family size (with and without children, sometimes single-parents)
+* all children of same location go to same **school** (modeled as a *complete network*)
+*  **adults** are linked through their **job** (there are `N_employers = $(setup.N_employers)` employers, each modeled as a _complete network_)
+
+</details>
+""")
+
+# ╔═╡ 14989685-a257-40c5-8e24-79fff0d1b825
+md"""
+In the plot below, the red dots are children, and the green dots are adults. The  $(setup.N_locations) clusters of red dots are schools.
+"""
+
+# ╔═╡ 5b944c23-442c-4f02-924c-2bad76b7970d
+function member_type(member_id)
+	if member_id == 1
+		return "adult"
+	elseif member_id == 2
+		if rand() < 2/3
+			return "adult"
+		else # single-parent
+			return "child"
+		end
+	else
+		return "child"
+	end
+end
+
+# ╔═╡ 223a560f-fc61-4432-9409-5cb2cb3d9789
+node_df = let
+	(; N_hh, N_locations, N_employers) = setup
+	household_size = rand(1:4, N_hh)
+
+	@chain begin
+		DataFrame(:hh_id => 1:N_hh)
+		@transform(:school_district = @c rand(1:N_locations, N_hh))
+		@groupby(:hh_id, :school_district)
+		@combine(:member_id = 1:rand(1:4))
+		@transform!(:member_type = member_type(:member_id))
+		@transform!(:node_id = @c 1:length(:hh_id))
+		@transform!(:employer = :member_type == "adult" ? N_locations + rand(1:N_employers) : :school_district)
+		@transform!(:node_color = :member_type == "adult" ? colorant"green" : colorant"red")
+	end
+end
+
+# ╔═╡ bf5ca480-d913-4b21-a85b-b1b2c0b4c2f9
+md"""
+## Edges
+"""
+
+# ╔═╡ 0da25924-c89b-4a1b-b63e-7cb2d17fcbc3
+begin
+	TP = typeof((i = 1, j = 1, linktype = :family))
+
+	edge_list = TP[]
+	
+	# families
+	gdf = @chain node_df begin
+		@groupby(:hh_id)
+	end
+
+	for df in gdf
+		for (i,j) ∈ Iterators.product(df.node_id, df.node_id)
+			i ≠ j && push!(edge_list, (; i, j, linktype = :family))
+		end
+	end
+
+	# schools / employers
+	gdf = @chain node_df begin
+		@groupby(:employer)
+	end
+
+	for df in gdf
+		for (i,j) ∈ Iterators.product(df.node_id, df.node_id)
+			if only(unique(df.employer)) ≤ setup.N_locations
+				linktype = :school
+				i ≠ j && push!(edge_list, (; i, j, linktype))
+			else
+				linktype = :work
+				i ≠ j && push!(edge_list, (; i, j, linktype))
+			end
+		end
+	end
+
+	n_v = size(node_df, 1)
+
+	edge_df00 = DataFrame(edge_list)
+	edge_df0 = @chain edge_df00 begin
+		@groupby(:i, :j)
+		combine(first, _)
+	end
+
+	g = SimpleGraph(sparse(edge_df0.i, edge_df0.j, 1, n_v, n_v))
+
+	edge_df = @chain edges(g) begin
+		DataFrame
+		leftjoin!(_, edge_df0, on = [:src => :i, :dst => :j])
+	end
+end
+
 # ╔═╡ 891e5c60-468a-44c7-9b5a-609dcdb02cc2
 let
 	edge_df_sorted_xx = sort(edge_df, [:src, :dst])
@@ -321,10 +473,20 @@ let
 	t2 / t1 - 1
 end
 
-# ╔═╡ 2875a129-ac48-4bae-8f18-d70a5f8b16a8
+# ╔═╡ 065c0b3c-d738-4581-b9f8-6446a20d0c0a
 md"""
-# Simulate
+## Plotting the network
 """
+
+# ╔═╡ 36edee11-497d-415c-b589-8a333573bb8c
+fg = graphplot(g; 
+	node_df.node_color, node_size = 7,
+	edge_width = 0.3,# transmission_probability.(edge_df.p, edge_df.linktype, lockdown),
+	edge_color = (:black, 0.5)
+)
+
+# ╔═╡ eaf1fd63-5977-4b99-9c11-ec301fba8078
+fg
 
 # ╔═╡ 3cd01849-fabd-4e97-841a-2eea57c93167
 md"""
@@ -408,10 +570,10 @@ function tidy_simulation_output(sim)
 	# node_id | t | state
 	df = stack(df0, Not(:node_id), variable_name = :t, value_name = :state)
 	# make t numeric
-	@transform!(df, :t = parse(Int, eval(:t)),
-					 :state = @c categorical(:state)
-	
-				)	
+	@transform!(df, 
+		:t = parse(Int, eval(:t)),
+		:state = @c categorical(:state)
+	)	
 	df
 end
 
@@ -534,30 +696,21 @@ end
 
 # ╔═╡ cba2a2cb-c2d5-4cb5-a3d1-a2a5d02bb336
 out_big = let
-	T = 30
+	
 	
 	graph = g
 
 	lockdown = fill(Symbol[], T)
-	for t in 1:10
-		lockdown[t] = [:school]
+	for t in (1:4) .+ 1
+		#lockdown[t] = [:work]
 	end
-	lockdown[15] = [:school, :job]
+	#lockdown[20] = [:school]
 
-	@assert all(lockdown .⊆ Ref([:school, :job, :family]))
+	@assert all(lockdown .⊆ Ref([:school, :work, :family]))
+
+	hospital_capacity = 0.1
 	
-	transitions_df = DataFrame([
-		(member_type = "child", δ = 0.0, χ = 0.0, ρ = 0.2),
- 		(member_type = "adult", δ = 0.5, χ = 0.5, ρ = 0.2)
-	])
-
 	node_df1 = leftjoin(node_df, transitions_df, on = :member_type)
-
-	transmission_df = DataFrame([
-		(linktype = :family, p = 0.5),
- 		(linktype = :school, p = 0.5),
- 		(linktype = :job,    p = 0.5)
-	])
 	
 	edge_df_sorted = @chain edge_df begin
 		@sort(:src, :dst)
@@ -568,19 +721,15 @@ out_big = let
 	sim = simulate(graph, T, edge_df_sorted, node_df1; lockdown)
 
 	attr = (
-		#layout = _ -> node_positions,
 		node_attr  = (; strokewidth = 0.1),
 		edge_width = 0.5,
 		edge_color = (:black, 0.3),
 	)
 	
-	out_big = sir_plot(sim, graph; hline = 0.1, attr...)
+	out_big = sir_plot(sim, graph; hline = hospital_capacity, attr...)
 end
 
 # ╔═╡ 886ae5b6-f052-4082-bfa1-c8a23f4c880a
-out_big.fig
-
-# ╔═╡ b9ea2229-6b11-403b-ab14-13cb91c856ee
 out_big.fig
 
 # ╔═╡ 311110d0-f62e-49e1-bf27-ebf09e1c08a1
@@ -590,11 +739,105 @@ md"""
 
 # ╔═╡ 338a5dc3-7099-4163-948e-ee1f0e362481
 md"""
-## Other
+## Infrastructure
 """
 
 # ╔═╡ 337e73e7-5454-4f1f-9d5e-9b01a5c2cd10
 TableOfContents()
+
+# ╔═╡ f23193dd-d1f8-4be3-8060-ed90cba0c168
+members = let
+	names = map(group_members) do (; firstname, lastname)
+		firstname * " " * lastname
+	end
+	join(names, ", ", " & ")
+end
+
+# ╔═╡ 44c1c228-d864-49ab-a8bf-bd7d6bd260cd
+md"""
+# Assignment 2: School Closures in the Covid-19 Pandemic
+
+*submitted by* **$members** (*group $(group_number)*)
+"""
+
+# ╔═╡ c49c0fce-0bc7-4665-81bf-24e61707fde7
+begin
+	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
+	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
+	still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
+	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
+	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
+	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
+	function wordcount(text)
+		stripped_text = strip(replace(string(text), r"\s" => " "))
+    	words = split(stripped_text, ('-','.',',',':','_','"',';','!'))
+    	length(words)
+	end
+end
+
+# ╔═╡ d6beb034-5171-46a2-a05a-2133f58e54e9
+if @isdefined H
+	if hasproperty(States.b.b, :b)
+		correct(md"You've successfully defined type `H`.")
+	else
+		almost(md"You've successfully defined `H`. But you need to do it in the right place. Go **The SIR Model** and uncomment the line that defines `H`.")
+	end
+else
+	hint(md"Uncomment the line that defines `H`.")
+end
+
+# ╔═╡ bd828ca7-5737-400e-be9e-6e23b07c02ad
+hint(md"You can look at the section **Define the transitions** for inspiration.")
+
+# ╔═╡ 45c718bb-ecfe-4107-bd84-1244184dc62a
+begin
+	try
+		test1 = transition(I(), (δ = 1, ρ = 0), 0) == D()
+		test2 = transition(I(), (δ = 0, ρ = 1), 0) == R()
+		test3 = transition(I(), (δ = 0, ρ = 0), 0) == I()
+	
+		if test1 && test2 && test3
+			correct(md"It seems that you've successfully adjusted the transition rule for `I`. *(Note: the other rules are not checked)*")
+		else
+			keep_working()
+		end
+	catch
+		keep_working()
+	end
+end
+
+# ╔═╡ 1bc07c3c-f71e-444a-9c22-b447295d5d99
+md"_approx. $(wordcount(answer2)) words_"
+
+# ╔═╡ 808fa60d-79a2-47e4-95d1-98a74b87ffc7
+if answer2 == md"""
+Your answer
+
+goes here ...
+"""
+	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
+elseif wordcount(answer2) > 1.1 * 500
+	almost(md"Try to shorten your text a bit, to get below 500 words.")
+else
+	correct(md"Great, we are looking forward to reading your answer!")
+end
+
+# ╔═╡ e61f91d5-80e6-4dc8-814f-c4c038af284f
+md"_approx $(wordcount(answer3)) words_"
+
+# ╔═╡ d4baea2f-3919-49eb-8d31-1bba68b322a7
+md"""
+## Acknowledgement
+"""
+
+# ╔═╡ dcce8f3c-7c26-4cdb-92d6-a98b091a1419
+Markdown.MD(
+	Markdown.Admonition("warning", "The design of this notebook is based on", 
+[md"""
+		
+_**Computational Thinking**, a live online Julia/Pluto textbook._ [(computationalthinking.mit.edu)](https://computationalthinking.mit.edu)
+"""]
+	))
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1894,25 +2137,49 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─08abc77a-814a-11ec-3d54-439126a38a85
-# ╟─8eb38c3b-3ab1-42a9-ae6c-a6d2e707162c
-# ╠═886ae5b6-f052-4082-bfa1-c8a23f4c880a
+# ╟─12cc3372-8400-4b77-abaf-af92698684b3
+# ╟─d7ab1943-d456-400d-b4c3-dda9f6c1fe26
+# ╟─13313236-502d-46ca-bf24-a4defd6d792f
+# ╟─44c1c228-d864-49ab-a8bf-bd7d6bd260cd
+# ╟─f45eb218-92d8-4bfe-87f6-e128c17db7c2
 # ╟─cd6c5481-ccc7-47d8-acda-4e90fc98b10e
+# ╟─14989685-a257-40c5-8e24-79fff0d1b825
 # ╟─eaf1fd63-5977-4b99-9c11-ec301fba8078
-# ╟─e4bf4d41-9568-42a1-b01b-e22fc5c39ec1
-# ╠═3d85c3c6-9303-47e6-9fa6-5fc975cf750a
-# ╠═5b944c23-442c-4f02-924c-2bad76b7970d
-# ╠═223a560f-fc61-4432-9409-5cb2cb3d9789
-# ╟─bf5ca480-d913-4b21-a85b-b1b2c0b4c2f9
-# ╠═0da25924-c89b-4a1b-b63e-7cb2d17fcbc3
-# ╟─065c0b3c-d738-4581-b9f8-6446a20d0c0a
-# ╠═36edee11-497d-415c-b589-8a333573bb8c
-# ╟─8c133759-f2ca-4c0c-a5e5-19f5ff188436
+# ╟─edbf2ae4-237d-4755-9419-b98b8ef52fc2
+# ╟─aba35d11-a5da-4e48-ace5-d7f317198b3e
+# ╟─bd986adf-2688-470f-8d62-9b66ed3f3d0f
+# ╠═0aa33258-a8c2-403f-b466-95dbaee2cc75
+# ╟─a35ae69d-6c82-4ac0-bbd9-0f443747b3e6
 # ╠═f1664b58-75c1-4a79-9540-85303ed3a42f
+# ╟─d6beb034-5171-46a2-a05a-2133f58e54e9
+# ╟─e73f7e86-eaac-493c-b34d-8f08ba5d3c6a
+# ╠═5bfce3c7-5fe4-43e8-9987-3a7764be243c
+# ╠═444ecb80-138e-43ef-8feb-4a8b1b40e4eb
+# ╟─bd828ca7-5737-400e-be9e-6e23b07c02ad
+# ╟─edb73532-2868-452c-afe2-e1fce60abb77
+# ╟─45c718bb-ecfe-4107-bd84-1244184dc62a
+# ╟─2e2f0ad7-d3c7-4a91-abe7-817f399783c3
+# ╠═5fe6969a-2453-4ac9-bf15-c2d9310115f1
+# ╠═886ae5b6-f052-4082-bfa1-c8a23f4c880a
+# ╠═fd9cdd83-d12c-49d6-9521-02b15f692f70
+# ╠═cba2a2cb-c2d5-4cb5-a3d1-a2a5d02bb336
+# ╠═9fadd61c-2532-4ad5-9c60-f17c18821624
+# ╠═80350d9e-ace6-4970-8861-0e767030f3d6
+# ╠═14991792-4dee-472a-a331-23be55edc92c
+# ╟─3945ab48-4d4a-41d1-80bb-75038aab4f7e
+# ╠═c3537e04-800f-4fa8-9320-a64db4391287
+# ╟─1bc07c3c-f71e-444a-9c22-b447295d5d99
+# ╟─808fa60d-79a2-47e4-95d1-98a74b87ffc7
+# ╠═c140b224-c10d-437b-85c0-2755c8d72970
+# ╠═5b53a9c1-d176-4740-95e8-98283ad57cf9
+# ╟─e61f91d5-80e6-4dc8-814f-c4c038af284f
+# ╟─064bfd13-944a-4d3b-8075-cf5d92018878
+# ╠═d73b9db2-742d-4c75-9ff0-2cdce26a8ec8
+# ╠═5c85f4fb-4431-4196-9663-c5ddbc719a0a
+# ╟─8c133759-f2ca-4c0c-a5e5-19f5ff188436
 # ╠═d1b16bec-ae19-4740-80fe-a711fd145089
 # ╟─ade7f9b5-cf6e-4278-95e0-651691baa892
 # ╠═ca1610dc-653a-4df9-bfc7-0366576ded08
-# ╠═5bfce3c7-5fe4-43e8-9987-3a7764be243c
 # ╠═5cb8fa66-9a1e-4d27-a1c6-f26c1b7f3532
 # ╠═baad47a0-398e-4f9f-9af6-7686acdc25e4
 # ╠═396f4c50-1b1e-449e-bf39-557018f2dd78
@@ -1921,11 +2188,15 @@ version = "3.5.0+0"
 # ╠═993546ec-5dbe-4c08-9c11-072bc343390a
 # ╠═56ca0088-97e0-493b-95fb-88bc35610d6d
 # ╠═891e5c60-468a-44c7-9b5a-609dcdb02cc2
-# ╟─2875a129-ac48-4bae-8f18-d70a5f8b16a8
-# ╠═c5b3e888-3b6f-449b-8f72-455fe86743d2
-# ╠═cba2a2cb-c2d5-4cb5-a3d1-a2a5d02bb336
-# ╠═e35ed6b2-3e18-40b5-b9fd-c6bb216ed2a0
-# ╠═b9ea2229-6b11-403b-ab14-13cb91c856ee
+# ╟─08abc77a-814a-11ec-3d54-439126a38a85
+# ╟─e4bf4d41-9568-42a1-b01b-e22fc5c39ec1
+# ╠═3d85c3c6-9303-47e6-9fa6-5fc975cf750a
+# ╠═5b944c23-442c-4f02-924c-2bad76b7970d
+# ╠═223a560f-fc61-4432-9409-5cb2cb3d9789
+# ╟─bf5ca480-d913-4b21-a85b-b1b2c0b4c2f9
+# ╠═0da25924-c89b-4a1b-b63e-7cb2d17fcbc3
+# ╟─065c0b3c-d738-4581-b9f8-6446a20d0c0a
+# ╠═36edee11-497d-415c-b589-8a333573bb8c
 # ╟─3cd01849-fabd-4e97-841a-2eea57c93167
 # ╟─19c68050-596c-4604-99b2-eb5fc045db10
 # ╠═2ef4585f-7c76-4382-bdc6-455a08448c6f
@@ -1951,8 +2222,14 @@ version = "3.5.0+0"
 # ╠═ff3f0580-0b8f-40c0-9e8d-ddf556745354
 # ╠═64031dfe-3f01-4ec1-aff7-5646cfde96f0
 # ╠═84a3ad96-4854-4ab8-be5c-b4859d1a2e39
+# ╠═c5b3e888-3b6f-449b-8f72-455fe86743d2
+# ╠═e35ed6b2-3e18-40b5-b9fd-c6bb216ed2a0
 # ╟─338a5dc3-7099-4163-948e-ee1f0e362481
 # ╠═f5e85900-1ea7-4dd3-8999-2e121efa9447
 # ╠═337e73e7-5454-4f1f-9d5e-9b01a5c2cd10
+# ╠═f23193dd-d1f8-4be3-8060-ed90cba0c168
+# ╠═c49c0fce-0bc7-4665-81bf-24e61707fde7
+# ╟─d4baea2f-3919-49eb-8d31-1bba68b322a7
+# ╟─dcce8f3c-7c26-4cdb-92d6-a98b091a1419
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
