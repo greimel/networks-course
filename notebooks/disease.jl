@@ -14,34 +14,51 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ cf30ace3-1c08-4ef3-8986-a27df7f1799d
-using AlgebraOfGraphics
-
-# ╔═╡ c5a427bc-9ab4-45aa-a1d7-cc8a30b0ab0e
-using Makie: Lines
-
-# ╔═╡ 345b272a-0ea4-46fc-b1a0-93dbc809366d
-using GraphMakie
-
 # ╔═╡ fdf43912-6623-11eb-2e6a-137c10342f32
 using PlutoUI: Slider, TableOfContents, CheckBox, NumberField
 
-# ╔═╡ 2b55141f-1cba-4a84-8811-98697d408d65
+# ╔═╡ db08e739-99f2-46a8-80c0-dadd8b2cadd1
+using Statistics: mean
+
+# ╔═╡ 2305de0f-79ee-4377-9925-d6f861f2ee86
+using GeometryBasics: Point2f0
+
+# ╔═╡ a5c1da76-8cfc-45c0-a2d8-c20e96d78a03
+using Graphs#: SimpleGraph, add_edge!, StarGraph, CycleGraph, WheelGraph, betweenness_centrality, eigenvector_centrality, edges, adjacency_matrix, nv, ne
+
+# ╔═╡ ae30a71d-e152-4e2e-900b-76efe94d55cf
+using DataFrames#: DataFrame, groupby, rename!, stack, unstack, leftjoin, leftjoin!, Not
+
+# ╔═╡ 642e0095-21f1-444e-a733-1345c7b5e1cc
+using DataFrameMacros#: @combine, @transform!, @transform, @groupby, @subset, @subset!
+
+# ╔═╡ 98d4da42-a067-4918-beb0-93147e9f5f7d
+using Chain: @chain
+
+# ╔═╡ 5f2782dd-390c-4ebf-8dfe-6b24fdc7c844
 begin
-	using Distributions: Distributions, LogNormal
-	using Chain: @chain
-	import CSV
-	using GeometryBasics: Point2f0
-	using NearestNeighbors: BallTree, knn
-	using Graphs: SimpleGraph, add_edge!, StarGraph, CycleGraph, WheelGraph, betweenness_centrality, eigenvector_centrality, edges, adjacency_matrix, nv, ne
-	using DataFrames: DataFrame, ByRow, groupby, rename!, Not, stack, unstack, leftjoin
-	using DataFrameMacros: @combine, @transform!, @transform, @groupby, @subset, @subset!
 	using CategoricalArrays: CategoricalArrays, categorical, cut, levels!
-	using UnPack: @unpack
-	using Statistics: mean
-	
 	Base.show(io::IO, ::MIME"text/html", x::CategoricalArrays.CategoricalValue) = print(io, get(x))
 end
+
+# ╔═╡ cf30ace3-1c08-4ef3-8986-a27df7f1799d
+using AlgebraOfGraphics, GraphMakie
+
+# ╔═╡ b6c688d0-5954-4f9b-a559-ad28a585c651
+using Makie: Makie,
+		Figure, Axis, Legend, Lines,
+		lines!, scatter!, scatterlines, scatterlines!, vlines!, 
+		hidedecorations!, ylims!, cgrad,
+		@lift, Observable
+
+# ╔═╡ 6607dac5-83fa-4d5f-9c8f-8c0c4706d01a
+using NetworkLayout: NetworkLayout
+
+# ╔═╡ e0bfd39a-a5c5-47be-a4f4-ffba3779f8ac
+using NearestNeighbors: BallTree, knn
+
+# ╔═╡ c178b435-98ac-4366-b4c9-d57b5be13897
+using Distributions: Distributions, LogNormal
 
 # ╔═╡ 51c0c3e2-1930-4859-87d7-99b1985c32e6
 md"""
@@ -55,38 +72,14 @@ md"""
 
 # ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
 md"""
-`disease.jl` | **Version 1.2** | *last updated: Jan 26, 2022*
+`disease.jl` | **Version 1.3** | *last updated: Feb 2, 2022*
 """
-
-# ╔═╡ c2940f90-661a-11eb-3d77-0fc1189e0960
-fancy = false; elegant = true;
-
-# ╔═╡ 3b444a90-64b3-11eb-0b8f-1facc32a4088
-begin
-	if fancy
-		#import WGLMakie
-		#using JSServe: Page
-		#WGLMakie.activate!()
-		#Page(exportable = true)
-	else
-		import CairoMakie
-		CairoMakie.activate!(type = "png")
-	end
-
-	using Makie: Makie,
-		Figure, Axis, Legend,
-		lines!, scatter!, scatterlines, scatterlines!, vlines!, 
-		hidedecorations!, ylims!, cgrad,
-		@lift, Observable
-	
-	using NetworkLayout: NetworkLayout
-end
 
 # ╔═╡ f4266196-64aa-11eb-3fc1-2bf0e099d19c
 md"""
 # Diffusion on Networks: Modeling Transmission of Disease
 
-This notebook will be the basis for part of **Lecture 3** *and* **Assignment 2**. Here is what we will cover.
+This notebook will be the basis for part of **Lecture 3**. Here is what we will cover.
 
 1. We will model the diffusion of disease on a network. We will analyze how the parameters of the model change the outcomes.
 """
@@ -129,7 +122,7 @@ begin
 	struct S <: State end
 	struct I <: State end
 	struct R <: State end
-	#struct D <: State end # (Assignment)
+	struct D <: State end # (Assignment)
 end
 
 # ╔═╡ f48fa122-649a-11eb-2041-bbf0d0c4670c
@@ -142,17 +135,13 @@ md"
 
 # ╔═╡ 8ddb6f1e-649e-11eb-3982-83d2d319b31f
 function transition(::I, par, node, args...; kwargs...)
-	## The following lines will be helpful for the assignment (task 2)
-	if length(par.δ) == 1
-	 	δ = only(par.δ)
-	else
-	 	δ = par.δ[node]
-	end
+	(; δ, ρ) = node
+
 	x = rand()
-	if x < par.ρ + δ # recover or die
+	if x < ρ #+ δ # recover or die
 		R()
-	#elseif x < ...
-	#	...
+	elseif x < ρ + δ
+		D()
 	else
 		I()
 	end
@@ -163,36 +152,17 @@ transition(::R, args...; kwargs...) = R()
 
 # ╔═╡ ffe07e00-0408-4986-9205-0fbb025a698c
 function transition(::S, par, node, adjacency_matrix, is_infected)
+	(; node_id) = node
 	inv_prob = 1.0
 	for i in is_infected
-	 	inv_prob *= 1 - par.p * adjacency_matrix[i, node]
+	 	inv_prob *= 1 - par.p * adjacency_matrix[i, node_id]
 	end
 	
-	#inv_prob = prod(1 - par.p * adjacency_matrix[i, node] for i in is_infected, init = 1.0)
+	#inv_prob = prod(1 - par.p * adjacency_matrix[i, node_id] for i in is_infected, init = 1.0)
 	
 	π =	1.0 - inv_prob
 	
 	rand() < π ? I() : S()
-end
-
-# ╔═╡ f4c62f95-876d-4915-8372-258dfde835f7
-function iterate!(states_new, states, adjacency_matrix, par)
-
-	is_infected = findall(isa.(states, I))
-	
-	for i in 1:size(adjacency_matrix, 1)
-		states_new[i] = transition(states[i], par, i, adjacency_matrix, is_infected)
-	end
-	
-	states_new
-end
-
-# ╔═╡ 5d11a2df-3187-4509-ba7b-8388564573a6
-function iterate(states, adjacency_matrix, par)
-	states_new = Vector{States}(undef, N)
-	iterate!(states_new, states, adjacency_matrix, par)
-	
-	states_new
 end
 
 # ╔═╡ 50d9fb56-64af-11eb-06b8-eb56903084e2
@@ -207,12 +177,6 @@ md"""
 # ╔═╡ 8d4cb5dc-6573-11eb-29c8-81baa6e3fffc
 simple_graph = CycleGraph(10)
 
-# ╔═╡ 77e3a468-6cb8-4883-8f16-66044ed393af
-fieldnames(AlgebraOfGraphics.AxisEntries)
-
-# ╔═╡ 000ac0d1-46ad-4724-8d5c-0a36d938eff0
-
-
 # ╔═╡ ce75fe16-6570-11eb-3f3a-577eac7f9ee8
 md"""
 ## Simulate on a Big Network
@@ -225,28 +189,9 @@ md"""
 * ``p``: $(@bind p0 Slider(0.1:0.1:0.9, default = 0.3, show_value =true)) (infection probability)
 """
 
-# ╔═╡ 4dee5da9-aa4b-4551-974a-f7268d016617
+# ╔═╡ 2fd3fa39-5314-443c-a690-bf27de93e479
 md"""
-# A First Look at Policies
-
-We understand now how to model the spread of a disease using the SIR model.
-
-#### Live Exercise 1: Corona policies
-
-I will randomly assign you to break-out rooms.
-
-👉 Think about one or two Corona policies. How would you evaluate them with our model?
-
-👉 *(We'll talk later about social distancing and vaccinations. Probably you can come up with at least one other policy.)*
-"""
-
-# ╔═╡ 04227a80-5d28-43db-929e-1cdc5b31796d
-md"""
-#### Place to collect your ideas
-
-*
-*
-*
+# Policies
 """
 
 # ╔═╡ 78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
@@ -257,45 +202,42 @@ md"""
 # ╔═╡ 7b43d3d6-03a0-4e0b-96e2-9de420d3187f
 p_range = 0.1:0.1:0.9
 
+# ╔═╡ 65df78ae-1533-4fad-835d-e301581d1c35
+md"""
+## School closures
+
+_**See Assignment 2.**_
+"""
+
+# ╔═╡ 9f040172-36bd-4e46-9827-e25c5c7fba12
+md"""
+## Vaccinations
+"""
+
 # ╔═╡ e8b7861e-661c-11eb-1c06-bfedd6ab563f
 md"""
 It's really hard to see the difference, so let's use an alternative visualization.
 """
 
-# ╔═╡ 1978febe-657c-11eb-04ac-e19b2d0e5a85
+# ╔═╡ 79f3c8b7-dea6-473c-87e5-772e391a51f4
 md"""
-#### Live Exercise 2: Can we do better?
+# Class Exercises
+"""
+
+# ╔═╡ ebd641ff-3249-49b7-ae77-3f7e0d4fd59d
+md"""
+## Class Exercise 1: Whom to vaccinate?
 
 Can you think of a way to improve the effectiveness of the vaccination program? If you have 100 doses at your disposal, whom would you vaccinate?
 """
 
 # ╔═╡ 12d7647e-6a13-11eb-2b1e-9f77bdb3a87a
 md"""
-## (End of Lecture)
+## Class Exercise 2: Distinguishing Recovered and Dead
 """
-
-# ╔═╡ b402b1e2-6a12-11eb-16ac-7b19064562b8
-group_members = ([
-	(firstname = "Ella-Louise", lastname = "Flores"),
-	(firstname = "Padraig", 	lastname = "Cope"),
-	(firstname = "Christy",  	lastname = "Denton")
-	]);
-
-# ╔═╡ e7d47230-6a12-11eb-0392-4360f36222b8
-group_number = 99
-
-# ╔═╡ eea88902-6a12-11eb-3a63-df8979fbdd55
-if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
-	md"""
-!!! danger "Note!"
-    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in the top cell.
-	"""
-end
 
 # ╔═╡ 98d449ac-695f-11eb-3daf-dffb377aa5e2
 md"""
-#### Task 1: Distinguish between `R`ecovered and `D`ead (3 points)
-
 👉 Add a new state `D`ead.
 """
 
@@ -305,7 +247,28 @@ md"""
 """
 
 # ╔═╡ 809375ba-6960-11eb-29d7-f9ab3ee61367
-# transition(::D, args...; kwargs...) = #= your code here =#
+transition(::D, args...; kwargs...) = D() #= your code here =#
+
+# ╔═╡ f4c62f95-876d-4915-8372-258dfde835f7
+function iterate!(states_new, states, adjacency_matrix, par, node_df)
+
+	is_infected = findall(isa.(states, I))
+
+	for node_row ∈ eachrow(node_df)
+		(; node_id) = node_row
+		states_new[node_id] = transition(states[node_id], par, node_row, adjacency_matrix, is_infected)
+	end
+	
+	states_new
+end
+
+# ╔═╡ 5d11a2df-3187-4509-ba7b-8388564573a6
+function iterate(states, adjacency_matrix, par, node_df)
+	states_new = Vector{States}(undef, N)
+	iterate!(states_new, states, adjacency_matrix, par, node_df)
+	
+	states_new
+end
 
 # ╔═╡ 945d67f6-6961-11eb-33cf-57ffe340b35f
 md"""
@@ -319,11 +282,13 @@ Great! You can now have a look how the simulations from the lecture have automat
 
 # ╔═╡ fac414f6-6961-11eb-03bb-4f58826b0e61
 md"""
-#### Task 2: Introduce age-specific death rates (2 points)
+## Class Exercise 3a: Introduce age-specific death rates
 
 The death probabilities are highly heterogeneous across age groups. See for example [this article in Nature.](https://www.nature.com/articles/s41586-020-2918-0)
 
 >  We find that age-specific IFRs estimated by the ensemble model range from 0.001% (95% credible interval, 0–0.001) in those aged 5–9 years old (range, 0–0.002% across individual national-level seroprevalence surveys) to 8.29% (95% credible intervals, 7.11–9.59%) in those aged 80+ (range, 2.49–15.55% across individual national-level seroprevalence surveys).
+
+$(Markdown.MD(Markdown.Admonition("danger", "Beware!", [md"These data are outdated."])))
 
 Below find the data from supplementary table S3 from this article.
 """
@@ -334,21 +299,11 @@ Let us assume there are the following age groups with age specific $\delta$. *(F
 
 """
 
-# ╔═╡ 33c4ea42-6a10-11eb-094c-75343532f835
+# ╔═╡ 1978febe-657c-11eb-04ac-e19b2d0e5a85
 md"""
-We want to adjust the code so that it can handle node-specific $\delta$. The way we are going to do it is to pass a vector $\vec \delta = (\delta_1, \ldots, \delta_N)$ that holds the death probability for each node.
+## Class Exercise 3b: Whom to vaccinate?
 
-👉 Go the the definition of `transition(::I, ...)`, make sure you understand the code snippet in the comment and uncomment the lines.
-
-"""
-
-# ╔═╡ 2e3413ae-6962-11eb-173c-6d53cfd8a968
-md"""
-#### Task 3: Whom to vaccinate? (5 points)
-
-In the lecture we've figured out, how we can improve on vaccinating random people. Now there is more structure in the model. Can you improve on the situation?
-
-First, let's construct the graph and specify the death rates. *(You don't need to change this.)*
+Can you think of a way to improve the effectiveness of the vaccination program? If you have 100 doses at your disposal, whom would you vaccinate?
 """
 
 # ╔═╡ 18e84a22-69ff-11eb-3909-7fd30fcf3040
@@ -359,87 +314,13 @@ end
 
 # ╔═╡ 0d2b1bdc-6a14-11eb-340a-3535d7bfbec1
 md"""
-
-Now it's your turn.
-
 👉 Decide which nodes you want to vaccinate and adjust the cell below. Make sure you only vaccinate `N_vacc` nodes.
-"""
-
-# ╔═╡ 297e4d74-6a12-11eb-0302-0f97bab2c906
-md"""
-Now write a short essay describing your choice. *(Your simulation results are subject to random noise. Make sure you run you simulations multiple times to make sure they are robust.)*
-
-👉 Describe how you would select nodes to be vaccinated
-
-👉 Be accurate but concise. Aim at no more than 500 words.
-"""
-
-# ╔═╡ d0f3064a-6a11-11eb-05bf-09f67a451510
-answer3 = md"""
-Your answer
-
-goes here ...
-"""
-
-# ╔═╡ 9c562b8c-6a12-11eb-1e07-c378e9304a1d
-md"""
-#### Before you submit ...
-
-👉 Make sure you have added your names and your group number at the top.
-
-👉 Make sure that that **all group members proofread** your submission (especially your little essay).
-
-👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. In addition, **upload the source code** of the notebook (the .jl file).
 """
 
 # ╔═╡ 515edb16-69f3-11eb-0bc9-a3504565b80b
 md"""
 ### Details on age-specific infection fatality rates
 """
-
-# ╔═╡ 1abd6992-6962-11eb-3db0-f3dbe5f095eb
-ifr_csv = CSV.File(IOBuffer(
-		"""
-from	to	IFR_pc
-0	4	0.003
-5	9	0.001
-10	14	0.001
-15	19	0.003
-20	24	0.006
-25	29	0.013
-30	34	0.024
-35	39	0.040
-40	44	0.075
-45	49	0.121
-50	54	0.207
-55	59	0.323
-60	64	0.456
-65	69	1.075
-70	74	1.674
-75	79	3.203
-80	95	8.292
-""" # note: the oldest age group is actually 80+
-		));
-
-# ╔═╡ 07c102c2-69ee-11eb-3b29-25e612df6911
-ifr_df = @chain ifr_csv begin
-	DataFrame
-	@transform!(
-		:age = mean(tuple(:from, :to)),
-		:age_group = @c cut(:to, [0, 40, 75, 100])
-	)
-end
-
-# ╔═╡ d18f1b0c-69ee-11eb-2fc0-4f14873847fb
-scatterlines(ifr_df.age, ifr_df.IFR_pc, 
-			 axis = (xlabel="age group", ylabel = "infection fatality ratio (%)")
-			)
-
-# ╔═╡ 57a72310-69ef-11eb-251b-c5b8ab2c6082
-ifr_df2 = @chain ifr_df begin
-	groupby(:age_group)
-	@combine(:IFR_pc = mean(:IFR_pc))
-end
 
 # ╔═╡ 74c35594-69f0-11eb-015e-2bf4b55e658c
 md"""
@@ -452,12 +333,6 @@ $$(1-IFR) = (1 - \delta)^{T_I}.$$
 
 # ╔═╡ 6ffb63bc-69f0-11eb-3f84-d3fca5526a3e
 get_δ_from_ifr(ifr, ρ) = 1 - (1 - ifr/100)^(ρ)
-
-# ╔═╡ 98b2eefe-69f2-11eb-36f4-7b19a55cfe78
-begin
-	ρ_new = 1/7
-	@transform(ifr_df2, :δ = get_δ_from_ifr(:IFR_pc, ρ_new))
-end
 
 # ╔═╡ 1b8c26b6-64aa-11eb-2d9a-47db5469a654
 md"""
@@ -490,7 +365,11 @@ function initial_state(N, n_infected)
 end
 
 # ╔═╡ 208445c4-5359-4442-9b9b-bde5e55a8c23
-function simulate(graph, par, T, init = initial_state(nv(graph), max(nv(graph) ÷ 100, 1)))
+function simulate(
+	graph, par, T, 
+	init = initial_state(nv(graph), max(nv(graph) ÷ 100, 1)); 
+	node_df = DataFrame(; node_id = 1:nv(graph), par...)
+)
 	mat = adjacency_matrix(graph)
 	N = nv(graph)
 	
@@ -498,7 +377,7 @@ function simulate(graph, par, T, init = initial_state(nv(graph), max(nv(graph) �
 	sim[:,1] .= init
 	
 	for t = 2:T
-		iterate!(view(sim, :, t), view(sim, :, t-1), mat, par)
+		iterate!(view(sim, :, t), view(sim, :, t-1), mat, par, node_df)
 	end
 	sim
 end
@@ -665,10 +544,14 @@ end
 # ╔═╡ d6694c32-656c-11eb-0796-5f485cccccf0
 out_simple = let
 	T = 15
+	g = simple_graph
 	
-	par = (ρ = ρ_simple, δ = δ_simple, p = p_simple)
+	par = (; p = p_simple)
 	
-	sim = simulate(simple_graph, par, T)
+	node_df = DataFrame(node_id = 1:nv(g), δ = δ_simple, ρ = ρ_simple)
+	@info node_df
+	
+	sim = simulate(simple_graph, par, T; node_df)
 
 	sir_plot(sim, simple_graph)
 	
@@ -679,14 +562,8 @@ md"""
 ``t``: $(@bind t0_simple NumberField(out_simple.T_range, default=1))
 """
 
-# ╔═╡ 657c3a98-6573-11eb-1ccb-b1d974414647
-fancy && out_simple.fig
-
 # ╔═╡ d2813d40-656d-11eb-2cfc-e389ed2a0d84
 out_simple.t[] = t0_simple; a=1
-
-# ╔═╡ 3aeb0106-661b-11eb-362f-6b9af20f71d7
-elegant && (a; t0_simple; out_simple.fig)
 
 # ╔═╡ e82d5b7f-5f37-4696-9917-58b117b9c1d6
 md"
@@ -733,10 +610,12 @@ end
 out_big = let
 	T = 100
 	
-	par = (ρ = ρ0, δ = δ0, p = p0)
+	par = (; p = p0)
 	
 	graph, node_positions = spatial_graph(1000)
-	sim = simulate(graph, par, T)
+	node_df = DataFrame(node_id = 1:nv(graph), ρ = ρ0, δ = δ0)
+
+	sim = simulate(graph, par, T; node_df)
 
 	attr = (
 		layout = _ -> node_positions,
@@ -753,24 +632,12 @@ md"""
 ``t``: $(@bind t0_intro NumberField(out_big.T_range, default=20))
 """
 
-# ╔═╡ 3e9af1f4-6575-11eb-21b2-453dc18d1b7b
-fancy && out_big.fig
-
-# ╔═╡ 5eafd0f0-6619-11eb-355d-f9de3ae53f6a
-elegant && (t0_intro; out_big.fig)
-
-# ╔═╡ 6948e6c6-661b-11eb-141c-370fc6ffe618
-fancy && out_big.fig
-
 # ╔═╡ f4cd5fb2-6574-11eb-37c4-73d4b21c1883
 md"""
 Check to activate slider: $(@bind past_intro CheckBox(default = false))
 
 ``t``: $(@bind t0_big NumberField(out_big.T_range, default=1))
 """
-
-# ╔═╡ 1bd2c660-6572-11eb-268c-732fd2210a58
-elegant && (t0_big; out_big.fig)
 
 # ╔═╡ 373cb47e-655e-11eb-2751-0150985d98c1
 out_big.t[] = past_intro ? t0_big : t0_intro
@@ -788,10 +655,13 @@ let
 	state = "I"
 	fig = Figure()
 	ax = Axis(fig[1,1], title = "#$(state) when varying the infection probability")
+
+	node_df = DataFrame(node_id = 1:nv(graph), ρ = ρ0, δ = δ0)
+	
 	for p in p_range
-		par = (p = p, ρ = ρ0, δ = δ0)
+		par = (; p )
 		
-		sim = simulate(graph, par, 100)
+		sim = simulate(graph, par, 100; node_df)
 		
 		df0 = fractions_over_time(sim)
 		
@@ -808,9 +678,10 @@ end
 vacc = let
 	N = 1000
 
-	par = (p = 0.1, ρ = ρ0, δ = δ0)
+	par = (; p = 0.1)
 	
 	graph, node_positions = spatial_graph(N)
+	node_df = DataFrame(node_id = 1:nv(graph), ρ = ρ0, δ = δ0)
 	
 	vaccinated = [
 		"none"   => [],
@@ -823,7 +694,7 @@ vacc = let
 	sims = map(vaccinated) do (label, vacc_nodes)
 		init = initial_state(N, infected_nodes, vacc_nodes)
 		
-		sim = simulate(graph, par, 100, init)
+		sim = simulate(graph, par, 100, init; node_df)
 		
 		label => sim
 	end
@@ -845,12 +716,6 @@ end;
 
 # ╔═╡ 99a1f078-657a-11eb-2183-1b6a0598ffcd
 out_vacc.t[] = t0_vacc
-
-# ╔═╡ bf2c5f5a-661b-11eb-01c5-51740fba63e3
-fancy && out_vacc.fig
-
-# ╔═╡ 83b817d2-657d-11eb-3cd2-332a348142ea
-!fancy && (t0_vacc; out_vacc.fig)
 
 # ╔═╡ 02b1e334-661d-11eb-3194-b382045810ef
 fig_vaccc = let
@@ -880,39 +745,46 @@ end
 fig_vaccc
 
 # ╔═╡ 29036938-69f4-11eb-09c1-63a7a75de61d
-vacc_age_graph = let
+age_graph = let
 	N = 1000
 	p = 0.5
-	ρ = ρ_new
+
+	node_df = DataFrame(
+		node_id = 1:N,
+		ρ = 0.5, δ = 0.01
+#		age_group = rand(Distributions.Categorical([0.4, 0.35, 0.25]), N)
+	)
+#	@chain node_df begin
+#		leftjoin!(_, ifr_df, on  = :age_group)
+#		@transform!(:δ = 20 * :δ)
+#	end
 	
-	# age specfic death rates
-	age_groups = rand(Distributions.Categorical([0.4, 0.35, 0.25]), N)
-		
-	δ_vec = get_δ_from_ifr.(ifr_df2.IFR_pc, ρ) .* 20 # we scale this up to remove some randomness
-	δ_per_node = δ_vec[age_groups]
+	@info node_df
 	
-	par = (p = p, ρ = ρ, δ = δ_per_node)
+	par = (; p)
 
 	graph, node_positions = spatial_graph(N)
 	
-	bet_centr = betweenness_centrality(graph)
 	
-	(; par, graph, node_positions, bet_centr)
+	(; par, graph, node_positions, node_df)
 end;	
 
 # ╔═╡ dceb5318-69fc-11eb-2e1b-0b8cef279e05
 vacc_age = let
 		
-	@unpack par, graph, node_positions, bet_centr = vacc_age_graph
+	(; par, graph, node_positions, node_df) = age_graph
 	N = nv(graph)
 	
 	N_vacc = N ÷ 5
 
+	centr = betweenness_centrality(graph)
+	
 	split = 50
 	vaccinated = [
-		"none"   => [],
-		"random" => pseudo_random(N, N_vacc, 4),
-		"central"=> sortperm(bet_centr, rev=true)[1:N_vacc],
+		"none"    => [],
+		"random"  => pseudo_random(N, N_vacc, 4),
+		"central 1"=> sortperm(centr, rev=true)[1:N_vacc],
+		"central 2"=> sortperm(degree_centrality(graph), rev=true)[1:N_vacc],
 		# place your suggestions here!
 		]
 	
@@ -921,7 +793,7 @@ vacc_age = let
 	sims = map(vaccinated) do (label, vacc_nodes)
 		init = initial_state(N, infected_nodes, vacc_nodes)
 		
-		sim = simulate(graph, par, 100, init)
+		sim = simulate(graph, par, 100, init; node_df)
 		
 		label => sim
 	end
@@ -978,6 +850,104 @@ md"""
 ## Package Environment
 """
 
+# ╔═╡ d7dd8e26-dad8-4339-aeff-3a9a5769be44
+fancy = false; elegant = true;
+
+# ╔═╡ 3e9af1f4-6575-11eb-21b2-453dc18d1b7b
+fancy && out_big.fig
+
+# ╔═╡ 5eafd0f0-6619-11eb-355d-f9de3ae53f6a
+elegant && (t0_intro; out_big.fig)
+
+# ╔═╡ 657c3a98-6573-11eb-1ccb-b1d974414647
+fancy && out_simple.fig
+
+# ╔═╡ 3aeb0106-661b-11eb-362f-6b9af20f71d7
+elegant && (a; t0_simple; out_simple.fig)
+
+# ╔═╡ 6948e6c6-661b-11eb-141c-370fc6ffe618
+fancy && out_big.fig
+
+# ╔═╡ 1bd2c660-6572-11eb-268c-732fd2210a58
+elegant && (t0_big; out_big.fig)
+
+# ╔═╡ bf2c5f5a-661b-11eb-01c5-51740fba63e3
+fancy && out_vacc.fig
+
+# ╔═╡ 83b817d2-657d-11eb-3cd2-332a348142ea
+!fancy && (t0_vacc; out_vacc.fig)
+
+# ╔═╡ 5872fda5-148c-4c4d-8127-eb882437c075
+md"""
+#### Data
+"""
+
+# ╔═╡ 159ebefa-49b0-44f6-bb96-5ab816b3fc98
+import CSV
+
+# ╔═╡ 1abd6992-6962-11eb-3db0-f3dbe5f095eb
+ifr_csv = CSV.File(IOBuffer(
+		"""
+from	to	IFR_pc
+0	4	0.003
+5	9	0.001
+10	14	0.001
+15	19	0.003
+20	24	0.006
+25	29	0.013
+30	34	0.024
+35	39	0.040
+40	44	0.075
+45	49	0.121
+50	54	0.207
+55	59	0.323
+60	64	0.456
+65	69	1.075
+70	74	1.674
+75	79	3.203
+80	95	8.292
+""" # note: the oldest age group is actually 80+
+		));
+
+# ╔═╡ 07c102c2-69ee-11eb-3b29-25e612df6911
+ifr_df0 = @chain ifr_csv begin
+	DataFrame
+	@transform!(
+		:age = mean(tuple(:from, :to)),
+		:age_bin = @c cut(:to, [0, 40, 75, 100])
+	)
+end
+
+# ╔═╡ d18f1b0c-69ee-11eb-2fc0-4f14873847fb
+scatterlines(ifr_df0.age, ifr_df0.IFR_pc, 
+			 axis = (xlabel="age group", ylabel = "infection fatality ratio (%)")
+			)
+
+# ╔═╡ 57a72310-69ef-11eb-251b-c5b8ab2c6082
+ifr_df = @chain ifr_df0 begin
+	groupby(:age_bin)
+	@combine(:IFR_pc = mean(:IFR_pc))
+	@transform(:age_group = @c 1:length(:age_bin))
+	@transform(:ρ = 1/7)
+	@transform(:δ = get_δ_from_ifr(:IFR_pc, :ρ))
+end
+
+# ╔═╡ 8cf2a18b-220a-4e63-9182-c84b7e13e985
+
+
+# ╔═╡ 7f57095f-88c5-4d65-b758-3bc928ea8d76
+md"""
+#### Plotting
+"""
+
+# ╔═╡ c03fbf6b-436f-4a9b-b0e1-830e1b7849b7
+import CairoMakie
+
+# ╔═╡ 17989c8e-ff35-4900-bb0c-63298a87e3fb
+md"""
+#### Spatial network
+"""
+
 # ╔═╡ bed07322-64b1-11eb-3324-7b7ac5e8fba2
 md"""
 ## Other Stuff
@@ -986,7 +956,7 @@ md"""
 # ╔═╡ 31bbc540-68cd-4d4a-b87a-d648e003524c
 TableOfContents()
 
-# ╔═╡ 9c0ee044-6a0b-11eb-1899-bbb75f5ba57d
+# ╔═╡ 21dfdec3-db5f-40d7-a59e-b1c323a69fc8
 begin
 	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
 	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
@@ -995,7 +965,8 @@ begin
 	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
 	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
 	function wordcount(text)
-    	words=split(string(text), (' ','\n','\t','-','.',',',':','_','"',';','!'))
+		stripped_text = strip(replace(string(text), r"\s" => " "))
+    	words = split(stripped_text, ('-','.',',',':','_','"',';','!'))
     	length(words)
 	end
 end
@@ -1005,10 +976,10 @@ if @isdefined D
 	if hasproperty(States.b.b, :b)
 		correct(md"You've successfully defined type `D`.")
 	else
-		almost(md"You've successfully defined `D`. But you need to do it in the right place. Go **The SIR Model** and uncomment the line that defines `D`.")
+		almost(md"You've successfully defined `D`. But you need to do it in the right place. [Go to **The SIR Model**](#b8d874b6-648d-11eb-251c-636c5ebc1f42) and uncomment the line that defines `D`.")
 	end
 else
-	keep_working(md"Go **The SIR Model** and uncomment the line that defines `D`.")
+	keep_working(md"[Go to **The SIR Model**](#b8d874b6-648d-11eb-251c-636c5ebc1f42) and uncomment the line that defines `D`.")
 end
 
 # ╔═╡ dc9ac0c0-6a0a-11eb-2ca8-ada347bffa85
@@ -1033,9 +1004,9 @@ hint(md"You can look at the section **Define the transitions** for inspiration."
 # ╔═╡ 11c507a2-6a0f-11eb-35bf-55e1116a3c72
 begin
 	try
-		test1 = transition(I(), (δ = 1, ρ = 0), 0) == D()
-		test2 = transition(I(), (δ = 0, ρ = 1), 0) == R()
-		test3 = transition(I(), (δ = 0, ρ = 0), 0) == I()
+		test1 = transition(I(), (;), (δ = 1, ρ = 0), 0) == D()
+		test2 = transition(I(), (;), (δ = 0, ρ = 1), 0) == R()
+		test3 = transition(I(), (;), (δ = 0, ρ = 0), 0) == I()
 	
 		if test1 && test2 && test3
 			correct(md"It seems that you've successfully adjusted the transition rule for `I`. *(Note: the other rules are not checked)*")
@@ -1047,53 +1018,19 @@ begin
 	end
 end
 
-# ╔═╡ e64300dc-6a10-11eb-1f68-57120286535b
-begin
-	try
-		test1 = transition(I(), (δ = (1, 0), ρ = 0), 1) == D()
-		test2 = transition(I(), (δ = (0, 1), ρ = 0), 1) == I()
-		test3 = transition(I(), (δ = (0, 0), ρ = 1), 1) == R()
-		test4 = transition(I(), (δ = (0, 0), ρ = 0), 1) == I()
-	
-		if test1 && test2 && test3 && test4
-			correct(md"It seems that you've successfully adjusted the transition rule for `I`.")
-		else
-			keep_working()
-		end
-	catch
-		keep_working()
-	end
-end
-
-# ╔═╡ e79e6ed4-6a11-11eb-2d68-69a814ec657c
-if answer3 == md"""
-Your answer
-
-goes here ...
-"""
-	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
-elseif wordcount(answer3) > 1.1 * 500
-	almost(md"Try to shorten your text a bit, to get below 500 words.")
-else
-	correct(md"Great, we are looking forward to reading your answer!")
-end
-
-# ╔═╡ d14a8860-6a12-11eb-013e-d39bc64de8b2
-members = let
-	str = ""
-	for (first, last) in group_members
-		str *= str == "" ? "" : ", "
-		str *= first * " " * last
-	end
-	str
-end
-
-# ╔═╡ fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
+# ╔═╡ 96f5a53b-72ab-44db-b8f3-37ceb802bf1a
 md"""
-# Assignment 2: Whom to Vaccinate When Death Rates are Age-Specfic
-
-*submitted by* **$members** (*group $(group_number)*)
+## Acknowledgement
 """
+
+# ╔═╡ 7e754b5f-0078-43e7-b0ca-eaef2fcf3e53
+Markdown.MD(
+	Markdown.Admonition("warning", "The design of this notebook is based on", 
+[md"""
+		
+_**Computational Thinking**, a live online Julia/Pluto textbook._ [(computationalthinking.mit.edu)](https://computationalthinking.mit.edu)
+"""]
+	))
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1114,25 +1051,19 @@ NearestNeighbors = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 
 [compat]
-AlgebraOfGraphics = "~0.6.0"
-CSV = "~0.9.11"
-CairoMakie = "~0.6.6"
+CSV = "~0.10.2"
 CategoricalArrays = "~0.10.2"
 Chain = "~0.4.10"
 DataFrameMacros = "~0.2.1"
-DataFrames = "~1.3.1"
-Distributions = "~0.25.37"
+DataFrames = "~1.3.2"
+Distributions = "~0.25.46"
 GeometryBasics = "~0.4.1"
-GraphMakie = "~0.3.0"
 Graphs = "~1.5.1"
-Makie = "~0.15.3"
 NearestNeighbors = "~0.4.9"
 NetworkLayout = "~0.4.4"
-PlutoUI = "~0.7.29"
-UnPack = "~1.0.2"
+PlutoUI = "~0.7.33"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -1188,9 +1119,9 @@ version = "0.2.0"
 
 [[deps.ArrayInterface]]
 deps = ["Compat", "IfElse", "LinearAlgebra", "Requires", "SparseArrays", "Static"]
-git-tree-sha1 = "1ee88c4c76caa995a885dc2f22a5d548dfbbc0ba"
+git-tree-sha1 = "1bdcc02836402d104a46f7843b6e6730b1948264"
 uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
-version = "3.2.2"
+version = "4.0.2"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
@@ -1223,9 +1154,9 @@ version = "0.4.1"
 
 [[deps.CSV]]
 deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mmap", "Parsers", "PooledArrays", "SentinelArrays", "Tables", "Unicode", "WeakRefStrings"]
-git-tree-sha1 = "49f14b6c56a2da47608fe30aed711b5882264d7a"
+git-tree-sha1 = "9519274b50500b8029973d241d32cfbf0b127d97"
 uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-version = "0.9.11"
+version = "0.10.2"
 
 [[deps.Cairo]]
 deps = ["Cairo_jll", "Colors", "Glib_jll", "Graphics", "Libdl", "Pango_jll"]
@@ -1258,9 +1189,9 @@ version = "0.4.10"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "926870acb6cbcf029396f2f2de030282b6bc1941"
+git-tree-sha1 = "f9982ef575e19b0e5c7a98c6e75ee496c0f73a93"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.11.4"
+version = "1.12.0"
 
 [[deps.ChangesOfVariables]]
 deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
@@ -1321,9 +1252,9 @@ uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.5.7"
 
 [[deps.Crayons]]
-git-tree-sha1 = "b618084b49e78985ffa8422f32b9838e397b9fc2"
+git-tree-sha1 = "249fe38abf76d48563e2f4556bebd215aa317e15"
 uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
-version = "4.1.0"
+version = "4.1.1"
 
 [[deps.DataAPI]]
 git-tree-sha1 = "cc70b17275652eb47bc9e5f81635981f13cea5c8"
@@ -1338,9 +1269,9 @@ version = "0.2.1"
 
 [[deps.DataFrames]]
 deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Reexport", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
-git-tree-sha1 = "cfdfef912b7f93e4b848e80b9befdf9e331bc05a"
+git-tree-sha1 = "ae02104e835f219b8930c7664b8012c93475c340"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "1.3.1"
+version = "1.3.2"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -1379,9 +1310,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "6a8dc9f82e5ce28279b6e3e2cea9421154f5bd0d"
+git-tree-sha1 = "2e97190dfd4382499a4ac349e8d316491c9db341"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.37"
+version = "0.25.46"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -1401,9 +1332,9 @@ version = "2.2.3+0"
 
 [[deps.EllipsisNotation]]
 deps = ["ArrayInterface"]
-git-tree-sha1 = "3fe985505b4b667e1ae303c9ca64d181f09d5c05"
+git-tree-sha1 = "d7ab55febfd0907b285fbf8dc0c73c0825d9d6aa"
 uuid = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
-version = "1.1.3"
+version = "1.3.0"
 
 [[deps.Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1501,15 +1432,15 @@ uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
 [[deps.GLM]]
 deps = ["Distributions", "LinearAlgebra", "Printf", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "StatsModels"]
-git-tree-sha1 = "acb98ca3e21f630d620db02936de567a8a4fc064"
+git-tree-sha1 = "fb764dacfa30f948d52a6a4269ae293a479bbc62"
 uuid = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
-version = "1.6.0"
+version = "1.6.1"
 
 [[deps.GeoInterface]]
 deps = ["RecipesBase"]
-git-tree-sha1 = "f63297cb6a2d2c403d18b3a3e0b7fcb01c0a3f40"
+git-tree-sha1 = "6b1a29c757f56e0ae01a35918a2c39260e2c4b98"
 uuid = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
-version = "0.5.6"
+version = "0.5.7"
 
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
@@ -1531,9 +1462,9 @@ version = "2.68.3+2"
 
 [[deps.GraphMakie]]
 deps = ["GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "StaticArrays"]
-git-tree-sha1 = "e39e441fd067053fd093319ecd0e90a270950baa"
+git-tree-sha1 = "8fc75ea16d1836cbcfb94227605afd49d5f3facf"
 uuid = "1ecd5474-83a3-4783-bb4f-06765db800d2"
-version = "0.3.0"
+version = "0.3.1"
 
 [[deps.Graphics]]
 deps = ["Colors", "LinearAlgebra", "NaNMath"]
@@ -1622,9 +1553,9 @@ version = "0.1.2"
 
 [[deps.InlineStrings]]
 deps = ["Parsers"]
-git-tree-sha1 = "8d70835a3759cdd75881426fced1508bb7b7e1b6"
+git-tree-sha1 = "61feba885fac3a407465726d0c330b3055df897f"
 uuid = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
-version = "1.1.1"
+version = "1.1.2"
 
 [[deps.IntelOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1682,9 +1613,9 @@ version = "1.0.0"
 
 [[deps.JLLWrappers]]
 deps = ["Preferences"]
-git-tree-sha1 = "22df5b96feef82434b07327e2d3c770a9b21e023"
+git-tree-sha1 = "abc9885a7ca2052a736a600f7fa66209f96506e1"
 uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
-version = "1.4.0"
+version = "1.4.1"
 
 [[deps.JSON]]
 deps = ["Dates", "Mmap", "Parsers", "Unicode"]
@@ -1860,9 +1791,9 @@ version = "0.3.3"
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 
 [[deps.NaNMath]]
-git-tree-sha1 = "f755f36b19a5116bb580de457cda0c140153f283"
+git-tree-sha1 = "b086b7ea07f8e38cf122f5016af580881ac914fe"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
-version = "0.3.6"
+version = "0.3.7"
 
 [[deps.NearestNeighbors]]
 deps = ["Distances", "StaticArrays"]
@@ -1959,9 +1890,9 @@ version = "0.11.5"
 
 [[deps.PNGFiles]]
 deps = ["Base64", "CEnum", "ImageCore", "IndirectArrays", "OffsetArrays", "libpng_jll"]
-git-tree-sha1 = "6d105d40e30b635cfed9d52ec29cf456e27d38f8"
+git-tree-sha1 = "2271d1c3b0103844a9f4af6cd17d70d146d5295f"
 uuid = "f57f5aa1-a3ce-4bc8-8ab9-96f992907883"
-version = "0.3.12"
+version = "0.3.13"
 
 [[deps.Packing]]
 deps = ["GeometryBasics"]
@@ -1983,9 +1914,9 @@ version = "1.47.0+0"
 
 [[deps.Parsers]]
 deps = ["Dates"]
-git-tree-sha1 = "d7fa6237da8004be601e19bd6666083056649918"
+git-tree-sha1 = "0b5cfbb704034b5b4c1869e36634438a047df065"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.1.3"
+version = "2.2.1"
 
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -2005,15 +1936,15 @@ version = "0.1.1"
 
 [[deps.PlotUtils]]
 deps = ["ColorSchemes", "Colors", "Dates", "Printf", "Random", "Reexport", "Statistics"]
-git-tree-sha1 = "68604313ed59f0408313228ba09e79252e4b2da8"
+git-tree-sha1 = "6f1b25e8ea06279b5689263cc538f51331d7ca17"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
-version = "1.1.2"
+version = "1.1.3"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
-git-tree-sha1 = "7711172ace7c40dc8449b7aed9d2d6f1cf56a5bd"
+git-tree-sha1 = "da2314d0b0cb518906ea32a497bb4605451811a4"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.29"
+version = "0.7.33"
 
 [[deps.PolygonOps]]
 git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
@@ -2124,9 +2055,9 @@ version = "1.1.0"
 
 [[deps.SentinelArrays]]
 deps = ["Dates", "Random"]
-git-tree-sha1 = "244586bc07462d22aed0113af9c731f2a518c93e"
+git-tree-sha1 = "15dfe6b103c2a993be24404124b8791a09460983"
 uuid = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
-version = "1.3.10"
+version = "1.3.11"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -2173,9 +2104,9 @@ uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.SpecialFunctions]]
 deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "e08890d19787ec25029113e88c34ec20cac1c91e"
+git-tree-sha1 = "e6bf188613555c78062842777b116905a9f9dd49"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "2.0.0"
+version = "2.1.0"
 
 [[deps.StackViews]]
 deps = ["OffsetArrays"]
@@ -2185,15 +2116,15 @@ version = "0.1.1"
 
 [[deps.Static]]
 deps = ["IfElse"]
-git-tree-sha1 = "7f5a513baec6f122401abfc8e9c074fdac54f6c1"
+git-tree-sha1 = "b4912cd034cdf968e06ca5f943bb54b17b97793a"
 uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
-version = "0.4.1"
+version = "0.5.1"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
-git-tree-sha1 = "2ae4fe21e97cd13efd857462c1869b73c9f61be3"
+git-tree-sha1 = "a635a9333989a094bddc9f940c04c549cd66afcf"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.3.2"
+version = "1.3.4"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -2212,9 +2143,9 @@ version = "0.33.14"
 
 [[deps.StatsFuns]]
 deps = ["ChainRulesCore", "InverseFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
-git-tree-sha1 = "bedb3e17cc1d94ce0e6e66d3afa47157978ba404"
+git-tree-sha1 = "f35e1879a71cca95f4826a14cdbf0b9e253ed918"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
-version = "0.9.14"
+version = "0.9.15"
 
 [[deps.StatsModels]]
 deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Printf", "REPL", "ShiftedArrays", "SparseArrays", "StatsBase", "StatsFuns", "Tables"]
@@ -2224,9 +2155,9 @@ version = "0.6.28"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
-git-tree-sha1 = "2ce41e0d042c60ecd131e9fb7154a3bfadbf50d3"
+git-tree-sha1 = "d21f2c564b21a202f4677c0fba5b5ee431058544"
 uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-version = "0.6.3"
+version = "0.6.4"
 
 [[deps.SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
@@ -2277,11 +2208,6 @@ version = "0.9.6"
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
-
-[[deps.UnPack]]
-git-tree-sha1 = "387c1f73762231e86e0c9c5443ce3b4a0a9a0c2b"
-uuid = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
-version = "1.0.2"
 
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
@@ -2426,7 +2352,6 @@ version = "3.5.0+0"
 # ╔═╡ Cell order:
 # ╟─51c0c3e2-1930-4859-87d7-99b1985c32e6
 # ╟─0e30624c-65fc-11eb-185d-1d018f68f82c
-# ╟─c2940f90-661a-11eb-3d77-0fc1189e0960
 # ╟─f4266196-64aa-11eb-3fc1-2bf0e099d19c
 # ╟─43a25dc8-6574-11eb-3607-311aa8d5451e
 # ╟─3e9af1f4-6575-11eb-21b2-453dc18d1b7b
@@ -2444,17 +2369,12 @@ version = "3.5.0+0"
 # ╠═5d11a2df-3187-4509-ba7b-8388564573a6
 # ╠═f4c62f95-876d-4915-8372-258dfde835f7
 # ╟─50d9fb56-64af-11eb-06b8-eb56903084e2
-# ╠═9302b00c-656f-11eb-25b3-495ae1c843cc
+# ╟─9302b00c-656f-11eb-25b3-495ae1c843cc
 # ╟─657c3a98-6573-11eb-1ccb-b1d974414647
 # ╟─3aeb0106-661b-11eb-362f-6b9af20f71d7
 # ╟─d2813d40-656d-11eb-2cfc-e389ed2a0d84
 # ╠═8d4cb5dc-6573-11eb-29c8-81baa6e3fffc
-# ╠═cf30ace3-1c08-4ef3-8986-a27df7f1799d
-# ╠═c5a427bc-9ab4-45aa-a1d7-cc8a30b0ab0e
 # ╠═d6694c32-656c-11eb-0796-5f485cccccf0
-# ╠═77e3a468-6cb8-4883-8f16-66044ed393af
-# ╠═000ac0d1-46ad-4724-8d5c-0a36d938eff0
-# ╠═345b272a-0ea4-46fc-b1a0-93dbc809366d
 # ╟─ce75fe16-6570-11eb-3f3a-577eac7f9ee8
 # ╟─37972f08-db05-4e84-9528-fe16cd86efbf
 # ╟─6948e6c6-661b-11eb-141c-370fc6ffe618
@@ -2462,12 +2382,13 @@ version = "3.5.0+0"
 # ╟─f4cd5fb2-6574-11eb-37c4-73d4b21c1883
 # ╠═0b35f73f-6976-4d85-b61f-b4188440043e
 # ╟─373cb47e-655e-11eb-2751-0150985d98c1
-# ╟─4dee5da9-aa4b-4551-974a-f7268d016617
-# ╟─04227a80-5d28-43db-929e-1cdc5b31796d
+# ╟─2fd3fa39-5314-443c-a690-bf27de93e479
 # ╟─78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
 # ╠═49b21e4e-6577-11eb-38b2-45d30b0f9c80
 # ╠═7b43d3d6-03a0-4e0b-96e2-9de420d3187f
 # ╠═c5f48079-f52e-4134-8e6e-6cd4c9ee915d
+# ╟─65df78ae-1533-4fad-835d-e301581d1c35
+# ╟─9f040172-36bd-4e46-9827-e25c5c7fba12
 # ╠═99a1f078-657a-11eb-2183-1b6a0598ffcd
 # ╟─34b1a3ba-657d-11eb-17fc-5bf325945dce
 # ╟─bf2c5f5a-661b-11eb-01c5-51740fba63e3
@@ -2476,41 +2397,31 @@ version = "3.5.0+0"
 # ╠═0d610e80-661e-11eb-3b9a-93af6b0ad5de
 # ╟─e8b7861e-661c-11eb-1c06-bfedd6ab563f
 # ╠═02b1e334-661d-11eb-3194-b382045810ef
-# ╟─1978febe-657c-11eb-04ac-e19b2d0e5a85
+# ╟─79f3c8b7-dea6-473c-87e5-772e391a51f4
+# ╟─ebd641ff-3249-49b7-ae77-3f7e0d4fd59d
 # ╟─12d7647e-6a13-11eb-2b1e-9f77bdb3a87a
-# ╠═b402b1e2-6a12-11eb-16ac-7b19064562b8
-# ╠═e7d47230-6a12-11eb-0392-4360f36222b8
-# ╟─eea88902-6a12-11eb-3a63-df8979fbdd55
-# ╟─fb4ff86c-64ad-11eb-2962-3372a2f2d9a5
-# ╠═98d449ac-695f-11eb-3daf-dffb377aa5e2
+# ╟─98d449ac-695f-11eb-3daf-dffb377aa5e2
 # ╟─b9c7df54-6a0c-11eb-1982-d7157b2c5b92
 # ╟─8a2c223e-6960-11eb-3d8a-516474e6653c
 # ╠═809375ba-6960-11eb-29d7-f9ab3ee61367
 # ╟─dc9ac0c0-6a0a-11eb-2ca8-ada347bffa85
-# ╟─1be1ac8a-6961-11eb-2736-79c77025255d
 # ╟─945d67f6-6961-11eb-33cf-57ffe340b35f
+# ╟─1be1ac8a-6961-11eb-2736-79c77025255d
 # ╟─11c507a2-6a0f-11eb-35bf-55e1116a3c72
 # ╟─48818cf0-6962-11eb-2024-8fca0690dd78
 # ╟─fac414f6-6961-11eb-03bb-4f58826b0e61
 # ╠═d18f1b0c-69ee-11eb-2fc0-4f14873847fb
 # ╟─75b4c0c2-69f3-11eb-1ebc-75efd2d0bf1f
-# ╠═98b2eefe-69f2-11eb-36f4-7b19a55cfe78
-# ╟─33c4ea42-6a10-11eb-094c-75343532f835
-# ╟─e64300dc-6a10-11eb-1f68-57120286535b
-# ╟─2e3413ae-6962-11eb-173c-6d53cfd8a968
+# ╠═57a72310-69ef-11eb-251b-c5b8ab2c6082
 # ╠═29036938-69f4-11eb-09c1-63a7a75de61d
+# ╟─1978febe-657c-11eb-04ac-e19b2d0e5a85
 # ╠═18e84a22-69ff-11eb-3909-7fd30fcf3040
 # ╟─0d2b1bdc-6a14-11eb-340a-3535d7bfbec1
 # ╠═dceb5318-69fc-11eb-2e1b-0b8cef279e05
 # ╟─da82d3ea-69f6-11eb-343f-a30cdc36228a
-# ╟─297e4d74-6a12-11eb-0302-0f97bab2c906
-# ╠═d0f3064a-6a11-11eb-05bf-09f67a451510
-# ╟─e79e6ed4-6a11-11eb-2d68-69a814ec657c
-# ╟─9c562b8c-6a12-11eb-1e07-c378e9304a1d
 # ╟─515edb16-69f3-11eb-0bc9-a3504565b80b
 # ╠═1abd6992-6962-11eb-3db0-f3dbe5f095eb
 # ╠═07c102c2-69ee-11eb-3b29-25e612df6911
-# ╟─57a72310-69ef-11eb-251b-c5b8ab2c6082
 # ╟─74c35594-69f0-11eb-015e-2bf4b55e658c
 # ╠═6ffb63bc-69f0-11eb-3f84-d3fca5526a3e
 # ╟─1b8c26b6-64aa-11eb-2d9a-47db5469a654
@@ -2537,11 +2448,29 @@ version = "3.5.0+0"
 # ╠═66d78eb4-64b4-11eb-2d30-b9cee7370d2a
 # ╟─a81f5244-64aa-11eb-1854-6dbb64c8eb6a
 # ╠═fdf43912-6623-11eb-2e6a-137c10342f32
-# ╠═3b444a90-64b3-11eb-0b8f-1facc32a4088
-# ╠═2b55141f-1cba-4a84-8811-98697d408d65
+# ╟─d7dd8e26-dad8-4339-aeff-3a9a5769be44
+# ╠═db08e739-99f2-46a8-80c0-dadd8b2cadd1
+# ╠═2305de0f-79ee-4377-9925-d6f861f2ee86
+# ╠═a5c1da76-8cfc-45c0-a2d8-c20e96d78a03
+# ╟─5872fda5-148c-4c4d-8127-eb882437c075
+# ╠═ae30a71d-e152-4e2e-900b-76efe94d55cf
+# ╠═642e0095-21f1-444e-a733-1345c7b5e1cc
+# ╠═98d4da42-a067-4918-beb0-93147e9f5f7d
+# ╠═159ebefa-49b0-44f6-bb96-5ab816b3fc98
+# ╠═8cf2a18b-220a-4e63-9182-c84b7e13e985
+# ╠═5f2782dd-390c-4ebf-8dfe-6b24fdc7c844
+# ╟─7f57095f-88c5-4d65-b758-3bc928ea8d76
+# ╠═cf30ace3-1c08-4ef3-8986-a27df7f1799d
+# ╠═c03fbf6b-436f-4a9b-b0e1-830e1b7849b7
+# ╠═b6c688d0-5954-4f9b-a559-ad28a585c651
+# ╠═6607dac5-83fa-4d5f-9c8f-8c0c4706d01a
+# ╟─17989c8e-ff35-4900-bb0c-63298a87e3fb
+# ╠═e0bfd39a-a5c5-47be-a4f4-ffba3779f8ac
+# ╠═c178b435-98ac-4366-b4c9-d57b5be13897
 # ╟─bed07322-64b1-11eb-3324-7b7ac5e8fba2
 # ╠═31bbc540-68cd-4d4a-b87a-d648e003524c
-# ╠═9c0ee044-6a0b-11eb-1899-bbb75f5ba57d
-# ╠═d14a8860-6a12-11eb-013e-d39bc64de8b2
+# ╠═21dfdec3-db5f-40d7-a59e-b1c323a69fc8
+# ╟─96f5a53b-72ab-44db-b8f3-37ceb802bf1a
+# ╟─7e754b5f-0078-43e7-b0ca-eaef2fcf3e53
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
