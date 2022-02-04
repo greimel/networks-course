@@ -23,6 +23,89 @@ md"""
 interbank deposits as a risk-sharing device. Liquidate them when liquidity is needed
 """
 
+# ╔═╡ 9562942c-990d-4e31-be1a-24e04ed01aee
+md"""
+## A story
+
+### A simple world
+We are in a simple world. At period ``t=0`` there are ``100m`` people that each owns a kilogram of potatoes (the _initial endowment_ is 1).
+
+##### Preferences
+At this moment ``(t=0)``, nobody is hungry. Everybody knows that they will be hungry _at some point_. But they don't know _when_ -- either in period ``1`` or period ``2``.
+
+The utility of an agent is 
+```math
+\begin{cases}
+	u(c_1) & \text{with probability }\gamma \\
+	u(c_2) &\text{with probability }1-\gamma
+\end{cases}
+```
+
+"""
+
+# ╔═╡ 51d69d70-1545-4096-bcbc-722bb3d9b200
+md"""
+##### Investment decision
+There are two options. Either store the potatoes or **plant** potatoes to grow more of them. **Storage** has a gross return of ``1`` (no gain, no loss) and the _stored potatoes_ are a **liquid** asset. They can be eaten in either of the two periods. Each kilogram of **planted** potatos yield ``1.5`` kilograms of potatoes in period 2. (The gross return is ``R=1.5`` if _held to maturity_.) Planted potatoes are an **illiquid asset**. If you dig up the planted potatoes in the intermediate period they will have lost their quality and not be very enjoyable. So, in case of _early liquidation_ the gross return is ``r \in [0, 1)``.
+
+Each agent can split up their initial endowment (1kg of potatoes), plant fraction ``x`` and store fraction ``y``. When the agents wakes up hungry in period 1, the agent will dig up (_liquidate_) the planted potatoes and have a consumption of ``c_1^e = r x + y``. If the agent wake is not hungry in period 1, she will keep the ``x`` potatoes in the ground, and the ``y`` potatoes in the storage and have a consumption of ``c_2^l = R x + y`` in period 2.
+
+Since agents have to decide about ``x`` and ``y`` **before** they know when they will be hungry, they will invest in both ``x`` and ``y``. This means that some agents will have to dig up (_liquidate_) their investment. This is under the assumption that agents are risk-averse.
+
+```math
+\begin{align}
+&\max_{x,y} U(c^e_1, c^e_2, c^l_1, c^l_2) = γ u(c^e_1) + (1-\gamma) u(c^l_2) \\
+&\begin{aligned}
+\text{such that } & c^e_1 = r x + y \\
+	              & c^e_2 = 0 \\
+			      & c^l_1 = 0 \\
+				  & c^l_2 = R x + y 
+\end{aligned}
+\end{align}
+```
+
+The fact that early agents will have to eat liquidate their illiquid assets if not very satisfying. Isn't it somehow possible to predict __how many agents will be hungry in period 1__? Then we could make sure that enough potatoes are stored so that no planted potatoes have to be liquidated. This is where banks come in ...
+"""
+
+# ╔═╡ 79665579-c707-48af-848d-3680c15dd380
+md"""
+### The role of a bank
+
+Agents _deposit_ their initial potatoes in the bank. The investment decision is delegated to the bank, who promises a fixed return ``(c_1, c_2)`` depending on the time of withdrawal.
+
+The bank know that the fraction ``\omega`` of people will be hungry in period 1 and ``(1-\omega)`` will be hungry in period 2. The bank only has to make sure that ``c_2 \geq c_1``, so that no "late" agent has an incentive to withdraw their deposits in period 1.
+
+The bank can maximize
+
+```math
+\begin{align}
+&\max_{x,y} U(c_1, c_2) = \omega u(c_1) + (1-\omega) u(c_2) \\
+&\begin{aligned}
+\text{such that } & x + y = 1 \\
+			      & \omega c_1 = y \\
+				  & (1-\omega) c_2 = R x 
+\end{aligned}
+\end{align}
+```
+
+It turns out, that this will lead to the welfare-maximizing outcome in this model.
+"""
+
+# ╔═╡ f68d68d6-2bc9-4298-b4aa-8d8f0059dc04
+md"""
+### Financial fragility
+
+What will happen, if a fraction ``\tilde \omega > \omega`` withdraws money in period ``t=1``? The bank will have to dig up some of its potatoes to fill the gap. This means that the payout in period two will have to be reduced (there are not enough potatoes left). As soon as the expected payout ``\tilde c_2`` becomes small enough, there will be a **bank run**. If the ``\tilde c_2 < c_1`` the incentive compatibility constraint is violated and the "late" types will start to withdraw their money.
+"""
+
+# ╔═╡ cc3a8e45-131e-4a3b-9239-babd134baacd
+md"""
+### Risk-sharing in the interbank market
+
+
+Now, let's suppose that there are **two banks**. Both banks face the same decision problem, so they will offer the same deposit contract ``(c_1, c_2)``. Agents will randomly pick one of the two banks the outcome will be the same as before.
+"""
+
 # ╔═╡ be8aecea-84da-11ec-1d53-d718f287cdf7
 md"""
 # One bank
@@ -98,7 +181,6 @@ function after_shock(r, ε, interbank_loan, (; R, γ), (; x, y, c₁, c₂))
 	ℓ = shortfall / (x * r)
 
 	c₂_new = ((1-ℓ) * x * R - interbank_loan) / (1-γ)
-
 	(; ℓ, c₂_new, Δ, shortfall)
 end
 
@@ -123,6 +205,54 @@ let
 	(; c₁, bank1, bank2)
 end
 
+# ╔═╡ d6073fad-9607-4a18-9e59-e3fbb374ce19
+function repayment(r, ε, interbank_deposit, (; R, γ), (; x, y, c₁, c₂))
+	liquid_assets  = y
+	scrap_value(ℓ_ill) = ℓ_ill * r * x
+	withdrawal(ℓ_ib)  = ℓ_ib * interbank_deposit
+	liquidity(ℓ_ill, ℓ_ib) = liquid_assets + scrap_value(ℓ_ill) + withdrawal(ℓ_ib)
+	
+	payables = (γ + ε) * c₁
+
+	if payables ≤ liquidity(0.0, 0.0)
+		ℓ_ill = 0.0
+		ℓ_ib = 0.0
+		c₁_pc = 1.0
+	elseif payables ≤ liquidity(0.0, 1.0)
+		ℓ_ill = 0.0
+		ℓ_ib = (payables - liquidity(ℓ_ill, 0.0)) / interbank_deposit
+		c₁_pc = 1.0
+	elseif payables ≤ liquidity(1.0, 1.0)
+		ℓ_ib = 1.0
+		ℓ_ill = (payables - liquidity(0.0, ℓ_ib)) / (r * x)
+		c₁_pc = 1.0
+	else
+		ℓ_ib = 1.0
+		ℓ_ill = 1.0
+		c₁_pc = liquidity(ℓ_ill, ℓ_ib) / payables
+	end
+
+	(; ℓ_ib, ℓ_ill, c₁_pc)
+end
+
+# ╔═╡ d4c5a683-00dd-4614-9e3b-d8c07c146568
+let
+	(; R, γ, y_opt) = out
+	(; x, y, c₁, c₂) = consumption(y_opt; R, γ)
+
+	r = 0.8
+	ε = 0.01
+
+	bank1 = after_shock(r, ε, 0.0, (; R, γ), (; x, y, c₁, c₂))
+	bank2 = after_shock(r, -ε, 0.0, (; R, γ), (; x, y, c₁, c₂))
+
+	interbank_deposit = 0.1
+	bank1 = repayment(r, ε, interbank_deposit, (; R, γ), (; x, y, c₁, c₂))
+	bank2 = repayment(r, -ε, interbank_deposit, (; R, γ), (; x, y, c₁, c₂))
+	
+	(; c₁, banks = DataFrame([bank1, bank2]))
+end
+
 # ╔═╡ b37f052c-ba6a-49cd-a3b9-80d95923a767
 md"""
 # Multiple banks
@@ -132,6 +262,35 @@ Let us assume now that there are two banks.
 
 # ╔═╡ 61a6dce7-101a-443e-962a-91a0d2ee7689
 
+
+# ╔═╡ 2db790eb-5345-457f-887b-753457bee1da
+#= let
+	bank = Bank(; c = 0.5, project = Project(ζ = 0.5, A = 2, a = _a, ε = _ε1), γ = Failure())
+	(; ν, c, project) = bank
+	(; a, A, ζ) = project
+	x, y = 1.7, 1.7
+
+	(; ℓ, y_pc, ν_pc) = repayment(bank, x, y)
+
+	bs_max = max(A + x + c + a, y + ν) * 1.05
+	
+	df = [
+		(type = "liabs", spec = L"senior (outside) liab $\nu$", value = ν_pc * ν),
+		(type = "liabs", spec = L"junior (interbank) liab $y$", value = y_pc * y),
+		(type = "assets", spec = L"early payoff $a - ϵ$", value = a - _ε1),
+		(type = "assets", spec = L"liquid assets $x + c$", value = x + c),
+		(type = "assets", spec = L"liquidated assets $ℓ ζ A$", value = ℓ * ζ * A),
+		(type = "assets", spec = L"z illiquid asset (project) $A$", value = (1-ℓ) * A)
+			] |> DataFrame
+	@chain df begin
+		data(_) * visual(BarPlot) * mapping(
+			:type, :value, stack = :spec, color = :spec
+		)
+		draw(; axis = (limits = (nothing, nothing, nothing, bs_max),))
+	end
+
+	#(; ℓ, y_pc, ν_pc)
+end =#
 
 # ╔═╡ 596df16c-a336-40fc-9df8-e93b321ca2e6
 md"""
@@ -1354,6 +1513,11 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╠═fee3fc5e-7a5f-436b-af17-37e05943d340
+# ╟─9562942c-990d-4e31-be1a-24e04ed01aee
+# ╟─51d69d70-1545-4096-bcbc-722bb3d9b200
+# ╟─79665579-c707-48af-848d-3680c15dd380
+# ╟─f68d68d6-2bc9-4298-b4aa-8d8f0059dc04
+# ╠═cc3a8e45-131e-4a3b-9239-babd134baacd
 # ╟─be8aecea-84da-11ec-1d53-d718f287cdf7
 # ╠═735e7f15-14a3-4cf0-950b-bd3f2c5dd776
 # ╠═97deba2a-a2d7-4726-b150-624ab72328e1
@@ -1366,8 +1530,11 @@ version = "3.5.0+0"
 # ╟─38105eb4-fd62-42be-be85-6fa1a7a802f4
 # ╠═c17e8915-5eba-45b9-a080-3ad1b834be99
 # ╠═5560e9d8-7d13-4cd3-a712-05a803298964
+# ╠═d6073fad-9607-4a18-9e59-e3fbb374ce19
+# ╠═d4c5a683-00dd-4614-9e3b-d8c07c146568
 # ╠═b37f052c-ba6a-49cd-a3b9-80d95923a767
 # ╠═61a6dce7-101a-443e-962a-91a0d2ee7689
+# ╠═2db790eb-5345-457f-887b-753457bee1da
 # ╟─596df16c-a336-40fc-9df8-e93b321ca2e6
 # ╟─deef738e-5636-4314-821a-9d6546963561
 # ╠═5f710a04-876e-4d0e-8fd2-6b56357d3f3e
