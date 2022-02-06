@@ -23,15 +23,6 @@ let
 	using StatsBase: ecdf
 end
 
-# ╔═╡ 36695e10-4ac0-411a-8d26-387961a56abe
-md"""
-!!! danger "Under construction!"
-
-	This notebook is used for the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
-
-	**The notebook will get updated for Spring 2022.**
-"""
-
 # ╔═╡ eb6a3510-6477-11eb-0e4e-33557d794e45
 md"""
 `first-networks.jl` | **Version 1.2** | *last updated: Jan 26 2022*
@@ -1618,7 +1609,6 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─36695e10-4ac0-411a-8d26-387961a56abe
 # ╟─eb6a3510-6477-11eb-0e4e-33557d794e45
 # ╟─6009f070-5ef8-11eb-340a-d9780be085ad
 # ╟─df4d9fab-13da-4df7-b51e-0689112f65fe
