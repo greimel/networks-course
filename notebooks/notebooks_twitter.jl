@@ -17,26 +17,17 @@ end
 # ╔═╡ f5450eab-0f9f-4b7f-9b80-992d3c553ba9
 HTML("<div style=\"\nposition: absolute;\nwidth: calc(100% - 30px);\nborder: 50vw solid #282936;\nborder-top: 500px solid #282936;\nborder-bottom: none;\nbox-sizing: content-box;\nleft: calc(-50vw + 15px);\ntop: -500px;\nheight: 500px;\npointer-events: none;\n\"></div>\n\n<div style=\"\nheight: 500px;\nwidth: 100%;\nbackground: #282936;\ncolor: #fff;\npadding-top: 68px;\n\">\n<span style=\"\nfont-family: Vollkorn, serif;\nfont-weight: 700;\nfont-feature-settings: 'lnum', 'pnum';\n\"> \n<p style=\"text-align: center; font-size: 2rem;\">\n<em> Assignment 1: A Twitter network </em>\n</p>\n</div>\n\n<style>\nbody {\noverflow-x: hidden;\n}\n</style>")
 
-# ╔═╡ b32a4b7a-6f4e-4cca-9183-9540fbb0a59f
-md"""
-!!! danger "Under construction!"
-
-	This notebook is used for the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
-
-	**The notebook will get updated for Spring 2022.**
-"""
+# ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
+md"
+`twitter.jl` | **Version 1.7** | *last changed: Feb 6, 2022*"
 
 # ╔═╡ 849cd5bc-617b-11eb-12eb-a7f0907fc718
 if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
 	md"""
 !!! danger "Note!"
-    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number [in this cell](#f021cb3e-6177-11eb-20f6-b5f9c69ed186).
+    **Before you submit**, please replace the [randomly generated names in this cell](#f021cb3e-6177-11eb-20f6-b5f9c69ed186) by the names of your group and put the [right group number in the cell above.](#235bcd50-6183-11eb-1272-65c61cfbf961).
 	"""
 end
-
-# ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
-md"
-`twitter.jl` | **Version 1.7** | *last changed: Feb 2, 2022*"
 
 # ╔═╡ da51e362-6176-11eb-15b2-b7bcebc2cbb6
 md"""
@@ -50,7 +41,7 @@ This network consists of twitter users that have used the keyword *$(keyword)* i
 """
 
 # ╔═╡ 41f4f6cc-6173-11eb-104f-69c755afd266
-graphplot(graph)
+graphplot(graph, node_color="orange")
 
 # ╔═╡ 39feff38-617d-11eb-0682-874b2f747ff8
 md"""
@@ -536,9 +527,8 @@ _**Computational Thinking**, a live online Julia/Pluto textbook._ [(computationa
 
 # ╔═╡ Cell order:
 # ╟─f5450eab-0f9f-4b7f-9b80-992d3c553ba9
-# ╟─b32a4b7a-6f4e-4cca-9183-9540fbb0a59f
-# ╟─849cd5bc-617b-11eb-12eb-a7f0907fc718
 # ╟─8493134e-6183-11eb-0059-6d6ecf0f17bf
+# ╟─849cd5bc-617b-11eb-12eb-a7f0907fc718
 # ╟─da51e362-6176-11eb-15b2-b7bcebc2cbb6
 # ╠═41f4f6cc-6173-11eb-104f-69c755afd266
 # ╟─39feff38-617d-11eb-0682-874b2f747ff8
