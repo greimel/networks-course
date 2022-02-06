@@ -95,18 +95,9 @@ end
 # ╔═╡ ba5e6141-9927-41e4-8688-cbbb17b8093c
 using PlutoUI
 
-# ╔═╡ b32a4b7a-6f4e-4cca-9183-9540fbb0a59f
-md"""
-!!! danger "Under construction!"
-
-	This notebook is used for the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
-
-	**The notebook will get updated for Spring 2022.**
-"""
-
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`twitter.jl` | **Version 1.7** | *last changed: Feb 2, 2022*"
+`twitter.jl` | **Version 1.7** | *last changed: Feb 6, 2022*"
 
 # ╔═╡ 39feff38-617d-11eb-0682-874b2f747ff8
 md"""
@@ -206,7 +197,7 @@ group_members = ([
 if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
 	md"""
 !!! danger "Note!"
-    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number [in this cell](#f021cb3e-6177-11eb-20f6-b5f9c69ed186).
+    **Before you submit**, please replace the [randomly generated names in this cell](#f021cb3e-6177-11eb-20f6-b5f9c69ed186) by the names of your group and put the [right group number in the cell above.](#235bcd50-6183-11eb-1272-65c61cfbf961).
 	"""
 end
 
@@ -402,7 +393,7 @@ graph = @chain edge_list begin
 end
 
 # ╔═╡ 41f4f6cc-6173-11eb-104f-69c755afd266
-graphplot(graph)
+graphplot(graph, node_color="orange")
 
 # ╔═╡ dc41336a-647f-11eb-3ca3-cb3ab8a6a024
 # some dummy analysis
@@ -532,9 +523,8 @@ _**Computational Thinking**, a live online Julia/Pluto textbook._ [(computationa
 	))
 
 # ╔═╡ Cell order:
-# ╟─b32a4b7a-6f4e-4cca-9183-9540fbb0a59f
-# ╟─849cd5bc-617b-11eb-12eb-a7f0907fc718
 # ╟─8493134e-6183-11eb-0059-6d6ecf0f17bf
+# ╟─849cd5bc-617b-11eb-12eb-a7f0907fc718
 # ╟─da51e362-6176-11eb-15b2-b7bcebc2cbb6
 # ╠═41f4f6cc-6173-11eb-104f-69c755afd266
 # ╟─39feff38-617d-11eb-0682-874b2f747ff8
