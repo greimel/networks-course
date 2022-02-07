@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.17.3
 
 using Markdown
 using InteractiveUtils
@@ -25,7 +25,7 @@ end
 
 # ╔═╡ eb6a3510-6477-11eb-0e4e-33557d794e45
 md"""
-`first-networks.jl` | **Version 1.2** | *last updated: Jan 26 2022*
+`first-networks.jl` | **Version 1.2** | *last updated: Feb 6 2022*
 """
 
 # ╔═╡ 6009f070-5ef8-11eb-340a-d9780be085ad
@@ -53,7 +53,7 @@ n_nodes = 10
 simple_network = StarGraph(n_nodes)
 
 # ╔═╡ 165ba943-b546-42d0-84b2-00391572ff8e
-graphplot(simple_network)
+graphplot(simple_network, node_size=20, node_color="orange")
 
 # ╔═╡ 0f0dc575-7660-4b32-b158-95a9a0ab31e8
 md"
@@ -94,7 +94,7 @@ Note, that you can build directed graphs using `SimpleDiGraph`. Replace `SimpleD
 
 
 # ╔═╡ d3feb786-2c69-416f-8fda-e2b4da0c0c1c
-graphplot(my_network, layout = Shell())
+graphplot(my_network, layout = Shell(),node_size=20,node_color="orange")
 
 # ╔═╡ 7057b8a6-91a9-495f-ac29-669d5652c8d0
 md"""
@@ -148,7 +148,9 @@ For illustration, let's plot the degree of each node for the `simple_network` fr
 graphplot(
 	simple_network,
 	nlabels = string.(degree(simple_network)),
-	nlabels_offset = Point(0.01, 0.05)
+	nlabels_offset = Point(0.01, 0.05),
+	node_size=20,
+	node_color="orange"
 )
 
 # ╔═╡ 7dead69c-36c1-4676-a072-3442d20ba899
@@ -237,7 +239,7 @@ giant_component(my_network)
 subgraph, node_list = induced_subgraph(my_network, giant_component(my_network))
 
 # ╔═╡ ba4ddf01-d02e-4d9f-beb7-15467a03b08a
-graphplot(subgraph)
+graphplot(subgraph, node_size=20, node_color="orange")
 
 # ╔═╡ ef85efd2-da5c-4197-831e-110aebe5a1d7
 let
@@ -317,7 +319,9 @@ edge_weights = (e.weight for e in edges(weighted_network))
 graphplot(
 	weighted_network,
 	elabels = string.(edge_weights),
-	nlabels = string.(1:3)
+	nlabels = string.(1:3),
+	node_size=20,
+	node_color="orange"
 )
 
 # ╔═╡ 99fb9532-6479-11eb-1c7b-1d385d3a5441
@@ -410,7 +414,7 @@ StatsBase = "~0.33.14"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.0"
+julia_version = "1.7.1"
 manifest_format = "2.0"
 
 [[deps.AbstractFFTs]]
