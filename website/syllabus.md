@@ -8,8 +8,9 @@
 
 | Lecture | Title | Date | Lecturer | Notebooks | Reading |
 |:-------:|:-----:|:----:|:--------:|:---------:|:-------:|
-| 1A | Network Basics 1      | Feb  7, 2022 | Cees   | [notebook](/notebooks/notebooks_first-networks) | Jackson Ch. 1 & 2 |
-| 1B | Network Basics 2      | Feb 10, 2022 | Cees   |  | Jackson Ch. 3 |
+| 1A | Network Basics 1      | Feb  7, 2022 | Cees   | [basic Julia](/notebooks/notebooks_basic-julia), [first networks](/notebooks/notebooks_first-networks)
+ | Jackson Ch. 1 & 2 |
+| 1B | Network Basics 2      | Feb 10, 2022 | Cees   | [coauthor network](/notebooks/notebooks_coauthors), [power law](/notebooks/notebooks_power_law), [exercises](/notebooks/notebooks_exercises-week1) | Jackson Ch. 3 |
 | 1C | Random Networks       | Feb 11, 2022 | Cees   |  | Jackson Ch. 4--6 & 11 |
 | 2A | Tutorial 1: Twitter   | Feb 14, 2022 | Cees   | [notebook](/notebooks/notebooks_twitter) | |
 | 2B | Learning on Networks  | Feb 17, 2022 | Cees   |  | Jackson Ch. 8 |
@@ -17,7 +18,7 @@
 | 3A | no lecture            | Feb 21, 2022 |        |                        | |
 | 3B | Financial networks 1  | Feb 24, 2022 | Fabian | [notebook](/notebooks/notebooks_banks)    | [Acemoglu et al. (2015)](https://www.aeaweb.org/articles?id=10.1257/aer.20130456) |
 | 3C | Financial networks 2  | Feb 25, 2022 | Fabian | [notebook](/notebooks/notebooks_banks)    | [Allen & Gale (2000)](https://www.jstor.org/stable/10.1086/262109) |
-| 4A | Tutorial 2: SIR       | Feb 28, 2022 | Cees   |                        | |
+| 4A | Tutorial 2: SIR       | Feb 28, 2022 | Cees   | [notebook](/notebooks/notebooks_school-closures) | |
 | 4B | Social Connectedness  | Mar  3, 2022 | Fabian | [notebook](/notebooks/notebooks_facebook) | [Bailey et al. (2018)](https://www.aeaweb.org/articles?id=10.1257/jep.32.3.259) | 
 | 4C | Network Games         | Mar  4, 2022 | Fabian | | Jackson Ch. 9 |
 | 5A | Tutorial 3: SCI       | Mar  7, 2022 | Fabian | | |
