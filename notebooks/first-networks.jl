@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.3
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -25,7 +25,7 @@ end
 
 # ╔═╡ eb6a3510-6477-11eb-0e4e-33557d794e45
 md"""
-`first-networks.jl` | **Version 1.2** | *last updated: Feb 6 2022*
+`first-networks.jl` | **Version 1.3** | *last updated: Feb 7 2022*
 """
 
 # ╔═╡ 6009f070-5ef8-11eb-340a-d9780be085ad
@@ -90,11 +90,8 @@ md"""
 Note, that you can build directed graphs using `SimpleDiGraph`. Replace `SimpleDiGraph` by `SimpleGraph` to get an undirected graph.
 """
 
-# ╔═╡ 4cff10cc-ef1b-4ce6-bf9b-7d25c975f091
-
-
 # ╔═╡ d3feb786-2c69-416f-8fda-e2b4da0c0c1c
-graphplot(my_network, layout = Shell(),node_size=20,node_color="orange")
+graphplot(my_network, layout=Shell(), node_size=20, arrow_size=20, node_color="orange")
 
 # ╔═╡ 7057b8a6-91a9-495f-ac29-669d5652c8d0
 md"""
@@ -118,7 +115,7 @@ If you want, you can try to plot this with the default layout algorithm. I stopp
 
 # ╔═╡ 07f7ed69-3e9a-4a6b-a10f-de8d09aa0db5
 graphplot(big_network,
-	layout=Shell(),
+	layout = Shell(),
 #	layout=SquareGrid(),
 	node_size = 2,
 	edge_width = 1,
@@ -239,7 +236,7 @@ giant_component(my_network)
 subgraph, node_list = induced_subgraph(my_network, giant_component(my_network))
 
 # ╔═╡ ba4ddf01-d02e-4d9f-beb7-15467a03b08a
-graphplot(subgraph, node_size=20, node_color="orange")
+graphplot(subgraph, node_size=20, arrow_size=20, node_color="orange")
 
 # ╔═╡ ef85efd2-da5c-4197-831e-110aebe5a1d7
 let
@@ -414,7 +411,7 @@ StatsBase = "~0.33.14"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.1"
+julia_version = "1.7.0"
 manifest_format = "2.0"
 
 [[deps.AbstractFFTs]]
@@ -1623,7 +1620,6 @@ version = "3.5.0+0"
 # ╟─5f1e3589-48fe-418a-958b-74b5dc0d7eff
 # ╠═b01cef89-6258-4050-9d35-7628eaf54010
 # ╟─67a2e792-647a-11eb-208e-4df018d00425
-# ╠═4cff10cc-ef1b-4ce6-bf9b-7d25c975f091
 # ╠═d3feb786-2c69-416f-8fda-e2b4da0c0c1c
 # ╟─7057b8a6-91a9-495f-ac29-669d5652c8d0
 # ╠═c28b2d55-63dc-4794-bfcd-a03172cb7f25
