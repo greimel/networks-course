@@ -35,6 +35,13 @@ md"""
 # The Co-Authorship Network of the Tinbergen Institute
 """
 
+# ╔═╡ 3367b97a-c0d8-4086-a454-2b6f5d8062e8
+md"""
+We next analyze the network of co-authorship relations between economists at the Tinbergen Institute.
+
+The next cells read the data (collection of links between co-authors) and constructs the co-author network from it.
+"""
+
 # ╔═╡ cfc9f604-6604-11eb-23bc-699617b17d7d
 md"""
 # Appendix
@@ -1477,6 +1484,7 @@ version = "3.5.0+0"
 # ╔═╡ Cell order:
 # ╟─0b79fb30-66d3-11eb-052b-89cfca69b3a6
 # ╟─7c18cc0e-66d3-11eb-3e8e-09d869dd5731
+# ╟─3367b97a-c0d8-4086-a454-2b6f5d8062e8
 # ╠═24dd4376-5e8f-11eb-02e7-f34f7c169726
 # ╠═a06b7ad2-6603-11eb-1588-195115c5f351
 # ╠═a58a3582-64a3-11eb-01e1-11f707525149
