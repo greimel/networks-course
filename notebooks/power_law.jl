@@ -4,23 +4,35 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 2ecf4ffd-d41d-494c-9fec-d681a176a8ba
-let
-	using PlutoUI: TableOfContents
-	
-	using Graphs # for analyzing networks
-	using SimpleWeightedGraphs # for handling weighted graphs
-	using MetaGraphs
-	using GraphMakie: graphplot # for plotting networks
-	using CairoMakie, Makie   # hist, scatter
-	using NetworkLayout# layout algorithms
-	using SNAPDatasets: loadsnap  # cool datasets of *big* networks
-	
-	# Basic statistical analysis
-	using Statistics: mean, std
-	using FreqTables    
-	using StatsBase: ecdf
-end
+# ╔═╡ bfe3ffc5-6347-4455-89e9-058f57caadfa
+using Graphs
+
+# ╔═╡ f2dd81c0-a197-4727-bb16-2510546da3d5
+using SimpleWeightedGraphs
+
+# ╔═╡ f84e0f50-8213-43ab-9f0f-e3c2bad9fd27
+using GraphMakie # graphplot
+
+# ╔═╡ 4cdad415-809f-46e9-b392-1840c9150ad1
+using CairoMakie # hist, lines, scatter
+
+# ╔═╡ a53cf870-42ad-43eb-93f5-c647cdd9a3cf
+using NetworkLayout # layout algorithms
+
+# ╔═╡ 20d6e00e-6e39-41f2-a21c-a052a1762733
+using SNAPDatasets: loadsnap  # cool datasets of *big* networks
+
+# ╔═╡ 4105db41-d9fa-4160-bd35-1d06231d8563
+using PlutoUI: TableOfContents
+
+# ╔═╡ c236c3fd-cfbd-4044-8229-e4bccc593336
+using Statistics: mean, std
+
+# ╔═╡ add960c4-12c3-442d-899b-faab9e5fff27
+using FreqTables: freqtable
+
+# ╔═╡ 35d41eba-71cb-40f5-afec-8b2a1f282432
+using StatsBase: ecdf
 
 # ╔═╡ eb6a3510-6477-11eb-0e4e-33557d794e45
 md"""
@@ -209,16 +221,6 @@ md"
 katz_centrality(big_network)
 # katz_centrality(big_network, 0.3)
 
-# ╔═╡ 97c76ed6-647d-11eb-3b73-b9fe79d52b4c
-md"""
-In order to get the matrix representation of the weighted graph use
-"""
-
-# ╔═╡ a0a0cc5a-647d-11eb-380a-bb5c0da3d2bd
-md"""
-This inconsistency will likely be fixed in the future. See [this issue on github](https://github.com/JuliaGraphs/LightGraphs.jl/issues/1519).
-"""
-
 # ╔═╡ 1250300d-8bd5-41c3-a36f-b59064e8fbfd
 md"""
 # Appendix
@@ -227,6 +229,31 @@ md"""
 # ╔═╡ c5cf8e17-9dcc-4f37-ace2-dbc3d92a83d4
 TableOfContents()
 
+# ╔═╡ 00a1ebe8-7d6d-47ac-bb22-d0a5b35379b1
+md"""
+## Packages
+"""
+
+# ╔═╡ 389d7396-4d8e-4b4f-b431-d152e69168b9
+md"""
+#### Graphs
+"""
+
+# ╔═╡ d6af737c-1b85-4b7b-9885-77b8ea39e051
+md"""
+#### Plotting
+"""
+
+# ╔═╡ 4723fae2-4bc5-4720-a4d9-040fb601765a
+md"""
+#### Other
+"""
+
+# ╔═╡ 7c4e745f-0626-4520-8fdc-d04927625e18
+md"""
+#### Basic statistics
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -234,8 +261,6 @@ CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 FreqTables = "da1fdf0e-e0ff-5433-a45f-9bb5ff651cb1"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
-Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 SNAPDatasets = "fc66bc1b-447b-53fc-8f09-bc9cfb0b0c10"
@@ -248,8 +273,6 @@ CairoMakie = "~0.6.6"
 FreqTables = "~0.4.5"
 GraphMakie = "~0.3.1"
 Graphs = "~1.5.1"
-Makie = "~0.15.3"
-MetaGraphs = "~0.7.1"
 NetworkLayout = "~0.4.4"
 PlutoUI = "~0.7.23"
 SNAPDatasets = "~0.2.0"
@@ -743,12 +766,6 @@ git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
 version = "1.0.0"
 
-[[deps.JLD2]]
-deps = ["DataStructures", "FileIO", "MacroTools", "Mmap", "Pkg", "Printf", "Reexport", "TranscodingStreams", "UUIDs"]
-git-tree-sha1 = "b528d68220e2aba1d2d0c0461b6f7eda8c5c1e33"
-uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-version = "0.4.20"
-
 [[deps.JLLWrappers]]
 deps = ["Preferences"]
 git-tree-sha1 = "abc9885a7ca2052a736a600f7fa66209f96506e1"
@@ -903,12 +920,6 @@ version = "0.2.1"
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
-
-[[deps.MetaGraphs]]
-deps = ["Graphs", "JLD2", "Random"]
-git-tree-sha1 = "2af69ff3c024d13bde52b34a2a7d6887d4e7b438"
-uuid = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
-version = "0.7.1"
 
 [[deps.Missings]]
 deps = ["DataAPI"]
@@ -1494,10 +1505,22 @@ version = "3.5.0+0"
 # ╠═0f3c851f-78ea-4d0f-bfcf-7a6f1df9c152
 # ╟─f609d59f-25ce-4075-a824-c96bc4e9bbe3
 # ╠═12cfd4cd-3448-405a-b8bb-ad1d73c23150
-# ╟─97c76ed6-647d-11eb-3b73-b9fe79d52b4c
-# ╟─a0a0cc5a-647d-11eb-380a-bb5c0da3d2bd
 # ╟─1250300d-8bd5-41c3-a36f-b59064e8fbfd
 # ╠═c5cf8e17-9dcc-4f37-ace2-dbc3d92a83d4
-# ╠═2ecf4ffd-d41d-494c-9fec-d681a176a8ba
+# ╟─00a1ebe8-7d6d-47ac-bb22-d0a5b35379b1
+# ╟─389d7396-4d8e-4b4f-b431-d152e69168b9
+# ╠═bfe3ffc5-6347-4455-89e9-058f57caadfa
+# ╠═f2dd81c0-a197-4727-bb16-2510546da3d5
+# ╟─d6af737c-1b85-4b7b-9885-77b8ea39e051
+# ╠═f84e0f50-8213-43ab-9f0f-e3c2bad9fd27
+# ╠═4cdad415-809f-46e9-b392-1840c9150ad1
+# ╠═a53cf870-42ad-43eb-93f5-c647cdd9a3cf
+# ╠═20d6e00e-6e39-41f2-a21c-a052a1762733
+# ╟─4723fae2-4bc5-4720-a4d9-040fb601765a
+# ╠═4105db41-d9fa-4160-bd35-1d06231d8563
+# ╟─7c4e745f-0626-4520-8fdc-d04927625e18
+# ╠═c236c3fd-cfbd-4044-8229-e4bccc593336
+# ╠═add960c4-12c3-442d-899b-faab9e5fff27
+# ╠═35d41eba-71cb-40f5-afec-8b2a1f282432
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
