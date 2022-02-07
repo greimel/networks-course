@@ -96,7 +96,7 @@ md"""
 import CSV
 
 # ╔═╡ d0d6460d-bec5-46ae-b852-45aa4064bfb3
-edge_list = CSV.read(joinpath(datadep"TI-network", "ti_netwk0711.csv"), DataFrame)
+edge_list = CSV.File(joinpath(datadep"TI-network", "ti_netwk0711.csv")) |> DataFrame
 
 # ╔═╡ 24dd4376-5e8f-11eb-02e7-f34f7c169726
 g = MetaGraph(edge_list, :from, :to)
