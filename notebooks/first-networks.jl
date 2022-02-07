@@ -110,7 +110,7 @@ md"Even though the dataset is rather small compared to others from this collecti
 
 The time it takes to plot a big network is mainly driven by the layout algorithm. That's why I choose the *boring* Shell algorithm, where all nodes are placed on a circle. This is very fast.
 
-If you want, you can try to plot this with the default layout algorithm. I stopped the computation after two minutes on my recent MacBook Pro.
+If you want, you can try to plot this with the default layout algorithm. (On my recent MacBook Pro, this took more than two minutes -- then I interrupted the execution of the cell.)
 "
 
 # ╔═╡ 07f7ed69-3e9a-4a6b-a10f-de8d09aa0db5
@@ -146,8 +146,8 @@ graphplot(
 	simple_network,
 	nlabels = string.(degree(simple_network)),
 	nlabels_offset = Point(0.01, 0.05),
-	node_size=20,
-	node_color="orange"
+	node_size = 20,
+	node_color = "orange"
 )
 
 # ╔═╡ 7dead69c-36c1-4676-a072-3442d20ba899
@@ -240,8 +240,8 @@ graphplot(subgraph, node_size=20, arrow_size=20, node_color="orange")
 
 # ╔═╡ ef85efd2-da5c-4197-831e-110aebe5a1d7
 let
-	x_vec = range(1, 250)
 	f(x) = log(1 - ecdf(degrees)(x))
+	x_vec = exp.(0:0.01:6)
 
 	lines(x_vec, f.(x_vec))
 end
