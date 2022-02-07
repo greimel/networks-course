@@ -119,7 +119,7 @@ begin
 end
 
 # ╔═╡ d0d6460d-bec5-46ae-b852-45aa4064bfb3
-edge_list = CSV.read(joinpath(datadep"TI-network", "ti_netwk0711.csv"), DataFrame)
+edge_list = CSV.File(joinpath(datadep"TI-network", "ti_netwk0711.csv")) |> DataFrame
 
 # ╔═╡ b76f0abb-01b0-4acc-8554-02c826cc9e6a
 md"""
