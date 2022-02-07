@@ -4,16 +4,6 @@
 using Markdown
 using InteractiveUtils
 
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
-        el
-    end
-end
-
 # ╔═╡ 923d97aa-1843-40a9-b3b0-1f33e94c07a4
 using Graphs
 
@@ -137,29 +127,56 @@ md"
 The next cells read the data (collection of links between co-authors) and constructs the co-author network from it.
 "
 
-# ╔═╡ 33cdd9ef-358b-42d6-8de6-18acdb5118f4
+# ╔═╡ 034cdd00-6738-11eb-286d-e94f457d0636
+md"
+Identify the components and extract the core
+"
+
+# ╔═╡ bb2b8184-6737-11eb-279e-6fc09622b8ca
+md"
+Let's calculate the top 10 centralities for the largest component in this co-authorship network in terms of degree, betweenness, eigenvector centrality and Katz-Bonancich centrality with $\alpha = 0.2$:
+"
+
+# ╔═╡ dc38df66-6782-11eb-2a76-af6fb73608b6
+md"
+Again we see that the ranking of the nodes in terms of the centrality depends strongly on the measure of centrality used. 
+"
+
+# ╔═╡ cfc9f604-6604-11eb-23bc-699617b17d7d
 md"""
-!!! danger "Note"
-    The dataset is not publicly available. Please download it from *Canvas* and load it into the notebook. You can either specify `path_to_csv` or use the **file picker** below.
+# Appendix
 """
 
-# ╔═╡ 99714c8c-b332-431e-a169-326713d5a703
-@bind file_data FilePicker()
+# ╔═╡ 3c946356-af84-4d81-aca2-cc29d1a4b60b
+md"""
+## Download data
+"""
 
-# ╔═╡ 91be26e7-2e7c-4ee8-9916-50564266d7b7
-path_to_csv = "/path/to/ti_netwk0711.csv"
+# ╔═╡ 3fee5013-2f1e-4965-90ed-d8f2c084ea79
+url_ti = "https://greimel.github.io/networks-course/assets/datasets/ti_netwk0711.csv"
 
-# ╔═╡ dff0486a-01a6-48d4-9dd8-f9e30bc99ad0
-links_list = let
-	if length(file_data["data"]) > 0
-		CSV.read(file_data["data"], DataFrame)
-	else
-		CSV.read(path_to_csv, DataFrame)
-	end
+# ╔═╡ 30bb2d4e-5dcd-4959-a1a6-dc6e1525a267
+begin
+	using DataDeps
+	ENV["DATADEPS_ALWAYS_ACCEPT"] = true
+
+	register(DataDep(
+   		"TI-network",
+		"""
+		The co-authorship network of the Tinbergen Institute 2007-2011.
+
+		Made available with the permission of Marco van der Leij.
+		""",
+		url_ti,
+		["dbb2a1d8ce1120ed274898ce76f84f7ef08f9938ad7f25f74d3b9f202dbc2137"]
+	))
 end
 
+# ╔═╡ 6e3e8170-9a6f-4d69-b5a3-7ea46bfe42b2
+edge_list = CSV.read(joinpath(datadep"TI-network", "ti_netwk0711.csv"), DataFrame)
+
 # ╔═╡ 24dd4376-5e8f-11eb-02e7-f34f7c169726
-g = MetaGraph(links_list, :from, :to)
+g = MetaGraph(edge_list, :from, :to)
 
 # ╔═╡ a06b7ad2-6603-11eb-1588-195115c5f351
 graphplot(g,
@@ -170,11 +187,6 @@ graphplot(g,
 	node_color = "orange",
 	node_attr = (strokewidth = 1, strokecolor = :black),
 )
-
-# ╔═╡ 034cdd00-6738-11eb-286d-e94f457d0636
-md"
-Identify the components and extract the core
-"
 
 # ╔═╡ a58a3582-64a3-11eb-01e1-11f707525149
 # list of components (contains a list of nodes for each component)
@@ -197,26 +209,11 @@ ti_plot = graphplot(gc,
 	node_attr = (strokewidth = 1, strokecolor = :black),
 )
 
-# ╔═╡ bb2b8184-6737-11eb-279e-6fc09622b8ca
-md"
-Let's calculate the top 10 centralities for the largest component in this co-authorship network in terms of degree, betweenness, eigenvector centrality and Katz-Bonancich centrality with $\alpha = 0.2$:
-"
-
 # ╔═╡ 3432e110-673f-11eb-2275-59c3aa7df804
 competerank(eigenvector_centrality(gc))
 
 # ╔═╡ 4c90a10c-673f-11eb-0c0e-75814d92f251
 scatter(competerank(degree_centrality(gc)), competerank(eigenvector_centrality(gc)))
-
-# ╔═╡ dc38df66-6782-11eb-2a76-af6fb73608b6
-md"
-Again we see that the ranking of the nodes in terms of the centrality depends strongly on the measure of centrality used. 
-"
-
-# ╔═╡ cfc9f604-6604-11eb-23bc-699617b17d7d
-md"""
-# Appendix
-"""
 
 # ╔═╡ 6d4ec768-649f-11eb-1093-054ab8976450
 md"""
@@ -251,6 +248,7 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GraphDataFrameBridge = "3c71623a-a715-5176-9801-629b201a4880"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
@@ -263,6 +261,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 [compat]
 CSV = "~0.10.2"
 CairoMakie = "~0.6.6"
+DataDeps = "~0.7.7"
 DataFrames = "~1.3.2"
 GraphDataFrameBridge = "~0.3.0"
 GraphMakie = "~0.3.1"
@@ -340,6 +339,12 @@ version = "1.0.1"
 
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
+
+[[deps.BinaryProvider]]
+deps = ["Libdl", "Logging", "SHA"]
+git-tree-sha1 = "ecdec412a9abc8db54c0efc5548c64dfce072058"
+uuid = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
+version = "0.5.10"
 
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -449,6 +454,12 @@ version = "4.1.1"
 git-tree-sha1 = "cc70b17275652eb47bc9e5f81635981f13cea5c8"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.9.0"
+
+[[deps.DataDeps]]
+deps = ["BinaryProvider", "HTTP", "Libdl", "Reexport", "SHA", "p7zip_jll"]
+git-tree-sha1 = "4f0e41ff461d42cfc62ff0de4f1cd44c6e6b3771"
+uuid = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
+version = "0.7.7"
 
 [[deps.DataFrames]]
 deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Reexport", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
@@ -666,6 +677,12 @@ git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
 uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
 version = "1.0.2"
 
+[[deps.HTTP]]
+deps = ["Base64", "Dates", "IniFile", "Logging", "MbedTLS", "NetworkOptions", "Sockets", "URIs"]
+git-tree-sha1 = "0fa77022fe4b511826b39c894c90daf5fce3334a"
+uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+version = "0.9.17"
+
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg"]
 git-tree-sha1 = "129acf094d168394e80ee1dc4bc06ec835e510a3"
@@ -721,6 +738,12 @@ version = "1.0.0"
 git-tree-sha1 = "f5fc07d4e706b84f72d54eedcc1c13d92fb0871c"
 uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.2"
+
+[[deps.IniFile]]
+deps = ["Test"]
+git-tree-sha1 = "098e4d2c533924c921f9f9847274f2ad89e018b8"
+uuid = "83e8ac13-25f8-5344-8a64-a9f2b223428f"
+version = "0.5.0"
 
 [[deps.InlineStrings]]
 deps = ["Parsers"]
@@ -938,6 +961,12 @@ deps = ["AbstractTrees", "Automa", "DataStructures", "FreeTypeAbstraction", "Geo
 git-tree-sha1 = "70e733037bbf02d691e78f95171a1fa08cdc6332"
 uuid = "0a4f8689-d25c-4efe-a92b-7142dfc1aa53"
 version = "0.2.1"
+
+[[deps.MbedTLS]]
+deps = ["Dates", "MbedTLS_jll", "Random", "Sockets"]
+git-tree-sha1 = "1c38e51c3d08ef2278062ebceade0e46cefc96fe"
+uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
+version = "1.0.3"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1360,6 +1389,11 @@ git-tree-sha1 = "216b95ea110b5972db65aa90f88d8d89dcb8851c"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 version = "0.9.6"
 
+[[deps.URIs]]
+git-tree-sha1 = "97bbe755a53fe859669cd907f2d96aee8d2c1355"
+uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
+version = "1.3.0"
+
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
@@ -1522,10 +1556,6 @@ version = "3.5.0+0"
 # ╟─04666c34-6737-11eb-0392-5be7f7836a5d
 # ╟─272cb7e8-6735-11eb-2093-3f7cbc28d539
 # ╟─5aa1f528-6737-11eb-3c31-6db3c14b4c95
-# ╟─33cdd9ef-358b-42d6-8de6-18acdb5118f4
-# ╟─99714c8c-b332-431e-a169-326713d5a703
-# ╠═91be26e7-2e7c-4ee8-9916-50564266d7b7
-# ╠═dff0486a-01a6-48d4-9dd8-f9e30bc99ad0
 # ╠═24dd4376-5e8f-11eb-02e7-f34f7c169726
 # ╠═a06b7ad2-6603-11eb-1588-195115c5f351
 # ╟─034cdd00-6738-11eb-286d-e94f457d0636
@@ -1538,6 +1568,10 @@ version = "3.5.0+0"
 # ╠═4c90a10c-673f-11eb-0c0e-75814d92f251
 # ╟─dc38df66-6782-11eb-2a76-af6fb73608b6
 # ╟─cfc9f604-6604-11eb-23bc-699617b17d7d
+# ╠═3c946356-af84-4d81-aca2-cc29d1a4b60b
+# ╠═3fee5013-2f1e-4965-90ed-d8f2c084ea79
+# ╠═30bb2d4e-5dcd-4959-a1a6-dc6e1525a267
+# ╠═6e3e8170-9a6f-4d69-b5a3-7ea46bfe42b2
 # ╟─6d4ec768-649f-11eb-1093-054ab8976450
 # ╟─cb02fb71-3433-4187-84fe-94c055ea5f25
 # ╠═923d97aa-1843-40a9-b3b0-1f33e94c07a4
