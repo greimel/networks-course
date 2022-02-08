@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.18.0
 
 using Markdown
 using InteractiveUtils
@@ -93,13 +93,25 @@ md"""
 """
 
 # ╔═╡ 4e95c941-331f-41f4-9b4c-8711ebb2c142
-import CSV
+import CSV, HTTP
+
+# ╔═╡ 80fea77e-e7df-41b5-a128-95d5242ec88d
+function csv_from_url(url)
+	CSV.File(HTTP.get(url).body)
+end
 
 # ╔═╡ d0d6460d-bec5-46ae-b852-45aa4064bfb3
-edge_list = CSV.File(joinpath(datadep"TI-network", "ti_netwk0711.csv")) |> DataFrame
+try
+	global edge_list = CSV.File(joinpath(datadep"TI-network", "ti_netwk0711.csv"))
+catch e
+	@info "Didn't use DataDeps.jl", e
+	global edge_list = csv_from_url(url_ti)
+finally
+	global edge_df = DataFrame(edge_list)
+end
 
 # ╔═╡ 24dd4376-5e8f-11eb-02e7-f34f7c169726
-g = MetaGraph(edge_list, :from, :to)
+g = MetaGraph(edge_df, :from, :to)
 
 # ╔═╡ a06b7ad2-6603-11eb-1588-195115c5f351
 graphplot(g,
@@ -218,7 +230,7 @@ PlutoUI = "~0.7.34"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.0"
+julia_version = "1.7.2"
 manifest_format = "2.0"
 
 [[deps.AbstractFFTs]]
@@ -1503,6 +1515,7 @@ version = "3.5.0+0"
 # ╠═438b124e-287b-4c74-bc2b-d2ee11f3f3ab
 # ╠═fc91f3b6-6839-4fb5-8de3-2238622c6325
 # ╠═d0d6460d-bec5-46ae-b852-45aa4064bfb3
+# ╠═80fea77e-e7df-41b5-a128-95d5242ec88d
 # ╟─b76f0abb-01b0-4acc-8554-02c826cc9e6a
 # ╟─610e52d3-8dba-4cf9-aada-a7ce908ed51f
 # ╠═b62ac876-40ba-4521-b0e9-7d14ecd781a8
