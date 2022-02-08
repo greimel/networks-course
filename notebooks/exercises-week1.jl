@@ -20,7 +20,7 @@ using GraphMakie
 using NetworkLayout
 
 # ╔═╡ ccf2a181-4863-4f6b-bfc9-6b59ca13cc2d
-using CSV
+using CSV, HTTP
 
 # ╔═╡ 947b6053-8739-4402-9d52-d02c03622826
 using DataFrames
@@ -180,8 +180,8 @@ end
 # ╔═╡ ee5e68e5-292d-4c89-8157-b1102a490356
 try
 	global edge_list = CSV.File(joinpath(datadep"TI-network", "ti_netwk0711.csv"))
-catch
-	@info "Didn't use DataDeps.jl"
+catch e
+	@info "Didn't use DataDeps.jl", e
 	global edge_list = csv_from_url(url_ti)
 finally
 	global edge_df = DataFrame(edge_list)
@@ -265,6 +265,7 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GraphDataFrameBridge = "3c71623a-a715-5176-9801-629b201a4880"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
@@ -278,6 +279,7 @@ DataFrames = "~1.3.2"
 GraphDataFrameBridge = "~0.3.0"
 GraphMakie = "~0.3.1"
 Graphs = "~1.5.1"
+HTTP = "~0.9.17"
 NetworkLayout = "~0.4.4"
 PlutoUI = "~0.7.34"
 StatsBase = "~0.33.14"
