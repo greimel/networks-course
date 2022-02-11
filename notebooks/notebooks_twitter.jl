@@ -253,7 +253,7 @@ function twitter_data(file_data, args...; kwargs...)
 	file_uploaded = !isnothing(file_data) 
 	
 	if file_uploaded
-		csv = CSV.File(file_data)
+		csv = CSV.File(file_data["data"])
 	else
 		filename = download_twitter_data(args...; kwargs...)
 		csv = CSV.File(filename)
