@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.18.0
 
 using Markdown
 using InteractiveUtils
@@ -97,7 +97,7 @@ using PlutoUI
 
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`twitter.jl` | **Version 1.7** | *last changed: Feb 6, 2022*"
+`twitter.jl` | **Version 1.8** | *last changed: Feb 11, 2022*"
 
 # ╔═╡ 39feff38-617d-11eb-0682-874b2f747ff8
 md"""
@@ -268,7 +268,7 @@ function twitter_data(file_data, args...; kwargs...)
 	file_uploaded = !isnothing(file_data) 
 	
 	if file_uploaded
-		csv = CSV.File(file_data)
+		csv = CSV.File(file_data["data"])
 	else
 		filename = download_twitter_data(args...; kwargs...)
 		csv = CSV.File(filename)
