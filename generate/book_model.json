@@ -37,6 +37,12 @@
                 "notebook_path": "notebooks/twitter.jl",
                 "video_id": "",
                 "preview_image_url": ""
+            },
+            {
+                "name": "Random networks",
+                "notebook_path": "notebooks/random-networks.jl",
+                "video_id": "",
+                "preview_image_url": ""
             }
         ]
     },

@@ -8,10 +8,9 @@
 
 | Lecture | Title | Date | Lecturer | Notebooks | Reading |
 |:-------:|:-----:|:----:|:--------:|:---------:|:-------:|
-| 1A | Network Basics 1      | Feb  7, 2022 | Cees   | [basic Julia](/notebooks/notebooks_basic-julia), [first networks](/notebooks/notebooks_first-networks)
- | Jackson Ch. 1 & 2 |
+| 1A | Network Basics 1      | Feb  7, 2022 | Cees   | [basic Julia](/notebooks/notebooks_basic-julia), [first networks](/notebooks/notebooks_first-networks) | Jackson Ch. 1 & 2 |
 | 1B | Network Basics 2      | Feb 10, 2022 | Cees   | [coauthor network](/notebooks/notebooks_coauthors), [power law](/notebooks/notebooks_power_law), [exercises](/notebooks/notebooks_exercises-week1) | Jackson Ch. 3 |
-| 1C | Random Networks       | Feb 11, 2022 | Cees   |  | Jackson Ch. 4--6 & 11 |
+| 1C | Random Networks       | Feb 11, 2022 | Cees   | [notebook](/notebooks/notebooks_random-networks) | Jackson Ch. 4--6 & 11 |
 | 2A | Tutorial 1: Twitter   | Feb 14, 2022 | Cees   | [notebook](/notebooks/notebooks_twitter) | |
 | 2B | Learning on Networks  | Feb 17, 2022 | Cees   |  | Jackson Ch. 8 |
 | 2C | Disease Transmission  | Feb 18, 2022 | Cees   | [notebook](/notebooks/notebooks_disease)  | |
