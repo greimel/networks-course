@@ -19,7 +19,7 @@ HTML("<div style=\"\nposition: absolute;\nwidth: calc(100% - 30px);\nborder: 50v
 
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`twitter.jl` | **Version 1.7** | *last changed: Feb 6, 2022*"
+`twitter.jl` | **Version 1.8** | *last changed: Feb 11, 2022*"
 
 # ╔═╡ 849cd5bc-617b-11eb-12eb-a7f0907fc718
 if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
