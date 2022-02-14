@@ -17,7 +17,7 @@ end
 
 # ╔═╡ 13313236-502d-46ca-bf24-a4defd6d792f
 md"""
-`school-closures.jl` | **Version 0.3** | *last updated: Feb 14, 2022*
+`school-closures.jl` | **Version 1.0** | *last updated: Feb 14, 2022*
 """
 
 # ╔═╡ 44c1c228-d864-49ab-a8bf-bd7d6bd260cd
@@ -65,7 +65,7 @@ We assume that `child`ren and `adult`s differ by their transition probabilities.
 # ╔═╡ aba35d11-a5da-4e48-ace5-d7f317198b3e
 	transitions_df = DataFrame([
 		(member_type = "child", χ = 0.0, ρ = 0.4),
- 		(member_type = "adult", χ = 0.2, ρ = 0.3)
+ 		(member_type = "adult", χ = 0.4, ρ = 0.3)
 	])
 
 # ╔═╡ bd986adf-2688-470f-8d62-9b66ed3f3d0f
@@ -197,7 +197,7 @@ out_big = let
 		leftjoin!(_, transmission_df, on = :linktype)
 	end
 	
-	Random.seed!(1234)
+	Random.seed!(1502)
 	sim = simulate(g, T, edge_df_sorted, node_df1; lockdown)
 
 	attr = (;
@@ -447,7 +447,7 @@ md"""
 """
 
 # ╔═╡ 3d85c3c6-9303-47e6-9fa6-5fc975cf750a
-setup = (; N_locations = 6, N_hh = 200, N_employers = 50)
+setup = (; N_locations = 10, N_hh = 200, N_employers = 40)
 
 # ╔═╡ 5b944c23-442c-4f02-924c-2bad76b7970d
 function member_type(member_id)
@@ -466,6 +466,7 @@ end
 
 # ╔═╡ 223a560f-fc61-4432-9409-5cb2cb3d9789
 node_df = let
+	Random.seed!(5679)
 	(; N_hh, N_locations, N_employers) = setup
 	household_size = rand(1:4, N_hh)
 
@@ -588,7 +589,7 @@ function initial_state(N, n_infected)
 end
 
 # ╔═╡ 58228108-6500-443b-8350-3d4e10f75988
-function simulate(graph, T, edge_df_sorted, node_df1, init = initial_state(nv(graph), max(nv(graph) ÷ 100, 1)); lockdown = fill(:none, T))
+function simulate(graph, T, edge_df_sorted, node_df1, init = initial_state(nv(graph), max(nv(graph) ÷ 200, 1)); lockdown = fill(:none, T))
 	mat = adjacency_matrix(graph)
 	N = nv(graph)
 	
