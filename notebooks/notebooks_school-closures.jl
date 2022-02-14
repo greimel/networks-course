@@ -7,16 +7,6 @@ using InteractiveUtils
 # ╔═╡ f5450eab-0f9f-4b7f-9b80-992d3c553ba9
 HTML("<div style=\"\nposition: absolute;\nwidth: calc(100% - 30px);\nborder: 50vw solid #282936;\nborder-top: 500px solid #282936;\nborder-bottom: none;\nbox-sizing: content-box;\nleft: calc(-50vw + 15px);\ntop: -500px;\nheight: 500px;\npointer-events: none;\n\"></div>\n\n<div style=\"\nheight: 500px;\nwidth: 100%;\nbackground: #282936;\ncolor: #fff;\npadding-top: 68px;\n\">\n<span style=\"\nfont-family: Vollkorn, serif;\nfont-weight: 700;\nfont-feature-settings: 'lnum', 'pnum';\n\"> \n<p style=\"text-align: center; font-size: 2rem;\">\n<em> Assignment 2: School closures </em>\n</p>\n</div>\n\n<style>\nbody {\noverflow-x: hidden;\n}\n</style>")
 
-# ╔═╡ 12cc3372-8400-4b77-abaf-af92698684b3
-md"""
-!!! danger "Under construction!"
-
-	This notebook is used for the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
-
-	**The notebook will get updated for Spring 2022.**
-
-"""
-
 # ╔═╡ d7ab1943-d456-400d-b4c3-dda9f6c1fe26
 if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
 	md"""
@@ -27,13 +17,16 @@ end
 
 # ╔═╡ 13313236-502d-46ca-bf24-a4defd6d792f
 md"""
-`school-closures.jl` | **Version 0.1** | *last updated: Feb 2, 2022*
+`school-closures.jl` | **Version 0.3** | *last updated: Feb 14, 2022*
 """
 
 # ╔═╡ 44c1c228-d864-49ab-a8bf-bd7d6bd260cd
 md"""
 # Assignment 2: School Closures in the Covid-19 Pandemic
+"""
 
+# ╔═╡ ec2e4346-1246-40cc-83e4-bb8c7e76bdd0
+md"""
 *submitted by* **$members** (*group $(group_number)*)
 """
 
@@ -66,13 +59,13 @@ fg
 
 # ╔═╡ edbf2ae4-237d-4755-9419-b98b8ef52fc2
 md"""
-We assume that `child`ren and `adult`s differ by their transition probabilities. Children do not get hospitalized (``\chi = 0``) and don't die (``\delta = 0``). (All these parameters are made up.)
+We assume that `child`ren and `adult`s differ by their transition probabilities. Children do not get hospitalized (``\chi = 0``), while their recovery rates are the same (both ``\rho``). (All these parameters are made up.)
 """
 
 # ╔═╡ aba35d11-a5da-4e48-ace5-d7f317198b3e
 	transitions_df = DataFrame([
-		(member_type = "child", δ = 0.0, χ = 0.0, ρ = 0.2),
- 		(member_type = "adult", δ = 0.5, χ = 0.5, ρ = 0.2)
+		(member_type = "child", χ = 0.0, ρ = 0.4),
+ 		(member_type = "adult", χ = 0.2, ρ = 0.3)
 	])
 
 # ╔═╡ bd986adf-2688-470f-8d62-9b66ed3f3d0f
@@ -82,9 +75,9 @@ We also make assumptions about the transmission probabilities within families, w
 
 # ╔═╡ 0aa33258-a8c2-403f-b466-95dbaee2cc75
 transmission_df = DataFrame([
-		(linktype = :family, p = 0.5),
- 		(linktype = :school, p = 0.5),
- 		(linktype = :work,   p = 0.5)
+		(linktype = :family, p = 0.3),
+ 		(linktype = :school, p = 0.3),
+ 		(linktype = :work,   p = 0.3)
 	])
 
 # ╔═╡ a35ae69d-6c82-4ac0-bbd9-0f443747b3e6
@@ -97,10 +90,10 @@ md"""
 # ╔═╡ f1664b58-75c1-4a79-9540-85303ed3a42f
 begin
 	abstract type State end
-	struct S <: State end
-	struct I <: State end
-	struct H <: State end # hospitalized
-	struct R <: State end
+	struct S <: State end # susceptible
+	struct I <: State end # infected
+#	struct H <: State end # hospitalized
+	struct R <: State end # recovered
 end
 
 # ╔═╡ d6beb034-5171-46a2-a05a-2133f58e54e9
@@ -108,7 +101,7 @@ if @isdefined H
 	if hasproperty(States.b.b, :b)
 		correct(md"You've successfully defined type `H`.")
 	else
-		almost(md"You've successfully defined `H`. But you need to do it in the right place. Go **The SIR Model** and uncomment the line that defines `H`.")
+		almost(md"You've successfully defined `H`. But you need to do it in the right place. Uncomment the line that defines `H`.")
 	end
 else
 	hint(md"Uncomment the line that defines `H`.")
@@ -116,36 +109,38 @@ end
 
 # ╔═╡ e73f7e86-eaac-493c-b34d-8f08ba5d3c6a
 md"""
-👉 Add a transition rule for `H`.
+👉 Add a transition rule for `H`. You may assume that recovery rates are the same for those in and outside of hospital.
 """
 
 # ╔═╡ 5bfce3c7-5fe4-43e8-9987-3a7764be243c
-function transition(::H, node, args...; kwargs...)
-	(; δ, ρ) = node
-
-	x = rand()
-	if x < ρ + δ # recover or die
-		R()
-	else
-		H()
-	end
-end
-
-# ╔═╡ 444ecb80-138e-43ef-8feb-4a8b1b40e4eb
-#try
-#	transition(H())
-#	if transition(H()) == H()
-#		correct(md"You've successfully specified the transition rule for `D`.")
+#function transition(::H, node, args...; kwargs...)
+#	(; ρ) = node
+#
+#	x = rand()
+#	if ... 
+#		...
 #	else
-#		keey_working(md"The transition rule for `D` doesn't seem to work correctly")
-#	end
-#catch e
-#	if e isa MethodError
-#		keep_working(md"The transition rule for `D` is not yet defined.")
-#	else
-#		keep_working(md"The transition rule for `D` doesn't seem to work correctly")
+#		...	
 #	end
 #end
+
+# ╔═╡ 444ecb80-138e-43ef-8feb-4a8b1b40e4eb
+try
+	test0 = transition(H(), (ρ = 0,)) == H()
+	test1 = transition(H(), (ρ = 1,)) == R()
+	
+	if test0 && test1
+		correct(md"You've successfully specified a transition rule for `H`.")
+	else
+		keep_working(md"The transition rule for `H` doesn't seem to work correctly")
+	end
+catch e
+	if e isa MethodError
+		keep_working(md"The transition rule for `H` is not yet defined.")
+	else
+		keep_working(md"The transition rule for `H` doesn't seem to work correctly")
+	end
+end
 
 # ╔═╡ bd828ca7-5737-400e-be9e-6e23b07c02ad
 hint(md"You can look at the section **Define the transitions** for inspiration.")
@@ -158,12 +153,12 @@ md"""
 # ╔═╡ 45c718bb-ecfe-4107-bd84-1244184dc62a
 begin
 	try
-		test1 = transition(I(), (δ = 1, ρ = 0), 0) == D()
-		test2 = transition(I(), (δ = 0, ρ = 1), 0) == R()
-		test3 = transition(I(), (δ = 0, ρ = 0), 0) == I()
+		test1 = transition(I(), (χ = 1, ρ = 0), 0) == H()
+		test2 = transition(I(), (χ = 0, ρ = 1), 0) == R()
+		test3 = transition(I(), (χ = 0, ρ = 0), 0) == I()
 	
 		if test1 && test2 && test3
-			correct(md"It seems that you've successfully adjusted the transition rule for `I`. *(Note: the other rules are not checked)*")
+			correct(md"It seems that you've adjusted the transition rule for `I`. *(Note: the other rules are not checked)*")
 		else
 			keep_working()
 		end
@@ -179,9 +174,9 @@ Great! You can now have a look how the simulations from the lecture have automat
 
 # ╔═╡ 5fe6969a-2453-4ac9-bf15-c2d9310115f1
 md"""
-### Task 2: Flatten the curve (of `H`ospitalized)
+### Task 2: Flatten the curve of `H`ospitalized (4 points)
 
-bla bla bla
+We consider a scenario from the start of a new wave with a small numer of infections at time zero. Without taking any measures the model predicts that the total number of people who will be hospitalized will exceed the maximum capacity. In order to prevent this from happening, your options are to announce a lockdown of either schools or workplaces on a pre-specified set of future days from day 0. Lockdown days of schools are economically more costly than lockdown days of workplaces. Therefore, it is important to obtain insights on how effective school lockdowns are in terms of preventing the spreading of Covid-19. In this assignment you will use simulation of the spreading of Covid-19 under various scenarios to extract those insights, and subsequently formulate a motivated lockdown policy based on these insights.
 """
 
 # ╔═╡ 886ae5b6-f052-4082-bfa1-c8a23f4c880a
@@ -192,17 +187,6 @@ T = 30
 
 # ╔═╡ cba2a2cb-c2d5-4cb5-a3d1-a2a5d02bb336
 out_big = let
-	
-	
-	graph = g
-
-	lockdown = fill(Symbol[], T)
-	for t in (1:4) .+ 1
-		#lockdown[t] = [:work]
-	end
-	#lockdown[20] = [:school]
-
-	@assert all(lockdown .⊆ Ref([:school, :work, :family]))
 
 	hospital_capacity = 0.1
 	
@@ -214,15 +198,16 @@ out_big = let
 	end
 	
 	Random.seed!(1234)
-	sim = simulate(graph, T, edge_df_sorted, node_df1; lockdown)
+	sim = simulate(g, T, edge_df_sorted, node_df1; lockdown)
 
-	attr = (
+	attr = (;
+		layout,
 		node_attr  = (; strokewidth = 0.1),
 		edge_width = 0.5,
 		edge_color = (:black, 0.3),
 	)
 	
-	out_big = sir_plot(sim, graph; hline = hospital_capacity, attr...)
+	out_big = sir_plot(sim, g; hline = hospital_capacity, attr...)
 end
 
 # ╔═╡ 9fadd61c-2532-4ad5-9c60-f17c18821624
@@ -230,30 +215,37 @@ md"""
 
 Now it's your turn.
 
-👉 Decide which when you want to lockdown schools and adjust the cell above. Make sure you close schools not longer than **5??** days.
+👉 Decide when you want to lockdown schools and adjust the cell above. Make sure you close schools no longer than **5** days in total.
 """
 
 # ╔═╡ 80350d9e-ace6-4970-8861-0e767030f3d6
 begin
 	lockdown = fill(Symbol[], T)
-	for t in (1:4) .+ 1
-		#lockdown[t] = [:work]
+	for t in (1:5) .+ 2
+#		lockdown[t] = [:school]
 	end
-	#lockdown[20] = [:school]
+
+	lockdown
 end
 
 # ╔═╡ 14991792-4dee-472a-a331-23be55edc92c
 @assert all(lockdown .⊆ Ref([:school, :work, :family]))
 
+# ╔═╡ 6dda8f0a-64d4-47e2-aae7-65d2d48deac7
+md"""
+
+👉 Next include the possibility to lock down workplaces as well. Can the number of school lockdown days be reduced or even avoided at all?
+"""
+
 # ╔═╡ 3945ab48-4d4a-41d1-80bb-75038aab4f7e
 md"""
-Now write a short essay describing your choice.
+👉 Now write a short report describing your choice.
 
-👉 Describe how you selected the lockdown period.
++ Describe how you selected the lockdown period.
 
-👉 Why are hospitalizations decreasing even though children never get hospitalized?
++ Why are hospitalizations decreasing even though children never get hospitalized?
 
-👉 Be accurate but concise. Aim at no more than 500 words.
++ Be accurate but concise. Aim at no more than 500 words.
 """
 
 # ╔═╡ c3537e04-800f-4fa8-9320-a64db4391287
@@ -281,13 +273,15 @@ end
 
 # ╔═╡ c140b224-c10d-437b-85c0-2755c8d72970
 md"""
-### Task 3: Discussing real-world policies
+### Task 3: Main insights and reflection on the model and method used (3 points)
 
-Now write a short essay describing ...
+👉 Finally write a short essay describing the main findings based on the model
 
-👉 Describe ...
++ Describe what insights you obtained from the model.
 
-👉 Be accurate but concise. Aim at no more than 500 words.
++ Explain the limitations of the model and the simulation setup. 
+
++ Be accurate but concise. Aim at no more than 500 words.
 """
 
 # ╔═╡ 5b53a9c1-d176-4740-95e8-98283ad57cf9
@@ -336,12 +330,12 @@ md"
 
 # ╔═╡ ca1610dc-653a-4df9-bfc7-0366576ded08
 function transition(::I, node, args...; kwargs...)
-	(; δ, ρ, χ) = node
+	(; ρ, χ) = node
 	x = rand()
 	if x < ρ # recover
 		R()
-	elseif x < (ρ + χ) # hospitalized
-		H()
+# 	elseif ...
+# 		...
 	else # infected
 		I()
 	end
@@ -408,7 +402,6 @@ end
 
 # ╔═╡ 56ca0088-97e0-493b-95fb-88bc35610d6d
 function get_edge_fast(i, j, edge_df_sorted)
-	#let i = 1, j = 161
 	src, dst = minmax(i, j)
 
 	i_src_from = findfirst(==(src), edge_df_sorted.src)
@@ -430,18 +423,17 @@ function get_edge_fast(i, j, edge_df_sorted)
 	end
 
 	src_rows[i_row, :]
-	
 end
 
 # ╔═╡ 891e5c60-468a-44c7-9b5a-609dcdb02cc2
 let
-	edge_df_sorted_xx = sort(edge_df, [:src, :dst])
+	#edge_df_sorted_xx = sort(edge_df, [:src, :dst])
 	
-	i, j = 478, 479 #1, 161
-	t1 = @elapsed get_edge(i, j, edge_df_sorted_xx)
-	t2 = @elapsed get_edge_fast(i, j, edge_df_sorted_xx)
+	#i, j = 478, 479 #1, 161
+	#t1 = @elapsed get_edge(i, j, edge_df_sorted_xx)
+	#t2 = @elapsed get_edge_fast(i, j, edge_df_sorted_xx)
 
-	t2 / t1 - 1
+	#t2 / t1 - 1
 end
 
 # ╔═╡ 08abc77a-814a-11ec-3d54-439126a38a85
@@ -544,13 +536,22 @@ begin
 	end
 end
 
+# ╔═╡ dc8b82e1-5e15-4832-a460-a2ce0da2ffc1
+begin
+	positions = Spring()(g)
+	layout = _ -> positions
+end
+
+# ╔═╡ 71cf8b81-f7d2-43cb-97e8-b5e7928c4120
+using NetworkLayout
+
 # ╔═╡ 065c0b3c-d738-4581-b9f8-6446a20d0c0a
 md"""
 ## Plotting the network
 """
 
 # ╔═╡ 36edee11-497d-415c-b589-8a333573bb8c
-fg = graphplot(g; 
+fg = graphplot(g; layout,
 	node_df.node_color, node_size = 7,
 	edge_width = 0.3,# transmission_probability.(edge_df.p, edge_df.linktype, lockdown),
 	edge_color = (:black, 0.5)
@@ -855,6 +856,7 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
+NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
@@ -871,6 +873,7 @@ DataFrames = "~1.3.2"
 GraphMakie = "~0.3.1"
 Graphs = "~1.5.1"
 MarkdownLiteral = "~0.1.1"
+NetworkLayout = "~0.4.4"
 PlutoUI = "~0.7.32"
 SimpleWeightedGraphs = "~1.2.1"
 """
@@ -879,7 +882,7 @@ SimpleWeightedGraphs = "~1.2.1"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.0"
+julia_version = "1.7.2"
 manifest_format = "2.0"
 
 [[deps.AbstractFFTs]]
@@ -2141,40 +2144,41 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╟─f5450eab-0f9f-4b7f-9b80-992d3c553ba9
-# ╟─12cc3372-8400-4b77-abaf-af92698684b3
 # ╟─d7ab1943-d456-400d-b4c3-dda9f6c1fe26
 # ╟─13313236-502d-46ca-bf24-a4defd6d792f
 # ╟─44c1c228-d864-49ab-a8bf-bd7d6bd260cd
+# ╟─ec2e4346-1246-40cc-83e4-bb8c7e76bdd0
 # ╟─f45eb218-92d8-4bfe-87f6-e128c17db7c2
 # ╟─cd6c5481-ccc7-47d8-acda-4e90fc98b10e
 # ╟─14989685-a257-40c5-8e24-79fff0d1b825
 # ╟─eaf1fd63-5977-4b99-9c11-ec301fba8078
 # ╟─edbf2ae4-237d-4755-9419-b98b8ef52fc2
-# ╟─aba35d11-a5da-4e48-ace5-d7f317198b3e
+# ╠═aba35d11-a5da-4e48-ace5-d7f317198b3e
 # ╟─bd986adf-2688-470f-8d62-9b66ed3f3d0f
-# ╠═0aa33258-a8c2-403f-b466-95dbaee2cc75
+# ╟─0aa33258-a8c2-403f-b466-95dbaee2cc75
 # ╟─a35ae69d-6c82-4ac0-bbd9-0f443747b3e6
 # ╠═f1664b58-75c1-4a79-9540-85303ed3a42f
 # ╟─d6beb034-5171-46a2-a05a-2133f58e54e9
 # ╟─e73f7e86-eaac-493c-b34d-8f08ba5d3c6a
 # ╠═5bfce3c7-5fe4-43e8-9987-3a7764be243c
-# ╠═444ecb80-138e-43ef-8feb-4a8b1b40e4eb
+# ╟─444ecb80-138e-43ef-8feb-4a8b1b40e4eb
 # ╟─bd828ca7-5737-400e-be9e-6e23b07c02ad
 # ╟─edb73532-2868-452c-afe2-e1fce60abb77
 # ╟─45c718bb-ecfe-4107-bd84-1244184dc62a
 # ╟─2e2f0ad7-d3c7-4a91-abe7-817f399783c3
-# ╠═5fe6969a-2453-4ac9-bf15-c2d9310115f1
+# ╟─5fe6969a-2453-4ac9-bf15-c2d9310115f1
 # ╠═886ae5b6-f052-4082-bfa1-c8a23f4c880a
 # ╠═fd9cdd83-d12c-49d6-9521-02b15f692f70
 # ╠═cba2a2cb-c2d5-4cb5-a3d1-a2a5d02bb336
-# ╠═9fadd61c-2532-4ad5-9c60-f17c18821624
+# ╟─9fadd61c-2532-4ad5-9c60-f17c18821624
 # ╠═80350d9e-ace6-4970-8861-0e767030f3d6
 # ╠═14991792-4dee-472a-a331-23be55edc92c
+# ╟─6dda8f0a-64d4-47e2-aae7-65d2d48deac7
 # ╟─3945ab48-4d4a-41d1-80bb-75038aab4f7e
-# ╠═c3537e04-800f-4fa8-9320-a64db4391287
+# ╟─c3537e04-800f-4fa8-9320-a64db4391287
 # ╟─1bc07c3c-f71e-444a-9c22-b447295d5d99
 # ╟─808fa60d-79a2-47e4-95d1-98a74b87ffc7
-# ╠═c140b224-c10d-437b-85c0-2755c8d72970
+# ╟─c140b224-c10d-437b-85c0-2755c8d72970
 # ╠═5b53a9c1-d176-4740-95e8-98283ad57cf9
 # ╟─e61f91d5-80e6-4dc8-814f-c4c038af284f
 # ╟─064bfd13-944a-4d3b-8075-cf5d92018878
@@ -2199,6 +2203,8 @@ version = "3.5.0+0"
 # ╠═223a560f-fc61-4432-9409-5cb2cb3d9789
 # ╟─bf5ca480-d913-4b21-a85b-b1b2c0b4c2f9
 # ╠═0da25924-c89b-4a1b-b63e-7cb2d17fcbc3
+# ╠═dc8b82e1-5e15-4832-a460-a2ce0da2ffc1
+# ╠═71cf8b81-f7d2-43cb-97e8-b5e7928c4120
 # ╟─065c0b3c-d738-4581-b9f8-6446a20d0c0a
 # ╠═36edee11-497d-415c-b589-8a333573bb8c
 # ╟─3cd01849-fabd-4e97-841a-2eea57c93167
