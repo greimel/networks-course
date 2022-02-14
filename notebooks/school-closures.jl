@@ -1,8 +1,11 @@
 ### A Pluto.jl notebook ###
-# v0.17.3
+# v0.18.0
 
 using Markdown
 using InteractiveUtils
+
+# ╔═╡ 71cf8b81-f7d2-43cb-97e8-b5e7928c4120
+using NetworkLayout
 
 # ╔═╡ bff18f1e-9ec9-4f52-b800-7ecd631f39fa
 using Graphs, SimpleWeightedGraphs
@@ -36,7 +39,12 @@ using PlutoUI
 
 # ╔═╡ 13313236-502d-46ca-bf24-a4defd6d792f
 md"""
-`school-closures.jl` | **Version 0.2** | *last updated: Feb 14, 2022*
+`school-closures.jl` | **Version 0.3** | *last updated: Feb 14, 2022*
+"""
+
+# ╔═╡ 44c1c228-d864-49ab-a8bf-bd7d6bd260cd
+md"""
+# Assignment 2: School Closures in the Covid-19 Pandemic
 """
 
 # ╔═╡ f45eb218-92d8-4bfe-87f6-e128c17db7c2
@@ -48,7 +56,7 @@ We construct a network of adults and children, where children are linked via sch
 
 # ╔═╡ edbf2ae4-237d-4755-9419-b98b8ef52fc2
 md"""
-We assume that `child`ren and `adult`s differ by their transition probabilities. Children do not get hospitalized (``\chi = 0``), while their recovery rates are the same (both ``ρ``). (All these parameters are made up.)
+We assume that `child`ren and `adult`s differ by their transition probabilities. Children do not get hospitalized (``\chi = 0``), while their recovery rates are the same (both ``\rho``). (All these parameters are made up.)
 """
 
 # ╔═╡ aba35d11-a5da-4e48-ace5-d7f317198b3e
@@ -95,10 +103,10 @@ md"""
 #	(; ρ) = node
 #
 #	x = rand()
-#	if [your code here]  # recover 
-#		R()
-#	else # stay hospitalized
-#		H()
+#	if ... 
+#		...
+#	else
+#		...	
 #	end
 #end
 
@@ -133,10 +141,11 @@ Now it's your turn.
 # ╔═╡ 80350d9e-ace6-4970-8861-0e767030f3d6
 begin
 	lockdown = fill(Symbol[], T)
-	for t in (1:4) .+ 1
-		#lockdown[t] = [:work]
+	for t in (1:5) .+ 2
+#		lockdown[t] = [:school]
 	end
-	#lockdown[20] = [:school]
+
+	lockdown
 end
 
 # ╔═╡ 14991792-4dee-472a-a331-23be55edc92c
@@ -234,8 +243,8 @@ function transition(::I, node, args...; kwargs...)
 	x = rand()
 	if x < ρ # recover
 		R()
-	elseif x < (ρ + χ) # hospitalized
-		H()
+# 	elseif ...
+# 		...
 	else # infected
 		I()
 	end
@@ -257,7 +266,6 @@ end
 
 # ╔═╡ 56ca0088-97e0-493b-95fb-88bc35610d6d
 function get_edge_fast(i, j, edge_df_sorted)
-	#let i = 1, j = 161
 	src, dst = minmax(i, j)
 
 	i_src_from = findfirst(==(src), edge_df_sorted.src)
@@ -279,7 +287,6 @@ function get_edge_fast(i, j, edge_df_sorted)
 	end
 
 	src_rows[i_row, :]
-	
 end
 
 # ╔═╡ baad47a0-398e-4f9f-9af6-7686acdc25e4
@@ -325,6 +332,17 @@ function iterate(states, adjacency_matrix, par, lockdown)
 	iterate!(states_new, states, adjacency_matrix, par, lockdown)
 	
 	states_new
+end
+
+# ╔═╡ 891e5c60-468a-44c7-9b5a-609dcdb02cc2
+let
+	#edge_df_sorted_xx = sort(edge_df, [:src, :dst])
+	
+	#i, j = 478, 479 #1, 161
+	#t1 = @elapsed get_edge(i, j, edge_df_sorted_xx)
+	#t2 = @elapsed get_edge_fast(i, j, edge_df_sorted_xx)
+
+	#t2 / t1 - 1
 end
 
 # ╔═╡ 08abc77a-814a-11ec-3d54-439126a38a85
@@ -444,15 +462,10 @@ begin
 	end
 end
 
-# ╔═╡ 891e5c60-468a-44c7-9b5a-609dcdb02cc2
-let
-	edge_df_sorted_xx = sort(edge_df, [:src, :dst])
-	
-	i, j = 478, 479 #1, 161
-	t1 = @elapsed get_edge(i, j, edge_df_sorted_xx)
-	t2 = @elapsed get_edge_fast(i, j, edge_df_sorted_xx)
-
-	t2 / t1 - 1
+# ╔═╡ dc8b82e1-5e15-4832-a460-a2ce0da2ffc1
+begin
+	positions = Spring()(g)
+	layout = _ -> positions
 end
 
 # ╔═╡ 065c0b3c-d738-4581-b9f8-6446a20d0c0a
@@ -461,7 +474,7 @@ md"""
 """
 
 # ╔═╡ 36edee11-497d-415c-b589-8a333573bb8c
-fg = graphplot(g; 
+fg = graphplot(g; layout,
 	node_df.node_color, node_size = 7,
 	edge_width = 0.3,# transmission_probability.(edge_df.p, edge_df.linktype, lockdown),
 	edge_color = (:black, 0.5)
@@ -678,17 +691,6 @@ end
 
 # ╔═╡ cba2a2cb-c2d5-4cb5-a3d1-a2a5d02bb336
 out_big = let
-	
-	
-	graph = g
-
-	lockdown = fill(Symbol[], T)
-	for t in (1:2) .+ 1
-		lockdown[t] = [:school]
-	end
-	#lockdown[20] = [:school]
-
-	@assert all(lockdown .⊆ Ref([:school, :work, :family]))
 
 	hospital_capacity = 0.1
 	
@@ -700,15 +702,16 @@ out_big = let
 	end
 	
 	Random.seed!(1234)
-	sim = simulate(graph, T, edge_df_sorted, node_df1; lockdown)
+	sim = simulate(g, T, edge_df_sorted, node_df1; lockdown)
 
-	attr = (
+	attr = (;
+		layout,
 		node_attr  = (; strokewidth = 0.1),
 		edge_width = 0.5,
 		edge_color = (:black, 0.3),
 	)
 	
-	out_big = sir_plot(sim, graph; hline = hospital_capacity, attr...)
+	out_big = sir_plot(sim, g; hline = hospital_capacity, attr...)
 end
 
 # ╔═╡ 886ae5b6-f052-4082-bfa1-c8a23f4c880a
@@ -735,10 +738,8 @@ members = let
 	join(names, ", ", " & ")
 end
 
-# ╔═╡ 44c1c228-d864-49ab-a8bf-bd7d6bd260cd
+# ╔═╡ ec2e4346-1246-40cc-83e4-bb8c7e76bdd0
 md"""
-# Assignment 2: School Closures in the Covid-19 Pandemic
-
 *submitted by* **$members** (*group $(group_number)*)
 """
 
@@ -770,8 +771,10 @@ end
 
 # ╔═╡ 444ecb80-138e-43ef-8feb-4a8b1b40e4eb
 try
-	transition(H())
-	if transition(H()) == H() 
+	test0 = transition(H(), (ρ = 0,)) == H()
+	test1 = transition(H(), (ρ = 1,)) == R()
+	
+	if test0 && test1
 		correct(md"You've successfully specified a transition rule for `H`.")
 	else
 		keep_working(md"The transition rule for `H` doesn't seem to work correctly")
@@ -790,12 +793,12 @@ hint(md"You can look at the section **Define the transitions** for inspiration."
 # ╔═╡ 45c718bb-ecfe-4107-bd84-1244184dc62a
 begin
 	try
-		test1 = transition(I(), (δ = 1, ρ = 0), 0) == D()
-		test2 = transition(I(), (δ = 0, ρ = 1), 0) == R()
-		test3 = transition(I(), (δ = 0, ρ = 0), 0) == I()
+		test1 = transition(I(), (χ = 1, ρ = 0), 0) == H()
+		test2 = transition(I(), (χ = 0, ρ = 1), 0) == R()
+		test3 = transition(I(), (χ = 0, ρ = 0), 0) == I()
 	
 		if test1 && test2 && test3
-			correct(md"It seems that you've successfully adjusted the transition rule for `I`. *(Note: the other rules are not checked)*")
+			correct(md"It seems that you've adjusted the transition rule for `I`. *(Note: the other rules are not checked)*")
 		else
 			keep_working()
 		end
@@ -850,6 +853,7 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
+NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
@@ -866,6 +870,7 @@ DataFrames = "~1.3.2"
 GraphMakie = "~0.3.1"
 Graphs = "~1.5.1"
 MarkdownLiteral = "~0.1.1"
+NetworkLayout = "~0.4.4"
 PlutoUI = "~0.7.32"
 SimpleWeightedGraphs = "~1.2.1"
 """
@@ -2138,12 +2143,13 @@ version = "3.5.0+0"
 # ╟─d7ab1943-d456-400d-b4c3-dda9f6c1fe26
 # ╟─13313236-502d-46ca-bf24-a4defd6d792f
 # ╟─44c1c228-d864-49ab-a8bf-bd7d6bd260cd
+# ╟─ec2e4346-1246-40cc-83e4-bb8c7e76bdd0
 # ╟─f45eb218-92d8-4bfe-87f6-e128c17db7c2
 # ╟─cd6c5481-ccc7-47d8-acda-4e90fc98b10e
 # ╟─14989685-a257-40c5-8e24-79fff0d1b825
 # ╟─eaf1fd63-5977-4b99-9c11-ec301fba8078
-# ╠═edbf2ae4-237d-4755-9419-b98b8ef52fc2
-# ╟─aba35d11-a5da-4e48-ace5-d7f317198b3e
+# ╟─edbf2ae4-237d-4755-9419-b98b8ef52fc2
+# ╠═aba35d11-a5da-4e48-ace5-d7f317198b3e
 # ╟─bd986adf-2688-470f-8d62-9b66ed3f3d0f
 # ╟─0aa33258-a8c2-403f-b466-95dbaee2cc75
 # ╟─a35ae69d-6c82-4ac0-bbd9-0f443747b3e6
@@ -2193,6 +2199,8 @@ version = "3.5.0+0"
 # ╠═223a560f-fc61-4432-9409-5cb2cb3d9789
 # ╟─bf5ca480-d913-4b21-a85b-b1b2c0b4c2f9
 # ╠═0da25924-c89b-4a1b-b63e-7cb2d17fcbc3
+# ╠═dc8b82e1-5e15-4832-a460-a2ce0da2ffc1
+# ╠═71cf8b81-f7d2-43cb-97e8-b5e7928c4120
 # ╟─065c0b3c-d738-4581-b9f8-6446a20d0c0a
 # ╠═36edee11-497d-415c-b589-8a333573bb8c
 # ╟─3cd01849-fabd-4e97-841a-2eea57c93167
