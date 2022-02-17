@@ -1,8 +1,30 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.18.0
 
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
+# ╔═╡ ceb4712b-98f6-407d-99e9-5bf3128749af
+using Optim
+
+# ╔═╡ 3b40bb50-ae8d-4a27-aff5-0a18ac57cf46
+using PlutoUI: Slider
+
+# ╔═╡ 67a8d3bc-8dd2-4f9e-b20c-bfb00323613e
+using LineSearches
+
+# ╔═╡ ba378958-3da4-4d6c-9987-72f2519f510f
+using ForwardDiff
 
 # ╔═╡ b64c7a0f-f053-4e3f-a444-e4d4b6c1c109
 using Roots
@@ -30,7 +52,7 @@ md"""
 ### A simple world
 We are in a simple world. At period ``t=0`` there are ``100m`` people that each owns a kilogram of potatoes (the _initial endowment_ is 1).
 
-##### Preferences
+#### Preferences
 At this moment ``(t=0)``, nobody is hungry. Everybody knows that they will be hungry _at some point_. But they don't know _when_ -- either in period ``1`` or period ``2``.
 
 The utility of an agent is 
@@ -41,31 +63,136 @@ The utility of an agent is
 \end{cases}
 ```
 
+#### Investment opportunities
+
+There are two options. Either store the potatoes or **plant** potatoes to grow more of them. **Storage** has a gross return of ``1`` (no gain, no loss) and the _stored potatoes_ are a **liquid** asset. They can be eaten in either of the two periods. Each kilogram of **planted** potatos yield ``1.5`` kilograms of potatoes in period 2. (The gross return is ``R=1.5`` if _held to maturity_.) Planted potatoes are an **illiquid asset**. If you dig up the planted potatoes in the intermediate period they will have lost their quality and not be very enjoyable. So, in case of _early liquidation_ the gross return is ``r \in [0, 1)``.
+
 """
 
 # ╔═╡ 51d69d70-1545-4096-bcbc-722bb3d9b200
 md"""
-##### Investment decision
-There are two options. Either store the potatoes or **plant** potatoes to grow more of them. **Storage** has a gross return of ``1`` (no gain, no loss) and the _stored potatoes_ are a **liquid** asset. They can be eaten in either of the two periods. Each kilogram of **planted** potatos yield ``1.5`` kilograms of potatoes in period 2. (The gross return is ``R=1.5`` if _held to maturity_.) Planted potatoes are an **illiquid asset**. If you dig up the planted potatoes in the intermediate period they will have lost their quality and not be very enjoyable. So, in case of _early liquidation_ the gross return is ``r \in [0, 1)``.
+### Investment decision of an agent
 
-Each agent can split up their initial endowment (1kg of potatoes), plant fraction ``x`` and store fraction ``y``. When the agents wakes up hungry in period 1, the agent will dig up (_liquidate_) the planted potatoes and have a consumption of ``c_1^e = r x + y``. If the agent wake is not hungry in period 1, she will keep the ``x`` potatoes in the ground, and the ``y`` potatoes in the storage and have a consumption of ``c_2^l = R x + y`` in period 2.
-
-Since agents have to decide about ``x`` and ``y`` **before** they know when they will be hungry, they will invest in both ``x`` and ``y``. This means that some agents will have to dig up (_liquidate_) their investment. This is under the assumption that agents are risk-averse.
+Each agent can split up their initial endowment (1kg of potatoes), plant fraction ``x`` and store fraction ``1 - x``. When the agents wakes up hungry in period 1, the agent will dig up (_liquidate_) the planted potatoes and have a consumption of ``c_1 = (1-x) + r x``. If the agent wake is not hungry in period 1, she will keep the ``x`` potatoes in the ground, and the ``(1-x)`` potatoes in the storage and have a consumption of ``c_2 = (1-x) + R x`` in period 2.
 
 ```math
 \begin{align}
-&\max_{x,y} U(c^e_1, c^e_2, c^l_1, c^l_2) = γ u(c^e_1) + (1-\gamma) u(c^l_2) \\
+&\max_{x} \mathbb E U(c_1, c_2) = \gamma u(c_1) + (1-\gamma) u(c_2) \\
 &\begin{aligned}
-\text{such that } & c^e_1 = r x + y \\
-	              & c^e_2 = 0 \\
-			      & c^l_1 = 0 \\
-				  & c^l_2 = R x + y 
+\text{such that } & c_1 = (1-x) + r x \\
+				  & c_2 = (1-x) + R x
 \end{aligned}
 \end{align}
 ```
-
-The fact that early agents will have to eat liquidate their illiquid assets if not very satisfying. Isn't it somehow possible to predict __how many agents will be hungry in period 1__? Then we could make sure that enough potatoes are stored so that no planted potatoes have to be liquidated. This is where banks come in ...
 """
+
+# ╔═╡ f8d5e164-f968-4b82-bf8f-8f79ade560df
+md"""
+* ``R``: $(@bind R Slider(0.5:0.05:1.5, default = 1.1, show_value = true))
+* ``r``: $(@bind r Slider(0.0:0.05:1.0, default = 0.1, show_value = true))
+* ``\gamma``: $(@bind γ Slider(0.0:0.05:1.0, default = 0.5, show_value = true))
+"""
+
+# ╔═╡ 24000350-dd53-4938-9360-09fcd7e0c2fb
+let
+	u = log
+	𝔼U(c₁, c₂; γ) = γ * u(c₁) + (1-γ) * c₂
+	function obj(x; R=R, r=r, γ=γ)
+		c₁ = 1 - x + x * r
+		c₂ = 1 - x + x * R
+	    𝔼U(c₁, c₂; γ)
+	end
+
+	res = maximize(obj, 0, 1)
+
+	x_opt = Optim.maximizer(res)
+	
+	
+	xx = 0.0:0.05:1.0
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel = L"fraction invested $x$", ylabel = "expected utility")
+	lines!(ax, xx, obj.(xx))
+	vlines!(ax, x_opt, linestyle = (:dash, :loose), color = :gray)
+
+	fig
+end
+
+
+# ╔═╡ b248eebe-0289-40de-8998-dd155db38af9
+md"""
+If the _return from liquidation_ $r$ is sufficiently low, agents will **not invest** in the liquid asset ($x=0$).
+
+The fact that nobody is investing in the asset is not very satisfying. Isn't it somehow possible to predict __how many agents will be hungry in period 2__? Then we could invest at least plant __some__ potatoes and distribute the returns somehow.
+"""
+
+# ╔═╡ 41b70c0c-7c48-40f9-bed6-b712bab83f1b
+md"""
+### The social optimum
+
+```math
+\begin{align}
+& \max_{x, \ell \in [0,1]} \gamma u(c_1) + (1-\gamma) u(c_2) \\
+&\begin{aligned}
+\text{such that } &&    \gamma c_1 &= (1-x) + \ell r x \\
+				  && (1-\gamma) c_2 &= (1-\ell) R x 
+\end{aligned}
+\end{align}
+```
+"""
+
+# ╔═╡ d1d8bb3c-69dc-413c-9506-f127d4ceba7d
+let
+	u = log
+	𝔼U(c₁, c₂; γ) = γ * u(c₁) + (1-γ) * c₂
+	function obj(args; R=R, r=r, γ=γ)
+		@assert length(args) == 2
+		x, ℓ = args
+		c₁ = 1 - x + ℓ * x * r / γ
+		c₂ = (1-ℓ) * x * R / (1-γ)
+	    𝔼U(c₁, c₂; γ)
+	end
+	neg_obj(args) = -obj(args)
+	
+	g!(out, x) = ForwardDiff.gradient!(out, neg_obj, x)
+	
+	res = optimize(neg_obj, g!, [0.0, 0.0], [1.0, 1.0], 
+		[0.5, 0.5],
+		Fminbox(GradientDescent())
+	)
+
+	x_opt, ℓ_opt = Optim.minimizer(res)
+
+	xx = range(0.0, 0.99, 100)
+	ℓℓ = 0.0:0.05:1.0
+
+#	objj = [obj([x, ℓ]) for ℓ ∈ ℓℓ, x ∈ xx]
+
+	fig = Figure()
+	ax = Axis(fig[1,1], xlabel = "fraction invested", ylabel = "expected utility")
+#	ax = Axis3(fig[1,1], xlabel = "fraction invested", ylabel = "fraction liquidated", zlabel = "expected utility")
+#	surface!(ax, ℓℓ, xx, objj)
+	lines!(ax, xx, [obj([x, ℓ_opt]) for x ∈ xx])
+	vlines!(ax, x_opt, linestyle = (:dash, :loose), color = :gray)
+
+	fig
+end
+
+# ╔═╡ c5983f6a-44a8-4b05-841a-7abc375a6d47
+let
+	f(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+	∇f(x) = ForwardDiff.gradient(f, x)
+	∇f!(out, x) = ForwardDiff.gradient!(out, f, x)
+	
+	function g!(G, x)
+		G .= ∇f(x)
+	end
+	
+	lower = [1.25, -2.1]
+	upper = [Inf, Inf]
+	initial_x = [2.0, 2.0]
+	inner_optimizer = GradientDescent()
+	results = optimize(f, ∇f!, lower, upper, initial_x, Fminbox(inner_optimizer))
+end
 
 # ╔═╡ 79665579-c707-48af-848d-3680c15dd380
 md"""
@@ -310,14 +437,20 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+LineSearches = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 
 [compat]
-CairoMakie = "~0.7.2"
+CairoMakie = "~0.7.3"
 DataFrames = "~1.3.2"
-Makie = "~0.16.3"
+ForwardDiff = "~0.10.25"
+LineSearches = "~7.1.1"
+Makie = "~0.16.4"
+Optim = "~1.6.1"
 PlutoUI = "~0.7.33"
 Roots = "~1.3.14"
 """
@@ -326,7 +459,7 @@ Roots = "~1.3.14"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.0"
+julia_version = "1.7.2"
 manifest_format = "2.0"
 
 [[deps.AbstractFFTs]]
@@ -363,9 +496,9 @@ uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 
 [[deps.ArrayInterface]]
 deps = ["Compat", "IfElse", "LinearAlgebra", "Requires", "SparseArrays", "Static"]
-git-tree-sha1 = "1bdcc02836402d104a46f7843b6e6730b1948264"
+git-tree-sha1 = "745233d77146ad221629590b6d82fe7f1ddb478f"
 uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
-version = "4.0.2"
+version = "4.0.3"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
@@ -404,9 +537,9 @@ version = "1.0.5"
 
 [[deps.CairoMakie]]
 deps = ["Base64", "Cairo", "Colors", "FFTW", "FileIO", "FreeType", "GeometryBasics", "LinearAlgebra", "Makie", "SHA", "StaticArrays"]
-git-tree-sha1 = "90fe6622efbb627e7c962e9bd6f5c4228680b7ca"
+git-tree-sha1 = "b1d884ee7dae11985314192270eb5762b9ed09ae"
 uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-version = "0.7.2"
+version = "0.7.3"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -434,9 +567,9 @@ version = "0.4.0"
 
 [[deps.ColorSchemes]]
 deps = ["ColorTypes", "Colors", "FixedPointNumbers", "Random"]
-git-tree-sha1 = "6b6f04f93710c71550ec7e16b650c1b9a612d0b6"
+git-tree-sha1 = "12fc73e5e0af68ad3137b886e3f7c1eacfca2640"
 uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-version = "3.16.0"
+version = "3.17.1"
 
 [[deps.ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -460,6 +593,12 @@ version = "0.12.8"
 git-tree-sha1 = "68a0743f578349ada8bc911a5cbd5a2ef6ed6d1f"
 uuid = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
 version = "0.2.0"
+
+[[deps.CommonSubexpressions]]
+deps = ["MacroTools", "Test"]
+git-tree-sha1 = "7b8a93dba8af7e3b42fecabf646260105ac373f7"
+uuid = "bbf7d656-a473-5ed7-a52c-81e309532950"
+version = "0.3.0"
 
 [[deps.Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "SHA", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
@@ -524,15 +663,27 @@ git-tree-sha1 = "80c3e8639e3353e5d2912fb3a1916b8455e2494b"
 uuid = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 version = "0.4.0"
 
+[[deps.DiffResults]]
+deps = ["StaticArrays"]
+git-tree-sha1 = "c18e98cba888c6c25d1c3b048e4b3380ca956805"
+uuid = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
+version = "1.0.3"
+
+[[deps.DiffRules]]
+deps = ["IrrationalConstants", "LogExpFunctions", "NaNMath", "Random", "SpecialFunctions"]
+git-tree-sha1 = "84083a5136b6abf426174a58325ffd159dd6d94f"
+uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
+version = "1.9.1"
+
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "2e97190dfd4382499a4ac349e8d316491c9db341"
+git-tree-sha1 = "38012bf3553d01255e83928eec9c998e19adfddf"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.46"
+version = "0.25.48"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -558,9 +709,9 @@ version = "1.3.0"
 
 [[deps.Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "b3bfd02e98aedfa5cf885665493c5598c350cd2f"
+git-tree-sha1 = "ae13fcbc7ab8f16b0856729b050ef0c446aa3492"
 uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
-version = "2.2.10+0"
+version = "2.4.4+0"
 
 [[deps.FFMPEG]]
 deps = ["FFMPEG_jll"]
@@ -588,15 +739,21 @@ version = "3.3.10+0"
 
 [[deps.FileIO]]
 deps = ["Pkg", "Requires", "UUIDs"]
-git-tree-sha1 = "67551df041955cc6ee2ed098718c8fcd7fc7aebe"
+git-tree-sha1 = "80ced645013a5dbdc52cf70329399c35ce007fae"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-version = "1.12.0"
+version = "1.13.0"
 
 [[deps.FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
-git-tree-sha1 = "8756f9935b7ccc9064c6eef0bff0ad643df733a3"
+git-tree-sha1 = "deed294cde3de20ae0b2e0355a6c4e1c6a5ceffc"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "0.12.7"
+version = "0.12.8"
+
+[[deps.FiniteDiff]]
+deps = ["ArrayInterface", "LinearAlgebra", "Requires", "SparseArrays", "StaticArrays"]
+git-tree-sha1 = "ec299fdc8f49ae450807b0cb1d161c6b76fd2b60"
+uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
+version = "2.10.1"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -615,6 +772,12 @@ deps = ["Printf"]
 git-tree-sha1 = "8339d61043228fdd3eb658d86c926cb282ae72a8"
 uuid = "59287772-0a20-5a39-b81b-1366585eb4c0"
 version = "0.4.2"
+
+[[deps.ForwardDiff]]
+deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions", "StaticArrays"]
+git-tree-sha1 = "1bd6fc0c344fc0cbee1f42f8d2e7ec8253dda2d2"
+uuid = "f6369f11-7733-5829-9624-2563aa707210"
+version = "0.10.25"
 
 [[deps.FreeType]]
 deps = ["CEnum", "FreeType2_jll"]
@@ -720,10 +883,10 @@ uuid = "a09fc81d-aa75-5fe9-8630-4744c3626534"
 version = "0.9.3"
 
 [[deps.ImageIO]]
-deps = ["FileIO", "Netpbm", "OpenEXR", "PNGFiles", "QOI", "Sixel", "TiffImages", "UUIDs"]
-git-tree-sha1 = "816fc866edd8307a6e79a575e6585bfab8cef27f"
+deps = ["FileIO", "JpegTurbo", "Netpbm", "OpenEXR", "PNGFiles", "QOI", "Sixel", "TiffImages", "UUIDs"]
+git-tree-sha1 = "464bdef044df52e6436f8c018bea2d48c40bb27b"
 uuid = "82e4d734-157c-48bb-816b-45c225c6df19"
-version = "0.6.0"
+version = "0.6.1"
 
 [[deps.Imath_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -803,9 +966,21 @@ version = "1.4.1"
 
 [[deps.JSON]]
 deps = ["Dates", "Mmap", "Parsers", "Unicode"]
-git-tree-sha1 = "8076680b162ada2a031f707ac7b4953e30667a37"
+git-tree-sha1 = "3c837543ddb02250ef42f4738347454f95079d4e"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
-version = "0.21.2"
+version = "0.21.3"
+
+[[deps.JpegTurbo]]
+deps = ["CEnum", "FileIO", "ImageCore", "JpegTurbo_jll", "TOML"]
+git-tree-sha1 = "a77b273f1ddec645d1b7c4fd5fb98c8f90ad10a5"
+uuid = "b835a17e-a41a-41e7-81f0-2f016b05efe0"
+version = "0.1.1"
+
+[[deps.JpegTurbo_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "b53380851c6e6664204efb2e62cd24fa5c47e4ba"
+uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
+version = "2.1.2+0"
 
 [[deps.KernelDensity]]
 deps = ["Distributions", "DocStringExtensions", "FFTW", "Interpolations", "StatsBase"]
@@ -889,6 +1064,12 @@ git-tree-sha1 = "7f3efec06033682db852f8b3bc3c1d2b0a0ab066"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
 version = "2.36.0+0"
 
+[[deps.LineSearches]]
+deps = ["LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "Printf"]
+git-tree-sha1 = "f27132e551e959b3667d8c93eae90973225032dd"
+uuid = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
+version = "7.1.1"
+
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -916,9 +1097,9 @@ version = "0.5.9"
 
 [[deps.Makie]]
 deps = ["Animations", "Base64", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "Distributions", "DocStringExtensions", "FFMPEG", "FileIO", "FixedPointNumbers", "Formatting", "FreeType", "FreeTypeAbstraction", "GeometryBasics", "GridLayoutBase", "ImageIO", "IntervalSets", "Isoband", "KernelDensity", "LaTeXStrings", "LinearAlgebra", "MakieCore", "Markdown", "Match", "MathTeXEngine", "Observables", "OffsetArrays", "Packing", "PlotUtils", "PolygonOps", "Printf", "Random", "RelocatableFolders", "Serialization", "Showoff", "SignedDistanceFields", "SparseArrays", "StaticArrays", "Statistics", "StatsBase", "StatsFuns", "StructArrays", "UnicodeFun"]
-git-tree-sha1 = "0aafd5121c6e1b6a83bd3bb341da45f058225a9b"
+git-tree-sha1 = "475b854bff7867c37687d65f7b9498401ac6536d"
 uuid = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-version = "0.16.3"
+version = "0.16.4"
 
 [[deps.MakieCore]]
 deps = ["Observables"]
@@ -967,6 +1148,12 @@ version = "0.3.3"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
+
+[[deps.NLSolversBase]]
+deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
+git-tree-sha1 = "50310f934e55e5ca3912fb941dec199b49ca9b68"
+uuid = "d41bc354-129a-5804-8e4c-c37616107c6c"
+version = "7.8.2"
 
 [[deps.NaNMath]]
 git-tree-sha1 = "b086b7ea07f8e38cf122f5016af580881ac914fe"
@@ -1031,6 +1218,12 @@ git-tree-sha1 = "13652491f6856acfd2db29360e1bbcd4565d04f1"
 uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
 version = "0.5.5+0"
 
+[[deps.Optim]]
+deps = ["Compat", "FillArrays", "ForwardDiff", "LineSearches", "LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "PositiveFactorizations", "Printf", "SparseArrays", "StatsBase"]
+git-tree-sha1 = "045d10789f5daff18deb454d5923c6996017c2f3"
+uuid = "429524aa-4258-5aef-a3af-852621145aeb"
+version = "1.6.1"
+
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "51a08fb14ec28da2ec7a927c4337e4332c2a4720"
@@ -1056,9 +1249,9 @@ version = "0.11.5"
 
 [[deps.PNGFiles]]
 deps = ["Base64", "CEnum", "ImageCore", "IndirectArrays", "OffsetArrays", "libpng_jll"]
-git-tree-sha1 = "2271d1c3b0103844a9f4af6cd17d70d146d5295f"
+git-tree-sha1 = "eb4dbb8139f6125471aa3da98fb70f02dc58e49c"
 uuid = "f57f5aa1-a3ce-4bc8-8ab9-96f992907883"
-version = "0.3.13"
+version = "0.3.14"
 
 [[deps.Packing]]
 deps = ["GeometryBasics"]
@@ -1074,15 +1267,21 @@ version = "0.5.11"
 
 [[deps.Pango_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "9bc1871464b12ed19297fbc56c4fb4ba84988b0d"
+git-tree-sha1 = "3a121dfbba67c94a5bec9dde613c3d0cbcf3a12b"
 uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
-version = "1.47.0+0"
+version = "1.50.3+0"
+
+[[deps.Parameters]]
+deps = ["OrderedCollections", "UnPack"]
+git-tree-sha1 = "34c0e9ad262e5f7fc75b10a9952ca7692cfc5fbe"
+uuid = "d96e819e-fc66-5662-9728-84c9c7592b0a"
+version = "0.12.3"
 
 [[deps.Parsers]]
 deps = ["Dates"]
-git-tree-sha1 = "0b5cfbb704034b5b4c1869e36634438a047df065"
+git-tree-sha1 = "13468f237353112a01b2d6b32f3d0f80219944aa"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.2.1"
+version = "2.2.2"
 
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1108,9 +1307,9 @@ version = "1.1.3"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
-git-tree-sha1 = "da2314d0b0cb518906ea32a497bb4605451811a4"
+git-tree-sha1 = "8979e9802b4ac3d58c503a20f2824ad67f9074dd"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.33"
+version = "0.7.34"
 
 [[deps.PolygonOps]]
 git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
@@ -1122,6 +1321,12 @@ deps = ["DataAPI", "Future"]
 git-tree-sha1 = "db3a23166af8aebf4db5ef87ac5b00d36eb771e2"
 uuid = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
 version = "1.4.0"
+
+[[deps.PositiveFactorizations]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "17275485f373e6673f7e7f97051f703ed5b15b20"
+uuid = "85a6dd25-e78a-55b7-8502-1745935b8125"
+version = "0.2.4"
 
 [[deps.Preferences]]
 deps = ["TOML"]
@@ -1272,9 +1477,9 @@ uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[deps.SpecialFunctions]]
 deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
-git-tree-sha1 = "e6bf188613555c78062842777b116905a9f9dd49"
+git-tree-sha1 = "8d0c8e3d0ff211d9ff4a0c2307d876c99d10bdf1"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "2.1.0"
+version = "2.1.2"
 
 [[deps.StackViews]]
 deps = ["OffsetArrays"]
@@ -1284,30 +1489,31 @@ version = "0.1.1"
 
 [[deps.Static]]
 deps = ["IfElse"]
-git-tree-sha1 = "b4912cd034cdf968e06ca5f943bb54b17b97793a"
+git-tree-sha1 = "00b725fffc9a7e9aac8850e4ed75b4c1acbe8cd2"
 uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
-version = "0.5.1"
+version = "0.5.5"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
-git-tree-sha1 = "a635a9333989a094bddc9f940c04c549cd66afcf"
+git-tree-sha1 = "95c6a5d0e8c69555842fc4a927fc485040ccc31c"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.3.4"
+version = "1.3.5"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [[deps.StatsAPI]]
-git-tree-sha1 = "d88665adc9bcf45903013af0982e2fd05ae3d0a6"
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "c3d8ba7f3fa0625b062b82853a7d5229cb728b6b"
 uuid = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
-version = "1.2.0"
+version = "1.2.1"
 
 [[deps.StatsBase]]
 deps = ["DataAPI", "DataStructures", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
-git-tree-sha1 = "51383f2d367eb3b444c961d485c565e4c0cf4ba0"
+git-tree-sha1 = "8977b17906b0a1cc74ab2e3a05faa16cf08a8291"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-version = "0.33.14"
+version = "0.33.16"
 
 [[deps.StatsFuns]]
 deps = ["ChainRulesCore", "InverseFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
@@ -1370,6 +1576,11 @@ version = "0.9.6"
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+
+[[deps.UnPack]]
+git-tree-sha1 = "387c1f73762231e86e0c9c5443ce3b4a0a9a0c2b"
+uuid = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
+version = "1.0.2"
 
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
@@ -1512,10 +1723,20 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
+# ╠═ceb4712b-98f6-407d-99e9-5bf3128749af
+# ╠═3b40bb50-ae8d-4a27-aff5-0a18ac57cf46
 # ╠═fee3fc5e-7a5f-436b-af17-37e05943d340
 # ╟─9562942c-990d-4e31-be1a-24e04ed01aee
 # ╟─51d69d70-1545-4096-bcbc-722bb3d9b200
-# ╟─79665579-c707-48af-848d-3680c15dd380
+# ╟─f8d5e164-f968-4b82-bf8f-8f79ade560df
+# ╠═24000350-dd53-4938-9360-09fcd7e0c2fb
+# ╟─b248eebe-0289-40de-8998-dd155db38af9
+# ╟─41b70c0c-7c48-40f9-bed6-b712bab83f1b
+# ╠═d1d8bb3c-69dc-413c-9506-f127d4ceba7d
+# ╠═67a8d3bc-8dd2-4f9e-b20c-bfb00323613e
+# ╠═c5983f6a-44a8-4b05-841a-7abc375a6d47
+# ╠═ba378958-3da4-4d6c-9987-72f2519f510f
+# ╠═79665579-c707-48af-848d-3680c15dd380
 # ╟─f68d68d6-2bc9-4298-b4aa-8d8f0059dc04
 # ╠═cc3a8e45-131e-4a3b-9239-babd134baacd
 # ╟─be8aecea-84da-11ec-1d53-d718f287cdf7
