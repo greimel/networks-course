@@ -17,17 +17,26 @@ end
 # ╔═╡ ceb4712b-98f6-407d-99e9-5bf3128749af
 using Optim
 
-# ╔═╡ 3b40bb50-ae8d-4a27-aff5-0a18ac57cf46
-using PlutoUI: Slider
-
-# ╔═╡ 67a8d3bc-8dd2-4f9e-b20c-bfb00323613e
-using LineSearches
-
 # ╔═╡ ba378958-3da4-4d6c-9987-72f2519f510f
 using ForwardDiff
 
-# ╔═╡ b64c7a0f-f053-4e3f-a444-e4d4b6c1c109
-using Roots
+# ╔═╡ 3b40bb50-ae8d-4a27-aff5-0a18ac57cf46
+using PlutoUI: Slider
+
+# ╔═╡ 7b3df55d-5d2f-4621-ae8a-b1d29999ee79
+using LaTeXStrings: latexstring, @L_str
+
+# ╔═╡ fede66c2-c073-43b4-8fb0-3cfd868f695f
+using NamedTupleTools: delete
+
+# ╔═╡ 002a5601-69c9-4342-a808-b9cfa64919eb
+using AlgebraOfGraphics
+
+# ╔═╡ e42f025a-11dc-48ed-92e3-3c5f473ba2bd
+using Chain: @chain
+
+# ╔═╡ 243a809d-8ee3-4f50-87bd-ea0da9c7c549
+using DataFrameMacros
 
 # ╔═╡ 5f710a04-876e-4d0e-8fd2-6b56357d3f3e
 using CairoMakie, Makie
@@ -37,6 +46,11 @@ using DataFrames
 
 # ╔═╡ 49f91510-597d-4151-916f-33ceaa9939f2
 using PlutoUI
+
+# ╔═╡ 2148f702-32ee-40d8-896d-48ae684647bc
+md"""
+`allen-gale.jl` | **Version 0.1** | *last updated: Feb 17*
+"""
 
 # ╔═╡ fee3fc5e-7a5f-436b-af17-37e05943d340
 md"""
@@ -86,18 +100,25 @@ Each agent can split up their initial endowment (1kg of potatoes), plant fractio
 ```
 """
 
+# ╔═╡ fdea373b-cc1e-4bba-8b57-340e63a68ab1
+u = log
+
+# ╔═╡ f1beca33-7885-4132-8ce7-9e58339bc26d
+𝔼U(c₁, c₂; γ) = γ * u(c₁) + (1-γ) * c₂
+
 # ╔═╡ f8d5e164-f968-4b82-bf8f-8f79ade560df
-md"""
+sliders = md"""
 * ``R``: $(@bind R Slider(0.5:0.05:1.5, default = 1.1, show_value = true))
 * ``r``: $(@bind r Slider(0.0:0.05:1.0, default = 0.1, show_value = true))
 * ``\gamma``: $(@bind γ Slider(0.0:0.05:1.0, default = 0.5, show_value = true))
-"""
+""";
+
+# ╔═╡ db2cff8e-0ddb-40e6-97ed-42b50a1d1b1f
+sliders
 
 # ╔═╡ 24000350-dd53-4938-9360-09fcd7e0c2fb
 let
-	u = log
-	𝔼U(c₁, c₂; γ) = γ * u(c₁) + (1-γ) * c₂
-	function obj(x; R=R, r=r, γ=γ)
+	function obj(x; γ=γ)
 		c₁ = 1 - x + x * r
 		c₂ = 1 - x + x * R
 	    𝔼U(c₁, c₂; γ)
@@ -129,6 +150,8 @@ The fact that nobody is investing in the asset is not very satisfying. Isn't it 
 md"""
 ### The social optimum
 
+What would a benevolent social planner do? The planner can collect all initial endowments, make an investment decision and distribute the proceeds. The planner maximizes the _ex-ante_ expected utility of an agent.
+
 ```math
 \begin{align}
 & \max_{x, \ell \in [0,1]} \gamma u(c_1) + (1-\gamma) u(c_2) \\
@@ -140,35 +163,44 @@ md"""
 ```
 """
 
-# ╔═╡ d1d8bb3c-69dc-413c-9506-f127d4ceba7d
-let
-	u = log
-	𝔼U(c₁, c₂; γ) = γ * u(c₁) + (1-γ) * c₂
-	function obj(args; R=R, r=r, γ=γ)
+# ╔═╡ eee63073-78dc-4378-b2bb-0d1746dcde3b
+c₁(x, ℓ; γ=γ) = (1-x + ℓ*x*r) / γ
+
+# ╔═╡ 56783c5a-2381-44e3-aa0f-8c9bf3d0dce5
+c₂(x, ℓ; γ=γ) = (1-ℓ)*x*R == 0.0 ? 0.0 : (1-ℓ) * x*R / (1-γ)
+
+# ╔═╡ b8933bd2-f4bb-4dca-8278-c00fd8cfdfbd
+	function obj(args; γ=γ)
 		@assert length(args) == 2
 		x, ℓ = args
-		c₁ = 1 - x + ℓ * x * r / γ
-		c₂ = (1-ℓ) * x * R / (1-γ)
-	    𝔼U(c₁, c₂; γ)
+	    𝔼U(c₁(x, ℓ; γ), c₂(x, ℓ; γ); γ)
 	end
+
+# ╔═╡ 98fabde8-90db-44a4-a439-45fcdfbf9e9c
+social_optimum = let
 	neg_obj(args) = -obj(args)
-	
-	g!(out, x) = ForwardDiff.gradient!(out, neg_obj, x)
-	
-	res = optimize(neg_obj, g!, [0.0, 0.0], [1.0, 1.0], 
+		
+	res = optimize(neg_obj, [0.0, 0.0], [1.0, 1.0], 
 		[0.5, 0.5],
 		Fminbox(GradientDescent())
 	)
 
 	x_opt, ℓ_opt = Optim.minimizer(res)
+	
+	(; x_opt, ℓ_opt, c₁_opt = c₁(x_opt, ℓ_opt; γ), c₂_opt = c₂(x_opt, ℓ_opt; γ))
+end
 
+# ╔═╡ 9f941a41-0b5d-4a98-96c5-1182784fa484
+let
+	(; x_opt, ℓ_opt) = social_optimum
+	
 	xx = range(0.0, 0.99, 100)
 	ℓℓ = 0.0:0.05:1.0
 
 #	objj = [obj([x, ℓ]) for ℓ ∈ ℓℓ, x ∈ xx]
 
 	fig = Figure()
-	ax = Axis(fig[1,1], xlabel = "fraction invested", ylabel = "expected utility")
+	ax = Axis(fig[1,1], xlabel = "fraction invested", ylabel = "expected utility", title=latexstring("expected utility for \$\\ell^* = $(round(ℓ_opt, digits=4)) \$"))
 #	ax = Axis3(fig[1,1], xlabel = "fraction invested", ylabel = "fraction liquidated", zlabel = "expected utility")
 #	surface!(ax, ℓℓ, xx, objj)
 	lines!(ax, xx, [obj([x, ℓ_opt]) for x ∈ xx])
@@ -177,22 +209,19 @@ let
 	fig
 end
 
-# ╔═╡ c5983f6a-44a8-4b05-841a-7abc375a6d47
-let
-	f(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
-	∇f(x) = ForwardDiff.gradient(f, x)
-	∇f!(out, x) = ForwardDiff.gradient!(out, f, x)
-	
-	function g!(G, x)
-		G .= ∇f(x)
-	end
-	
-	lower = [1.25, -2.1]
-	upper = [Inf, Inf]
-	initial_x = [2.0, 2.0]
-	inner_optimizer = GradientDescent()
-	results = optimize(f, ∇f!, lower, upper, initial_x, Fminbox(inner_optimizer))
-end
+# ╔═╡ b533b725-5d8e-4a22-96ec-fcfdb6be80b2
+sliders
+
+# ╔═╡ 970e0ae1-e25e-4606-9007-eb63afa80083
+md"""
+We can see that in the social optimum, there is a significant investment into the liquid asset. We can also see, that the optimal expected utility is higher than in the individual optimum above.
+
+In the real world, there is no benevolent social planner. So the question is: 
+
+> How can we achieve the social optimum?
+
+TL;DR: banks.
+"""
 
 # ╔═╡ 79665579-c707-48af-848d-3680c15dd380
 md"""
@@ -200,30 +229,121 @@ md"""
 
 Agents _deposit_ their initial potatoes in the bank. The investment decision is delegated to the bank, who promises a fixed return ``(c_1, c_2)`` depending on the time of withdrawal.
 
-The bank know that the fraction ``\omega`` of people will be hungry in period 1 and ``(1-\omega)`` will be hungry in period 2. The bank only has to make sure that ``c_2 \geq c_1``, so that no "late" agent has an incentive to withdraw their deposits in period 1.
+The banks know that the fraction ``\gamma`` of people will withdraw in period 1 (because they are hungry) and ``(1-\gamma)`` will withdraw in period 2. The bank needs to make sure that ``c_2 \geq c_1``, otherwise _late_ agents have an incentive to withdraw their deposits in period 1 (and store them until period 2).
 
-The bank can maximize
+We assume that banks act on a competitive market, so agents will only choose to deposit in a bank that provides the _optimal contract_. Thus, banks will only operate if they maximize
 
 ```math
 \begin{align}
-&\max_{x,y} U(c_1, c_2) = \omega u(c_1) + (1-\omega) u(c_2) \\
+& \max_{x, \ell \in [0,1]} \gamma u(c_1) + (1-\gamma) u(c_2) \\
 &\begin{aligned}
-\text{such that } & x + y = 1 \\
-			      & \omega c_1 = y \\
-				  & (1-\omega) c_2 = R x 
+\text{such that } &&    \gamma c_1 &= (1-x) + ℓ r x \\
+				  && (1-\gamma) c_2 &= (1-ℓ) R x \\
+	  			  && c_2 &≥ c_1
 \end{aligned}
 \end{align}
 ```
 
-It turns out, that this will lead to the welfare-maximizing outcome in this model.
+This problem is the same as the _planner's problem_, except that the incentive compatibility constraint (IC) ``c_2 \geq c_1`` is added. It turns out, that under some conditions for the utility function `u` the IC will always be satisfied. So the presence of banks will lead to the welfare-maximizing outcome in this model.
 """
+
+# ╔═╡ 6a101f0f-88f4-40a5-96cc-6338f8d24323
+let
+	(; x_opt, ℓ_opt) = social_optimum
+
+	xx = range(0.05, 0.95, 100)
+
+	fig = Figure()
+	ax1 = Axis(fig[1,1], xlabel= L"fraction invested $x$")
+	ax2 = Axis(fig[2,1], xlabel= L"fraction invested $x$")
+
+	lines!(ax1, xx, c₁.(xx, ℓ_opt), label = L"c_1")
+	lines!(ax1, xx, c₂.(xx, ℓ_opt), label = L"c_2")
+	lines!(ax2, xx, 𝔼U.(c₁.(xx, ℓ_opt), c₂.(xx, ℓ_opt); γ), label = L"\bbE U")
+	vlines!.([ax1, ax2], x_opt, linestyle = (:dash, :loose), color = :gray)
+	axislegend.([ax1, ax2])
+	linkxaxes!(ax1, ax2)
+	hidexdecorations!(ax1, grid=false)
+	
+	fig
+end
 
 # ╔═╡ f68d68d6-2bc9-4298-b4aa-8d8f0059dc04
 md"""
-### Financial fragility
+## Financial fragility (Bank runs)
 
 What will happen, if a fraction ``\tilde \omega > \omega`` withdraws money in period ``t=1``? The bank will have to dig up some of its potatoes to fill the gap. This means that the payout in period two will have to be reduced (there are not enough potatoes left). As soon as the expected payout ``\tilde c_2`` becomes small enough, there will be a **bank run**. If the ``\tilde c_2 < c_1`` the incentive compatibility constraint is violated and the "late" types will start to withdraw their money.
 """
+
+# ╔═╡ 85a1a267-70e4-471c-a399-4fff1715627d
+begin
+	(; x_opt, ℓ_opt, c₁_opt, c₂_opt) = social_optimum
+
+	liquid(ℓ) = 1 - x_opt + ℓ * x_opt * r
+	withdrawal(ω) = c₁_opt * ω
+end	
+
+# ╔═╡ db66a02e-ab0a-4953-a96c-7743caaf0a90
+md"additional withdrawers ε: $(@bind ε Slider(0:0.01:(1-γ), default = 0.05, show_value = true))"
+
+# ╔═╡ 7f701bf1-67e2-437a-a499-3768f0c2154d
+ω = γ + ε
+
+# ╔═╡ c5b744d3-b674-49dc-a149-3a6cc629c998
+liquid(ℓ_opt)
+
+# ╔═╡ e1da1aed-e6df-4740-ae48-a1099a65d4ec
+withdrawal(ω)
+
+# ╔═╡ 95ebddf6-c9ba-494d-be9c-e5a1cf478ce7
+withdrawal(ω) ≤ liquid(ℓ_opt)
+
+# ╔═╡ 29b2d1b3-2ec6-4de8-82bf-ea05807d0699
+function realized_payout(ω, opt)
+	(; x_opt, ℓ_opt, c₁_opt, c₂_opt) = opt
+
+	liquid(ℓ) = 1 - x_opt + ℓ * x_opt * r
+	withdrawal(ω) = c₁_opt * ω
+
+	shortfall = max(withdrawal(ω) - liquid(0.0), 0.0)
+	ℓ_new = clamp(shortfall / (x_opt * r), 0.0, 1.0)
+	c₁_new = c₁(x_opt, ℓ_new, γ = max(γ, ω))
+	c₂_new = c₂(x_opt, ℓ_new, γ = max(γ, ω))
+
+	if c₂_new < c₁_new && ω < 1.0 # IC violated => everybody withdraws early
+		ω̃ = 1.0
+		return (; ω, delete(realized_payout(ω̃, opt), :ω)...)
+	end
+		
+		
+	(; ω, c₁_opt, c₂_opt, ℓ_opt, c₁_new, c₂_new, ℓ_new)
+end
+
+# ╔═╡ 221eed48-6110-48ee-8aa5-c9ea58c47b46
+realized_payout(ω, social_optimum)
+
+# ╔═╡ 8b9edbc2-5849-4b1f-a897-1e909d2c9885
+sliders
+
+# ╔═╡ f355b2ff-555e-458d-bc5b-f8c23bcf9cf8
+let
+	df = map(0:0.005:1) do ω
+		ε = ω - γ
+		(; ε, realized_payout(ω, social_optimum)...)
+	end |> DataFrame
+
+	@chain df begin
+		select(Not(:ω))
+		stack(Not(:ε))
+		@transform(@t begin
+			tmp = split(:variable, "_")
+			:variable = tmp[1]
+			:mod = tmp[2] == "opt" ? "planned" : "realized"
+		end)
+		data(_) * mapping(:ε => "additional withdrawers ε", :value, color = :variable, linestyle = :mod => "") * visual(Lines)
+		draw
+	end
+end
 
 # ╔═╡ cc3a8e45-131e-4a3b-9239-babd134baacd
 md"""
@@ -232,67 +352,6 @@ md"""
 
 Now, let's suppose that there are **two banks**. Both banks face the same decision problem, so they will offer the same deposit contract ``(c_1, c_2)``. Agents will randomly pick one of the two banks the outcome will be the same as before.
 """
-
-# ╔═╡ be8aecea-84da-11ec-1d53-d718f287cdf7
-md"""
-# One bank
-"""
-
-# ╔═╡ 735e7f15-14a3-4cf0-950b-bd3f2c5dd776
-#ω = γ # probability of being "early" type
-
-# ╔═╡ 97deba2a-a2d7-4726-b150-624ab72328e1
-#γ = 0.5 # probability of being "early" type
-
-# ╔═╡ 38117533-8f14-489a-8e13-2a412afae748
-#R = 1.1
-
-# ╔═╡ 6a101f0f-88f4-40a5-96cc-6338f8d24323
-u(c₁, c₂; γ) = γ * log(c₁) + (1-γ) * log(c₂)
-
-# ╔═╡ 91aa84b0-6c18-4f9e-bd61-281086a53e0d
-function consumption(y; R, γ)
-	x = 1 - y
-	
-	c₁ = y / γ
-	c₂ = R * x / (1 - γ)
-	
-	(; x, y, c₁, c₂, u = u(c₁, c₂; γ))
-end
-
-# ╔═╡ 94e9b6b9-7b6d-439a-bb3c-b6c0bf1fdf97
-function optimum(; R, γ)
-	c₁(y) = y / γ
-	c₂(c₁) = (1-γ*c₁) * R / (1 - γ)
-	u_prime(x) = 1/x
-	foc(y) = γ * u_prime(c₁(y)) - u_prime(c₂(c₁(y))) * γ * R
-
-	y_opt = fzero(foc, [0.01, 0.99])
-
-	(; y_opt)
-end
-
-# ╔═╡ 97f2d42a-ad0e-4601-b4c3-4afbeb3836e7
-(; f, out) = let
-	R = 1.1
-	γ = 0.3
-	y_vec = 0.05:0.05:0.95
-
-	df = map(y_vec) do y
-		consumption(y; R, γ)
-	end |> DataFrame
-
-	(; y_opt) = optimum(; R, γ)
-
-	f, ax, plt = lines(df.y, df.c₁, label = L"c_1", axis = (xlabel = L"short asset $y$", ))
-	lines!(ax, df.y, df.c₂, label = L"c_2" )
-	lines!(ax, df.y, df.u, label = L"u(c_1, c_2)")
-	vlines!(ax, y_opt, color = :gray, linestyle = (:dash, :loose))
-
-	axislegend(ax)
-
-	(; f, out=(; y_opt, R, γ))
-end; f
 
 # ╔═╡ 38105eb4-fd62-42be-be85-6fa1a7a802f4
 md"""
@@ -313,8 +372,10 @@ end
 
 # ╔═╡ c17e8915-5eba-45b9-a080-3ad1b834be99
 let
-	(; R, γ, y_opt) = out
-	(; x, y, c₁, c₂) = consumption(y_opt; R, γ)
+	x_opt = social_optimum
+	
+	#(; R, γ, x_opt) = out
+	(; x, y, c₁, c₂) = consumption(x_opt; R, γ)
 
 	r = 0.8
 	ε = 0.01
@@ -364,8 +425,8 @@ end
 
 # ╔═╡ d4c5a683-00dd-4614-9e3b-d8c07c146568
 let
-	(; R, γ, y_opt) = out
-	(; x, y, c₁, c₂) = consumption(y_opt; R, γ)
+	(; R, γ, x_opt) = out
+	(; x, y, c₁, c₂) = consumption(x_opt; R, γ)
 
 	r = 0.8
 	ε = 0.01
@@ -435,24 +496,30 @@ TableOfContents()
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
+DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-LineSearches = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+NamedTupleTools = "d9ec5142-1e00-5aa0-9d6a-321866360f50"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 
 [compat]
+AlgebraOfGraphics = "~0.6.5"
 CairoMakie = "~0.7.3"
+Chain = "~0.4.10"
+DataFrameMacros = "~0.2.1"
 DataFrames = "~1.3.2"
 ForwardDiff = "~0.10.25"
-LineSearches = "~7.1.1"
+LaTeXStrings = "~1.3.0"
 Makie = "~0.16.4"
+NamedTupleTools = "~0.13.7"
 Optim = "~1.6.1"
 PlutoUI = "~0.7.33"
-Roots = "~1.3.14"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -484,6 +551,12 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "af92965fb30777147966f58acb05da51c5616b5f"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 version = "3.3.3"
+
+[[deps.AlgebraOfGraphics]]
+deps = ["Colors", "Dates", "Dictionaries", "FileIO", "GLM", "GeoInterface", "GeometryBasics", "GridLayoutBase", "KernelDensity", "Loess", "Makie", "PlotUtils", "PooledArrays", "RelocatableFolders", "StatsBase", "StructArrays", "Tables"]
+git-tree-sha1 = "032144cbb772cf0aef2954dfe5cc2c0bebeaaadd"
+uuid = "cbdf2221-f076-402e-a563-3d30da359d67"
+version = "0.6.5"
 
 [[deps.Animations]]
 deps = ["Colors"]
@@ -547,6 +620,11 @@ git-tree-sha1 = "4b859a208b2397a7a623a03449e4636bdb17bcf2"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.16.1+1"
 
+[[deps.Chain]]
+git-tree-sha1 = "339237319ef4712e6e5df7758d0bccddf5c237d9"
+uuid = "8be319e6-bccf-4806-a6f7-6fae938471bc"
+version = "0.4.10"
+
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "f9982ef575e19b0e5c7a98c6e75ee496c0f73a93"
@@ -589,11 +667,6 @@ git-tree-sha1 = "417b0ed7b8b838aa6ca0a87aadf1bb9eb111ce40"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.8"
 
-[[deps.CommonSolve]]
-git-tree-sha1 = "68a0743f578349ada8bc911a5cbd5a2ef6ed6d1f"
-uuid = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
-version = "0.2.0"
-
 [[deps.CommonSubexpressions]]
 deps = ["MacroTools", "Test"]
 git-tree-sha1 = "7b8a93dba8af7e3b42fecabf646260105ac373f7"
@@ -610,12 +683,6 @@ version = "3.41.0"
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
 
-[[deps.ConstructionBase]]
-deps = ["LinearAlgebra"]
-git-tree-sha1 = "f74e9d5388b8620b4cee35d4c5a618dd4dc547f4"
-uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
-version = "1.3.0"
-
 [[deps.Contour]]
 deps = ["StaticArrays"]
 git-tree-sha1 = "9f02045d934dc030edad45944ea80dbd1f0ebea7"
@@ -631,6 +698,12 @@ version = "4.1.1"
 git-tree-sha1 = "cc70b17275652eb47bc9e5f81635981f13cea5c8"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.9.0"
+
+[[deps.DataFrameMacros]]
+deps = ["DataFrames"]
+git-tree-sha1 = "cff70817ef73acb9882b6c9b163914e19fad84a9"
+uuid = "75880514-38bc-4a95-a458-c2aea5a3a702"
+version = "0.2.1"
 
 [[deps.DataFrames]]
 deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Reexport", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
@@ -663,6 +736,12 @@ git-tree-sha1 = "80c3e8639e3353e5d2912fb3a1916b8455e2494b"
 uuid = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 version = "0.4.0"
 
+[[deps.Dictionaries]]
+deps = ["Indexing", "Random"]
+git-tree-sha1 = "63004a55faf43a5f7be7f5eca36ce355e9a75b2c"
+uuid = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
+version = "0.3.18"
+
 [[deps.DiffResults]]
 deps = ["StaticArrays"]
 git-tree-sha1 = "c18e98cba888c6c25d1c3b048e4b3380ca956805"
@@ -674,6 +753,12 @@ deps = ["IrrationalConstants", "LogExpFunctions", "NaNMath", "Random", "SpecialF
 git-tree-sha1 = "84083a5136b6abf426174a58325ffd159dd6d94f"
 uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
 version = "1.9.1"
+
+[[deps.Distances]]
+deps = ["LinearAlgebra", "SparseArrays", "Statistics", "StatsAPI"]
+git-tree-sha1 = "3258d0659f812acde79e8a74b11f17ac06d0ca04"
+uuid = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
+version = "0.10.7"
 
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
@@ -807,6 +892,18 @@ version = "1.0.10+0"
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
+[[deps.GLM]]
+deps = ["Distributions", "LinearAlgebra", "Printf", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "StatsModels"]
+git-tree-sha1 = "fb764dacfa30f948d52a6a4269ae293a479bbc62"
+uuid = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+version = "1.6.1"
+
+[[deps.GeoInterface]]
+deps = ["RecipesBase"]
+git-tree-sha1 = "6b1a29c757f56e0ae01a35918a2c39260e2c4b98"
+uuid = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
+version = "0.5.7"
+
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
 git-tree-sha1 = "58bcdf5ebc057b085e58d95c138725628dd7453c"
@@ -893,6 +990,11 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "87f7662e03a649cffa2e05bf19c303e168732d3e"
 uuid = "905a6f67-0a94-5f89-b386-d35d92009cd1"
 version = "3.1.2+0"
+
+[[deps.Indexing]]
+git-tree-sha1 = "ce1566720fd6b19ff3411404d4b977acd4814f9f"
+uuid = "313cdc1a-70c2-5d6a-ae34-0150d3930a38"
+version = "1.1.1"
 
 [[deps.IndirectArrays]]
 git-tree-sha1 = "012e604e1c7458645cb8b436f8fba789a51b257f"
@@ -1074,6 +1176,12 @@ version = "7.1.1"
 deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
+[[deps.Loess]]
+deps = ["Distances", "LinearAlgebra", "Statistics"]
+git-tree-sha1 = "46efcea75c890e5d820e670516dc156689851722"
+uuid = "4345ca2d-374a-55d4-8d30-97f9976e7612"
+version = "0.5.4"
+
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
 git-tree-sha1 = "e5718a00af0ab9756305a0392832c8952c7426c1"
@@ -1159,6 +1267,11 @@ version = "7.8.2"
 git-tree-sha1 = "b086b7ea07f8e38cf122f5016af580881ac914fe"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "0.3.7"
+
+[[deps.NamedTupleTools]]
+git-tree-sha1 = "63831dcea5e11db1c0925efe5ef5fc01d528c522"
+uuid = "d9ec5142-1e00-5aa0-9d6a-321866360f50"
+version = "0.13.7"
 
 [[deps.Netpbm]]
 deps = ["FileIO", "ImageCore"]
@@ -1376,6 +1489,11 @@ git-tree-sha1 = "01d341f502250e81f6fec0afe662aa861392a3aa"
 uuid = "c84ed2f1-dad5-54f0-aa8e-dbefe2724439"
 version = "0.4.2"
 
+[[deps.RecipesBase]]
+git-tree-sha1 = "6bf3f380ff52ce0832ddd3a2a7b9538ed1bcca7d"
+uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+version = "1.2.1"
+
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
 uuid = "189a3867-3050-52da-a836-e630ba90ab69"
@@ -1405,12 +1523,6 @@ git-tree-sha1 = "68db32dff12bb6127bac73c209881191bf0efbb7"
 uuid = "f50d1b31-88e8-58de-be2c-1cc44531875f"
 version = "0.3.0+0"
 
-[[deps.Roots]]
-deps = ["CommonSolve", "Printf", "Setfield"]
-git-tree-sha1 = "0abe7fc220977da88ad86d339335a4517944fea2"
-uuid = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
-version = "1.3.14"
-
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 
@@ -1434,15 +1546,14 @@ version = "1.1.0"
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 
-[[deps.Setfield]]
-deps = ["ConstructionBase", "Future", "MacroTools", "Requires"]
-git-tree-sha1 = "0afd9e6c623e379f593da01f20590bacc26d1d14"
-uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
-version = "0.8.1"
-
 [[deps.SharedArrays]]
 deps = ["Distributed", "Mmap", "Random", "Serialization"]
 uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
+
+[[deps.ShiftedArrays]]
+git-tree-sha1 = "22395afdcf37d6709a5a0766cc4a5ca52cb85ea0"
+uuid = "1277b4bf-5013-50f5-be3d-901d8477a67a"
+version = "1.0.0"
 
 [[deps.Showoff]]
 deps = ["Dates", "Grisu"]
@@ -1520,6 +1631,12 @@ deps = ["ChainRulesCore", "InverseFunctions", "IrrationalConstants", "LogExpFunc
 git-tree-sha1 = "f35e1879a71cca95f4826a14cdbf0b9e253ed918"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "0.9.15"
+
+[[deps.StatsModels]]
+deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Printf", "REPL", "ShiftedArrays", "SparseArrays", "StatsBase", "StatsFuns", "Tables"]
+git-tree-sha1 = "677488c295051568b0b79a77a8c44aa86e78b359"
+uuid = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
+version = "0.6.28"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
@@ -1723,31 +1840,46 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
+# ╟─2148f702-32ee-40d8-896d-48ae684647bc
 # ╠═ceb4712b-98f6-407d-99e9-5bf3128749af
+# ╠═ba378958-3da4-4d6c-9987-72f2519f510f
 # ╠═3b40bb50-ae8d-4a27-aff5-0a18ac57cf46
-# ╠═fee3fc5e-7a5f-436b-af17-37e05943d340
+# ╠═7b3df55d-5d2f-4621-ae8a-b1d29999ee79
+# ╠═fede66c2-c073-43b4-8fb0-3cfd868f695f
+# ╠═002a5601-69c9-4342-a808-b9cfa64919eb
+# ╠═e42f025a-11dc-48ed-92e3-3c5f473ba2bd
+# ╠═243a809d-8ee3-4f50-87bd-ea0da9c7c549
+# ╟─fee3fc5e-7a5f-436b-af17-37e05943d340
 # ╟─9562942c-990d-4e31-be1a-24e04ed01aee
 # ╟─51d69d70-1545-4096-bcbc-722bb3d9b200
+# ╠═fdea373b-cc1e-4bba-8b57-340e63a68ab1
+# ╠═f1beca33-7885-4132-8ce7-9e58339bc26d
 # ╟─f8d5e164-f968-4b82-bf8f-8f79ade560df
-# ╠═24000350-dd53-4938-9360-09fcd7e0c2fb
+# ╟─db2cff8e-0ddb-40e6-97ed-42b50a1d1b1f
+# ╟─24000350-dd53-4938-9360-09fcd7e0c2fb
 # ╟─b248eebe-0289-40de-8998-dd155db38af9
 # ╟─41b70c0c-7c48-40f9-bed6-b712bab83f1b
-# ╠═d1d8bb3c-69dc-413c-9506-f127d4ceba7d
-# ╠═67a8d3bc-8dd2-4f9e-b20c-bfb00323613e
-# ╠═c5983f6a-44a8-4b05-841a-7abc375a6d47
-# ╠═ba378958-3da4-4d6c-9987-72f2519f510f
-# ╠═79665579-c707-48af-848d-3680c15dd380
-# ╟─f68d68d6-2bc9-4298-b4aa-8d8f0059dc04
-# ╠═cc3a8e45-131e-4a3b-9239-babd134baacd
-# ╟─be8aecea-84da-11ec-1d53-d718f287cdf7
-# ╠═735e7f15-14a3-4cf0-950b-bd3f2c5dd776
-# ╠═97deba2a-a2d7-4726-b150-624ab72328e1
-# ╠═38117533-8f14-489a-8e13-2a412afae748
+# ╠═eee63073-78dc-4378-b2bb-0d1746dcde3b
+# ╠═56783c5a-2381-44e3-aa0f-8c9bf3d0dce5
+# ╠═b8933bd2-f4bb-4dca-8278-c00fd8cfdfbd
+# ╠═98fabde8-90db-44a4-a439-45fcdfbf9e9c
+# ╟─9f941a41-0b5d-4a98-96c5-1182784fa484
+# ╟─b533b725-5d8e-4a22-96ec-fcfdb6be80b2
+# ╟─970e0ae1-e25e-4606-9007-eb63afa80083
+# ╟─79665579-c707-48af-848d-3680c15dd380
 # ╠═6a101f0f-88f4-40a5-96cc-6338f8d24323
-# ╠═91aa84b0-6c18-4f9e-bd61-281086a53e0d
-# ╠═94e9b6b9-7b6d-439a-bb3c-b6c0bf1fdf97
-# ╠═b64c7a0f-f053-4e3f-a444-e4d4b6c1c109
-# ╠═97f2d42a-ad0e-4601-b4c3-4afbeb3836e7
+# ╟─f68d68d6-2bc9-4298-b4aa-8d8f0059dc04
+# ╠═85a1a267-70e4-471c-a399-4fff1715627d
+# ╟─db66a02e-ab0a-4953-a96c-7743caaf0a90
+# ╠═7f701bf1-67e2-437a-a499-3768f0c2154d
+# ╠═c5b744d3-b674-49dc-a149-3a6cc629c998
+# ╠═e1da1aed-e6df-4740-ae48-a1099a65d4ec
+# ╠═95ebddf6-c9ba-494d-be9c-e5a1cf478ce7
+# ╠═221eed48-6110-48ee-8aa5-c9ea58c47b46
+# ╠═29b2d1b3-2ec6-4de8-82bf-ea05807d0699
+# ╟─8b9edbc2-5849-4b1f-a897-1e909d2c9885
+# ╟─f355b2ff-555e-458d-bc5b-f8c23bcf9cf8
+# ╟─cc3a8e45-131e-4a3b-9239-babd134baacd
 # ╟─38105eb4-fd62-42be-be85-6fa1a7a802f4
 # ╠═c17e8915-5eba-45b9-a080-3ad1b834be99
 # ╠═5560e9d8-7d13-4cd3-a712-05a803298964
