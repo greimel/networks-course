@@ -60,6 +60,12 @@
                 "notebook_path": "notebooks/school-closures.jl",
                 "video_id": "",
                 "preview_image_url": ""
+            },
+            {
+                "name": "Spread of Information in the DeGroot model",
+                "notebook_path": "notebooks/DeGroot.jl",
+                "video_id": "",
+                "preview_image_url": ""
             }
         ]
     },

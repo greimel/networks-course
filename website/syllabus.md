@@ -12,8 +12,8 @@
 | 1B | Network Basics 2      | Feb 10, 2022 | Cees   | [coauthor network](/notebooks/notebooks_coauthors), [power law](/notebooks/notebooks_power_law), [exercises](/notebooks/notebooks_exercises-week1) | Jackson Ch. 3 |
 | 1C | Random Networks       | Feb 11, 2022 | Cees   | [notebook](/notebooks/notebooks_random-networks) | Jackson Ch. 4--6 & 11 |
 | 2A | Tutorial 1: Twitter   | Feb 14, 2022 | Cees   | [notebook](/notebooks/notebooks_twitter) | |
-| 2B | Learning on Networks  | Feb 17, 2022 | Cees   |  | Jackson Ch. 8 |
-| 2C | Disease Transmission  | Feb 18, 2022 | Cees   | [notebook](/notebooks/notebooks_disease)  | |
+| 2B | Learning on Networks  | Feb 17, 2022 | Cees   | [notebook](/notebooks/notebooks_DeGroot) | Jackson Ch. 8 |
+| 2C | Disease Transmission  | Feb 18, 2022 | Cees   | [notebook](/notebooks/notebooks_disease) | |
 | 3A | no lecture            | Feb 21, 2022 |        |                        | |
 | 3B | Financial networks 1  | Feb 24, 2022 | Fabian | [notebook](/notebooks/notebooks_banks)    | [Acemoglu et al. (2015)](https://www.aeaweb.org/articles?id=10.1257/aer.20130456) |
 | 3C | Financial networks 2  | Feb 25, 2022 | Fabian | [notebook](/notebooks/notebooks_banks)    | [Allen & Gale (2000)](https://www.jstor.org/stable/10.1086/262109) |

@@ -1,6 +1,6 @@
 # Course Website of _Economic and Financial Network Analysis_
 
-This website contains the course material of the 2022 edition of the course. The course is part of the Master in Econometrics at the Unversity of Amsterdam.
+This website contains the course material of the 2022 edition of the course. The course is part of the Master in Econometrics at the University of Amsterdam.
 
 The official course information can be found on Canvas.
 
