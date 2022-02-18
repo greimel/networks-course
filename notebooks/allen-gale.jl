@@ -38,6 +38,18 @@ using Chain: @chain
 # ╔═╡ 243a809d-8ee3-4f50-87bd-ea0da9c7c549
 using DataFrameMacros
 
+# ╔═╡ 9bc0e1d4-9c1b-4f3c-802f-6e5bddad689e
+using Graphs
+
+# ╔═╡ 97a3fbcd-5969-4886-9a9b-abc20674f95f
+using GraphMakie
+
+# ╔═╡ 6bff9775-1199-42a8-b0e6-099b0701cdb6
+using NetworkLayout
+
+# ╔═╡ 95127df3-1c89-45c2-a6c9-012b02dd3bbf
+using Random
+
 # ╔═╡ 5f710a04-876e-4d0e-8fd2-6b56357d3f3e
 using CairoMakie, Makie
 
@@ -127,7 +139,7 @@ let
 	res = maximize(obj, 0, 1)
 
 	x_opt = Optim.maximizer(res)
-	
+	@info x_opt
 	
 	xx = 0.0:0.05:1.0
 	fig = Figure()
@@ -209,7 +221,7 @@ let
 	fig
 end
 
-# ╔═╡ b533b725-5d8e-4a22-96ec-fcfdb6be80b2
+# ╔═╡ 20348017-411a-49fe-a178-eac580e71e63
 sliders
 
 # ╔═╡ 970e0ae1-e25e-4606-9007-eb63afa80083
@@ -299,13 +311,22 @@ withdrawal(ω)
 withdrawal(ω) ≤ liquid(ℓ_opt)
 
 # ╔═╡ 29b2d1b3-2ec6-4de8-82bf-ea05807d0699
-function realized_payout(ω, opt)
+function realized_payout(ω, opt; ib_payable=0.0, ib_deposit=0.0)
 	(; x_opt, ℓ_opt, c₁_opt, c₂_opt) = opt
 
-	liquid(ℓ) = 1 - x_opt + ℓ * x_opt * r
+	liquid(ℓ) = 1 - x_opt + ℓ * x_opt * r - ib_payable
 	withdrawal(ω) = c₁_opt * ω
 
-	shortfall = max(withdrawal(ω) - liquid(0.0), 0.0)
+	shortfall0 = max(withdrawal(ω) - liquid(0.0), 0.0)
+	if 0 ≤ shortfall0 ≤ ib_deposit
+		ib_withdrawal = shortfall0
+	else # shortfall > ib_deposit
+		ib_withdrawal = ib_deposit
+	end
+	@info shortfall0
+	
+	shortfall = shortfall0 - ib_withdrawal
+		
 	ℓ_new = clamp(shortfall / (x_opt * r), 0.0, 1.0)
 	c₁_new = c₁(x_opt, ℓ_new, γ = max(γ, ω))
 	c₂_new = c₂(x_opt, ℓ_new, γ = max(γ, ω))
@@ -316,11 +337,29 @@ function realized_payout(ω, opt)
 	end
 		
 		
-	(; ω, c₁_opt, c₂_opt, ℓ_opt, c₁_new, c₂_new, ℓ_new)
+	(; ω, c₁_opt, c₂_opt, ℓ_opt, c₁_new, c₂_new, ℓ_new, ib_withdrawal)
 end
 
 # ╔═╡ 221eed48-6110-48ee-8aa5-c9ea58c47b46
 realized_payout(ω, social_optimum)
+
+# ╔═╡ 59696736-58c5-46da-835e-e3e00843cf40
+let
+	ε = 0.2
+	ib_deposit = 0.2
+	
+	bank1 = realized_payout(γ - ε, social_optimum; ib_deposit)
+	bank2 = realized_payout(γ + ε, social_optimum; ib_deposit)
+
+	@chain [bank1; bank2] begin
+		DataFrame
+		@select(:ω, :ℓ_new, :ib_withdrawal)
+	end
+end
+
+
+# ╔═╡ 7052dd28-04af-467f-be23-fbe70db24e1e
+
 
 # ╔═╡ 8b9edbc2-5849-4b1f-a897-1e909d2c9885
 sliders
@@ -347,11 +386,56 @@ end
 
 # ╔═╡ cc3a8e45-131e-4a3b-9239-babd134baacd
 md"""
-### Risk-sharing in the interbank market
+## Risk-sharing in the interbank market
 
+Now, let's suppose that there are ``N`` banks. All banks face the same decision problem, so they will offer the same deposit contract ``(c_1, c_2)``. Agents will randomly pick one of the two banks the outcome will be the same as before.
 
-Now, let's suppose that there are **two banks**. Both banks face the same decision problem, so they will offer the same deposit contract ``(c_1, c_2)``. Agents will randomly pick one of the two banks the outcome will be the same as before.
+Let ``\omega_i`` be the fraction of bank ``i``'s customers that withdraws early. The average fraction of withdrawers is ``\gamma = \frac{1}{N}\sum_{i=1}^N \omega_i``. We assume that there is **idiosychratic** (i.e. bank-specific) **risk**, but **no aggregate risk**.  That is, banks don't know ``\omega_i``, but they know ``\gamma``.
+
+> Can the social optimum still be achieved?
+
+TL;DR: Yes, if there is an interbank market
 """
+
+# ╔═╡ 7b0fe034-b70f-4dc1-ad98-3d29ec6797e7
+md"""
+Banks can serve at most ``\gamma`` early withdrawals without liquidating assets. If they are faced with ``\omega_i > \gamma`` early customers, the bank as excess liquidity needs of ``(\omega_i - \gamma) c_1`` in period 1. If faced with ``\omega_i < \gamma`` early customers, the bank has excess liquidity in period 1, but a shortage of funds of ``((1-\gamma) - (1-\omega_i))c_2 = (\omega_i - \gamma)c_2`` in period 2. Since ``0 \leq \omega_i \leq 1``, the maximal liquity need in period 1 is
+```math
+(1 - \gamma) c_1
+```
+
+
+Suppose banks can deposit at the same terms as agents. So for each unit deposited, agents get ``c_1`` if withdrawn in period ``t=1`` and ``c_2`` if withdrawn in period ``t=2``. Now suppose that each has total deposits of ``\bar y = 1-\gamma``.
+"""
+
+# ╔═╡ 23c6b670-6685-467b-be9e-8c68b48c83ec
+let
+	ib_deposit = 0.2
+	ω = γ + 0.2
+	
+	shortfall0 = max(ω*c₁_opt - γ*c₁_opt, 0.0)
+	
+	if 0 ≤ shortfall0 < ib_deposit
+		ib_withdrawal = shortfall0
+		c₁ = c₁_opt
+		ℓ = 0.0
+		shortfall = 0.0
+	elseif shortfall0 ≤ ib_deposit + x_opt * r
+		ib_withdrawal = ib_deposit
+		shortfall = shortfall0 - ib_withdrawal
+		ℓ = shortfall / (x_opt * r) # /( γ / ω)
+		c₁ = c₁_opt
+	else
+		ib_withdrawal = ib_deposit
+		ℓ = 1.0
+		c₁ = (liquid(ℓ) + ib_withdrawal)/ω
+	end
+	ζ = excess_liquidity = liquid(ℓ) + ib_withdrawal - ω * c₁
+
+	ζ_next = next_period = c₂_opt * (ω - γ)
+	
+	(; ζ_next, ib_withdrawal, ω, ℓ, c₁, ζ, shortfall0, shortfall)
+end
 
 # ╔═╡ 38105eb4-fd62-42be-be85-6fa1a7a802f4
 md"""
@@ -480,6 +564,125 @@ Let us assume now that there are two banks.
 	#(; ℓ, y_pc, ν_pc)
 end =#
 
+# ╔═╡ f2967e20-223a-41d3-82bb-bf110d64c821
+md"""
+# Exercises
+"""
+
+# ╔═╡ f06193b2-f51c-433d-baeb-f60fc9ee53eb
+theme = (
+	arrow_size = 25,
+	node_size = 15,
+	layout = Shell(),
+)
+
+# ╔═╡ 58080c61-bdb8-4520-a09d-f4397e0100ec
+md"""
+## Exercise 1
+"""
+
+# ╔═╡ cd01834c-febc-4ccb-9900-d902d897f9e4
+md"""
+## Exercise 2
+
+There are two states of the world.
+
+```math
+\begin{align}
+S_1 = (\gamma - \varepsilon, \gamma + \varepsilon, \gamma - \varepsilon, \gamma + \varepsilon )\\
+S_2 = (\gamma - \varepsilon, \gamma - \varepsilon, \gamma + \varepsilon, \gamma + \varepsilon )
+\end{align}
+```
+where ``0 \leq \gamma - \varepsilon < \gamma + \varepsilon \leq 1``.
+
+**(a)** What is the minimal number of edges that will prevent a bank run in period ``t=1`` in both possible states?
+
+**(b)** Assume that your minimal network from **(a)** has _uniform weights_. What is the lower bound ``y_\text{min}`` for that weight that will allow the socially optimal allocation in both states?
+
+**(c)** What will happen if ``y < y_\text{min}``?
+
+**(d)** Assume that there is a complete interbank network with uniform weights. What is the lowest weight that allows the socially optimal allocation in both states?
+
+**(e)** Take the two networks with their minimal weights as given. Discuss two alternative states ``S_3`` and ``S_4``. In ``S_3``, your minimal network should have a better outcome than the complete network. And in ``S_4`` the complete network should have a better outcome.
+
+"""
+
+# ╔═╡ 3f8f5da8-f76f-46df-bc12-350923697b40
+function node_legend(figpos, node_styles, title = "")
+	
+	elems = [MarkerElement(; color, markersize = 15, marker = :●) for color ∈ node_styles.color]
+
+	if length(title) == 0
+		title_tuple = ()
+	else
+		title_tuple = (title, )
+	end
+	
+	Legend(
+		figpos,
+    	elems, node_styles.label, title_tuple...;
+		orientation=:horizontal, titleposition=:left, framevisible=false
+	)
+end
+
+# ╔═╡ a312a869-0359-47ab-b9f5-d4fcadca9c02
+function minimal_graphplot(args; node_styles = missing, kwargs...)
+	fig, ax, plt = graphplot(args; kwargs...)
+
+	hidedecorations!(ax)
+	
+	if !ismissing(node_styles)
+		(title, df) = node_styles
+		node_legend(fig[end+1,1], df, title)
+	end
+
+	(; fig, ax, plt)
+end
+
+# ╔═╡ 76855ce2-3083-4272-b43c-f9397a4914e6
+ex1 = let
+	n = 5
+
+	shuffled_nodes = shuffle(1:n)
+	n_half = n ÷ 2
+	
+	shock = fill("none", n)
+	shock[shuffled_nodes[1:n_half]] .= "positive"
+	shock[shuffled_nodes[n_half+1:2n_half]] .= "negative"
+
+	node_styles = (title = "shock", df = DataFrame(label = ["positive", "negative", "none"], color = ["green", "red", "gray"]))
+
+	df = @chain begin
+		DataFrame(bank = 1:n, label = shock)
+		leftjoin(_, node_styles.df, on = :label)
+	end
+
+	(; n, color = df.color, node_styles)
+end;
+
+# ╔═╡ 831ef0e4-a408-4b84-b50a-d8ccef81bd2d
+md"""
+Consider the setup of Allen & Gale with $(ex1.n) banks. Banks know that a fraction ``\gamma`` of the population are _early types_. In the social optimum, banks offer deposit contracts ``(c_1, c_2)``.
+
+After the contracts have been set, banks learn that among their clients the fraction of early types is ``\omega_i \in \{ \gamma \pm \varepsilon, \gamma\}``. This is shown in the figure below. The red dots mean "negative" (``\gamma + \varepsilon``), the green dots mean "positive" (``\gamma - \varepsilon``) and the gray dots mean "none" (``\gamma``).
+"""
+
+# ╔═╡ 4d4fc17f-c500-4437-9931-3167b85b966e
+let
+	g = SimpleDiGraph(ex1.n)
+
+	fig, ax, _ = minimal_graphplot(g;
+		theme...,
+		node_color = ex1.color,
+		nlabels = string.(vertices(g)),
+		nlabels_offset = Point2(0.05, 0.05),
+		ex1.node_styles,
+		axis = (title = "Interbank network", )
+	)
+
+	fig
+end
+
 # ╔═╡ 596df16c-a336-40fc-9df8-e93b321ca2e6
 md"""
 # Appendix
@@ -502,11 +705,15 @@ Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
 DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 NamedTupleTools = "d9ec5142-1e00-5aa0-9d6a-321866360f50"
+NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
 AlgebraOfGraphics = "~0.6.5"
@@ -515,9 +722,12 @@ Chain = "~0.4.10"
 DataFrameMacros = "~0.2.1"
 DataFrames = "~1.3.2"
 ForwardDiff = "~0.10.25"
+GraphMakie = "~0.3.2"
+Graphs = "~1.6.0"
 LaTeXStrings = "~1.3.0"
 Makie = "~0.16.4"
 NamedTupleTools = "~0.13.7"
+NetworkLayout = "~0.4.4"
 Optim = "~1.6.1"
 PlutoUI = "~0.7.33"
 """
@@ -566,6 +776,12 @@ version = "0.4.1"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
+
+[[deps.ArnoldiMethod]]
+deps = ["LinearAlgebra", "Random", "StaticArrays"]
+git-tree-sha1 = "62e51b39331de8911e4a7ff6f5aaf38a5f4cc0ae"
+uuid = "ec485272-7323-5ecc-a04f-4719b315124d"
+version = "0.2.0"
 
 [[deps.ArrayInterface]]
 deps = ["Compat", "IfElse", "LinearAlgebra", "Requires", "SparseArrays", "Static"]
@@ -922,6 +1138,12 @@ git-tree-sha1 = "a32d672ac2c967f3deb8a81d828afc739c838a06"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.68.3+2"
 
+[[deps.GraphMakie]]
+deps = ["GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "StaticArrays"]
+git-tree-sha1 = "7413cb602a7cbe44129016e8cd45981209823404"
+uuid = "1ecd5474-83a3-4783-bb4f-06765db800d2"
+version = "0.3.2"
+
 [[deps.Graphics]]
 deps = ["Colors", "LinearAlgebra", "NaNMath"]
 git-tree-sha1 = "1c5a84319923bea76fa145d49e93aa4394c73fc2"
@@ -933,6 +1155,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "344bf40dcab1073aca04aa0df4fb092f920e4011"
 uuid = "3b182d85-2403-5c21-9c21-1e1f0cc25472"
 version = "1.3.14+0"
+
+[[deps.Graphs]]
+deps = ["ArnoldiMethod", "Compat", "DataStructures", "Distributed", "Inflate", "LinearAlgebra", "Random", "SharedArrays", "SimpleTraits", "SparseArrays", "Statistics"]
+git-tree-sha1 = "57c021de207e234108a6f1454003120a1bf350c4"
+uuid = "86223c79-3864-5bf0-83f7-82e725a168b6"
+version = "1.6.0"
 
 [[deps.GridLayoutBase]]
 deps = ["GeometryBasics", "InteractiveUtils", "Observables"]
@@ -1279,6 +1507,12 @@ git-tree-sha1 = "18efc06f6ec36a8b801b23f076e3c6ac7c3bf153"
 uuid = "f09324ee-3d7c-5217-9330-fc30815ba969"
 version = "1.0.2"
 
+[[deps.NetworkLayout]]
+deps = ["GeometryBasics", "LinearAlgebra", "Random", "Requires", "SparseArrays"]
+git-tree-sha1 = "cac8fc7ba64b699c678094fa630f49b80618f625"
+uuid = "46757867-2c16-5918-afeb-47bfcb05e46a"
+version = "0.4.4"
+
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 
@@ -1566,6 +1800,12 @@ deps = ["Random", "Statistics", "Test"]
 git-tree-sha1 = "d263a08ec505853a5ff1c1ebde2070419e3f28e9"
 uuid = "73760f76-fbc4-59ce-8f25-708e95d2df96"
 version = "0.4.0"
+
+[[deps.SimpleTraits]]
+deps = ["InteractiveUtils", "MacroTools"]
+git-tree-sha1 = "5d7e3f4e11935503d3ecaf7186eac40602e7d231"
+uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
+version = "0.9.4"
 
 [[deps.Sixel]]
 deps = ["Dates", "FileIO", "ImageCore", "IndirectArrays", "OffsetArrays", "REPL", "libsixel_jll"]
@@ -1856,7 +2096,7 @@ version = "3.5.0+0"
 # ╠═f1beca33-7885-4132-8ce7-9e58339bc26d
 # ╟─f8d5e164-f968-4b82-bf8f-8f79ade560df
 # ╟─db2cff8e-0ddb-40e6-97ed-42b50a1d1b1f
-# ╟─24000350-dd53-4938-9360-09fcd7e0c2fb
+# ╠═24000350-dd53-4938-9360-09fcd7e0c2fb
 # ╟─b248eebe-0289-40de-8998-dd155db38af9
 # ╟─41b70c0c-7c48-40f9-bed6-b712bab83f1b
 # ╠═eee63073-78dc-4378-b2bb-0d1746dcde3b
@@ -1864,7 +2104,7 @@ version = "3.5.0+0"
 # ╠═b8933bd2-f4bb-4dca-8278-c00fd8cfdfbd
 # ╠═98fabde8-90db-44a4-a439-45fcdfbf9e9c
 # ╟─9f941a41-0b5d-4a98-96c5-1182784fa484
-# ╟─b533b725-5d8e-4a22-96ec-fcfdb6be80b2
+# ╟─20348017-411a-49fe-a178-eac580e71e63
 # ╟─970e0ae1-e25e-4606-9007-eb63afa80083
 # ╟─79665579-c707-48af-848d-3680c15dd380
 # ╠═6a101f0f-88f4-40a5-96cc-6338f8d24323
@@ -1877,9 +2117,13 @@ version = "3.5.0+0"
 # ╠═95ebddf6-c9ba-494d-be9c-e5a1cf478ce7
 # ╠═221eed48-6110-48ee-8aa5-c9ea58c47b46
 # ╠═29b2d1b3-2ec6-4de8-82bf-ea05807d0699
+# ╠═59696736-58c5-46da-835e-e3e00843cf40
+# ╠═7052dd28-04af-467f-be23-fbe70db24e1e
 # ╟─8b9edbc2-5849-4b1f-a897-1e909d2c9885
 # ╟─f355b2ff-555e-458d-bc5b-f8c23bcf9cf8
 # ╟─cc3a8e45-131e-4a3b-9239-babd134baacd
+# ╠═7b0fe034-b70f-4dc1-ad98-3d29ec6797e7
+# ╠═23c6b670-6685-467b-be9e-8c68b48c83ec
 # ╟─38105eb4-fd62-42be-be85-6fa1a7a802f4
 # ╠═c17e8915-5eba-45b9-a080-3ad1b834be99
 # ╠═5560e9d8-7d13-4cd3-a712-05a803298964
@@ -1888,6 +2132,19 @@ version = "3.5.0+0"
 # ╠═b37f052c-ba6a-49cd-a3b9-80d95923a767
 # ╠═61a6dce7-101a-443e-962a-91a0d2ee7689
 # ╠═2db790eb-5345-457f-887b-753457bee1da
+# ╟─f2967e20-223a-41d3-82bb-bf110d64c821
+# ╠═9bc0e1d4-9c1b-4f3c-802f-6e5bddad689e
+# ╠═97a3fbcd-5969-4886-9a9b-abc20674f95f
+# ╠═6bff9775-1199-42a8-b0e6-099b0701cdb6
+# ╠═f06193b2-f51c-433d-baeb-f60fc9ee53eb
+# ╟─58080c61-bdb8-4520-a09d-f4397e0100ec
+# ╟─831ef0e4-a408-4b84-b50a-d8ccef81bd2d
+# ╟─4d4fc17f-c500-4437-9931-3167b85b966e
+# ╟─cd01834c-febc-4ccb-9900-d902d897f9e4
+# ╠═3f8f5da8-f76f-46df-bc12-350923697b40
+# ╠═a312a869-0359-47ab-b9f5-d4fcadca9c02
+# ╠═76855ce2-3083-4272-b43c-f9397a4914e6
+# ╠═95127df3-1c89-45c2-a6c9-012b02dd3bbf
 # ╟─596df16c-a336-40fc-9df8-e93b321ca2e6
 # ╟─deef738e-5636-4314-821a-9d6546963561
 # ╠═5f710a04-876e-4d0e-8fd2-6b56357d3f3e
