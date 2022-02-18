@@ -14,32 +14,38 @@ macro bind(def, element)
     end
 end
 
+# ╔═╡ 95127df3-1c89-45c2-a6c9-012b02dd3bbf
+using Random
+
+# ╔═╡ 3b40bb50-ae8d-4a27-aff5-0a18ac57cf46
+using PlutoUI: Slider
+
+# ╔═╡ fede66c2-c073-43b4-8fb0-3cfd868f695f
+using NamedTupleTools: delete
+
+# ╔═╡ 9bc0e1d4-9c1b-4f3c-802f-6e5bddad689e
+using Graphs
+
 # ╔═╡ ceb4712b-98f6-407d-99e9-5bf3128749af
 using Optim
 
 # ╔═╡ ba378958-3da4-4d6c-9987-72f2519f510f
 using ForwardDiff
 
-# ╔═╡ 3b40bb50-ae8d-4a27-aff5-0a18ac57cf46
-using PlutoUI: Slider
-
-# ╔═╡ 7b3df55d-5d2f-4621-ae8a-b1d29999ee79
-using LaTeXStrings: latexstring, @L_str
-
-# ╔═╡ fede66c2-c073-43b4-8fb0-3cfd868f695f
-using NamedTupleTools: delete
-
-# ╔═╡ 002a5601-69c9-4342-a808-b9cfa64919eb
-using AlgebraOfGraphics
-
 # ╔═╡ e42f025a-11dc-48ed-92e3-3c5f473ba2bd
 using Chain: @chain
+
+# ╔═╡ f5d5d00c-da96-44fc-b164-f557d2430e9a
+using DataFrames
 
 # ╔═╡ 243a809d-8ee3-4f50-87bd-ea0da9c7c549
 using DataFrameMacros
 
-# ╔═╡ 9bc0e1d4-9c1b-4f3c-802f-6e5bddad689e
-using Graphs
+# ╔═╡ 002a5601-69c9-4342-a808-b9cfa64919eb
+using AlgebraOfGraphics
+
+# ╔═╡ 5f710a04-876e-4d0e-8fd2-6b56357d3f3e
+using CairoMakie, Makie
 
 # ╔═╡ 97a3fbcd-5969-4886-9a9b-abc20674f95f
 using GraphMakie
@@ -47,14 +53,8 @@ using GraphMakie
 # ╔═╡ 6bff9775-1199-42a8-b0e6-099b0701cdb6
 using NetworkLayout
 
-# ╔═╡ 95127df3-1c89-45c2-a6c9-012b02dd3bbf
-using Random
-
-# ╔═╡ 5f710a04-876e-4d0e-8fd2-6b56357d3f3e
-using CairoMakie, Makie
-
-# ╔═╡ f5d5d00c-da96-44fc-b164-f557d2430e9a
-using DataFrames
+# ╔═╡ 7b3df55d-5d2f-4621-ae8a-b1d29999ee79
+using LaTeXStrings: latexstring, @L_str
 
 # ╔═╡ 49f91510-597d-4151-916f-33ceaa9939f2
 using PlutoUI
@@ -314,18 +314,18 @@ withdrawal(ω) ≤ liquid(ℓ_opt)
 function realized_payout(ω, opt; ib_payable=0.0, ib_deposit=0.0)
 	(; x_opt, ℓ_opt, c₁_opt, c₂_opt) = opt
 
-	liquid(ℓ) = 1 - x_opt + ℓ * x_opt * r - ib_payable
+	liquid(ℓ) = 1 - x_opt + ℓ * x_opt * r #- ib_payable
 	withdrawal(ω) = c₁_opt * ω
 
 	shortfall0 = max(withdrawal(ω) - liquid(0.0), 0.0)
-	if 0 ≤ shortfall0 ≤ ib_deposit
-		ib_withdrawal = shortfall0
-	else # shortfall > ib_deposit
-		ib_withdrawal = ib_deposit
-	end
-	@info shortfall0
+	#if 0 ≤ shortfall0 ≤ ib_deposit
+	#	ib_withdrawal = shortfall0
+	#else # shortfall > ib_deposit
+	#	ib_withdrawal = ib_deposit
+	#end
+	#@info shortfall0
 	
-	shortfall = shortfall0 - ib_withdrawal
+	shortfall = shortfall0 #- ib_withdrawal
 		
 	ℓ_new = clamp(shortfall / (x_opt * r), 0.0, 1.0)
 	c₁_new = c₁(x_opt, ℓ_new, γ = max(γ, ω))
@@ -337,7 +337,7 @@ function realized_payout(ω, opt; ib_payable=0.0, ib_deposit=0.0)
 	end
 		
 		
-	(; ω, c₁_opt, c₂_opt, ℓ_opt, c₁_new, c₂_new, ℓ_new, ib_withdrawal)
+	(; ω, c₁_opt, c₂_opt, ℓ_opt, c₁_new, c₂_new, ℓ_new)
 end
 
 # ╔═╡ 221eed48-6110-48ee-8aa5-c9ea58c47b46
@@ -353,12 +353,9 @@ let
 
 	@chain [bank1; bank2] begin
 		DataFrame
-		@select(:ω, :ℓ_new, :ib_withdrawal)
+		#@select(:ω, :ℓ_new, :ib_withdrawal)
 	end
 end
-
-
-# ╔═╡ 7052dd28-04af-467f-be23-fbe70db24e1e
 
 
 # ╔═╡ 8b9edbc2-5849-4b1f-a897-1e909d2c9885
@@ -691,6 +688,31 @@ md"""
 # ╔═╡ deef738e-5636-4314-821a-9d6546963561
 md"""
 ## Package environment
+"""
+
+# ╔═╡ eaf1c5bd-ee4f-4233-9756-59c27975256c
+md"""
+### Graphs
+"""
+
+# ╔═╡ 5913fea9-07c0-41ba-b8f3-bc215f50405d
+md"""
+### Numerical Methods
+"""
+
+# ╔═╡ 1e5fd0a1-b029-4759-a017-c6d4a786caaf
+md"""
+### Data
+"""
+
+# ╔═╡ 7edf81ff-cd74-4d2b-ac29-779efa7be2b3
+md"""
+### Plotting
+"""
+
+# ╔═╡ 5c302835-c976-43f9-87d4-77f1ef3fc78f
+md"""
+### Other
 """
 
 # ╔═╡ 3c4b48db-ead0-4dc3-b72c-1c53188419b9
@@ -2081,14 +2103,6 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╟─2148f702-32ee-40d8-896d-48ae684647bc
-# ╠═ceb4712b-98f6-407d-99e9-5bf3128749af
-# ╠═ba378958-3da4-4d6c-9987-72f2519f510f
-# ╠═3b40bb50-ae8d-4a27-aff5-0a18ac57cf46
-# ╠═7b3df55d-5d2f-4621-ae8a-b1d29999ee79
-# ╠═fede66c2-c073-43b4-8fb0-3cfd868f695f
-# ╠═002a5601-69c9-4342-a808-b9cfa64919eb
-# ╠═e42f025a-11dc-48ed-92e3-3c5f473ba2bd
-# ╠═243a809d-8ee3-4f50-87bd-ea0da9c7c549
 # ╟─fee3fc5e-7a5f-436b-af17-37e05943d340
 # ╟─9562942c-990d-4e31-be1a-24e04ed01aee
 # ╟─51d69d70-1545-4096-bcbc-722bb3d9b200
@@ -2118,11 +2132,10 @@ version = "3.5.0+0"
 # ╠═221eed48-6110-48ee-8aa5-c9ea58c47b46
 # ╠═29b2d1b3-2ec6-4de8-82bf-ea05807d0699
 # ╠═59696736-58c5-46da-835e-e3e00843cf40
-# ╠═7052dd28-04af-467f-be23-fbe70db24e1e
 # ╟─8b9edbc2-5849-4b1f-a897-1e909d2c9885
 # ╟─f355b2ff-555e-458d-bc5b-f8c23bcf9cf8
 # ╟─cc3a8e45-131e-4a3b-9239-babd134baacd
-# ╠═7b0fe034-b70f-4dc1-ad98-3d29ec6797e7
+# ╟─7b0fe034-b70f-4dc1-ad98-3d29ec6797e7
 # ╠═23c6b670-6685-467b-be9e-8c68b48c83ec
 # ╟─38105eb4-fd62-42be-be85-6fa1a7a802f4
 # ╠═c17e8915-5eba-45b9-a080-3ad1b834be99
@@ -2133,9 +2146,6 @@ version = "3.5.0+0"
 # ╠═61a6dce7-101a-443e-962a-91a0d2ee7689
 # ╠═2db790eb-5345-457f-887b-753457bee1da
 # ╟─f2967e20-223a-41d3-82bb-bf110d64c821
-# ╠═9bc0e1d4-9c1b-4f3c-802f-6e5bddad689e
-# ╠═97a3fbcd-5969-4886-9a9b-abc20674f95f
-# ╠═6bff9775-1199-42a8-b0e6-099b0701cdb6
 # ╠═f06193b2-f51c-433d-baeb-f60fc9ee53eb
 # ╟─58080c61-bdb8-4520-a09d-f4397e0100ec
 # ╟─831ef0e4-a408-4b84-b50a-d8ccef81bd2d
@@ -2144,11 +2154,27 @@ version = "3.5.0+0"
 # ╠═3f8f5da8-f76f-46df-bc12-350923697b40
 # ╠═a312a869-0359-47ab-b9f5-d4fcadca9c02
 # ╠═76855ce2-3083-4272-b43c-f9397a4914e6
-# ╠═95127df3-1c89-45c2-a6c9-012b02dd3bbf
 # ╟─596df16c-a336-40fc-9df8-e93b321ca2e6
 # ╟─deef738e-5636-4314-821a-9d6546963561
-# ╠═5f710a04-876e-4d0e-8fd2-6b56357d3f3e
+# ╟─eaf1c5bd-ee4f-4233-9756-59c27975256c
+# ╠═9bc0e1d4-9c1b-4f3c-802f-6e5bddad689e
+# ╟─5913fea9-07c0-41ba-b8f3-bc215f50405d
+# ╠═ceb4712b-98f6-407d-99e9-5bf3128749af
+# ╠═ba378958-3da4-4d6c-9987-72f2519f510f
+# ╟─1e5fd0a1-b029-4759-a017-c6d4a786caaf
+# ╠═e42f025a-11dc-48ed-92e3-3c5f473ba2bd
 # ╠═f5d5d00c-da96-44fc-b164-f557d2430e9a
+# ╠═243a809d-8ee3-4f50-87bd-ea0da9c7c549
+# ╟─7edf81ff-cd74-4d2b-ac29-779efa7be2b3
+# ╠═002a5601-69c9-4342-a808-b9cfa64919eb
+# ╠═5f710a04-876e-4d0e-8fd2-6b56357d3f3e
+# ╠═97a3fbcd-5969-4886-9a9b-abc20674f95f
+# ╠═6bff9775-1199-42a8-b0e6-099b0701cdb6
+# ╠═7b3df55d-5d2f-4621-ae8a-b1d29999ee79
+# ╟─5c302835-c976-43f9-87d4-77f1ef3fc78f
+# ╠═95127df3-1c89-45c2-a6c9-012b02dd3bbf
+# ╠═3b40bb50-ae8d-4a27-aff5-0a18ac57cf46
+# ╠═fede66c2-c073-43b4-8fb0-3cfd868f695f
 # ╠═49f91510-597d-4151-916f-33ceaa9939f2
 # ╠═3c4b48db-ead0-4dc3-b72c-1c53188419b9
 # ╟─00000000-0000-0000-0000-000000000001
