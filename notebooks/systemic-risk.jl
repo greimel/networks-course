@@ -331,11 +331,11 @@ initial_network(interbank_market) = adjacency_matrix(interbank_market.network)
 
 # ╔═╡ 44728e3a-3e88-4808-96d1-be17b58fde70
 begin
-	payables(IM::InterbankMarket) = sum(initial_network(IM), dims = 1)
-	receivables(IM::InterbankMarket) = sum(initial_network(IM), dims = 2)
+	payables(IM::InterbankMarket) = sum(initial_network(IM), dims = 2)
+	receivables(IM::InterbankMarket) = sum(initial_network(IM), dims = 1)
 	
-	paid(IM::InterbankMarket) = sum(updated_network(IM), dims = 1)
-	received(IM::InterbankMarket) = sum(updated_network(IM), dims = 2)
+	paid(IM::InterbankMarket) = sum(updated_network(IM), dims = 2)
+	received(IM::InterbankMarket) = sum(updated_network(IM), dims = 1)
 end
 
 # ╔═╡ 602e44bc-4d5b-4f7f-9a75-bf9b1576ac11
@@ -385,7 +385,7 @@ function iterate_payments(banks, IM)
 		# compute repayment
 		(; y_pc, ν_pc, ℓ) = repayment(bank, i, IM)
 		# update payment matrix
-		x_new[:, i] .*= y_pc
+		x_new[i, :] .*= y_pc
 		# return bank's choices
 		(; y_pc, ν_pc, ℓ, bank = i)
 	end
@@ -401,11 +401,12 @@ function equilibrium(banks, IM; maxit = 100)
 	x_new = copy(x)
 	for it ∈ 1:maxit
 		(; x_new, out) = iterate_payments(banks, IM)
+		converged = x_new ≈ x
+		x .= x_new
 		
-		if x_new ≈ x || it == maxit
+		if converged || it == maxit
 			return (; out = DataFrame(out), x, y, it, success = it != maxit, banks, IM)
 		end
-		x .= x_new
 	end
 	
 end
@@ -460,8 +461,11 @@ end
 # ╔═╡ d07fa3a9-6687-4279-8fe7-e348152b18f4
 peq2 = let
 	ȳ = 2.5 # 0.2
-	n_banks = 10
+	n_banks = 4
+	#nw = CompleteNetwork(n_banks, ȳ)
 	nw = RingNetwork(n_banks, ȳ)
+	#nw = IslandNetwork(2, n_banks ÷ 2, ȳ)
+
 	IM = InterbankMarket(nw)
 	
 	updated_network(IM) .= initial_network(IM)
@@ -564,7 +568,6 @@ let ε = 1.2
 	ax.yminorticksvisible = true
 	ax.yminorticks = IntervalsBetween(n)
 	ax.yminorgridvisible = true
-	
 	
 	axislegend(ax)
 	fig	
@@ -2217,21 +2220,21 @@ version = "3.5.0+0"
 # ╟─c4ccc5ad-618d-4635-9d52-13be0df55198
 # ╠═37acf7b5-f93e-4ec9-9807-b247544713ed
 # ╟─8377503b-4556-4dc0-9d15-330bdd4100e6
-# ╠═83817687-0e03-4be0-a66b-e74dcd300b15
+# ╟─83817687-0e03-4be0-a66b-e74dcd300b15
 # ╟─f8271303-ab1f-486a-aa34-8f1dc6b33cd2
 # ╟─f3e015f2-33e1-4b2f-b34a-ee6a5751d96b
 # ╟─27039532-1c2b-4aee-858e-f9f0a135e62f
-# ╟─6e3907db-9c66-4805-853b-11877c23a1d6
 # ╠═2ed68cbb-7e5b-4d17-9cb3-4f9404b63365
+# ╟─6e3907db-9c66-4805-853b-11877c23a1d6
 # ╠═d07fa3a9-6687-4279-8fe7-e348152b18f4
 # ╟─78a45e6a-a772-4fa7-bd9c-d728d5ea79e8
 # ╠═e9e6c131-c334-4674-9384-273cd40929dc
 # ╠═3726a99d-8024-4fec-a047-43d370f795d9
 # ╟─d649a654-e515-40b4-a45b-e095f1d12da7
-# ╠═76f41f57-2971-4020-ab2f-87fad4a92489
+# ╟─76f41f57-2971-4020-ab2f-87fad4a92489
 # ╠═2b7c65fe-8bf8-47f2-96b1-6dfe8888d494
 # ╟─0d4d9a5b-5e4f-4126-85ec-d31327cbf960
-# ╠═045c54d2-c76c-49f1-b849-d607e50b182b
+# ╟─045c54d2-c76c-49f1-b849-d607e50b182b
 # ╟─f5938462-ae9d-44c0-a0b1-17d61e8ac0eb
 # ╟─45430bb9-8914-4839-b936-79bcbc453822
 # ╠═dafe2f99-d3b5-4450-bbab-c8ffe1ac11ea
