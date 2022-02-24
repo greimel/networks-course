@@ -94,9 +94,6 @@ and the claims (receivables) of bank ``j`` are ``\begin{pmatrix} y_{1j} \\ y_{2j
 
 """
 
-# ╔═╡ 1a381072-5c07-476b-9604-dcc1cc589e62
-g isa SimpleWeightedDiGraph
-
 # ╔═╡ b309cc56-598f-4bd4-a523-edbbb850db58
 # paid(IM)
 
@@ -201,29 +198,15 @@ md"""
 specify the shock ``\varepsilon`` $(@bind _ε1 Slider(0:0.1:_a, show_value = true, default = 0))
 """
 
-# ╔═╡ 6a529266-dd07-4240-b6f6-47a7472cb6b5
-md"""
-## Payment equilibrium
-"""
-
 # ╔═╡ f3e015f2-33e1-4b2f-b34a-ee6a5751d96b
 md"""
 ## III. Financial contagion
 """
 
-# ╔═╡ 66f45323-9972-4d01-a824-b4f21da28625
+# ╔═╡ 27039532-1c2b-4aee-858e-f9f0a135e62f
 md"""
-### Payment equilibrium without project
-"""
-
-# ╔═╡ 3c836db8-485c-4683-8334-58527454adae
-md"""
-specify the shock ``\varepsilon`` $(@bind _ε2 Slider(0.0:0.05:0.4, show_value = true, default = 0.3))
-"""
-
-# ╔═╡ ed3646ba-dec1-47e9-bc9b-3a024e97ef01
-md"""
-### Payment equilibrium with productive projects
+!!! note "Note"
+    The plot only shows interbank assets and liabilities.
 """
 
 # ╔═╡ 6e3907db-9c66-4805-853b-11877c23a1d6
@@ -348,11 +331,11 @@ initial_network(interbank_market) = adjacency_matrix(interbank_market.network)
 
 # ╔═╡ 44728e3a-3e88-4808-96d1-be17b58fde70
 begin
-	payables(IM::InterbankMarket) = sum(initial_network(IM), dims = 1) #|> vec
-	receivables(IM::InterbankMarket) = sum(initial_network(IM), dims = 2) #|> vec
+	payables(IM::InterbankMarket) = sum(initial_network(IM), dims = 1)
+	receivables(IM::InterbankMarket) = sum(initial_network(IM), dims = 2)
 	
-	paid(IM::InterbankMarket) = sum(updated_network(IM), dims = 1) #|> vec
-	received(IM::InterbankMarket) = sum(updated_network(IM), dims = 2) #|> vec
+	paid(IM::InterbankMarket) = sum(updated_network(IM), dims = 1)
+	received(IM::InterbankMarket) = sum(updated_network(IM), dims = 2)
 end
 
 # ╔═╡ 602e44bc-4d5b-4f7f-9a75-bf9b1576ac11
@@ -379,8 +362,8 @@ let
 		(type = "liabs", spec = "2. junior liab (interbank) y", value = y_pc * y),
 		(type = "assets", spec = "3. early payoff a - ε", value = a - _ε1),
 		(type = "assets", spec = "4. liquid assets x + c", value = x + c),
-		(type = "assets", spec = "6. liquidated assets ℓ ζ A", value = ℓ * ζ * A),
-		(type = "assets", spec = "5. illiquid asset (project) A", value = (1-ℓ) * A)
+		(type = "assets", spec = "5. liquidated assets ℓ ζ A", value = ℓ * ζ * A),
+		(type = "assets", spec = "6. illiquid asset (project) A", value = (1-ℓ) * A)
 			] |> DataFrame
 	@chain df begin
 		data(_) * visual(BarPlot) * mapping(
@@ -449,73 +432,6 @@ struct CompleteNetwork <: FinancialNetwork
 	end
 end
 
-# ╔═╡ 60615cd2-aa70-47e9-b432-b4051e17f628
-begin
-	n_banks = 3
-	ȳ = 2.1
-	nw = CompleteNetwork(n_banks, ȳ)
-	IM = InterbankMarket(nw)
-
-	nw
-end
-
-# ╔═╡ 7a8725e1-2881-4393-8495-3fecfd8b609d
-graphplot(SimpleWeightedDiGraph(nw.Y), arrow_size = 15, arrow_show=true)
-
-# ╔═╡ 97ae1ed5-9017-4e54-954d-5c9b917bce93
-is_directed(SimpleDiGraph(nw.Y))
-
-# ╔═╡ e454ff61-2769-4095-8d0c-6958f79338ee
-payables(IM)
-
-# ╔═╡ b09eb768-f645-441d-a943-8c2fe373fd08
-receivables(IM)
-
-# ╔═╡ d385bc7e-d9e9-4f61-a455-9973262bd37a
-banks = let
-	ν = 2.3
-	c = 2.4
-	ε = 2.4 # ȳ + 0.1 + 0.1 #4
-	[Bank(; ν = ν, c = max(c - ε, 0)); fill(Bank(; ν, c), n_banks - 1)]
-end
-
-# ╔═╡ f8271303-ab1f-486a-aa34-8f1dc6b33cd2
-let
-	out = map(0:0.05:5.5) do ε
-		project = Project(; a = 5.5, ε, ζ = 0.5, A = 3.5)
-		bank = Bank(; ν = 4.7, c = 0.0, project, γ = Failure())
-		i_bank = 1
-
-		(; ε, repayment(bank, i_bank, IM)...)
-	end 
-	
-	@chain out begin
-		DataFrame
-		stack([:ℓ, :y_pc, :ν_pc])
-		@transform!(:panel = :variable == "ℓ" ? "liquidated" : "repaid")
-		@transform!(:variable = @c recode(:variable, 
-			"y_pc" => "% repaid (interbank)",
-			"ν_pc" => "% repaid (outside)",
-			"ℓ" => "% liquidated"
-			)
-		)
-		data(_) * visual(Lines) * mapping(
-			:ε => "size of shock ε",
-			:value => "",
-			color = :variable => "",
-			row = :panel)
-		draw(; legend = (position = :top, titleposition = :left))
-	end
-end
-
-# ╔═╡ 45430bb9-8914-4839-b936-79bcbc453822
-md"""
-## The Interbank Market
-
-We look at $n_banks banks that have the same exposure to the project and the same total exposure to the interbank market.
-
-"""
-
 # ╔═╡ 8c3cf1ef-187a-4f32-96b5-926d93519a30
 function ring_network(n, ȳ)
 	Y = zeros(n, n)
@@ -572,22 +488,6 @@ struct γNetwork <: FinancialNetwork
 		
 		new(Y, ȳ, γ)
 	end
-end
-
-# ╔═╡ 5b6837d8-afdb-4314-a1f5-d36cd4276411
-peq = let
-	n_banks = 4
-	ȳ = 2.1
-	ν = 2.3
-	c = 2.4
-	ε = 0.35 #2.4
-
-	banks = [Bank(; ν = ν, c = max(c - _ε2, 0)); fill(Bank(; ν, c), n_banks - 1)]
-
-	nw = γNetwork(n_banks, ȳ, 1.0)
-	IM = InterbankMarket(nw)
-
-	equilibrium(banks, IM)
 end
 
 # ╔═╡ 46745175-c7bf-45b5-8e1a-d8ab9e9ca703
@@ -782,6 +682,67 @@ function circular_graphplot(g; axis = (;), kwargs...)
 	fig
 end
 
+# ╔═╡ 60615cd2-aa70-47e9-b432-b4051e17f628
+begin
+	n_banks = 3
+	ȳ = 2.1
+	nw = CompleteNetwork(n_banks, ȳ)
+	IM = InterbankMarket(nw)
+
+	circular_graphplot(IM)
+end
+
+# ╔═╡ e454ff61-2769-4095-8d0c-6958f79338ee
+payables(IM)
+
+# ╔═╡ b09eb768-f645-441d-a943-8c2fe373fd08
+receivables(IM)
+
+# ╔═╡ d385bc7e-d9e9-4f61-a455-9973262bd37a
+banks = let
+	ν = 2.3
+	c = 2.4
+	ε = 2.4 # ȳ + 0.1 + 0.1 #4
+	[Bank(; ν = ν, c = max(c - ε, 0)); fill(Bank(; ν, c), n_banks - 1)]
+end
+
+# ╔═╡ f8271303-ab1f-486a-aa34-8f1dc6b33cd2
+let
+	out = map(0:0.05:5.5) do ε
+		project = Project(; a = 5.5, ε, ζ = 0.5, A = 3.5)
+		bank = Bank(; ν = 4.7, c = 0.0, project, γ = Failure())
+		i_bank = 1
+
+		(; ε, repayment(bank, i_bank, IM)...)
+	end 
+	
+	@chain out begin
+		DataFrame
+		stack([:ℓ, :y_pc, :ν_pc])
+		@transform!(:panel = :variable == "ℓ" ? "liquidated" : "repaid")
+		@transform!(:variable = @c recode(:variable, 
+			"y_pc" => "% repaid (interbank)",
+			"ν_pc" => "% repaid (outside)",
+			"ℓ" => "% liquidated"
+			)
+		)
+		data(_) * visual(Lines) * mapping(
+			:ε => "size of shock ε",
+			:value => "",
+			color = :variable => "",
+			row = :panel)
+		draw(; legend = (position = :top, titleposition = :left))
+	end
+end
+
+# ╔═╡ 45430bb9-8914-4839-b936-79bcbc453822
+md"""
+## The Interbank Market
+
+We look at $n_banks banks that have the same exposure to the project and the same total exposure to the interbank market.
+
+"""
+
 # ╔═╡ 5e3fb6e9-eacb-4e4b-9a62-83632263be37
 let	
 	n = γNetwork(5, 0.5, _γ_)
@@ -810,7 +771,15 @@ red_if_lt_one(x) = x < 1 ? :red : :black
 # ╔═╡ 41d5e579-418b-4988-9a6f-f75afeffe821
 function viz_eq_graph!(ax, peq; kwargs...)
 	(; IM, out) = peq
-	circular_graphplot!(ax, IM; node_size = (2.5 .- out.ℓ) .* 10, node_color = red_if_lt_one.(out.y_pc), kwargs...)
+	graph = SimpleWeightedDiGraph(IM.network.Y)
+
+	circular_graphplot!(ax, graph; 
+		node_size = (2.5 .- out.ℓ) .* 10,
+		node_color = red_if_lt_one.(out.y_pc),
+		nlabels = string.(vertices(graph)),
+		nlabels_offset = Point2(0.05, 0.05),
+		kwargs...
+	)
 end
 
 # ╔═╡ 64248193-552e-47a0-8da5-0c58a6099b80
@@ -845,8 +814,8 @@ function viz_eq_bal_sheets((; x, banks); ymax = nothing, kwargs...)
 
 	# Attention rows and columns mixed up	
 	inside_df = [
-		@select(payment_df, :bank = :src, :value, :type = "liabs", :spec, :edge_id);
-		@select(payment_df, :bank = :dst, :value, :type = "assets",  :spec, :edge_id)
+		@select(payment_df, :bank = :src, :value, :type = "liabs",  :spec, :edge_id);
+		@select(payment_df, :bank = :dst, :value, :type = "assets", :spec, :edge_id)
 	 ]
 
 	df_bs = vcat(inside_df, outside_df, cols = :union)
@@ -876,9 +845,6 @@ function visualize_equilibrium(peq; graph = (;), bs = (;))
 
 	fg.figure
 end
-
-# ╔═╡ 81c25bb1-bc88-4639-a4b8-dbcd9c4c1998
-visualize_equilibrium(peq; bs = (ymax = ȳ * 1.05, ))
 
 # ╔═╡ 2ed68cbb-7e5b-4d17-9cb3-4f9404b63365
 visualize_equilibrium(peq2)
@@ -2230,9 +2196,6 @@ version = "3.5.0+0"
 # ╟─0cb23460-2db6-4327-a01c-a013eb471a9e
 # ╟─b542043b-b4ac-4207-b092-18b283c65524
 # ╠═60615cd2-aa70-47e9-b432-b4051e17f628
-# ╠═7a8725e1-2881-4393-8495-3fecfd8b609d
-# ╠═1a381072-5c07-476b-9604-dcc1cc589e62
-# ╠═97ae1ed5-9017-4e54-954d-5c9b917bce93
 # ╠═e454ff61-2769-4095-8d0c-6958f79338ee
 # ╠═b09eb768-f645-441d-a943-8c2fe373fd08
 # ╠═b309cc56-598f-4bd4-a523-edbbb850db58
@@ -2254,15 +2217,10 @@ version = "3.5.0+0"
 # ╟─c4ccc5ad-618d-4635-9d52-13be0df55198
 # ╠═37acf7b5-f93e-4ec9-9807-b247544713ed
 # ╟─8377503b-4556-4dc0-9d15-330bdd4100e6
-# ╟─83817687-0e03-4be0-a66b-e74dcd300b15
+# ╠═83817687-0e03-4be0-a66b-e74dcd300b15
 # ╟─f8271303-ab1f-486a-aa34-8f1dc6b33cd2
-# ╟─6a529266-dd07-4240-b6f6-47a7472cb6b5
 # ╟─f3e015f2-33e1-4b2f-b34a-ee6a5751d96b
-# ╟─66f45323-9972-4d01-a824-b4f21da28625
-# ╟─3c836db8-485c-4683-8334-58527454adae
-# ╠═81c25bb1-bc88-4639-a4b8-dbcd9c4c1998
-# ╠═5b6837d8-afdb-4314-a1f5-d36cd4276411
-# ╟─ed3646ba-dec1-47e9-bc9b-3a024e97ef01
+# ╟─27039532-1c2b-4aee-858e-f9f0a135e62f
 # ╟─6e3907db-9c66-4805-853b-11877c23a1d6
 # ╠═2ed68cbb-7e5b-4d17-9cb3-4f9404b63365
 # ╠═d07fa3a9-6687-4279-8fe7-e348152b18f4
