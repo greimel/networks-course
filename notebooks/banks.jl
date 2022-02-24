@@ -45,109 +45,17 @@ md"""
 
 # ╔═╡ 815648ae-78f2-42f1-a216-81b10c0a7850
 md"""
-`banks.jl` | **Version 2.0-dev** | *last updated: Jan 5, 2022*
-"""
-
-# ╔═╡ 336dd51e-36bc-4756-b0c5-77f616cd5711
-md"""
-# Risk Sharing and Systemic Risk in Financial Networks
-
-This lecture is based on _[Acemoglu, Ozdaglar & Tahbaz-Salehi, 2015](https://www.aeaweb.org/articles?id=10.1257/aer.20130456), American Economic Review_, and _[Allen & Gale, 2000](https://www.jstor.org/stable/10.1086/262109), Journal of Political Economy_.
-
-_Part 1 -- **Introduction**_
-* **pecking order** in case of bank default
-* financial network as a **network of promises** (a liability is a _promised_ payment)
-
-_Part 2 -- **Systemic Risk** -- What can go wrong in financial networks?_
-* **stability** and **resilience** of financial networks
-* densely connected networks are **robust, yet fragile**
-
-_Part 3 -- **Risk sharing** -- What's the value of financial networks?_
-* the **Diamond & Dybvig (1983) model** of bank and bank runs
-* banks share risk on interbank markets, **avoid default**
-
-"""
-
-# ╔═╡ cb553c47-7e67-4237-b6d4-37119731101e
-md"
-* [Diamond & Dybvig (1983)](https://www.jstor.org/stable/1837095): Bank Runs, Deposit Insurance, and Liquidity, _Journal of Political Economy_
-* [Diamond 2007](https://www.richmondfed.org/-/media/RichmondFedOrg/publications/research/economic_quarterly/2007/spring/pdf/diamond.pdf): A simple exposition of the Diamond-Dybvig model, _Richmond Fed Economic Quarterly_
-* [Allen & Gale (2000)](https://www.jstor.org/stable/10.1086/262109): Financial Contagion, _Journal of Political Economy_
-"
-
-# ╔═╡ dbdb4ba0-944d-49ba-be8a-2e783522b907
-md"""
-# Assignment 3: XXX
-"""
-
-# ╔═╡ 51f114f8-5223-44f8-a593-daab7dd117da
-group_members = ([
-	(firstname = "Ella-Louise", lastname = "Flores"),
-	(firstname = "Padraig", 	lastname = "Cope"),
-	(firstname = "Christy",  	lastname = "Denton")
-	]);
-
-# ╔═╡ e75b676f-55e9-49fc-9bbc-b2a023f45330
-group_number = 99
-
-# ╔═╡ d046c407-444e-48a7-b8f2-d2648c2dedaa
-if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
-	md"""
-!!! danger "Note!"
-    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in the above cell.
-	"""
-end
-
-# ╔═╡ 6d48b655-5163-45e9-ba6a-77d7b83f0752
-md"""
-### Task 1: ... (X points)
-
-In this exercise
-
-"""
-
-# ╔═╡ 2b722bdd-ed88-4cea-aefa-cb550262a3ad
-md"""
-👉 (1.1 | 2 points) 
-Explain why  (<100 words)
-"""
-
-# ╔═╡ 237f3fae-2d86-4eb7-95f5-2cf51e989d99
-answer11 = md"""
-Your answer
-
-goes here ...
-"""
-
-# ╔═╡ 3eab4053-22f3-4f2d-bd7b-a2b24ac89d16
-md"""
-👉 (1.2 | 2 points) 
- Clearly and concisely explain why/why not. (<100 words)
-"""
-
-# ╔═╡ 3ee8607a-a8e4-4fca-82e3-6cb2dccd9682
-answer12 = md"""
-Your answer
-
-goes here ...
-"""
-
-# ╔═╡ 32a184be-92d3-4d5d-bdd0-10204d2fde7c
-md"""
-#### Before you submit ...
-
-👉 Make sure you have added your names and your group number above.
-
-👉 Make sure that that **all group members proofread** your submission (especially your little essay).
-
-👉 Make sure that you are **within the word limit**. Short and concise answers are appreciated. Answers longer than the word limit will lead to deductions.
-
-👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. In addition, **upload the source code** of the notebook (the .jl file).
+`systemic-risk.jl` | **Version 0.1** | *last updated: Feb 24, 2022*
 """
 
 # ╔═╡ 942580bf-60d3-49fe-be2a-2fab9869322d
 md"""
-# Part 1 -- Introduction
+# Part B -- Systemic risk in financial networks
+
+This is the second lecture on financial networks. It is based on _[Acemoglu, Ozdaglar & Tahbaz-Salehi, 2015](https://www.aeaweb.org/articles?id=10.1257/aer.20130456), American Economic Review_
+
+* **stability** and **resilience** of financial networks
+* densely connected networks are **robust, yet fragile**
 """
 
 # ╔═╡ 0cb23460-2db6-4327-a01c-a013eb471a9e
@@ -406,12 +314,6 @@ begin
     	length(words)
 	end
 end
-
-# ╔═╡ 1231a633-6d68-49d3-9a05-366531987c64
-md"(You have used approximately **$(wordcount(answer11))** words.)"
-
-# ╔═╡ 3d54f493-d8a5-460c-8907-0cf45c8408d2
-md"(You have used approximately **$(wordcount(answer12))** words.)"
 
 # ╔═╡ f746a247-feb7-4291-b9bd-dba29eec7143
 md"""
@@ -733,7 +635,9 @@ let ε = 1.2
 	ax = Axis(fig[1,1], palette = (color = blues(length(γ_vec)), ),
 				xlabel = L"\bar{y}",
 				ylabel = "number of defaulted banks")
-		
+
+	max_defaulted = 0
+	min_defaulted = 1000
 	for γ in γ_vec
 		network(ȳ) = γNetwork(n_banks, ȳ, γ)
 		
@@ -742,8 +646,17 @@ let ε = 1.2
 			(; out) = equilibrium(banks, IM)
 			defaulted_banks = sum(out.y_pc .< 1)
 		end
+		max_defaulted = max(max_defaulted, maximum(no_defaulted))
+		min_defaulted = min(min_defaulted, minimum(no_defaulted))
 		lines!(ax, ȳ_vec , no_defaulted, label = label(network(0)))
 	end
+	
+	n = (max_defaulted - min_defaulted) ÷ 3
+	ax.yticks = min_defaulted:n:max_defaulted
+	ax.yminorticksvisible = true
+	ax.yminorticks = IntervalsBetween(n)
+	ax.yminorgridvisible = true
+	
 	
 	axislegend(ax)
 	fig	
@@ -769,7 +682,10 @@ let
 	] 
 
 	networks = [γNetwork.(n_banks, ȳ, γ_vec); island_networks]
-		
+
+	max_defaulted = 0
+	min_defaulted = 1000
+	
 	fig = Figure()
 	ax = Axis(fig[1,1], #palette = (color = blues(length(γ_vec)), ),
 				xlabel = "shock size ε",
@@ -785,7 +701,15 @@ let
 			defaulted_banks = sum(out.y_pc .< 1)
 		end
 		lines!(ax, ε_vec , no_defaulted, label = label(network))
+		max_defaulted = max(max_defaulted, maximum(no_defaulted))
+		min_defaulted = min(min_defaulted, minimum(no_defaulted))
 	end
+
+	n = (max_defaulted - min_defaulted) ÷ 3
+	ax.yticks = min_defaulted:n:max_defaulted
+	ax.yminorticksvisible = true
+	ax.yminorticks = IntervalsBetween(n)
+	ax.yminorgridvisible = true
 	
 	axislegend(ax, position = :lt)
 	fig	
@@ -2293,20 +2217,6 @@ version = "3.5.0+0"
 # ╔═╡ Cell order:
 # ╟─00973e1a-8f2e-4ac4-b451-237570bdad3a
 # ╟─815648ae-78f2-42f1-a216-81b10c0a7850
-# ╟─336dd51e-36bc-4756-b0c5-77f616cd5711
-# ╟─cb553c47-7e67-4237-b6d4-37119731101e
-# ╟─dbdb4ba0-944d-49ba-be8a-2e783522b907
-# ╠═51f114f8-5223-44f8-a593-daab7dd117da
-# ╠═e75b676f-55e9-49fc-9bbc-b2a023f45330
-# ╟─d046c407-444e-48a7-b8f2-d2648c2dedaa
-# ╠═6d48b655-5163-45e9-ba6a-77d7b83f0752
-# ╟─2b722bdd-ed88-4cea-aefa-cb550262a3ad
-# ╠═237f3fae-2d86-4eb7-95f5-2cf51e989d99
-# ╠═1231a633-6d68-49d3-9a05-366531987c64
-# ╟─3eab4053-22f3-4f2d-bd7b-a2b24ac89d16
-# ╠═3d54f493-d8a5-460c-8907-0cf45c8408d2
-# ╠═3ee8607a-a8e4-4fca-82e3-6cb2dccd9682
-# ╟─32a184be-92d3-4d5d-bdd0-10204d2fde7c
 # ╟─942580bf-60d3-49fe-be2a-2fab9869322d
 # ╟─0cb23460-2db6-4327-a01c-a013eb471a9e
 # ╟─9a771f35-8f15-4abc-a093-4b5cb84b909a
@@ -2318,9 +2228,9 @@ version = "3.5.0+0"
 # ╠═ec82cd1e-6d3f-11ec-18d7-8dd51f5446de
 # ╟─c4ccc5ad-618d-4635-9d52-13be0df55198
 # ╠═37acf7b5-f93e-4ec9-9807-b247544713ed
-# ╠═8377503b-4556-4dc0-9d15-330bdd4100e6
-# ╠═83817687-0e03-4be0-a66b-e74dcd300b15
-# ╠═f8271303-ab1f-486a-aa34-8f1dc6b33cd2
+# ╟─8377503b-4556-4dc0-9d15-330bdd4100e6
+# ╟─83817687-0e03-4be0-a66b-e74dcd300b15
+# ╟─f8271303-ab1f-486a-aa34-8f1dc6b33cd2
 # ╟─54a97baa-69bd-47c8-b5d3-dd8424906d96
 # ╠═e454ff61-2769-4095-8d0c-6958f79338ee
 # ╠═b09eb768-f645-441d-a943-8c2fe373fd08
