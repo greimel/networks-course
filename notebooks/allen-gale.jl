@@ -68,18 +68,23 @@ md"""
 md"""
 # Risk Sharing and Systemic Risk in Financial Networks
 
-This lecture is based on _[Acemoglu, Ozdaglar & Tahbaz-Salehi, 2015](https://www.aeaweb.org/articles?id=10.1257/aer.20130456), American Economic Review_, and _[Allen & Gale, 2000](https://www.jstor.org/stable/10.1086/262109), Journal of Political Economy_.
+
 
 > A financial network is a **network of promises** (a liability is a _promised_ payment) between banks (or other financial institutions)
 
-_Part A -- **Risk sharing** -- What's good about financial networks?_
+_Part A -- **Risk sharing** -- What's good about financial networks?_ \
+based on _[Allen & Gale, 2000](https://www.jstor.org/stable/10.1086/262109), Journal of Political Economy_
 * I. banks provide liquidity
 * II. banks are fragile (subject to bank runs)
 * III. an interbank market can**avoid default**, **prevent bank runs**
 
-_Part B -- **Systemic Risk** -- What's bad about financial networks?_
+_Part B -- **Systemic Risk** -- What's bad about financial networks?_ \
+based on _[Acemoglu, Ozdaglar & Tahbaz-Salehi, 2015](https://www.aeaweb.org/articles?id=10.1257/aer.20130456), American Economic Review_
+
 * **stability** and **resilience** of financial networks
 * densely connected networks are **robust, yet fragile**
+
+
 """
 
 # ╔═╡ 547715c2-98e2-4188-a840-36f3dfda45e8
@@ -340,7 +345,8 @@ withdrawal(ω)
 withdrawal(ω) ≤ liquid(ℓ_opt)
 
 # ╔═╡ 29b2d1b3-2ec6-4de8-82bf-ea05807d0699
-function realized_payout(ω, opt; ib_payable=0.0, ib_deposit=0.0)
+function realized_payout(ω, opt)
+	#; ib_payable=0.0, ib_deposit=0.0
 	(; x_opt, ℓ_opt, c₁_opt, c₂_opt) = opt
 
 	liquid(ℓ) = 1 - x_opt + ℓ * x_opt * r #- ib_payable
@@ -373,7 +379,7 @@ end
 realized_payout(ω, social_optimum)
 
 # ╔═╡ 59696736-58c5-46da-835e-e3e00843cf40
-let
+#= let
 	ε = 0.2
 	ib_deposit = 0.2
 	
@@ -385,7 +391,7 @@ let
 		#@select(:ω, :ℓ_new, :ib_withdrawal)
 	end
 end
-
+=#; md"(hidden cell)"
 
 # ╔═╡ 8b9edbc2-5849-4b1f-a897-1e909d2c9885
 sliders
@@ -437,8 +443,13 @@ Banks can serve at most ``\gamma`` early withdrawals without liquidating assets.
 Suppose banks can deposit at the same terms as agents. So for each unit deposited, agents get ``c_1`` if withdrawn in period ``t=1`` and ``c_2`` if withdrawn in period ``t=2``. Now suppose that each has total deposits of ``\bar y = 1-\gamma``.
 """
 
+# ╔═╡ aebd8501-e852-43c8-af64-3810a6f5a23c
+md"""
+#### (illustration missing)
+"""
+
 # ╔═╡ 23c6b670-6685-467b-be9e-8c68b48c83ec
-let
+#= let
 	ib_deposit = 0.2
 	ω = γ + 0.2
 	
@@ -464,7 +475,7 @@ let
 	ζ_next = next_period = c₂_opt * (ω - γ)
 	
 	(; ζ_next, ib_withdrawal, ω, ℓ, c₁, ζ, shortfall0, shortfall)
-end
+end =#
 
 # ╔═╡ 596df16c-a336-40fc-9df8-e93b321ca2e6
 md"""
@@ -1919,13 +1930,14 @@ version = "3.5.0+0"
 # ╠═95ebddf6-c9ba-494d-be9c-e5a1cf478ce7
 # ╠═221eed48-6110-48ee-8aa5-c9ea58c47b46
 # ╠═29b2d1b3-2ec6-4de8-82bf-ea05807d0699
-# ╠═59696736-58c5-46da-835e-e3e00843cf40
+# ╟─59696736-58c5-46da-835e-e3e00843cf40
 # ╟─8b9edbc2-5849-4b1f-a897-1e909d2c9885
 # ╠═69e6c200-25ac-4b05-8c34-a66f55009b2f
 # ╟─f355b2ff-555e-458d-bc5b-f8c23bcf9cf8
 # ╟─cc3a8e45-131e-4a3b-9239-babd134baacd
 # ╟─7b0fe034-b70f-4dc1-ad98-3d29ec6797e7
-# ╠═23c6b670-6685-467b-be9e-8c68b48c83ec
+# ╟─aebd8501-e852-43c8-af64-3810a6f5a23c
+# ╟─23c6b670-6685-467b-be9e-8c68b48c83ec
 # ╟─596df16c-a336-40fc-9df8-e93b321ca2e6
 # ╟─deef738e-5636-4314-821a-9d6546963561
 # ╟─eaf1c5bd-ee4f-4233-9756-59c27975256c
