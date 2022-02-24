@@ -60,7 +60,68 @@ This is the second lecture on financial networks. It is based on _[Acemoglu, Ozd
 
 # ╔═╡ 0cb23460-2db6-4327-a01c-a013eb471a9e
 md"""
-## Concepts and Definitions
+## I. Model setup
+"""
+
+# ╔═╡ b542043b-b4ac-4207-b092-18b283c65524
+md"""
+### Interbank market – A network of promises
+
+```math
+y_{ij} > 0 \iff i \to j \iff
+\begin{cases}
+\text{$i$ promises to pay to $j$} \\
+\text{$i$ has a liability with $j$} \\
+\end{cases}
+```
+
+
+```math
+(y_{ij}) = \begin{pmatrix} 
+y_{11} & y_{12} & \cdots & y_{1j} & \cdots & y_{1n} \\
+y_{21} & y_{22} & \cdots & y_{2j} & \cdots & y_{2n} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+y_{i1} & y_{i2} & \cdots & y_{ij} & \cdots & y_{in} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+y_{n1} & y_{n2} & \cdots & y_{nj} & \cdots & y_{nn}
+\end{pmatrix}
+```
+
+The promises (payables) of bank ``i`` are ``\begin{pmatrix}y_{i1} & y_{i2} & \cdots & y_{in}\end{pmatrix}``
+
+and the claims (receivables) of bank ``j`` are ``\begin{pmatrix} y_{1j} \\ y_{2j} \\ \vdots \\ y_{nj}
+\end{pmatrix}``.
+
+"""
+
+# ╔═╡ 1a381072-5c07-476b-9604-dcc1cc589e62
+g isa SimpleWeightedDiGraph
+
+# ╔═╡ b309cc56-598f-4bd4-a523-edbbb850db58
+# paid(IM)
+
+# ╔═╡ 141e0dd3-a9bb-4ea6-8686-e18a2628d926
+# received(IM)
+
+# ╔═╡ e3ae420b-1d40-4d2d-99f3-728cfb8ca167
+md"""
+#### Ring, complete network and their mixtures
+"""
+
+# ╔═╡ 7d55098d-2665-44ec-a959-91e591ccc70e
+md"""
+specify the mixture parameter ``\gamma``: $(@bind _γ_ Slider(0:0.1:1, show_value = true, default = 0.5))
+"""
+
+# ╔═╡ 8f0dc26b-45c3-44ac-a0db-73e42b09f46b
+md"""
+#### Island network
+"""
+
+# ╔═╡ f1555793-db56-4b4c-909d-c8f3bf6cd857
+md"""
+* specify number of islands $(@bind _n_islands Slider(1:6, show_value = true, default = 4))
+* specify the number of banks per island $(@bind _n_banks Slider(1:10, show_value = true, default = 5))
 """
 
 # ╔═╡ 9a771f35-8f15-4abc-a093-4b5cb84b909a
@@ -129,7 +190,7 @@ end
 
 # ╔═╡ c4ccc5ad-618d-4635-9d52-13be0df55198
 md"""
-## Liquidating the project and default
+## II. Insolvency, Bankruptcy and the Payment Equilibrium
 """
 
 # ╔═╡ 37acf7b5-f93e-4ec9-9807-b247544713ed
@@ -140,60 +201,14 @@ md"""
 specify the shock ``\varepsilon`` $(@bind _ε1 Slider(0:0.1:_a, show_value = true, default = 0))
 """
 
-# ╔═╡ 54a97baa-69bd-47c8-b5d3-dd8424906d96
-md"""
-## The interbank market - A network of promises
-
-```math
-g_{ij} > 0 \iff i \to j \iff
-\begin{cases}
-\text{$i$ promises to pay to $j$} \\
-\text{$i$ has a liability with $j$} \\
-\end{cases}
-```
-
-
-```math
-G = \begin{pmatrix} 
-g_{11} & g_{12} & g_{13} \\
-g_{21} & g_{22} & g_{23} \\
-g_{31} & g_{32} & g_{33}
-\end{pmatrix}
-```
-
-The ``i``th row are all the liabilities of ``i``.
-
-"""
-
-# ╔═╡ 6000614a-58b3-4079-be2b-e673a334c904
-md"""
-## Network topology
-"""
-
-# ╔═╡ e3ae420b-1d40-4d2d-99f3-728cfb8ca167
-md"""
-### Ring, complete network and their mixtures
-"""
-
-# ╔═╡ 7d55098d-2665-44ec-a959-91e591ccc70e
-md"""
-specify the mixture parameter ``\gamma``: $(@bind _γ_ Slider(0:0.1:1, show_value = true, default = 0.5))
-"""
-
-# ╔═╡ 8f0dc26b-45c3-44ac-a0db-73e42b09f46b
-md"""
-### Island network
-"""
-
-# ╔═╡ f1555793-db56-4b4c-909d-c8f3bf6cd857
-md"""
-* specify number of islands $(@bind _n_islands Slider(1:6, show_value = true, default = 4))
-* specify the number of banks per island $(@bind _n_banks Slider(1:10, show_value = true, default = 5))
-"""
-
 # ╔═╡ 6a529266-dd07-4240-b6f6-47a7472cb6b5
 md"""
 ## Payment equilibrium
+"""
+
+# ╔═╡ f3e015f2-33e1-4b2f-b34a-ee6a5751d96b
+md"""
+## III. Financial contagion
 """
 
 # ╔═╡ 66f45323-9972-4d01-a824-b4f21da28625
@@ -218,7 +233,7 @@ specify the shock ``\varepsilon`` $(@bind _ε3 Slider(0.0:0.2:2.0, show_value = 
 
 # ╔═╡ 78a45e6a-a772-4fa7-bd9c-d728d5ea79e8
 md"""
-# Part 2 -- Systemic Risk
+## IV. Systemic Risk: Stability and Resilience
 """
 
 # ╔═╡ 3726a99d-8024-4fec-a047-43d370f795d9
@@ -253,16 +268,9 @@ __Compare *Propositions 4 and 6*__:
 
 """
 
-# ╔═╡ 00107c15-2811-41fe-bf70-634dbd2bd096
-md"""
-# Part 3 -- Risk sharing
-
-**_missing_**
-"""
-
 # ╔═╡ f5938462-ae9d-44c0-a0b1-17d61e8ac0eb
 md"""
-# Specifying the model
+# Implementation details
 """
 
 # ╔═╡ d8ddea58-b8d3-41a9-a3a4-8c53754bda32
@@ -340,11 +348,11 @@ initial_network(interbank_market) = adjacency_matrix(interbank_market.network)
 
 # ╔═╡ 44728e3a-3e88-4808-96d1-be17b58fde70
 begin
-	payables(IM::InterbankMarket) = sum(initial_network(IM), dims = 2) #|> vec
-	receivables(IM::InterbankMarket) = sum(initial_network(IM), dims = 1) #|> vec
+	payables(IM::InterbankMarket) = sum(initial_network(IM), dims = 1) #|> vec
+	receivables(IM::InterbankMarket) = sum(initial_network(IM), dims = 2) #|> vec
 	
-	paid(IM::InterbankMarket) = sum(updated_network(IM), dims = 2) #|> vec
-	received(IM::InterbankMarket) = sum(updated_network(IM), dims = 1) #|> vec
+	paid(IM::InterbankMarket) = sum(updated_network(IM), dims = 1) #|> vec
+	received(IM::InterbankMarket) = sum(updated_network(IM), dims = 2) #|> vec
 end
 
 # ╔═╡ 602e44bc-4d5b-4f7f-9a75-bf9b1576ac11
@@ -394,7 +402,7 @@ function iterate_payments(banks, IM)
 		# compute repayment
 		(; y_pc, ν_pc, ℓ) = repayment(bank, i, IM)
 		# update payment matrix
-		x_new[i, :] .*= y_pc
+		x_new[:, i] .*= y_pc
 		# return bank's choices
 		(; y_pc, ν_pc, ℓ, bank = i)
 	end
@@ -446,7 +454,22 @@ begin
 	n_banks = 3
 	ȳ = 2.1
 	nw = CompleteNetwork(n_banks, ȳ)
+	IM = InterbankMarket(nw)
+
+	nw
 end
+
+# ╔═╡ 7a8725e1-2881-4393-8495-3fecfd8b609d
+graphplot(SimpleWeightedDiGraph(nw.Y), arrow_size = 15, arrow_show=true)
+
+# ╔═╡ 97ae1ed5-9017-4e54-954d-5c9b917bce93
+is_directed(SimpleDiGraph(nw.Y))
+
+# ╔═╡ e454ff61-2769-4095-8d0c-6958f79338ee
+payables(IM)
+
+# ╔═╡ b09eb768-f645-441d-a943-8c2fe373fd08
+receivables(IM)
 
 # ╔═╡ d385bc7e-d9e9-4f61-a455-9973262bd37a
 banks = let
@@ -455,9 +478,6 @@ banks = let
 	ε = 2.4 # ȳ + 0.1 + 0.1 #4
 	[Bank(; ν = ν, c = max(c - ε, 0)); fill(Bank(; ν, c), n_banks - 1)]
 end
-
-# ╔═╡ cb1f13fc-93e4-447d-80de-213a6a3d1caa
-IM = InterbankMarket(nw)
 
 # ╔═╡ f8271303-ab1f-486a-aa34-8f1dc6b33cd2
 let
@@ -487,18 +507,6 @@ let
 		draw(; legend = (position = :top, titleposition = :left))
 	end
 end
-
-# ╔═╡ e454ff61-2769-4095-8d0c-6958f79338ee
-payables(IM)
-
-# ╔═╡ b09eb768-f645-441d-a943-8c2fe373fd08
-receivables(IM)
-
-# ╔═╡ b309cc56-598f-4bd4-a523-edbbb850db58
-paid(IM)
-
-# ╔═╡ 141e0dd3-a9bb-4ea6-8686-e18a2628d926
-received(IM)
 
 # ╔═╡ 45430bb9-8914-4839-b936-79bcbc453822
 md"""
@@ -752,11 +760,12 @@ end
 # ╔═╡ 3524ca16-7f6d-4ffd-bb38-600085fe3c80
 function circular_graphplot!(ax, g;
 			layout = componentwise_circle,
-			edge_width = 2 .* weight.(edges(g)),
+			edge_width = 2 .* weight.(edges(g)) ./ maximum(sum(weights(g), dims=1)),
+			arrow_size = 15, arrow_show=is_directed(g),
 		 	kwargs...
 	)
 	
-	graphplot!(ax, g; layout, edge_width, kwargs...)
+	graphplot!(ax, g; layout, edge_width, arrow_size, arrow_show, kwargs...)
 	
 	hidedecorations!(ax)
 	hidespines!(ax)
@@ -2219,6 +2228,22 @@ version = "3.5.0+0"
 # ╟─815648ae-78f2-42f1-a216-81b10c0a7850
 # ╟─942580bf-60d3-49fe-be2a-2fab9869322d
 # ╟─0cb23460-2db6-4327-a01c-a013eb471a9e
+# ╟─b542043b-b4ac-4207-b092-18b283c65524
+# ╠═60615cd2-aa70-47e9-b432-b4051e17f628
+# ╠═7a8725e1-2881-4393-8495-3fecfd8b609d
+# ╠═1a381072-5c07-476b-9604-dcc1cc589e62
+# ╠═97ae1ed5-9017-4e54-954d-5c9b917bce93
+# ╠═e454ff61-2769-4095-8d0c-6958f79338ee
+# ╠═b09eb768-f645-441d-a943-8c2fe373fd08
+# ╠═b309cc56-598f-4bd4-a523-edbbb850db58
+# ╠═141e0dd3-a9bb-4ea6-8686-e18a2628d926
+# ╟─e3ae420b-1d40-4d2d-99f3-728cfb8ca167
+# ╟─7d55098d-2665-44ec-a959-91e591ccc70e
+# ╟─5e3fb6e9-eacb-4e4b-9a62-83632263be37
+# ╟─8f0dc26b-45c3-44ac-a0db-73e42b09f46b
+# ╟─f1555793-db56-4b4c-909d-c8f3bf6cd857
+# ╟─d14e0faa-4509-46aa-bfe1-0ba89d04c8c7
+# ╠═d385bc7e-d9e9-4f61-a455-9973262bd37a
 # ╟─9a771f35-8f15-4abc-a093-4b5cb84b909a
 # ╠═1a7df5c9-3036-44a7-9eba-42ef4851d9ae
 # ╠═7c7ba04a-fc84-4ca2-a903-faf1fae0a839
@@ -2231,22 +2256,8 @@ version = "3.5.0+0"
 # ╟─8377503b-4556-4dc0-9d15-330bdd4100e6
 # ╟─83817687-0e03-4be0-a66b-e74dcd300b15
 # ╟─f8271303-ab1f-486a-aa34-8f1dc6b33cd2
-# ╟─54a97baa-69bd-47c8-b5d3-dd8424906d96
-# ╠═e454ff61-2769-4095-8d0c-6958f79338ee
-# ╠═b09eb768-f645-441d-a943-8c2fe373fd08
-# ╠═b309cc56-598f-4bd4-a523-edbbb850db58
-# ╠═141e0dd3-a9bb-4ea6-8686-e18a2628d926
-# ╠═d385bc7e-d9e9-4f61-a455-9973262bd37a
-# ╟─6000614a-58b3-4079-be2b-e673a334c904
-# ╟─e3ae420b-1d40-4d2d-99f3-728cfb8ca167
-# ╟─7d55098d-2665-44ec-a959-91e591ccc70e
-# ╟─5e3fb6e9-eacb-4e4b-9a62-83632263be37
-# ╟─8f0dc26b-45c3-44ac-a0db-73e42b09f46b
-# ╟─f1555793-db56-4b4c-909d-c8f3bf6cd857
-# ╟─d14e0faa-4509-46aa-bfe1-0ba89d04c8c7
 # ╟─6a529266-dd07-4240-b6f6-47a7472cb6b5
-# ╠═60615cd2-aa70-47e9-b432-b4051e17f628
-# ╠═cb1f13fc-93e4-447d-80de-213a6a3d1caa
+# ╟─f3e015f2-33e1-4b2f-b34a-ee6a5751d96b
 # ╟─66f45323-9972-4d01-a824-b4f21da28625
 # ╟─3c836db8-485c-4683-8334-58527454adae
 # ╠═81c25bb1-bc88-4639-a4b8-dbcd9c4c1998
@@ -2263,7 +2274,6 @@ version = "3.5.0+0"
 # ╠═2b7c65fe-8bf8-47f2-96b1-6dfe8888d494
 # ╟─0d4d9a5b-5e4f-4126-85ec-d31327cbf960
 # ╠═045c54d2-c76c-49f1-b849-d607e50b182b
-# ╟─00107c15-2811-41fe-bf70-634dbd2bd096
 # ╟─f5938462-ae9d-44c0-a0b1-17d61e8ac0eb
 # ╟─45430bb9-8914-4839-b936-79bcbc453822
 # ╠═dafe2f99-d3b5-4450-bbab-c8ffe1ac11ea

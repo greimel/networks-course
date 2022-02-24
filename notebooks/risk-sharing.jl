@@ -421,7 +421,7 @@ end
 
 # ╔═╡ cc3a8e45-131e-4a3b-9239-babd134baacd
 md"""
-## III Risk-sharing in the interbank market
+## III. Risk-sharing in the interbank market
 
 Now, let's suppose that there are ``N`` banks. All banks face the same decision problem, so they will offer the same deposit contract ``(c_1, c_2)``. Agents will randomly pick one of the two banks the outcome will be the same as before.
 
