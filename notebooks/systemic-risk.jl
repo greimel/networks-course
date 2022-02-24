@@ -35,27 +35,36 @@ using PlutoUI: TableOfContents, Slider
 # ╔═╡ 9898ed0c-3510-4d05-8056-4112d3ca72c7
 using GraphMakie, NetworkLayout
 
-# ╔═╡ 00973e1a-8f2e-4ac4-b451-237570bdad3a
-md"""
-!!! danger "Under construction!"
-
-	This notebook is being re-designed. 
-
-"""
-
 # ╔═╡ 815648ae-78f2-42f1-a216-81b10c0a7850
 md"""
-`systemic-risk.jl` | **Version 0.1** | *last updated: Feb 24, 2022*
+`systemic-risk.jl` | **Version 1.0** | *last updated: Feb 24, 2022*
+"""
+
+# ╔═╡ c129dec7-eb81-4cab-91d5-2ef7a1c06b24
+md"""
+# Risk Sharing and Systemic Risk in Financial Networks
+
+_Part A -- **Risk sharing** -- What's good about financial networks?_ \
+based on _[Allen & Gale, 2000](https://www.jstor.org/stable/10.1086/262109), Journal of Political Economy_
+* I. banks provide liquidity
+* II. banks are fragile (subject to bank runs)
+* III. an interbank market can **avoid default**, **prevent bank runs**
+
+👉 _Part B -- **Systemic Risk** -- What's bad about financial networks?_ \
+based on _[Acemoglu, Ozdaglar & Tahbaz-Salehi, 2015](https://www.aeaweb.org/articles?id=10.1257/aer.20130456), American Economic Review_
+
+* I. Model setup
+* II. **insolvency** and **bankruptcy** in the payment equilibrium
+* III. **financial contagion**
+* IV. **stability** and **resilience** of financial networks
+  * more interbank lending leads to higher fragility
+  * densely connected networks are **robust, yet fragile**
+  * with **big shocks**, we want to have **disconnected components**
 """
 
 # ╔═╡ 942580bf-60d3-49fe-be2a-2fab9869322d
 md"""
-# Part B -- Systemic risk in financial networks
-
-This is the second lecture on financial networks. It is based on _[Acemoglu, Ozdaglar & Tahbaz-Salehi, 2015](https://www.aeaweb.org/articles?id=10.1257/aer.20130456), American Economic Review_
-
-* **stability** and **resilience** of financial networks
-* densely connected networks are **robust, yet fragile**
+# Part B -- *Systemic risk in financial networks*
 """
 
 # ╔═╡ 0cb23460-2db6-4327-a01c-a013eb471a9e
@@ -291,20 +300,6 @@ md"""
 
 # ╔═╡ 9630dabc-87b1-4bb9-82cc-7fbb59a45c34
 TableOfContents()
-
-# ╔═╡ 4eb88372-1df6-4255-8a7b-be5f5bb89130
-begin
-	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
-	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
-	still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
-	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
-	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
-	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
-	function wordcount(text)
-    	words=split(string(text), (' ','\n','\t','-','.',',',':','_','"',';','!'))
-    	length(words)
-	end
-end
 
 # ╔═╡ f746a247-feb7-4291-b9bd-dba29eec7143
 md"""
@@ -2193,8 +2188,8 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─00973e1a-8f2e-4ac4-b451-237570bdad3a
 # ╟─815648ae-78f2-42f1-a216-81b10c0a7850
+# ╟─c129dec7-eb81-4cab-91d5-2ef7a1c06b24
 # ╟─942580bf-60d3-49fe-be2a-2fab9869322d
 # ╟─0cb23460-2db6-4327-a01c-a013eb471a9e
 # ╟─b542043b-b4ac-4207-b092-18b283c65524
@@ -2232,7 +2227,7 @@ version = "3.5.0+0"
 # ╠═3726a99d-8024-4fec-a047-43d370f795d9
 # ╟─d649a654-e515-40b4-a45b-e095f1d12da7
 # ╟─76f41f57-2971-4020-ab2f-87fad4a92489
-# ╠═2b7c65fe-8bf8-47f2-96b1-6dfe8888d494
+# ╟─2b7c65fe-8bf8-47f2-96b1-6dfe8888d494
 # ╟─0d4d9a5b-5e4f-4126-85ec-d31327cbf960
 # ╟─045c54d2-c76c-49f1-b849-d607e50b182b
 # ╟─f5938462-ae9d-44c0-a0b1-17d61e8ac0eb
@@ -2253,7 +2248,6 @@ version = "3.5.0+0"
 # ╠═4984ca28-1de2-4e5f-9d27-8c13decff996
 # ╠═53660817-3947-4c30-bf61-3a36d6614a13
 # ╠═9630dabc-87b1-4bb9-82cc-7fbb59a45c34
-# ╠═4eb88372-1df6-4255-8a7b-be5f5bb89130
 # ╟─f746a247-feb7-4291-b9bd-dba29eec7143
 # ╠═31dca57c-b5fe-49c2-87e0-31b2999a6f65
 # ╠═2a964fbe-80b5-4501-ad52-97686dae67bb

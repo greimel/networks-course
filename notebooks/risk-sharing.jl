@@ -61,30 +61,40 @@ using PlutoUI
 
 # ╔═╡ 2148f702-32ee-40d8-896d-48ae684647bc
 md"""
-`risk-sharing.jl` | **Version 1.0** | *last updated: Feb 17*
+`risk-sharing.jl` | **Version 1.1** | *last updated: Feb 24*
 """
 
 # ╔═╡ 5d057554-f8af-4242-8291-0e584cf24764
 md"""
 # Risk Sharing and Systemic Risk in Financial Networks
 
-
-
 > A financial network is a **network of promises** (a liability is a _promised_ payment) between banks (or other financial institutions)
 
-_Part A -- **Risk sharing** -- What's good about financial networks?_ \
+👉 _Part A -- **Risk sharing** -- What's good about financial networks?_ \
 based on _[Allen & Gale, 2000](https://www.jstor.org/stable/10.1086/262109), Journal of Political Economy_
 * I. banks provide liquidity
 * II. banks are fragile (subject to bank runs)
-* III. an interbank market can**avoid default**, **prevent bank runs**
+* III. an interbank market can **avoid default**, **prevent bank runs**
 
 _Part B -- **Systemic Risk** -- What's bad about financial networks?_ \
 based on _[Acemoglu, Ozdaglar & Tahbaz-Salehi, 2015](https://www.aeaweb.org/articles?id=10.1257/aer.20130456), American Economic Review_
 
-* **stability** and **resilience** of financial networks
-* densely connected networks are **robust, yet fragile**
+* I. Model setup
+* II. **insolvency** and **bankruptcy** in the payment equilibrium
+* III. **financial contagion**
+* IV. **stability** and **resilience** of financial networks
+  * more interbank lending leads to higher fragility
+  * densely connected networks are **robust, yet fragile**
+  * with **big shocks**, we want to have **disconnected components**
 
 
+"""
+
+# ╔═╡ fee3fc5e-7a5f-436b-af17-37e05943d340
+md"""
+# Part A: *Risk sharing in financial networks*
+
+We study the model of **Allen & Gale (2000)**, which builds on the **Diamond & Dybvig (1983)** of bank runs.
 """
 
 # ╔═╡ 547715c2-98e2-4188-a840-36f3dfda45e8
@@ -92,18 +102,6 @@ md"""
 If you want to read more about the Diamond-Dybvig model (_a true classic!_)
 * [Diamond & Dybvig (1983)](https://www.jstor.org/stable/1837095): Bank Runs, Deposit Insurance, and Liquidity, _Journal of Political Economy_
 * [Diamond 2007](https://www.richmondfed.org/-/media/RichmondFedOrg/publications/research/economic_quarterly/2007/spring/pdf/diamond.pdf): A simple exposition of the Diamond-Dybvig model, _Richmond Fed Economic Quarterly_
-"""
-
-# ╔═╡ fee3fc5e-7a5f-436b-af17-37e05943d340
-md"""
-# Part A: Risk sharing in financial networks
-
-We study the model of **Allen & Gale (2000)**, which builds on the **Diamond & Dybvig (1983)** of bank runs.
-
-* I. banks provide liquidity
-* II. banks are fragile (subject to bank runs)
-* III. an interbank market can **avoid default**, **prevent bank runs**
-
 """
 
 # ╔═╡ 9562942c-990d-4e31-be1a-24e04ed01aee
@@ -1901,8 +1899,8 @@ version = "3.5.0+0"
 # ╔═╡ Cell order:
 # ╟─2148f702-32ee-40d8-896d-48ae684647bc
 # ╟─5d057554-f8af-4242-8291-0e584cf24764
-# ╟─547715c2-98e2-4188-a840-36f3dfda45e8
 # ╟─fee3fc5e-7a5f-436b-af17-37e05943d340
+# ╟─547715c2-98e2-4188-a840-36f3dfda45e8
 # ╟─9562942c-990d-4e31-be1a-24e04ed01aee
 # ╟─51d69d70-1545-4096-bcbc-722bb3d9b200
 # ╠═fdea373b-cc1e-4bba-8b57-340e63a68ab1
