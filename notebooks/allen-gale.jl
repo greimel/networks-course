@@ -14,15 +14,6 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 95127df3-1c89-45c2-a6c9-012b02dd3bbf
-using Random
-
-# ╔═╡ 3b40bb50-ae8d-4a27-aff5-0a18ac57cf46
-using PlutoUI: Slider
-
-# ╔═╡ fede66c2-c073-43b4-8fb0-3cfd868f695f
-using NamedTupleTools: delete
-
 # ╔═╡ 9bc0e1d4-9c1b-4f3c-802f-6e5bddad689e
 using Graphs
 
@@ -56,27 +47,66 @@ using NetworkLayout
 # ╔═╡ 7b3df55d-5d2f-4621-ae8a-b1d29999ee79
 using LaTeXStrings: latexstring, @L_str
 
+# ╔═╡ 95127df3-1c89-45c2-a6c9-012b02dd3bbf
+using Random
+
+# ╔═╡ 3b40bb50-ae8d-4a27-aff5-0a18ac57cf46
+using PlutoUI: Slider
+
+# ╔═╡ fede66c2-c073-43b4-8fb0-3cfd868f695f
+using NamedTupleTools: delete
+
 # ╔═╡ 49f91510-597d-4151-916f-33ceaa9939f2
 using PlutoUI
 
 # ╔═╡ 2148f702-32ee-40d8-896d-48ae684647bc
 md"""
-`allen-gale.jl` | **Version 0.1** | *last updated: Feb 17*
+`risk-sharing.jl` | **Version 1.0** | *last updated: Feb 17*
+"""
+
+# ╔═╡ 5d057554-f8af-4242-8291-0e584cf24764
+md"""
+# Risk Sharing and Systemic Risk in Financial Networks
+
+This lecture is based on _[Acemoglu, Ozdaglar & Tahbaz-Salehi, 2015](https://www.aeaweb.org/articles?id=10.1257/aer.20130456), American Economic Review_, and _[Allen & Gale, 2000](https://www.jstor.org/stable/10.1086/262109), Journal of Political Economy_.
+
+> A financial network is a **network of promises** (a liability is a _promised_ payment) between banks (or other financial institutions)
+
+_Part A -- **Risk sharing** -- What's good about financial networks?_
+* I. banks provide liquidity
+* II. banks are fragile (subject to bank runs)
+* III. an interbank market can**avoid default**, **prevent bank runs**
+
+_Part B -- **Systemic Risk** -- What's bad about financial networks?_
+* **stability** and **resilience** of financial networks
+* densely connected networks are **robust, yet fragile**
+"""
+
+# ╔═╡ 547715c2-98e2-4188-a840-36f3dfda45e8
+md"""
+If you want to read more about the Diamond-Dybvig model (_a true classic!_)
+* [Diamond & Dybvig (1983)](https://www.jstor.org/stable/1837095): Bank Runs, Deposit Insurance, and Liquidity, _Journal of Political Economy_
+* [Diamond 2007](https://www.richmondfed.org/-/media/RichmondFedOrg/publications/research/economic_quarterly/2007/spring/pdf/diamond.pdf): A simple exposition of the Diamond-Dybvig model, _Richmond Fed Economic Quarterly_
 """
 
 # ╔═╡ fee3fc5e-7a5f-436b-af17-37e05943d340
 md"""
-# Risk sharing and financial contagion
+# Part A: Risk sharing in financial networks
 
-interbank deposits as a risk-sharing device. Liquidate them when liquidity is needed
+We study the model of **Allen & Gale (2000)**, which builds on the **Diamond & Dybvig (1983)** of bank runs.
+
+* I. banks provide liquidity
+* II. banks are fragile (subject to bank runs)
+* III. an interbank market can **avoid default**, **prevent bank runs**
+
 """
 
 # ╔═╡ 9562942c-990d-4e31-be1a-24e04ed01aee
 md"""
-## A story
+## I. Banks provide liquidity -- A story
 
 ### A simple world
-We are in a simple world. At period ``t=0`` there are ``100m`` people that each owns a kilogram of potatoes (the _initial endowment_ is 1).
+We are in a simple world. At period ``t=0`` there are is a big population, where each person owns a kilogram of potatoes (the _initial endowment_ is 1).
 
 #### Preferences
 At this moment ``(t=0)``, nobody is hungry. Everybody knows that they will be hungry _at some point_. But they don't know _when_ -- either in period ``1`` or period ``2``.
@@ -182,11 +212,10 @@ c₁(x, ℓ; γ=γ) = (1-x + ℓ*x*r) / γ
 c₂(x, ℓ; γ=γ) = (1-ℓ)*x*R == 0.0 ? 0.0 : (1-ℓ) * x*R / (1-γ)
 
 # ╔═╡ b8933bd2-f4bb-4dca-8278-c00fd8cfdfbd
-	function obj(args; γ=γ)
-		@assert length(args) == 2
-		x, ℓ = args
-	    𝔼U(c₁(x, ℓ; γ), c₂(x, ℓ; γ); γ)
-	end
+function obj(args; γ=γ)
+	x, ℓ = args
+    𝔼U(c₁(x, ℓ; γ), c₂(x, ℓ; γ); γ)
+end
 
 # ╔═╡ 98fabde8-90db-44a4-a439-45fcdfbf9e9c
 social_optimum = let
@@ -282,7 +311,7 @@ end
 
 # ╔═╡ f68d68d6-2bc9-4298-b4aa-8d8f0059dc04
 md"""
-## Financial fragility (Bank runs)
+## II. Financial fragility (Bank runs)
 
 What will happen, if a fraction ``\tilde \omega > \omega`` withdraws money in period ``t=1``? The bank will have to dig up some of its potatoes to fill the gap. This means that the payout in period two will have to be reduced (there are not enough potatoes left). As soon as the expected payout ``\tilde c_2`` becomes small enough, there will be a **bank run**. If the ``\tilde c_2 < c_1`` the incentive compatibility constraint is violated and the "late" types will start to withdraw their money.
 """
@@ -361,6 +390,9 @@ end
 # ╔═╡ 8b9edbc2-5849-4b1f-a897-1e909d2c9885
 sliders
 
+# ╔═╡ 69e6c200-25ac-4b05-8c34-a66f55009b2f
+# 1.1, 0.4. 0.5
+
 # ╔═╡ f355b2ff-555e-458d-bc5b-f8c23bcf9cf8
 let
 	df = map(0:0.005:1) do ω
@@ -383,7 +415,7 @@ end
 
 # ╔═╡ cc3a8e45-131e-4a3b-9239-babd134baacd
 md"""
-## Risk-sharing in the interbank market
+## III Risk-sharing in the interbank market
 
 Now, let's suppose that there are ``N`` banks. All banks face the same decision problem, so they will offer the same deposit contract ``(c_1, c_2)``. Agents will randomly pick one of the two banks the outcome will be the same as before.
 
@@ -432,252 +464,6 @@ let
 	ζ_next = next_period = c₂_opt * (ω - γ)
 	
 	(; ζ_next, ib_withdrawal, ω, ℓ, c₁, ζ, shortfall0, shortfall)
-end
-
-# ╔═╡ 38105eb4-fd62-42be-be85-6fa1a7a802f4
-md"""
-# Bank runs
-
-What happens, if the share of "early" types _unexpectedly_ increases to ``\gamma + \varepsilon``?
-"""
-
-# ╔═╡ 5560e9d8-7d13-4cd3-a712-05a803298964
-function after_shock(r, ε, interbank_loan, (; R, γ), (; x, y, c₁, c₂))
-	Δ = (γ + ε)*c₁ - (y + interbank_loan)
-	shortfall = max(0, Δ)
-	ℓ = shortfall / (x * r)
-
-	c₂_new = ((1-ℓ) * x * R - interbank_loan) / (1-γ)
-	(; ℓ, c₂_new, Δ, shortfall)
-end
-
-# ╔═╡ c17e8915-5eba-45b9-a080-3ad1b834be99
-let
-	x_opt = social_optimum
-	
-	#(; R, γ, x_opt) = out
-	(; x, y, c₁, c₂) = consumption(x_opt; R, γ)
-
-	r = 0.8
-	ε = 0.01
-
-	bank1 = after_shock(r, ε, 0.0, (; R, γ), (; x, y, c₁, c₂))
-	bank2 = after_shock(r, -ε, 0.0, (; R, γ), (; x, y, c₁, c₂))
-
-	loan = bank1.Δ
-	
-	remainder = sum([bank1.Δ, bank2.Δ])
-
-	bank1 = after_shock(r, ε, loan, (; R, γ), (; x, y, c₁, c₂))
-	bank2 = after_shock(r, -ε, -loan, (; R, γ), (; x, y, c₁, c₂))
-	
-	(; c₁, bank1, bank2)
-end
-
-# ╔═╡ d6073fad-9607-4a18-9e59-e3fbb374ce19
-function repayment(r, ε, interbank_deposit, (; R, γ), (; x, y, c₁, c₂))
-	liquid_assets  = y
-	scrap_value(ℓ_ill) = ℓ_ill * r * x
-	withdrawal(ℓ_ib)  = ℓ_ib * interbank_deposit
-	liquidity(ℓ_ill, ℓ_ib) = liquid_assets + scrap_value(ℓ_ill) + withdrawal(ℓ_ib)
-	
-	payables = (γ + ε) * c₁
-
-	if payables ≤ liquidity(0.0, 0.0)
-		ℓ_ill = 0.0
-		ℓ_ib = 0.0
-		c₁_pc = 1.0
-	elseif payables ≤ liquidity(0.0, 1.0)
-		ℓ_ill = 0.0
-		ℓ_ib = (payables - liquidity(ℓ_ill, 0.0)) / interbank_deposit
-		c₁_pc = 1.0
-	elseif payables ≤ liquidity(1.0, 1.0)
-		ℓ_ib = 1.0
-		ℓ_ill = (payables - liquidity(0.0, ℓ_ib)) / (r * x)
-		c₁_pc = 1.0
-	else
-		ℓ_ib = 1.0
-		ℓ_ill = 1.0
-		c₁_pc = liquidity(ℓ_ill, ℓ_ib) / payables
-	end
-
-	(; ℓ_ib, ℓ_ill, c₁_pc)
-end
-
-# ╔═╡ d4c5a683-00dd-4614-9e3b-d8c07c146568
-let
-	(; R, γ, x_opt) = out
-	(; x, y, c₁, c₂) = consumption(x_opt; R, γ)
-
-	r = 0.8
-	ε = 0.01
-
-	bank1 = after_shock(r, ε, 0.0, (; R, γ), (; x, y, c₁, c₂))
-	bank2 = after_shock(r, -ε, 0.0, (; R, γ), (; x, y, c₁, c₂))
-
-	interbank_deposit = 0.1
-	bank1 = repayment(r, ε, interbank_deposit, (; R, γ), (; x, y, c₁, c₂))
-	bank2 = repayment(r, -ε, interbank_deposit, (; R, γ), (; x, y, c₁, c₂))
-	
-	(; c₁, banks = DataFrame([bank1, bank2]))
-end
-
-# ╔═╡ b37f052c-ba6a-49cd-a3b9-80d95923a767
-md"""
-# Multiple banks
-
-Let us assume now that there are two banks.
-"""
-
-# ╔═╡ 61a6dce7-101a-443e-962a-91a0d2ee7689
-
-
-# ╔═╡ 2db790eb-5345-457f-887b-753457bee1da
-#= let
-	bank = Bank(; c = 0.5, project = Project(ζ = 0.5, A = 2, a = _a, ε = _ε1), γ = Failure())
-	(; ν, c, project) = bank
-	(; a, A, ζ) = project
-	x, y = 1.7, 1.7
-
-	(; ℓ, y_pc, ν_pc) = repayment(bank, x, y)
-
-	bs_max = max(A + x + c + a, y + ν) * 1.05
-	
-	df = [
-		(type = "liabs", spec = L"senior (outside) liab $\nu$", value = ν_pc * ν),
-		(type = "liabs", spec = L"junior (interbank) liab $y$", value = y_pc * y),
-		(type = "assets", spec = L"early payoff $a - ϵ$", value = a - _ε1),
-		(type = "assets", spec = L"liquid assets $x + c$", value = x + c),
-		(type = "assets", spec = L"liquidated assets $ℓ ζ A$", value = ℓ * ζ * A),
-		(type = "assets", spec = L"z illiquid asset (project) $A$", value = (1-ℓ) * A)
-			] |> DataFrame
-	@chain df begin
-		data(_) * visual(BarPlot) * mapping(
-			:type, :value, stack = :spec, color = :spec
-		)
-		draw(; axis = (limits = (nothing, nothing, nothing, bs_max),))
-	end
-
-	#(; ℓ, y_pc, ν_pc)
-end =#
-
-# ╔═╡ f2967e20-223a-41d3-82bb-bf110d64c821
-md"""
-# Exercises
-"""
-
-# ╔═╡ f06193b2-f51c-433d-baeb-f60fc9ee53eb
-theme = (
-	arrow_size = 25,
-	node_size = 15,
-	layout = Shell(),
-)
-
-# ╔═╡ 58080c61-bdb8-4520-a09d-f4397e0100ec
-md"""
-## Exercise 1
-"""
-
-# ╔═╡ cd01834c-febc-4ccb-9900-d902d897f9e4
-md"""
-## Exercise 2
-
-There are two states of the world.
-
-```math
-\begin{align}
-S_1 = (\gamma - \varepsilon, \gamma + \varepsilon, \gamma - \varepsilon, \gamma + \varepsilon )\\
-S_2 = (\gamma - \varepsilon, \gamma - \varepsilon, \gamma + \varepsilon, \gamma + \varepsilon )
-\end{align}
-```
-where ``0 \leq \gamma - \varepsilon < \gamma + \varepsilon \leq 1``.
-
-**(a)** What is the minimal number of edges that will prevent a bank run in period ``t=1`` in both possible states?
-
-**(b)** Assume that your minimal network from **(a)** has _uniform weights_. What is the lower bound ``y_\text{min}`` for that weight that will allow the socially optimal allocation in both states?
-
-**(c)** What will happen if ``y < y_\text{min}``?
-
-**(d)** Assume that there is a complete interbank network with uniform weights. What is the lowest weight that allows the socially optimal allocation in both states?
-
-**(e)** Take the two networks with their minimal weights as given. Discuss two alternative states ``S_3`` and ``S_4``. In ``S_3``, your minimal network should have a better outcome than the complete network. And in ``S_4`` the complete network should have a better outcome.
-
-"""
-
-# ╔═╡ 3f8f5da8-f76f-46df-bc12-350923697b40
-function node_legend(figpos, node_styles, title = "")
-	
-	elems = [MarkerElement(; color, markersize = 15, marker = :●) for color ∈ node_styles.color]
-
-	if length(title) == 0
-		title_tuple = ()
-	else
-		title_tuple = (title, )
-	end
-	
-	Legend(
-		figpos,
-    	elems, node_styles.label, title_tuple...;
-		orientation=:horizontal, titleposition=:left, framevisible=false
-	)
-end
-
-# ╔═╡ a312a869-0359-47ab-b9f5-d4fcadca9c02
-function minimal_graphplot(args; node_styles = missing, kwargs...)
-	fig, ax, plt = graphplot(args; kwargs...)
-
-	hidedecorations!(ax)
-	
-	if !ismissing(node_styles)
-		(title, df) = node_styles
-		node_legend(fig[end+1,1], df, title)
-	end
-
-	(; fig, ax, plt)
-end
-
-# ╔═╡ 76855ce2-3083-4272-b43c-f9397a4914e6
-ex1 = let
-	n = 5
-
-	shuffled_nodes = shuffle(1:n)
-	n_half = n ÷ 2
-	
-	shock = fill("none", n)
-	shock[shuffled_nodes[1:n_half]] .= "positive"
-	shock[shuffled_nodes[n_half+1:2n_half]] .= "negative"
-
-	node_styles = (title = "shock", df = DataFrame(label = ["positive", "negative", "none"], color = ["green", "red", "gray"]))
-
-	df = @chain begin
-		DataFrame(bank = 1:n, label = shock)
-		leftjoin(_, node_styles.df, on = :label)
-	end
-
-	(; n, color = df.color, node_styles)
-end;
-
-# ╔═╡ 831ef0e4-a408-4b84-b50a-d8ccef81bd2d
-md"""
-Consider the setup of Allen & Gale with $(ex1.n) banks. Banks know that a fraction ``\gamma`` of the population are _early types_. In the social optimum, banks offer deposit contracts ``(c_1, c_2)``.
-
-After the contracts have been set, banks learn that among their clients the fraction of early types is ``\omega_i \in \{ \gamma \pm \varepsilon, \gamma\}``. This is shown in the figure below. The red dots mean "negative" (``\gamma + \varepsilon``), the green dots mean "positive" (``\gamma - \varepsilon``) and the gray dots mean "none" (``\gamma``).
-"""
-
-# ╔═╡ 4d4fc17f-c500-4437-9931-3167b85b966e
-let
-	g = SimpleDiGraph(ex1.n)
-
-	fig, ax, _ = minimal_graphplot(g;
-		theme...,
-		node_color = ex1.color,
-		nlabels = string.(vertices(g)),
-		nlabels_offset = Point2(0.05, 0.05),
-		ex1.node_styles,
-		axis = (title = "Interbank network", )
-	)
-
-	fig
 end
 
 # ╔═╡ 596df16c-a336-40fc-9df8-e93b321ca2e6
@@ -2103,6 +1889,8 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╟─2148f702-32ee-40d8-896d-48ae684647bc
+# ╟─5d057554-f8af-4242-8291-0e584cf24764
+# ╟─547715c2-98e2-4188-a840-36f3dfda45e8
 # ╟─fee3fc5e-7a5f-436b-af17-37e05943d340
 # ╟─9562942c-990d-4e31-be1a-24e04ed01aee
 # ╟─51d69d70-1545-4096-bcbc-722bb3d9b200
@@ -2110,7 +1898,7 @@ version = "3.5.0+0"
 # ╠═f1beca33-7885-4132-8ce7-9e58339bc26d
 # ╟─f8d5e164-f968-4b82-bf8f-8f79ade560df
 # ╟─db2cff8e-0ddb-40e6-97ed-42b50a1d1b1f
-# ╠═24000350-dd53-4938-9360-09fcd7e0c2fb
+# ╟─24000350-dd53-4938-9360-09fcd7e0c2fb
 # ╟─b248eebe-0289-40de-8998-dd155db38af9
 # ╟─41b70c0c-7c48-40f9-bed6-b712bab83f1b
 # ╠═eee63073-78dc-4378-b2bb-0d1746dcde3b
@@ -2121,7 +1909,7 @@ version = "3.5.0+0"
 # ╟─20348017-411a-49fe-a178-eac580e71e63
 # ╟─970e0ae1-e25e-4606-9007-eb63afa80083
 # ╟─79665579-c707-48af-848d-3680c15dd380
-# ╠═6a101f0f-88f4-40a5-96cc-6338f8d24323
+# ╟─6a101f0f-88f4-40a5-96cc-6338f8d24323
 # ╟─f68d68d6-2bc9-4298-b4aa-8d8f0059dc04
 # ╠═85a1a267-70e4-471c-a399-4fff1715627d
 # ╟─db66a02e-ab0a-4953-a96c-7743caaf0a90
@@ -2133,27 +1921,11 @@ version = "3.5.0+0"
 # ╠═29b2d1b3-2ec6-4de8-82bf-ea05807d0699
 # ╠═59696736-58c5-46da-835e-e3e00843cf40
 # ╟─8b9edbc2-5849-4b1f-a897-1e909d2c9885
+# ╠═69e6c200-25ac-4b05-8c34-a66f55009b2f
 # ╟─f355b2ff-555e-458d-bc5b-f8c23bcf9cf8
 # ╟─cc3a8e45-131e-4a3b-9239-babd134baacd
 # ╟─7b0fe034-b70f-4dc1-ad98-3d29ec6797e7
 # ╠═23c6b670-6685-467b-be9e-8c68b48c83ec
-# ╟─38105eb4-fd62-42be-be85-6fa1a7a802f4
-# ╠═c17e8915-5eba-45b9-a080-3ad1b834be99
-# ╠═5560e9d8-7d13-4cd3-a712-05a803298964
-# ╠═d6073fad-9607-4a18-9e59-e3fbb374ce19
-# ╠═d4c5a683-00dd-4614-9e3b-d8c07c146568
-# ╠═b37f052c-ba6a-49cd-a3b9-80d95923a767
-# ╠═61a6dce7-101a-443e-962a-91a0d2ee7689
-# ╠═2db790eb-5345-457f-887b-753457bee1da
-# ╟─f2967e20-223a-41d3-82bb-bf110d64c821
-# ╠═f06193b2-f51c-433d-baeb-f60fc9ee53eb
-# ╟─58080c61-bdb8-4520-a09d-f4397e0100ec
-# ╟─831ef0e4-a408-4b84-b50a-d8ccef81bd2d
-# ╟─4d4fc17f-c500-4437-9931-3167b85b966e
-# ╟─cd01834c-febc-4ccb-9900-d902d897f9e4
-# ╠═3f8f5da8-f76f-46df-bc12-350923697b40
-# ╠═a312a869-0359-47ab-b9f5-d4fcadca9c02
-# ╠═76855ce2-3083-4272-b43c-f9397a4914e6
 # ╟─596df16c-a336-40fc-9df8-e93b321ca2e6
 # ╟─deef738e-5636-4314-821a-9d6546963561
 # ╟─eaf1c5bd-ee4f-4233-9756-59c27975256c
