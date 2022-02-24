@@ -73,8 +73,20 @@
         "title": "Financial Networks",
         "contents": [
             {
-                "name": "Systemic risk, stability and resilience of financial markets",
-                "notebook_path": "notebooks/banks.jl",
+                "name": "Risk sharing",
+                "notebook_path": "notebooks/risk-sharing.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            },
+            {
+                "name": "Systemic risk",
+                "notebook_path": "notebooks/systemic-risk.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            },
+            {
+                "name": "Assignment 3",
+                "notebook_path": "notebooks/banks-assignment.jl",
                 "video_id": "",
                 "preview_image_url": ""
             }
