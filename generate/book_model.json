@@ -50,6 +50,12 @@
         "title": "Diffusion on Networks",
         "contents": [
             {
+                "name": "Spread of Information in the DeGroot model",
+                "notebook_path": "notebooks/DeGroot.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            },
+            {
                 "name": "Spread of Covid-19 and the SIR model",
                 "notebook_path": "notebooks/disease.jl",
                 "video_id": "",
@@ -58,12 +64,6 @@
             {
                 "name": "Assignment 2: School closures",
                 "notebook_path": "notebooks/school-closures.jl",
-                "video_id": "",
-                "preview_image_url": ""
-            },
-            {
-                "name": "Spread of Information in the DeGroot model",
-                "notebook_path": "notebooks/DeGroot.jl",
                 "video_id": "",
                 "preview_image_url": ""
             }
