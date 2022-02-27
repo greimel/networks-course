@@ -260,6 +260,18 @@ __Compare *Propositions 4 and 6*__:
 
 """
 
+# ╔═╡ de064aa2-8162-4a6c-ab73-4d4734d18882
+md"""
+# Exercises
+"""
+
+# ╔═╡ c8f31fe7-a5cd-4506-8218-f270a298d9fd
+md"""
+1. Consider financial network ``y``. Find the minimal number of shocks ``p`` that have to appear to fail the whole system and the size of the shock ``\varepsilon`` to fail the whole system.
+2. Now consider the alternative network ``\bar y``. Consider the size of the shock ``\varepsilon_2 = xxx``. Which network is more stable, which network is more resilient.
+3. What if ``\varepsilon_3 = \infty``? Argue without any (non-trivial) computations.
+"""
+
 # ╔═╡ f5938462-ae9d-44c0-a0b1-17d61e8ac0eb
 md"""
 # Implementation details
@@ -454,7 +466,7 @@ begin
 end
 
 # ╔═╡ d07fa3a9-6687-4279-8fe7-e348152b18f4
-peq2 = let
+peq = let
 	ȳ = 2.5 # 0.2
 	n_banks = 4
 	#nw = CompleteNetwork(n_banks, ȳ)
@@ -508,24 +520,41 @@ function island_network(n_islands, n_banks_per_island, ȳ)
 	cat(blocks...,dims=(1,2))
 end
 
+# ╔═╡ 00cabaf0-e341-4fd5-9f3f-b513591087f1
+function island_network(n_banks::AbstractVector, ȳ)
+	blocks = (CompleteNetwork(n, ȳ).Y for n ∈ n_banks)
+	
+	cat(blocks...,dims=(1,2))
+end
+
 # ╔═╡ c054bded-ad5a-4c19-9758-5e81ece988ba
-struct IslandNetwork <: FinancialNetwork
-	Y
-	ȳ
-	n_islands
-	n_banks_per_island
+let
+	struct IslandNetwork <: FinancialNetwork
+		Y
+		ȳ
+		n_islands
+		n_banks_per_island
+	end
+
 	function IslandNetwork(n_islands, n_banks_per_island, ȳ)
-		Y = island_network(n_islands, n_banks_per_island, ȳ)
-		
-		new(Y, ȳ, n_islands, n_banks_per_island)
+		Y = island_network(n_islands, n_banks_per_island, ȳ)	
+		IslandNetwork(Y, ȳ, n_islands, n_banks_per_island)
+	end
+	function IslandNetwork(n_banks::AbstractVector, ȳ)
+		Y = island_network(n_banks, ȳ)	
+		IslandNetwork(Y, ȳ, length(n_banks), n_banks)
 	end
 end
 
 # ╔═╡ 0ba6d675-477f-493d-a621-2431d32ad9a8
 function label(nw::IslandNetwork)
 	(; n_banks_per_island, n_islands) = nw
-	bank_or_banks = n_banks_per_island == 1 ? "bank" : "banks"
-	latexstring("\$ $n_islands \\times $n_banks_per_island \$ $bank_or_banks")
+	if length(n_banks_per_island) == 1
+		bank_or_banks = n_banks_per_island == 1 ? "bank" : "banks"
+		return latexstring("\$ $n_islands \\times $n_banks_per_island \$ $bank_or_banks")
+	else
+		return latexstring("\$ $n_islands \$ islands ")
+	end		
 end
 
 # ╔═╡ 2b7c65fe-8bf8-47f2-96b1-6dfe8888d494
@@ -671,6 +700,26 @@ end
 
 # ╔═╡ 796e8e3c-8b7c-4636-a37f-866ace5039e6
 circular_graphplot!(ax, IM::InterbankMarket; kwargs...) = circular_graphplot!(ax, SimpleWeightedDiGraph(adjacency_matrix(IM.network)); kwargs...)
+
+# ╔═╡ 1e38675b-3482-4f85-b4fa-f476e84fb520
+out = let
+	n = 6
+	m = 3
+	ȳ = 2.1
+	#IM1 = InterbankMarket(CompleteNetwork(n, ȳ))
+	#IM2 = InterbankMarket(IslandNetwork(n ÷ m, m, ȳ))
+	IM1 = InterbankMarket(IslandNetwork([5, 3, 3], ȳ))
+	IM2 = InterbankMarket(IslandNetwork([6, 2, 1, 1, 1], ȳ))
+
+	
+	fig = Figure()
+	ax1 = Axis(fig[1,1], aspect = 1, title = L"interbank market $y$")
+	ax2 = Axis(fig[1,2], aspect = 1, title = L"interbank market $\tilde{y}$")
+	circular_graphplot!(ax1, IM1)
+	circular_graphplot!(ax2, IM2)
+
+	(; IM1, IM2, fig)
+end; out.fig
 
 # ╔═╡ 0cf8fe5b-cd62-4354-bd84-e236249647ad
 function circular_graphplot(g; axis = (;), kwargs...)
@@ -845,7 +894,35 @@ function visualize_equilibrium(peq; graph = (;), bs = (;))
 end
 
 # ╔═╡ 2ed68cbb-7e5b-4d17-9cb3-4f9404b63365
-visualize_equilibrium(peq2)
+visualize_equilibrium(peq)
+
+# ╔═╡ cee410bb-1470-41f9-8e98-b96591eac7ca
+let
+	IM = out.IM1
+	i = 1
+	_ε4 = 0.4
+	
+	updated_network(IM) .= initial_network(IM)
+
+	x = updated_network(IM)
+	y = initial_network(IM)
+	
+	n_banks = size(y, 1)
+
+	# failed bank
+	bank₀ = Bank(; ν = 2.0, c = 0.0, project = Project(; ζ = 0.1, A = 3.5, a = 2.0, ε = _ε4), γ = Failure())
+	# sucessful bank
+	bank₁ = Bank(; ν = 2.0, c = 0.0, project = Project(; ζ = 0.1, A = 3.5, a = 2.0))
+
+	# vector of banks
+	banks = let
+		banks = [fill(bank₁, n_banks-1); bank₀]
+		banks .= Ref(bank₁)
+		banks[i] = bank₀
+		banks
+	end
+	visualize_equilibrium(equilibrium(banks, IM))
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2230,6 +2307,10 @@ version = "3.5.0+0"
 # ╟─2b7c65fe-8bf8-47f2-96b1-6dfe8888d494
 # ╟─0d4d9a5b-5e4f-4126-85ec-d31327cbf960
 # ╟─045c54d2-c76c-49f1-b849-d607e50b182b
+# ╟─de064aa2-8162-4a6c-ab73-4d4734d18882
+# ╠═1e38675b-3482-4f85-b4fa-f476e84fb520
+# ╠═cee410bb-1470-41f9-8e98-b96591eac7ca
+# ╠═c8f31fe7-a5cd-4506-8218-f270a298d9fd
 # ╟─f5938462-ae9d-44c0-a0b1-17d61e8ac0eb
 # ╟─45430bb9-8914-4839-b936-79bcbc453822
 # ╠═dafe2f99-d3b5-4450-bbab-c8ffe1ac11ea
@@ -2258,6 +2339,7 @@ version = "3.5.0+0"
 # ╠═a7834a3a-ed74-48ab-99ba-581f7a790bf9
 # ╠═46745175-c7bf-45b5-8e1a-d8ab9e9ca703
 # ╠═3e7f87ae-da71-42c4-8ebb-6dc2aef7ce03
+# ╠═00cabaf0-e341-4fd5-9f3f-b513591087f1
 # ╠═c054bded-ad5a-4c19-9758-5e81ece988ba
 # ╠═0ba6d675-477f-493d-a621-2431d32ad9a8
 # ╟─e6c8244a-6dca-4599-b3a5-02491bb99dfb
