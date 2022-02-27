@@ -37,12 +37,7 @@ md"""
 
 # ╔═╡ bd17b2ca-0de7-4d66-9d90-18704f058f86
 md"""
-# Assignment 3: XXX
-"""
-
-# ╔═╡ 65dfcce4-b9d8-4a3a-8531-b60e857b9903
-md"""
-# Exercises
+# Assignment 3: Financial stability
 """
 
 # ╔═╡ 4cc4f6eb-4487-46a5-ae25-12bd92cda949
@@ -52,9 +47,9 @@ theme = (
 	layout = Shell(),
 )
 
-# ╔═╡ 552a5211-055b-445a-9566-dc24d873ad97
+# ╔═╡ 65dfcce4-b9d8-4a3a-8531-b60e857b9903
 md"""
-## XXX
+# Exercises 1 – Risk sharing
 """
 
 # ╔═╡ f9b3dac7-15b6-485d-9737-7c6efbb6a510
@@ -206,6 +201,38 @@ Your answer
 goes here ...
 """
 
+# ╔═╡ 8a8fd025-dd1e-4577-a515-4ff3abe6baf2
+md"""
+# Exercise 2 – Imminent bank runs in Russia? (3 points)
+
+Following the Russian aggression against Ukraine, the US and the EU have imposed sanctions on Russia. Some commentators point out that the possibility of bank runs in the following days. (See, for example [this bloomberg article](https://www.bloomberg.com/news/articles/2022-02-26/u-s-weighs-sanctions-on-russia-s-central-bank-over-ukraine)).
+"""
+
+# ╔═╡ ef06cc5c-7789-4c4e-9211-b90964443ff0
+md"""
+👉 (2.1 | 1 points) Briefly summarize _(some of)_ the measures that affect the Russian financial system. (<200 words)
+"""
+
+# ╔═╡ 2bf14b52-51b3-47e2-abaf-34653e15da84
+answer21 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 2fb0e3ed-6766-40e0-a60c-037fe63ed1e2
+md"""
+👉 (2.2 | 2 points) What do think will be the implications of these measures on financial stability in Russia? Aim at making a connection to _(some of)_ the models we discussed in the lecture (_Diamond & Dybvig (1983)_, _Allen & Gale (2000)_, _Acemoglu et al (2015)_) (<200 words)
+"""
+
+# ╔═╡ f552be1d-5194-4570-921c-b674df019088
+answer22 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ fd14c5cd-32e8-437c-90f0-6668354bcdf2
+md"""
+# Exercises 3 – _Systemic Risk_ (4 points)
+"""
+
 # ╔═╡ f2d2fb2c-37cf-462b-883f-cb87de3adc85
 md"""
 ### Task X: Resilience and Stability (X points)
@@ -264,7 +291,9 @@ md"""
 """
 
 # ╔═╡ ef5eb54b-d4b1-4249-a13a-727c8fa05092
-
+md"""
+## Packages
+"""
 
 # ╔═╡ cac44438-2814-4a9b-beaa-8dd14ef745ac
 md"""
@@ -307,6 +336,12 @@ md"(You have used approximately **$(wordcount(answer11))** words.)"
 
 # ╔═╡ 6eb04ed2-e69c-487f-bef5-c66e4645c345
 md"(You have used approximately **$(wordcount(answer12))** words.)"
+
+# ╔═╡ 7e3117ff-589b-4f97-a93d-621ed2e0ae9c
+md"*approx. $(wordcount(answer21)) words*"
+
+# ╔═╡ b273f743-fa24-447b-83d8-d44910b63863
+md"*approx. $(wordcount(answer22)) words*"
 
 # ╔═╡ 9db95530-b66c-43d5-a043-0f938b69e7ef
 md"_approx. $(wordcount(answerX1)) words_"
@@ -1571,27 +1606,29 @@ version = "3.5.0+0"
 # ╟─add11e80-b68b-4346-b0c2-96a95e164336
 # ╟─bd17b2ca-0de7-4d66-9d90-18704f058f86
 # ╟─c95df236-544b-4d5c-860f-3691f7dbcf72
+# ╠═4cc4f6eb-4487-46a5-ae25-12bd92cda949
 # ╟─65dfcce4-b9d8-4a3a-8531-b60e857b9903
-# ╠═c2a414bb-1157-4579-a1eb-b64a7ff79c01
-# ╠═09feeb20-3b12-4d81-bdc7-48d4f84bcb96
-# ╠═db4370a6-baea-40e4-92f7-da8a68b7afa5
-# ╠═580ffabc-55d8-48dd-85b4-58681251e01b
-# ╠═e934b7cf-71e0-44d0-8678-c0d5b6b5350f
-# ╟─4cc4f6eb-4487-46a5-ae25-12bd92cda949
-# ╠═552a5211-055b-445a-9566-dc24d873ad97
 # ╟─08aa1816-5270-49f9-99c4-b7a5a9009c37
 # ╟─a37df74a-beb4-46d4-b830-e20b040e702f
 # ╟─f9b3dac7-15b6-485d-9737-7c6efbb6a510
 # ╠═e7e9fee1-7860-4820-a328-f204affbe5df
 # ╠═d1a72c24-1ea2-4824-894d-fe1abc9af1d7
 # ╠═58f29248-2987-4755-ae2e-1b8c999fdfbb
-# ╠═ccfb2f26-add1-41ca-9f9c-282eeddbcf36
-# ╠═72b8af85-d9ba-40ae-83d6-d629ee66bd83
+# ╟─ccfb2f26-add1-41ca-9f9c-282eeddbcf36
+# ╟─72b8af85-d9ba-40ae-83d6-d629ee66bd83
 # ╠═7c99e8a8-e32c-4e76-bf7c-401e5aca0aa9
 # ╠═c9d88522-aa98-411a-9159-afc984048692
 # ╠═2dcb4bde-765c-4b68-acff-48ed9a6ac6ed
 # ╠═6eb04ed2-e69c-487f-bef5-c66e4645c345
 # ╠═c5b7f5a5-3306-4237-b6c2-c2f383b45459
+# ╟─8a8fd025-dd1e-4577-a515-4ff3abe6baf2
+# ╟─ef06cc5c-7789-4c4e-9211-b90964443ff0
+# ╠═2bf14b52-51b3-47e2-abaf-34653e15da84
+# ╟─7e3117ff-589b-4f97-a93d-621ed2e0ae9c
+# ╟─2fb0e3ed-6766-40e0-a60c-037fe63ed1e2
+# ╠═f552be1d-5194-4570-921c-b674df019088
+# ╟─b273f743-fa24-447b-83d8-d44910b63863
+# ╟─fd14c5cd-32e8-437c-90f0-6668354bcdf2
 # ╟─f2d2fb2c-37cf-462b-883f-cb87de3adc85
 # ╠═4efa71cc-39be-4563-97f1-eb12bc9c9435
 # ╟─4cf156d2-0975-4bff-b4dc-8f06763dae0f
@@ -1601,7 +1638,12 @@ version = "3.5.0+0"
 # ╠═1520dcbe-a190-41ff-adcd-264779b611bf
 # ╠═99234900-1490-4f2f-8dd1-50ba3d0f2766
 # ╟─f8ae5864-52a2-421b-9523-b0d69e9332cc
-# ╠═ef5eb54b-d4b1-4249-a13a-727c8fa05092
+# ╟─ef5eb54b-d4b1-4249-a13a-727c8fa05092
+# ╠═c2a414bb-1157-4579-a1eb-b64a7ff79c01
+# ╠═09feeb20-3b12-4d81-bdc7-48d4f84bcb96
+# ╠═db4370a6-baea-40e4-92f7-da8a68b7afa5
+# ╠═580ffabc-55d8-48dd-85b4-58681251e01b
+# ╠═e934b7cf-71e0-44d0-8678-c0d5b6b5350f
 # ╟─cac44438-2814-4a9b-beaa-8dd14ef745ac
 # ╠═5d31d61f-bae2-49e2-b891-85faa914ef1a
 # ╠═d53e8a95-96ec-437a-990c-f6405f2410fc
