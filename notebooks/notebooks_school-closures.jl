@@ -14,7 +14,7 @@ end
 
 # ╔═╡ 13313236-502d-46ca-bf24-a4defd6d792f
 md"""
-`school-closures.jl` | **Version 1.1** | *last updated: Feb 21, 2022*
+`school-closures.jl` | **Version 1.2** | *last updated: Feb 28, 2022*
 """
 
 # ╔═╡ 44c1c228-d864-49ab-a8bf-bd7d6bd260cd
@@ -253,7 +253,7 @@ goes here ...
 """
 
 # ╔═╡ 1bc07c3c-f71e-444a-9c22-b447295d5d99
-md"_approx. $(wordcount(answer2)) words_"
+show_words_limit(answer2, 500)
 
 # ╔═╡ 808fa60d-79a2-47e4-95d1-98a74b87ffc7
 if answer2 == md"""
@@ -289,7 +289,7 @@ goes here ...
 """
 
 # ╔═╡ e61f91d5-80e6-4dc8-814f-c4c038af284f
-md"_approx $(wordcount(answer3)) words_"
+show_words_limit(answer3, 500)
 
 # ╔═╡ 064bfd13-944a-4d3b-8075-cf5d92018878
 md"""
@@ -793,23 +793,46 @@ using CategoricalArrays
 # ╔═╡ e35ed6b2-3e18-40b5-b9fd-c6bb216ed2a0
 using Random
 
-# ╔═╡ 338a5dc3-7099-4163-948e-ee1f0e362481
+# ╔═╡ f924060e-d722-4444-bcf2-987c8ee7b83d
 md"""
-## Infrastructure
+## Assignment infrastructure
 """
 
-# ╔═╡ f5e85900-1ea7-4dd3-8999-2e121efa9447
-using PlutoUI
-
-# ╔═╡ 337e73e7-5454-4f1f-9d5e-9b01a5c2cd10
-TableOfContents()
-
-# ╔═╡ f23193dd-d1f8-4be3-8060-ed90cba0c168
+# ╔═╡ 64536894-ee22-4520-9097-f625c530d7be
 members = let
 	names = map(group_members) do (; firstname, lastname)
 		firstname * " " * lastname
 	end
 	join(names, ", ", " & ")
+end
+
+# ╔═╡ 74e4acbe-89d7-4ce9-a1f7-0cc9b2a7bca7
+function wordcount(text)
+	stripped_text = strip(replace(string(text), r"\s" => " "))
+   	words = split(stripped_text, (' ', '-', '.', ',', ':', '_', '"', ';', '!', '\''))
+   	length(filter(!=(""), words))
+end
+
+# ╔═╡ 0c511a66-b69d-4146-9927-885eeb24d240
+using PlutoTest: @test
+
+# ╔═╡ d45a3bfd-1187-4c07-84a2-026318b84456
+@test wordcount("  Hello,---it's me.  ") == 4
+
+# ╔═╡ b4aeb1f6-b804-4335-a6e2-72c55af5c7a4
+@test wordcount("This;doesn't really matter.") == 5
+
+# ╔═╡ 565eb639-92c8-44db-b2f1-c118c83ae077
+show_words(answer) = md"_approximately $(wordcount(answer)) words_"
+
+# ╔═╡ 7fb38ee0-29cf-4b52-9c7c-97ae42ed4ba3
+function show_words_limit(answer, limit)
+	count = wordcount(answer)
+	if count < 1.02 * limit
+		return show_words(answer)
+	else
+		return almost(md"You are at $count words. Please shorten your text a bit, to get **below $limit words**.")
+	end
 end
 
 # ╔═╡ c49c0fce-0bc7-4665-81bf-24e61707fde7
@@ -820,12 +843,13 @@ begin
 	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
 	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
 	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
-	function wordcount(text)
-		stripped_text = strip(replace(string(text), r"\s" => " "))
-    	words = split(stripped_text, ('-','.',',',':','_','"',';','!'))
-    	length(words)
-	end
 end
+
+# ╔═╡ f5e85900-1ea7-4dd3-8999-2e121efa9447
+using PlutoUI
+
+# ╔═╡ 337e73e7-5454-4f1f-9d5e-9b01a5c2cd10
+TableOfContents()
 
 # ╔═╡ d4baea2f-3919-49eb-8d31-1bba68b322a7
 md"""
@@ -855,6 +879,7 @@ GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
+PlutoTest = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
@@ -872,6 +897,7 @@ GraphMakie = "~0.3.2"
 Graphs = "~1.6.0"
 MarkdownLiteral = "~0.1.1"
 NetworkLayout = "~0.4.4"
+PlutoTest = "~0.2.1"
 PlutoUI = "~0.7.34"
 SimpleWeightedGraphs = "~1.2.1"
 """
@@ -1773,6 +1799,12 @@ git-tree-sha1 = "6f1b25e8ea06279b5689263cc538f51331d7ca17"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.1.3"
 
+[[deps.PlutoTest]]
+deps = ["HypertextLiteral", "InteractiveUtils", "Markdown", "Test"]
+git-tree-sha1 = "cd214d5c737563369887ac465a6d3c0fd7c1f854"
+uuid = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
+version = "0.2.1"
+
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
 git-tree-sha1 = "8979e9802b4ac3d58c503a20f2824ad67f9074dd"
@@ -2292,11 +2324,17 @@ version = "3.5.0+0"
 # ╠═84a3ad96-4854-4ab8-be5c-b4859d1a2e39
 # ╠═c5b3e888-3b6f-449b-8f72-455fe86743d2
 # ╠═e35ed6b2-3e18-40b5-b9fd-c6bb216ed2a0
-# ╟─338a5dc3-7099-4163-948e-ee1f0e362481
+# ╟─f924060e-d722-4444-bcf2-987c8ee7b83d
+# ╠═64536894-ee22-4520-9097-f625c530d7be
+# ╠═74e4acbe-89d7-4ce9-a1f7-0cc9b2a7bca7
+# ╠═0c511a66-b69d-4146-9927-885eeb24d240
+# ╠═d45a3bfd-1187-4c07-84a2-026318b84456
+# ╠═b4aeb1f6-b804-4335-a6e2-72c55af5c7a4
+# ╠═565eb639-92c8-44db-b2f1-c118c83ae077
+# ╠═7fb38ee0-29cf-4b52-9c7c-97ae42ed4ba3
+# ╠═c49c0fce-0bc7-4665-81bf-24e61707fde7
 # ╠═f5e85900-1ea7-4dd3-8999-2e121efa9447
 # ╠═337e73e7-5454-4f1f-9d5e-9b01a5c2cd10
-# ╠═f23193dd-d1f8-4be3-8060-ed90cba0c168
-# ╠═c49c0fce-0bc7-4665-81bf-24e61707fde7
 # ╟─d4baea2f-3919-49eb-8d31-1bba68b322a7
 # ╟─dcce8f3c-7c26-4cdb-92d6-a98b091a1419
 # ╟─00000000-0000-0000-0000-000000000001

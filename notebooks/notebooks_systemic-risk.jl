@@ -29,7 +29,7 @@ end
 
 # ╔═╡ 815648ae-78f2-42f1-a216-81b10c0a7850
 md"""
-`systemic-risk.jl` | **Version 1.1** | *last updated: Feb 28, 2022*
+`systemic-risk.jl` | **Version 1.2** | *last updated: Feb 28, 2022*
 """
 
 # ╔═╡ c129dec7-eb81-4cab-91d5-2ef7a1c06b24
@@ -88,7 +88,7 @@ Your answer goes here ...
 """
 
 # ╔═╡ b13cbc28-5658-4f24-879e-bd6c10f7c7f0
-md"*approx. $(wordcount(answer11)) words*"
+show_words_limit(answer11, 200)
 
 # ╔═╡ f7a60a89-40b2-4656-98a6-a258a4a5741d
 md"""
@@ -101,7 +101,7 @@ Your answer goes here ...
 """
 
 # ╔═╡ 0a7829f4-c3a9-488d-aacc-6e8a02c3ef79
-md"*approx. $(wordcount(answer12)) words*"
+show_words_limit(answer12, 200)
 
 # ╔═╡ 496f01ef-6422-412b-9142-c3893476bc0d
 md"""
@@ -287,7 +287,7 @@ Your answer goes here ...
 """
 
 # ╔═╡ d41cd681-2434-4525-9c67-9e184fdd1f67
-md"*approx. $(wordcount(answer_a)) words*"
+show_words(answer_a)
 
 # ╔═╡ 9a8b8946-e083-49f3-8a86-7ba2df4636fe
 md"""
@@ -308,7 +308,7 @@ Your answer goes here ...
 """
 
 # ╔═╡ e6f4813b-86bb-45a8-b017-c2d32f3c74b0
-md"*approx. $(wordcount(answer_b)) words*"
+show_words(answer_b)
 
 # ╔═╡ 207d92a3-b8fa-45e3-88b1-bb95bb7d981c
 md"""
@@ -321,7 +321,7 @@ Your answer goes here ...
 """
 
 # ╔═╡ be0f68e9-36ad-4500-b941-fe47e1865eba
-md"*approx. $(wordcount(answer_c)) words*"
+show_words(answer_c)
 
 # ╔═╡ 0a7b61c5-8e11-4025-b6ad-8fcfc2701464
 md"""
@@ -334,7 +334,7 @@ Your answer goes here ...
 """
 
 # ╔═╡ dcdd349e-3edb-413f-b315-994b9395c3bc
-md"*approx. $(wordcount(answer_d)) words*"
+show_words(answer_d)
 
 # ╔═╡ c177b994-cf6c-4a90-8d64-a4feef88fd56
 md"""
@@ -347,7 +347,7 @@ Your answer goes here ...
 """
 
 # ╔═╡ 75b27e3b-f8b3-4345-ac43-2974d624ea72
-md"*approx. $(wordcount(answer_e)) words*"
+show_words(answer_e)
 
 # ╔═╡ 942580bf-60d3-49fe-be2a-2fab9869322d
 md"""
@@ -768,12 +768,6 @@ let
 	axislegend(ax, position = :lt)
 	fig	
 end
-
-# ╔═╡ 17423158-bbc9-4b3f-b711-ae5a87f6cb11
-
-
-# ╔═╡ 76ddb8a1-e662-4048-bc3d-33346f5884d1
-
 
 # ╔═╡ f5938462-ae9d-44c0-a0b1-17d61e8ac0eb
 md"""
@@ -1253,11 +1247,33 @@ members = let
 	join(names, ", ", " & ")
 end
 
-# ╔═╡ cc9368a4-8a7c-4146-8746-d1518ff895c5
+# ╔═╡ 76bc41d8-c97f-4120-9b13-679997411ca6
 function wordcount(text)
 	stripped_text = strip(replace(string(text), r"\s" => " "))
-   	words = split(stripped_text, ('-','.',',',':','_','"',';','!'))
-   	length(words)
+   	words = split(stripped_text, (' ', '-', '.', ',', ':', '_', '"', ';', '!', '\''))
+   	length(filter(!=(""), words))
+end
+
+# ╔═╡ b72dedc8-bd5a-457e-ba67-13f26a0148dd
+using PlutoTest: @test
+
+# ╔═╡ a3874185-b0ec-49da-a9d7-7875416b3b4f
+@test wordcount("  Hello,---it's me.  ") == 4
+
+# ╔═╡ 3945c5e7-8d0c-4196-8eb1-2931cd85cd30
+@test wordcount("This;doesn't really matter.") == 5
+
+# ╔═╡ 0694c61f-bcd7-435e-8bfa-77e81bb580e7
+show_words(answer) = md"_approximately $(wordcount(answer)) words_"
+
+# ╔═╡ fe70e69a-1c07-4e50-b29e-6ca028bb1a3d
+function show_words_limit(answer, limit)
+	count = wordcount(answer)
+	if count < 1.02 * limit
+		return show_words(answer)
+	else
+		return almost(md"You are at $count words. Please shorten your text a bit, to get **below $limit words**.")
+	end
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1275,6 +1291,7 @@ Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
+PlutoTest = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 
@@ -1291,6 +1308,7 @@ Graphs = "~1.6.0"
 LaTeXStrings = "~1.3.0"
 MarkdownLiteral = "~0.1.1"
 NetworkLayout = "~0.4.4"
+PlutoTest = "~0.2.1"
 PlutoUI = "~0.7.34"
 SimpleWeightedGraphs = "~1.2.1"
 """
@@ -2192,6 +2210,12 @@ git-tree-sha1 = "6f1b25e8ea06279b5689263cc538f51331d7ca17"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.1.3"
 
+[[deps.PlutoTest]]
+deps = ["HypertextLiteral", "InteractiveUtils", "Markdown", "Test"]
+git-tree-sha1 = "cd214d5c737563369887ac465a6d3c0fd7c1f854"
+uuid = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
+version = "0.2.1"
+
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
 git-tree-sha1 = "8979e9802b4ac3d58c503a20f2824ad67f9074dd"
@@ -2710,8 +2734,6 @@ version = "3.5.0+0"
 # ╟─2b7c65fe-8bf8-47f2-96b1-6dfe8888d494
 # ╟─0d4d9a5b-5e4f-4126-85ec-d31327cbf960
 # ╟─045c54d2-c76c-49f1-b849-d607e50b182b
-# ╠═17423158-bbc9-4b3f-b711-ae5a87f6cb11
-# ╠═76ddb8a1-e662-4048-bc3d-33346f5884d1
 # ╟─f5938462-ae9d-44c0-a0b1-17d61e8ac0eb
 # ╟─45430bb9-8914-4839-b936-79bcbc453822
 # ╠═dafe2f99-d3b5-4450-bbab-c8ffe1ac11ea
@@ -2763,6 +2785,11 @@ version = "3.5.0+0"
 # ╠═fd3dc6bf-f1e5-46de-b0b0-94adbc845d81
 # ╟─2d1f7620-de37-4e9f-8044-9459abda92ac
 # ╠═7f0ad695-ea05-483b-86c4-a63df55689e9
-# ╠═cc9368a4-8a7c-4146-8746-d1518ff895c5
+# ╠═76bc41d8-c97f-4120-9b13-679997411ca6
+# ╠═b72dedc8-bd5a-457e-ba67-13f26a0148dd
+# ╠═a3874185-b0ec-49da-a9d7-7875416b3b4f
+# ╠═3945c5e7-8d0c-4196-8eb1-2931cd85cd30
+# ╠═0694c61f-bcd7-435e-8bfa-77e81bb580e7
+# ╠═fe70e69a-1c07-4e50-b29e-6ca028bb1a3d
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
