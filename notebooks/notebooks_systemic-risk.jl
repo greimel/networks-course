@@ -74,12 +74,12 @@ md"""
 md"""
 ### Task 1: Imminent bank runs in Russia? (4 points)
 
-Following the Russian aggression against Ukraine, the US and the EU have imposed sanctions on Russia. Some commentators point out that the possibility of bank runs in the following days. (See, for example [this bloomberg article](https://www.bloomberg.com/news/articles/2022-02-26/u-s-weighs-sanctions-on-russia-s-central-bank-over-ukraine)).
+Following the Russian aggression against Ukraine, the US and the EU have imposed sanctions on Russia. Some commentators point out the possibility of bank runs in the following days. (See, for example [this bloomberg article](https://www.bloomberg.com/news/articles/2022-02-26/u-s-weighs-sanctions-on-russia-s-central-bank-over-ukraine)).
 """
 
 # ╔═╡ 88580398-8b68-4830-9df9-ec1a1aeaf243
 md"""
-👉 (1.1 | 2 points) Briefly summarize _(some of)_ the measures that affect the Russian financial system. (<200 words)
+👉 (1.1 | 2 points) Briefly summarize _(some of)_ the measures that target the Russian financial system. (<200 words)
 """
 
 # ╔═╡ 186b1fe4-4462-4c0d-a874-256ee3e3f700
