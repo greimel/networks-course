@@ -97,7 +97,7 @@ using PlutoUI
 
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`twitter.jl` | **Version 1.8** | *last changed: Feb 11, 2022*"
+`twitter.jl` | **Version 1.9** | *last changed: Feb 28, 2022*"
 
 # ╔═╡ 39feff38-617d-11eb-0682-874b2f747ff8
 md"""
@@ -121,7 +121,7 @@ Your answer goes here ...
 
 # ╔═╡ 3ba06884-6481-11eb-20ea-69d7baf86fff
 md"""
-**NOTE** the word count is done by the function `wordcount` at the very bottom. It is not completely accurate :-). If you are a few words above the limit, that's ok.
+**NOTE** the word count is done by the function `wordcount` at the very bottom. It may not be completely accurate :-). If you are a few words above the limit, that's ok.
 """
 
 # ╔═╡ b2975790-617f-11eb-3dad-ab030c5213ec
@@ -432,15 +432,12 @@ let
 	sort!(df_hashtags, :freqs, rev = true)
 end
 
-# ╔═╡ c7ed3a0c-faaa-48c1-b442-67e603d99d97
+# ╔═╡ e18dc43b-156c-456b-9261-18cc1abee5cc
 md"""
-## Infrastructure
+## Assignment infrastructure
 """
 
-# ╔═╡ af4b0571-e522-4d00-963b-5f1f13adc619
-TableOfContents()
-
-# ╔═╡ 31a80c8f-ae90-4dbf-8a3d-e91f316758f2
+# ╔═╡ 57008096-21b5-4971-a58a-6f54e090e9b8
 members = let
 	names = map(group_members) do (; firstname, lastname)
 		firstname * " " * lastname
@@ -459,7 +456,17 @@ In this assignment you will download a set of *tweets* from social network *Twit
 This network consists of twitter users that have used the keyword *$(keyword)* in on of their recent tweets. Two nodes (users) are connected if they have used another hashtag in common. See the plot below.
 """
 
-# ╔═╡ 4b22ab6b-5b3a-47c3-b054-2bc4c4b2f1b0
+# ╔═╡ db650af6-4214-490b-a7a1-eb06a7de4116
+function wordcount(text)
+	stripped_text = strip(replace(string(text), r"\s" => " "))
+   	words = split(stripped_text, (' ', '-', '.', ',', ':', '_', '"', ';', '!', '\''))
+   	length(filter(!=(""), words))
+end
+
+# ╔═╡ 9b3dc668-1fd1-46f2-b93c-7efc7c4787f0
+show_words(answer) = md"_approximately $(wordcount(answer)) words_"
+
+# ╔═╡ 6a100e4d-31b9-4eb3-a7ae-bae844a247ff
 begin
 	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
 	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
@@ -467,11 +474,6 @@ begin
 	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
 	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
 	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
-	function wordcount(text)
-		stripped_text = strip(replace(string(text), r"\s" => " "))
-    	words = split(stripped_text, ('-','.',',',':','_','"',';','!'))
-    	length(words)
-	end
 end
 
 # ╔═╡ 09d66db0-617c-11eb-1b92-b3ed2e5f68f6
@@ -481,32 +483,41 @@ else
 	correct(md"Go and analyse the tweets on *$(keyword)*!")
 end
 
-# ╔═╡ d7046f24-617e-11eb-0571-ebcacb3a39e9
-md" ~ $(wordcount(answer1)) words"
-
 # ╔═╡ a36f6492-617f-11eb-2bb8-1ded14d9f438
 if answer1 == md"Your answer goes here ..."
 	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
-elseif wordcount(answer1) > 150
-	almost(md"Try to shorten your text a bit, to get below 150 words.")
 else
 	correct(md"Great, we are looking forward to reading your answer!")
 end
-
-# ╔═╡ 163ef7aa-6480-11eb-2ead-e9fb9a35f490
-md"*approx. $(sum(wordcount.([answer2_1, answer2_2, answer2_3]))) words*"
-
-# ╔═╡ 0cbb406e-6181-11eb-015d-d582e3a9b175
-md"_approx. $(wordcount(answer3)) words_"
 
 # ╔═╡ f1c8a53a-6180-11eb-2e05-179bfab97223
 if answer3 == md"Your answer goes here ..."
 	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
-elseif wordcount(answer3) > 150
-	almost(md"Try to shorten your text a bit, to get below 150 words.")
 else
 	correct(md"Great, we are looking forward to reading your answer!")
 end
+
+# ╔═╡ effe32c3-47e8-4389-9de3-250d251d4828
+function show_words_limit(answer, limit)
+	count = wordcount(answer)
+	if count < 1.02 * limit
+		return show_words(answer)
+	else
+		return almost(md"You are at $count words. Please shorten your text a bit, to get **below $limit words**.")
+	end
+end
+
+# ╔═╡ d7046f24-617e-11eb-0571-ebcacb3a39e9
+show_words_limit(answer1, 150)
+
+# ╔═╡ 163ef7aa-6480-11eb-2ead-e9fb9a35f490
+show_words_limit(join([answer2_1, answer2_2, answer2_3], " "), 500)
+
+# ╔═╡ 0cbb406e-6181-11eb-015d-d582e3a9b175
+show_words_limit(answer3, 250)
+
+# ╔═╡ af4b0571-e522-4d00-963b-5f1f13adc619
+TableOfContents()
 
 # ╔═╡ bef961a8-caa3-4360-8b35-d945b7e030d9
 md"""
@@ -523,8 +534,8 @@ _**Computational Thinking**, a live online Julia/Pluto textbook._ [(computationa
 	))
 
 # ╔═╡ Cell order:
-# ╟─8493134e-6183-11eb-0059-6d6ecf0f17bf
 # ╟─849cd5bc-617b-11eb-12eb-a7f0907fc718
+# ╟─8493134e-6183-11eb-0059-6d6ecf0f17bf
 # ╟─da51e362-6176-11eb-15b2-b7bcebc2cbb6
 # ╠═41f4f6cc-6173-11eb-104f-69c755afd266
 # ╟─39feff38-617d-11eb-0682-874b2f747ff8
@@ -544,7 +555,7 @@ _**Computational Thinking**, a live online Julia/Pluto textbook._ [(computationa
 # ╠═f5e4f31a-647f-11eb-11c0-87221d14576e
 # ╠═05854c34-6480-11eb-021a-07c21ae697ba
 # ╠═0ee478fe-6480-11eb-3d3d-1bc21388754f
-# ╟─163ef7aa-6480-11eb-2ead-e9fb9a35f490
+# ╠═163ef7aa-6480-11eb-2ead-e9fb9a35f490
 # ╟─840f84aa-6180-11eb-03bb-71fa9a6e9d17
 # ╠═e96b54dc-6180-11eb-027f-a9db3a83aa99
 # ╟─0cbb406e-6181-11eb-015d-d582e3a9b175
@@ -586,10 +597,13 @@ _**Computational Thinking**, a live online Julia/Pluto textbook._ [(computationa
 # ╠═6535e16c-6146-11eb-35c0-31aef62a631c
 # ╟─1f927f3c-60e5-11eb-0304-f1639b68468d
 # ╠═620c76e4-60de-11eb-2c82-d364f55fbe4d
-# ╟─c7ed3a0c-faaa-48c1-b442-67e603d99d97
+# ╟─e18dc43b-156c-456b-9261-18cc1abee5cc
+# ╠═57008096-21b5-4971-a58a-6f54e090e9b8
+# ╠═db650af6-4214-490b-a7a1-eb06a7de4116
+# ╠═9b3dc668-1fd1-46f2-b93c-7efc7c4787f0
+# ╠═effe32c3-47e8-4389-9de3-250d251d4828
+# ╠═6a100e4d-31b9-4eb3-a7ae-bae844a247ff
 # ╠═ba5e6141-9927-41e4-8688-cbbb17b8093c
 # ╠═af4b0571-e522-4d00-963b-5f1f13adc619
-# ╠═31a80c8f-ae90-4dbf-8a3d-e91f316758f2
-# ╠═4b22ab6b-5b3a-47c3-b054-2bc4c4b2f1b0
 # ╟─bef961a8-caa3-4360-8b35-d945b7e030d9
 # ╟─052ab5c3-51a9-43ca-9d95-37f41e283a31
