@@ -79,14 +79,8 @@
                 "preview_image_url": ""
             },
             {
-                "name": "Systemic risk",
+                "name": "Systemic risk (with Assignment 3)",
                 "notebook_path": "notebooks/systemic-risk.jl",
-                "video_id": "",
-                "preview_image_url": ""
-            },
-            {
-                "name": "Assignment 3",
-                "notebook_path": "notebooks/banks-assignment.jl",
                 "video_id": "",
                 "preview_image_url": ""
             }
