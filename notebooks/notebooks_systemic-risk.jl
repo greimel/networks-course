@@ -14,9 +14,22 @@ macro bind(def, element)
     end
 end
 
+# ╔═╡ 8573d925-e4bd-4544-a264-b3a7ba8610a3
+md"""
+*Assignment submitted by* **$members** (*group $(group_number)*)
+"""
+
+# ╔═╡ 2db89e2d-4d89-454d-bd1a-976a1f415623
+if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
+	md"""
+!!! danger "Note!"
+    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in [this cell](#93a79265-110d-4fb9-b2a7-97da4667f8c6).
+	"""
+end
+
 # ╔═╡ 815648ae-78f2-42f1-a216-81b10c0a7850
 md"""
-`systemic-risk.jl` | **Version 1.0** | *last updated: Feb 24, 2022*
+`systemic-risk.jl` | **Version 1.1** | *last updated: Feb 28, 2022*
 """
 
 # ╔═╡ c129dec7-eb81-4cab-91d5-2ef7a1c06b24
@@ -40,6 +53,301 @@ based on _[Acemoglu, Ozdaglar & Tahbaz-Salehi, 2015](https://www.aeaweb.org/arti
   * densely connected networks are **robust, yet fragile**
   * with **big shocks**, we want to have **disconnected components**
 """
+
+# ╔═╡ 6060f7ec-52c1-4504-9fc9-dfaaff4c1109
+md"""
+# Assignment 3: Financial stability
+"""
+
+# ╔═╡ 1f9e1561-405d-4d49-a2ee-af2dfeb2d409
+md"""
+*submitted by* **$members** (*group $(group_number)*)
+"""
+
+# ╔═╡ 4f30bb25-0f69-4c5a-948c-df89d75a0a24
+md"""
+!!! info "Note on Task 3"
+    **Task 3** is not graded, but it will be discussed in the tutorial. You are invited to submit solutions for **Task 3**, but you don't have to.
+"""
+
+# ╔═╡ 07958953-43c8-441b-b6d6-6bcf0e027603
+md"""
+### Task 1: Imminent bank runs in Russia? (4 points)
+
+Following the Russian aggression against Ukraine, the US and the EU have imposed sanctions on Russia. Some commentators point out that the possibility of bank runs in the following days. (See, for example [this bloomberg article](https://www.bloomberg.com/news/articles/2022-02-26/u-s-weighs-sanctions-on-russia-s-central-bank-over-ukraine)).
+"""
+
+# ╔═╡ 88580398-8b68-4830-9df9-ec1a1aeaf243
+md"""
+👉 (1.1 | 2 points) Briefly summarize _(some of)_ the measures that affect the Russian financial system. (<200 words)
+"""
+
+# ╔═╡ 186b1fe4-4462-4c0d-a874-256ee3e3f700
+answer11 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ b13cbc28-5658-4f24-879e-bd6c10f7c7f0
+md"*approx. $(wordcount(answer11)) words*"
+
+# ╔═╡ f7a60a89-40b2-4656-98a6-a258a4a5741d
+md"""
+👉 (1.2 | 2 points) What do think will be the implications of these measures on financial stability in Russia? Aim at making a connection to _(some of)_ the models we discussed in the lecture (_Diamond & Dybvig (1983)_, _Allen & Gale (2000)_, _Acemoglu et al (2015)_) (<200 words)
+"""
+
+# ╔═╡ 70e40546-b5e8-45dc-86a0-bfbef5403e30
+answer12 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 0a7829f4-c3a9-488d-aacc-6e8a02c3ef79
+md"*approx. $(wordcount(answer12)) words*"
+
+# ╔═╡ 496f01ef-6422-412b-9142-c3893476bc0d
+md"""
+### Task 2: _Systemic Risk_ (6 points)
+"""
+
+# ╔═╡ 1e38675b-3482-4f85-b4fa-f476e84fb520
+out = let
+	#n = 6
+	#m = 3
+	ȳ = 2.1
+	#IM1 = InterbankMarket(CompleteNetwork(n, ȳ))
+	#IM2 = InterbankMarket(IslandNetwork(n ÷ m, m, ȳ))
+	IM1 = InterbankMarket(IslandNetwork([5, 3, 3], ȳ))
+	IM2 = InterbankMarket(IslandNetwork([6, 2, 1, 1, 1], ȳ))
+
+	n1 = size(IM1.network.Y, 1)
+	n2 = size(IM2.network.Y, 1)
+	if n1 == n2
+		n = n1
+	else
+		n = (n1, n2)
+	end
+	
+	fig = Figure()
+	ax1 = Axis(fig[1,1], aspect = 1, title = L"interbank market $y$")
+	ax2 = Axis(fig[1,2], aspect = 1, title = L"interbank market $\tilde{y}$")
+	circular_graphplot!(ax1, IM1)
+	circular_graphplot!(ax2, IM2)
+
+	(; IM1, IM2, fig, n, ȳ)
+end; out.fig
+
+# ╔═╡ 21dd99b3-ee5b-46e5-adf5-9c9ff9448272
+@markdown("""
+Consider the interbank networks ``y`` and ``\\tilde y`` of $(out.n) banks as depicted above. For all non-isolated banks the sum of interbank liabilities equal the sum of interbank claims (``y = $(out.ȳ)``).
+""")
+
+# ╔═╡ febcd0aa-0a19-405c-b5ed-5c73dab8929c
+md"""
+For this exercise you can use the tool below, to simulate the payment equilibrium for a given interbank market, shock size, and the bank that is hit by the shock.
+
+* Which bank is hit? ``i`` $(@bind i_bank Slider(1:out.n, default = 1, show_value = true))
+* Size of the shock ``\varepsilon``  $(@bind _ε4 Slider(0.0:0.2:3.0, show_value = true, default = 1.0))
+* Select ``y`` or ``\tilde y`` $(@bind _IM Select([out.IM1 => "y", out.IM2 => "ỹ"]))
+"""
+
+# ╔═╡ cee410bb-1470-41f9-8e98-b96591eac7ca
+let
+	IM = _IM
+	i = i_bank
+	#_ε4 = 0.4
+	
+	updated_network(IM) .= initial_network(IM)
+
+	x = updated_network(IM)
+	y = initial_network(IM)
+	
+	n_banks = size(y, 1)
+
+	# failed bank
+	bank₀ = Bank(; ν = 2.0, c = 0.0, project = Project(; ζ = 0.1, A = 3.5, a = 2.0, ε = _ε4), γ = Failure())
+	# sucessful bank
+	bank₁ = Bank(; ν = 2.0, c = 0.0, project = Project(; ζ = 0.1, A = 3.5, a = 2.0))
+
+	# vector of banks
+	banks = let
+		banks = [fill(bank₁, n_banks-1); bank₀]
+		banks .= Ref(bank₁)
+		banks[i] = bank₀
+		banks
+	end
+	visualize_equilibrium(equilibrium(banks, IM))
+end
+
+# ╔═╡ 6733025d-20f0-48cd-b6d8-0dfb02bb7482
+md"""
+👉 (2.1 | 2 points) Consider financial network ``y``. What is the minimal number of shocks ``p`` that have to occur to wipe out the whole financial system. Which banks have to be hit? How big would the shocks ``\varepsilon`` have to be?
+"""
+
+# ╔═╡ 33bf5bdd-6e13-4375-bf26-bdac273d6738
+answer21 = md"""
+Your answer goes here ... You can type math like this: ``p = 17``, ``\varepsilon = 1.1``
+"""
+
+# ╔═╡ 07fc0a5c-8d9f-46a7-9893-fefa23007878
+md"""
+👉 (2.2 | 2 points) Consider financial network ``\tilde y``. What is the minimal number of shocks ``\tilde p`` that have to occur to wipe out the whole financial system. Which banks have to be hit? How big would the shocks ``\tilde \varepsilon`` have to be?
+"""
+
+# ╔═╡ 1f52926c-fc07-4652-97a8-6abbdb3e3b5e
+answer22 = md"""
+Your answer goes here ... You can type math like this: ``\tilde p = 17``, ``\tilde \varepsilon = 1.1``
+"""
+
+# ╔═╡ e903ac6c-1b5c-40ea-a925-e7243cbf9b02
+md"""
+👉 (2.3 | 2 points) Now consider ``\hat \varepsilon > \max\{\varepsilon, \tilde \varepsilon \}`` and ``\hat p = 1``. Which network is more stable? Which network is more resilient?
+"""
+
+# ╔═╡ 751e1643-43c2-4071-87cf-a904560e2bc4
+answer23 = md"""
+Your answer goes here ... You can type math like this: ``\hat p = 17``, ``\hat \varepsilon = 1.1``
+"""
+
+# ╔═╡ 25dae65d-65a6-462f-aba2-afd498bf4d5a
+md"""
+### Before you submit ...
+
+👉 Make sure you have added your names and your group number [in the cells below](#d73b9db2-742d-4c75-9ff0-2cdce26a8ec8).
+
+👉 Make sure that that **all group members proofread** your submission (especially your little essays).
+
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
+"""
+
+# ╔═╡ 93a79265-110d-4fb9-b2a7-97da4667f8c6
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]);
+
+# ╔═╡ 3946c3f6-3044-42e4-b161-09f4394b7147
+group_number = 99
+
+# ╔═╡ 4712bc8d-4e63-47c9-8367-dc417f1a7649
+md"""
+### Task 3 (not graded): Avoiding a bank run
+"""
+
+# ╔═╡ 54722cbe-6a91-4275-a78c-8a50715b86c8
+md"""
+Consider the setup of Allen & Gale with banks ``i \in \{1, 2, 3, 4\}``. Banks know that a fraction ``\gamma`` of the population are _early types_. In the social optimum, banks offer deposit contracts ``(c_1, c_2)``. The fraction of early types ``\omega_i`` in each bank is random. There are three possible states ``S_j = (\omega_{1j}, \omega_{2j}, \omega_{3j}, \omega_{4j})``
+
+```math
+\begin{align}
+S_1 &= (\gamma, \gamma, \gamma, \gamma) \\
+S_2 &= (\gamma + \varepsilon, \gamma + \varepsilon, \gamma - \varepsilon, \gamma - \varepsilon) \\
+S_3 &= (\gamma - \varepsilon, \gamma - \varepsilon, \gamma + \varepsilon, \gamma + \varepsilon) \\
+\end{align}
+```
+
+The states are shown in the figure below. The red dots mean "more early customers" (``\gamma + \varepsilon``), the green dots mean "more late customers" (``\gamma - \varepsilon``) and the gray dots mean "no shock" (``\gamma``).
+"""
+
+# ╔═╡ eb1e20e7-9873-45bd-ae30-ed147a70b457
+md"""
+Select state (the ``i`` in ``S_i``): $(@bind i_state NumberField(1:length(states))).
+"""
+
+# ╔═╡ 28bbf56b-1bdf-486f-8230-b9a6ee19a955
+let
+	g = SimpleDiGraph(G_minimal)
+
+	fig, ax, _ = minimal_graphplot(g;
+		theme...,
+		node_color = exX.color,
+		nlabels = string.(vertices(g)),
+		nlabels_offset = Point2(0.05, 0.05),
+		exX.node_styles,
+		axis = (title = latexstring("Interbank network in state \$ S_$i_state \$"), )
+	)
+
+	fig
+end
+
+# ╔═╡ 7f0bad7b-439a-4639-bba4-5f0a52560042
+states = [
+	[:none, :none, :none, :none],
+	[:early, :early, :late, :late],
+	[:late, :late, :early, :early],
+]
+
+# ╔═╡ 497c6314-6f0f-4d45-9bd2-17d6f6b00ab9
+md"""
+👉 **(a)** What is the minimal number of edges that will prevent a bank run in period ``t=1`` in state ``S_1``? Explain briefly.
+"""
+
+# ╔═╡ 3abaa20d-a24d-4b2f-8d8d-4e01b719ab5e
+answer_a = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ d41cd681-2434-4525-9c67-9e184fdd1f67
+md"*approx. $(wordcount(answer_a)) words*"
+
+# ╔═╡ 9a8b8946-e083-49f3-8a86-7ba2df4636fe
+md"""
+👉 **(b)** What is the minimal number of edges that will prevent a bank run in period ``t=1`` in all possible states? Explain and adjust the adjacency matrix `G_minimal` accordingly.
+"""
+
+# ╔═╡ e7eb6784-e947-4a14-8227-888d4646855e
+G_minimal = [
+	0 1 1 1;
+    0 0 1 1;
+	1 0 0 1;
+	1 1 0 0
+]
+
+# ╔═╡ 23bd3f41-7c81-4b15-a07c-720c3a393118
+answer_b = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ e6f4813b-86bb-45a8-b017-c2d32f3c74b0
+md"*approx. $(wordcount(answer_b)) words*"
+
+# ╔═╡ 207d92a3-b8fa-45e3-88b1-bb95bb7d981c
+md"""
+👉 **(c)** Assume that your minimal network from **(a)** has _uniform weights_. What is the lower bound ``y_\text{min}`` for that weight that will allow the socially optimal allocation in all states?
+"""
+
+# ╔═╡ 5a12e196-99b2-4d45-b373-8aec03f6cc0e
+answer_c = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ be0f68e9-36ad-4500-b941-fe47e1865eba
+md"*approx. $(wordcount(answer_c)) words*"
+
+# ╔═╡ 0a7b61c5-8e11-4025-b6ad-8fcfc2701464
+md"""
+👉 **(d)** What will happen if ``y < y_\text{min}``?
+"""
+
+# ╔═╡ f596a5cc-d291-4358-b568-9b3872bc2dc8
+answer_d = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ dcdd349e-3edb-413f-b315-994b9395c3bc
+md"*approx. $(wordcount(answer_d)) words*"
+
+# ╔═╡ c177b994-cf6c-4a90-8d64-a4feef88fd56
+md"""
+👉 **(e)** Assume that there is a complete interbank network with a uniform weights to ensure the socially optimal allocation in all states. What would be an alternative state ``S_4`` in which the complete interbank network has a better outcome
+"""
+
+# ╔═╡ 71185d5e-ae37-4571-b380-a5b9f2b65205
+answer_e = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 75b27e3b-f8b3-4345-ac43-2974d624ea72
+md"*approx. $(wordcount(answer_e)) words*"
 
 # ╔═╡ 942580bf-60d3-49fe-be2a-2fab9869322d
 md"""
@@ -297,7 +605,7 @@ md"""
 """
 
 # ╔═╡ 2ed68cbb-7e5b-4d17-9cb3-4f9404b63365
-visualize_equilibrium(peq2)
+visualize_equilibrium(peq)
 
 # ╔═╡ 6e3907db-9c66-4805-853b-11877c23a1d6
 md"""
@@ -305,7 +613,7 @@ specify the shock ``\varepsilon`` $(@bind _ε3 Slider(0.0:0.2:2.0, show_value = 
 """
 
 # ╔═╡ d07fa3a9-6687-4279-8fe7-e348152b18f4
-peq2 = let
+peq = let
 	ȳ = 2.5 # 0.2
 	n_banks = 4
 	#nw = CompleteNetwork(n_banks, ȳ)
@@ -461,6 +769,12 @@ let
 	fig	
 end
 
+# ╔═╡ 17423158-bbc9-4b3f-b711-ae5a87f6cb11
+
+
+# ╔═╡ 76ddb8a1-e662-4048-bc3d-33346f5884d1
+
+
 # ╔═╡ f5938462-ae9d-44c0-a0b1-17d61e8ac0eb
 md"""
 # Implementation details
@@ -567,6 +881,65 @@ function repayment(bank, x̄, ȳ)
 	end
 end
 
+# ╔═╡ dd257094-78c5-403b-942a-f0b29064e29e
+md"""
+## Functions for Task 3
+"""
+
+# ╔═╡ 335ec769-9a1c-413a-8130-033669343030
+theme = (
+	arrow_size = 25,
+	node_size = 15,
+	layout = Shell(),
+)
+
+# ╔═╡ d5808058-cc75-4091-8fd0-c5f163ba3cb9
+exX = let
+	S = states[i_state]
+	n = length(S)
+
+	node_styles = (title = "shock", df = DataFrame(label = string.([:early, :late, :none]), color = ["green", "red", "gray"]))
+
+	df = @chain begin
+		DataFrame(bank = 1:n, label = string.(S))
+		leftjoin(_, node_styles.df, on = :label)
+	end
+
+	(; n, color = df.color, node_styles)
+end;
+
+# ╔═╡ 09debe63-1ccc-45fa-8f73-e8f05b794726
+function node_legend(figpos, node_styles, title = "")
+	
+	elems = [MarkerElement(; color, markersize = 15, marker = :●) for color ∈ node_styles.color]
+
+	if length(title) == 0
+		title_tuple = ()
+	else
+		title_tuple = (title, )
+	end
+	
+	Legend(
+		figpos,
+    	elems, node_styles.label, title_tuple...;
+		orientation=:horizontal, titleposition=:left, framevisible=false
+	)
+end
+
+# ╔═╡ dd3f555f-c7e3-4a01-b3b0-06e01dd7a075
+function minimal_graphplot(args; node_styles = missing, kwargs...)
+	fig, ax, plt = graphplot(args; kwargs...)
+
+	hidedecorations!(ax)
+	
+	if !ismissing(node_styles)
+		(title, df) = node_styles
+		node_legend(fig[end+1,1], df, title)
+	end
+
+	(; fig, ax, plt)
+end
+
 # ╔═╡ d7139b58-1b84-4c61-9060-c3e8e27083a9
 md"""
 # Appendix
@@ -585,7 +958,10 @@ using CairoMakie, AlgebraOfGraphics
 using CategoricalArrays: recode
 
 # ╔═╡ 53660817-3947-4c30-bf61-3a36d6614a13
-using PlutoUI: TableOfContents, Slider
+using PlutoUI: TableOfContents, Slider, Select, NumberField
+
+# ╔═╡ d05680b7-4bf2-4d9e-99b9-fde6254a4b4c
+using MarkdownLiteral: @markdown
 
 # ╔═╡ 9630dabc-87b1-4bb9-82cc-7fbb59a45c34
 TableOfContents()
@@ -679,24 +1055,41 @@ function island_network(n_islands, n_banks_per_island, ȳ)
 	cat(blocks...,dims=(1,2))
 end
 
+# ╔═╡ 00cabaf0-e341-4fd5-9f3f-b513591087f1
+function island_network(n_banks::AbstractVector, ȳ)
+	blocks = (CompleteNetwork(n, ȳ).Y for n ∈ n_banks)
+	
+	cat(blocks...,dims=(1,2))
+end
+
 # ╔═╡ c054bded-ad5a-4c19-9758-5e81ece988ba
-struct IslandNetwork <: FinancialNetwork
-	Y
-	ȳ
-	n_islands
-	n_banks_per_island
+let
+	struct IslandNetwork <: FinancialNetwork
+		Y
+		ȳ
+		n_islands
+		n_banks_per_island
+	end
+
 	function IslandNetwork(n_islands, n_banks_per_island, ȳ)
-		Y = island_network(n_islands, n_banks_per_island, ȳ)
-		
-		new(Y, ȳ, n_islands, n_banks_per_island)
+		Y = island_network(n_islands, n_banks_per_island, ȳ)	
+		IslandNetwork(Y, ȳ, n_islands, n_banks_per_island)
+	end
+	function IslandNetwork(n_banks::AbstractVector, ȳ)
+		Y = island_network(n_banks, ȳ)	
+		IslandNetwork(Y, ȳ, length(n_banks), n_banks)
 	end
 end
 
 # ╔═╡ 0ba6d675-477f-493d-a621-2431d32ad9a8
 function label(nw::IslandNetwork)
 	(; n_banks_per_island, n_islands) = nw
-	bank_or_banks = n_banks_per_island == 1 ? "bank" : "banks"
-	latexstring("\$ $n_islands \\times $n_banks_per_island \$ $bank_or_banks")
+	if length(n_banks_per_island) == 1
+		bank_or_banks = n_banks_per_island == 1 ? "bank" : "banks"
+		return latexstring("\$ $n_islands \\times $n_banks_per_island \$ $bank_or_banks")
+	else
+		return latexstring("\$ $n_islands \$ islands ")
+	end		
 end
 
 # ╔═╡ e6c8244a-6dca-4599-b3a5-02491bb99dfb
@@ -847,6 +1240,26 @@ function viz_eq_bal_sheets((; x, banks); ymax = nothing, kwargs...)
 	end
 end
 
+# ╔═╡ 2d1f7620-de37-4e9f-8044-9459abda92ac
+md"""
+## Assignment infrastructure
+"""
+
+# ╔═╡ 7f0ad695-ea05-483b-86c4-a63df55689e9
+members = let
+	names = map(group_members) do (; firstname, lastname)
+		firstname * " " * lastname
+	end
+	join(names, ", ", " & ")
+end
+
+# ╔═╡ cc9368a4-8a7c-4146-8746-d1518ff895c5
+function wordcount(text)
+	stripped_text = strip(replace(string(text), r"\s" => " "))
+   	words = split(stripped_text, ('-','.',',',':','_','"',';','!'))
+   	length(words)
+end
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -860,6 +1273,7 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
@@ -875,6 +1289,7 @@ DataFrames = "~1.3.2"
 GraphMakie = "~0.3.2"
 Graphs = "~1.6.0"
 LaTeXStrings = "~1.3.0"
+MarkdownLiteral = "~0.1.1"
 NetworkLayout = "~0.4.4"
 PlutoUI = "~0.7.34"
 SimpleWeightedGraphs = "~1.2.1"
@@ -1042,6 +1457,12 @@ deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
 git-tree-sha1 = "417b0ed7b8b838aa6ca0a87aadf1bb9eb111ce40"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.8"
+
+[[deps.CommonMark]]
+deps = ["Crayons", "JSON", "URIs"]
+git-tree-sha1 = "4cd7063c9bdebdbd55ede1af70f3c2f48fab4215"
+uuid = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
+version = "0.8.6"
 
 [[deps.Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "SHA", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
@@ -1588,6 +2009,12 @@ version = "0.4.1"
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
+[[deps.MarkdownLiteral]]
+deps = ["CommonMark", "HypertextLiteral"]
+git-tree-sha1 = "0d3fa2dd374934b62ee16a4721fe68c418b92899"
+uuid = "736d6165-7244-6769-4267-6b50796e6954"
+version = "0.1.1"
+
 [[deps.Match]]
 git-tree-sha1 = "1d9bc5c1a6e7ee24effb93f175c9342f9154d97f"
 uuid = "7eb4fadd-790c-5f42-8a69-bfa0b872bfbf"
@@ -2043,6 +2470,11 @@ git-tree-sha1 = "216b95ea110b5972db65aa90f88d8d89dcb8851c"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
 version = "0.9.6"
 
+[[deps.URIs]]
+git-tree-sha1 = "97bbe755a53fe859669cd907f2d96aee8d2c1355"
+uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
+version = "1.3.0"
+
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
@@ -2189,8 +2621,55 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╟─f5450eab-0f9f-4b7f-9b80-992d3c553ba9
+# ╟─8573d925-e4bd-4544-a264-b3a7ba8610a3
+# ╟─2db89e2d-4d89-454d-bd1a-976a1f415623
 # ╟─815648ae-78f2-42f1-a216-81b10c0a7850
 # ╟─c129dec7-eb81-4cab-91d5-2ef7a1c06b24
+# ╟─6060f7ec-52c1-4504-9fc9-dfaaff4c1109
+# ╟─1f9e1561-405d-4d49-a2ee-af2dfeb2d409
+# ╟─4f30bb25-0f69-4c5a-948c-df89d75a0a24
+# ╟─07958953-43c8-441b-b6d6-6bcf0e027603
+# ╠═88580398-8b68-4830-9df9-ec1a1aeaf243
+# ╠═186b1fe4-4462-4c0d-a874-256ee3e3f700
+# ╟─b13cbc28-5658-4f24-879e-bd6c10f7c7f0
+# ╟─f7a60a89-40b2-4656-98a6-a258a4a5741d
+# ╠═70e40546-b5e8-45dc-86a0-bfbef5403e30
+# ╟─0a7829f4-c3a9-488d-aacc-6e8a02c3ef79
+# ╟─496f01ef-6422-412b-9142-c3893476bc0d
+# ╟─1e38675b-3482-4f85-b4fa-f476e84fb520
+# ╟─21dd99b3-ee5b-46e5-adf5-9c9ff9448272
+# ╟─febcd0aa-0a19-405c-b5ed-5c73dab8929c
+# ╟─cee410bb-1470-41f9-8e98-b96591eac7ca
+# ╟─6733025d-20f0-48cd-b6d8-0dfb02bb7482
+# ╠═33bf5bdd-6e13-4375-bf26-bdac273d6738
+# ╟─07fc0a5c-8d9f-46a7-9893-fefa23007878
+# ╠═1f52926c-fc07-4652-97a8-6abbdb3e3b5e
+# ╟─e903ac6c-1b5c-40ea-a925-e7243cbf9b02
+# ╠═751e1643-43c2-4071-87cf-a904560e2bc4
+# ╟─25dae65d-65a6-462f-aba2-afd498bf4d5a
+# ╠═93a79265-110d-4fb9-b2a7-97da4667f8c6
+# ╠═3946c3f6-3044-42e4-b161-09f4394b7147
+# ╟─4712bc8d-4e63-47c9-8367-dc417f1a7649
+# ╟─54722cbe-6a91-4275-a78c-8a50715b86c8
+# ╟─eb1e20e7-9873-45bd-ae30-ed147a70b457
+# ╟─28bbf56b-1bdf-486f-8230-b9a6ee19a955
+# ╟─7f0bad7b-439a-4639-bba4-5f0a52560042
+# ╟─497c6314-6f0f-4d45-9bd2-17d6f6b00ab9
+# ╠═3abaa20d-a24d-4b2f-8d8d-4e01b719ab5e
+# ╟─d41cd681-2434-4525-9c67-9e184fdd1f67
+# ╟─9a8b8946-e083-49f3-8a86-7ba2df4636fe
+# ╠═e7eb6784-e947-4a14-8227-888d4646855e
+# ╠═23bd3f41-7c81-4b15-a07c-720c3a393118
+# ╟─e6f4813b-86bb-45a8-b017-c2d32f3c74b0
+# ╟─207d92a3-b8fa-45e3-88b1-bb95bb7d981c
+# ╠═5a12e196-99b2-4d45-b373-8aec03f6cc0e
+# ╟─be0f68e9-36ad-4500-b941-fe47e1865eba
+# ╟─0a7b61c5-8e11-4025-b6ad-8fcfc2701464
+# ╠═f596a5cc-d291-4358-b568-9b3872bc2dc8
+# ╟─dcdd349e-3edb-413f-b315-994b9395c3bc
+# ╟─c177b994-cf6c-4a90-8d64-a4feef88fd56
+# ╠═71185d5e-ae37-4571-b380-a5b9f2b65205
+# ╟─75b27e3b-f8b3-4345-ac43-2974d624ea72
 # ╟─942580bf-60d3-49fe-be2a-2fab9869322d
 # ╟─0cb23460-2db6-4327-a01c-a013eb471a9e
 # ╟─b542043b-b4ac-4207-b092-18b283c65524
@@ -2221,7 +2700,7 @@ version = "3.5.0+0"
 # ╟─f3e015f2-33e1-4b2f-b34a-ee6a5751d96b
 # ╟─27039532-1c2b-4aee-858e-f9f0a135e62f
 # ╠═2ed68cbb-7e5b-4d17-9cb3-4f9404b63365
-# ╟─6e3907db-9c66-4805-853b-11877c23a1d6
+# ╠═6e3907db-9c66-4805-853b-11877c23a1d6
 # ╠═d07fa3a9-6687-4279-8fe7-e348152b18f4
 # ╟─78a45e6a-a772-4fa7-bd9c-d728d5ea79e8
 # ╠═e9e6c131-c334-4674-9384-273cd40929dc
@@ -2231,6 +2710,8 @@ version = "3.5.0+0"
 # ╟─2b7c65fe-8bf8-47f2-96b1-6dfe8888d494
 # ╟─0d4d9a5b-5e4f-4126-85ec-d31327cbf960
 # ╟─045c54d2-c76c-49f1-b849-d607e50b182b
+# ╠═17423158-bbc9-4b3f-b711-ae5a87f6cb11
+# ╠═76ddb8a1-e662-4048-bc3d-33346f5884d1
 # ╟─f5938462-ae9d-44c0-a0b1-17d61e8ac0eb
 # ╟─45430bb9-8914-4839-b936-79bcbc453822
 # ╠═dafe2f99-d3b5-4450-bbab-c8ffe1ac11ea
@@ -2242,12 +2723,18 @@ version = "3.5.0+0"
 # ╠═f950f7a5-4277-43bc-8700-21f6cd0d9c9f
 # ╠═602e44bc-4d5b-4f7f-9a75-bf9b1576ac11
 # ╠═db5a2982-8986-48e3-85f5-75892afdb12a
+# ╟─dd257094-78c5-403b-942a-f0b29064e29e
+# ╠═335ec769-9a1c-413a-8130-033669343030
+# ╠═d5808058-cc75-4091-8fd0-c5f163ba3cb9
+# ╠═09debe63-1ccc-45fa-8f73-e8f05b794726
+# ╠═dd3f555f-c7e3-4a01-b3b0-06e01dd7a075
 # ╟─d7139b58-1b84-4c61-9060-c3e8e27083a9
 # ╠═ceaebe3d-a6b8-48d4-98fd-0fd3055b2943
 # ╠═f61a2b9a-d36c-4f03-95b4-226f31e7acba
 # ╠═707555ea-48d2-4ae6-9417-b47a972deb9d
 # ╠═4984ca28-1de2-4e5f-9d27-8c13decff996
 # ╠═53660817-3947-4c30-bf61-3a36d6614a13
+# ╠═d05680b7-4bf2-4d9e-99b9-fde6254a4b4c
 # ╠═9630dabc-87b1-4bb9-82cc-7fbb59a45c34
 # ╟─f746a247-feb7-4291-b9bd-dba29eec7143
 # ╠═31dca57c-b5fe-49c2-87e0-31b2999a6f65
@@ -2259,6 +2746,7 @@ version = "3.5.0+0"
 # ╠═a7834a3a-ed74-48ab-99ba-581f7a790bf9
 # ╠═46745175-c7bf-45b5-8e1a-d8ab9e9ca703
 # ╠═3e7f87ae-da71-42c4-8ebb-6dc2aef7ce03
+# ╠═00cabaf0-e341-4fd5-9f3f-b513591087f1
 # ╠═c054bded-ad5a-4c19-9758-5e81ece988ba
 # ╠═0ba6d675-477f-493d-a621-2431d32ad9a8
 # ╟─e6c8244a-6dca-4599-b3a5-02491bb99dfb
@@ -2273,5 +2761,8 @@ version = "3.5.0+0"
 # ╠═64248193-552e-47a0-8da5-0c58a6099b80
 # ╠═41d5e579-418b-4988-9a6f-f75afeffe821
 # ╠═fd3dc6bf-f1e5-46de-b0b0-94adbc845d81
+# ╟─2d1f7620-de37-4e9f-8044-9459abda92ac
+# ╠═7f0ad695-ea05-483b-86c4-a63df55689e9
+# ╠═cc9368a4-8a7c-4146-8746-d1518ff895c5
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
