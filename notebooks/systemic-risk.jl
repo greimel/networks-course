@@ -30,7 +30,7 @@ using CairoMakie, AlgebraOfGraphics
 using CategoricalArrays: recode
 
 # ╔═╡ 53660817-3947-4c30-bf61-3a36d6614a13
-using PlutoUI: TableOfContents, Slider, Select
+using PlutoUI: TableOfContents, Slider, Select, NumberField
 
 # ╔═╡ d05680b7-4bf2-4d9e-99b9-fde6254a4b4c
 using MarkdownLiteral: @markdown
@@ -68,6 +68,12 @@ based on _[Acemoglu, Ozdaglar & Tahbaz-Salehi, 2015](https://www.aeaweb.org/arti
 # ╔═╡ 6060f7ec-52c1-4504-9fc9-dfaaff4c1109
 md"""
 # Assignment 3: Financial stability
+"""
+
+# ╔═╡ 4f30bb25-0f69-4c5a-948c-df89d75a0a24
+md"""
+!!! info "Note on Task 3"
+    **Task 3** is not graded, but it will be discussed in the tutorial. You are invited to submit solutions for **Task 3**, but you don't have to.
 """
 
 # ╔═╡ 07958953-43c8-441b-b6d6-6bcf0e027603
@@ -160,6 +166,96 @@ if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_m
     **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in [this cell](#93a79265-110d-4fb9-b2a7-97da4667f8c6).
 	"""
 end
+
+# ╔═╡ 4712bc8d-4e63-47c9-8367-dc417f1a7649
+md"""
+### Task 3 (not graded): Avoiding a bank run
+"""
+
+# ╔═╡ 54722cbe-6a91-4275-a78c-8a50715b86c8
+md"""
+Consider the setup of Allen & Gale with banks ``i \in \{1, 2, 3, 4\}``. Banks know that a fraction ``\gamma`` of the population are _early types_. In the social optimum, banks offer deposit contracts ``(c_1, c_2)``. The fraction of early types ``\omega_i`` in each bank is random. There are three possible states ``S_j = (\omega_{1j}, \omega_{2j}, \omega_{3j}, \omega_{4j})``
+
+```math
+\begin{align}
+S_1 &= (\gamma, \gamma, \gamma, \gamma) \\
+S_2 &= (\gamma + \varepsilon, \gamma + \varepsilon, \gamma - \varepsilon, \gamma - \varepsilon) \\
+S_3 &= (\gamma - \varepsilon, \gamma - \varepsilon, \gamma + \varepsilon, \gamma + \varepsilon) \\
+\end{align}
+```
+
+The states are shown in the figure below. The red dots mean "more early customers" (``\gamma + \varepsilon``), the green dots mean "more late customers" (``\gamma - \varepsilon``) and the gray dots mean "no shock" (``\gamma``).
+"""
+
+# ╔═╡ 7f0bad7b-439a-4639-bba4-5f0a52560042
+states = [
+	[:none, :none, :none, :none],
+	[:early, :early, :late, :late],
+	[:late, :late, :early, :early],
+]
+
+# ╔═╡ eb1e20e7-9873-45bd-ae30-ed147a70b457
+md"""
+Select state (the ``i`` in ``S_i``): $(@bind i_state NumberField(1:length(states))).
+"""
+
+# ╔═╡ 497c6314-6f0f-4d45-9bd2-17d6f6b00ab9
+md"""
+👉 **(a)** What is the minimal number of edges that will prevent a bank run in period ``t=1`` in state ``S_1``? Explain briefly.
+"""
+
+# ╔═╡ 3abaa20d-a24d-4b2f-8d8d-4e01b719ab5e
+answer_a = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 9a8b8946-e083-49f3-8a86-7ba2df4636fe
+md"""
+👉 **(b)** What is the minimal number of edges that will prevent a bank run in period ``t=1`` in all possible states? Explain and adjust the adjacency matrix `G_minimal` accordingly.
+"""
+
+# ╔═╡ e7eb6784-e947-4a14-8227-888d4646855e
+G_minimal = [
+	0 1 1 1;
+    0 0 1 1;
+	1 0 0 1;
+	1 1 0 0
+]
+
+# ╔═╡ 23bd3f41-7c81-4b15-a07c-720c3a393118
+answer_b = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 207d92a3-b8fa-45e3-88b1-bb95bb7d981c
+md"""
+👉 **(c)** Assume that your minimal network from **(a)** has _uniform weights_. What is the lower bound ``y_\text{min}`` for that weight that will allow the socially optimal allocation in all states?
+"""
+
+# ╔═╡ 5a12e196-99b2-4d45-b373-8aec03f6cc0e
+answer_c = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 0a7b61c5-8e11-4025-b6ad-8fcfc2701464
+md"""
+👉 **(d)** What will happen if ``y < y_\text{min}``?
+"""
+
+# ╔═╡ f596a5cc-d291-4358-b568-9b3872bc2dc8
+answer_d = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ c177b994-cf6c-4a90-8d64-a4feef88fd56
+md"""
+👉 **(e)** Assume that there is a complete interbank network with a uniform weights to ensure the socially optimal allocation in all states. What would be an alternative state ``S_4`` in which the complete interbank network has a better outcome
+"""
+
+# ╔═╡ 71185d5e-ae37-4571-b380-a5b9f2b65205
+answer_e = md"""
+Your answer goes here ...
+"""
 
 # ╔═╡ 942580bf-60d3-49fe-be2a-2fab9869322d
 md"""
@@ -396,6 +492,81 @@ function repayment(bank, x̄, ȳ)
 	elseif assets < ν
 		return (; ℓ = 1.0, y_pc = 0.0, ν_pc = assets/ν)
 	end
+end
+
+# ╔═╡ dd257094-78c5-403b-942a-f0b29064e29e
+md"""
+## Functions for Task 3
+"""
+
+# ╔═╡ 335ec769-9a1c-413a-8130-033669343030
+theme = (
+	arrow_size = 25,
+	node_size = 15,
+	layout = Shell(),
+)
+
+# ╔═╡ d5808058-cc75-4091-8fd0-c5f163ba3cb9
+exX = let
+	S = states[i_state]
+	n = length(S)
+
+	node_styles = (title = "shock", df = DataFrame(label = string.([:early, :late, :none]), color = ["green", "red", "gray"]))
+
+	df = @chain begin
+		DataFrame(bank = 1:n, label = string.(S))
+		leftjoin(_, node_styles.df, on = :label)
+	end
+
+	(; n, color = df.color, node_styles)
+end;
+
+# ╔═╡ 09debe63-1ccc-45fa-8f73-e8f05b794726
+function node_legend(figpos, node_styles, title = "")
+	
+	elems = [MarkerElement(; color, markersize = 15, marker = :●) for color ∈ node_styles.color]
+
+	if length(title) == 0
+		title_tuple = ()
+	else
+		title_tuple = (title, )
+	end
+	
+	Legend(
+		figpos,
+    	elems, node_styles.label, title_tuple...;
+		orientation=:horizontal, titleposition=:left, framevisible=false
+	)
+end
+
+# ╔═╡ dd3f555f-c7e3-4a01-b3b0-06e01dd7a075
+function minimal_graphplot(args; node_styles = missing, kwargs...)
+	fig, ax, plt = graphplot(args; kwargs...)
+
+	hidedecorations!(ax)
+	
+	if !ismissing(node_styles)
+		(title, df) = node_styles
+		node_legend(fig[end+1,1], df, title)
+	end
+
+	(; fig, ax, plt)
+end
+
+# ╔═╡ 28bbf56b-1bdf-486f-8230-b9a6ee19a955
+let
+	g = SimpleDiGraph(G_minimal)
+
+	fig, ax, _ = minimal_graphplot(g;
+		theme...,
+		node_color = exX.color,
+		nlabels = string.(vertices(g)),
+		nlabels_offset = Point2(0.05, 0.05),
+		exX.node_styles,
+		axis = (title = latexstring("Interbank network in state \$ S_$i_state \$"), )
+	)
+
+	fig
 end
 
 # ╔═╡ d7139b58-1b84-4c61-9060-c3e8e27083a9
@@ -1073,6 +1244,21 @@ md"*approx. $(wordcount(answer11)) words*"
 
 # ╔═╡ 0a7829f4-c3a9-488d-aacc-6e8a02c3ef79
 md"*approx. $(wordcount(answer12)) words*"
+
+# ╔═╡ d41cd681-2434-4525-9c67-9e184fdd1f67
+md"*approx. $(wordcount(answer_a)) words*"
+
+# ╔═╡ e6f4813b-86bb-45a8-b017-c2d32f3c74b0
+md"*approx. $(wordcount(answer_b)) words*"
+
+# ╔═╡ be0f68e9-36ad-4500-b941-fe47e1865eba
+md"*approx. $(wordcount(answer_c)) words*"
+
+# ╔═╡ dcdd349e-3edb-413f-b315-994b9395c3bc
+md"*approx. $(wordcount(answer_d)) words*"
+
+# ╔═╡ 75b27e3b-f8b3-4345-ac43-2974d624ea72
+md"*approx. $(wordcount(answer_e)) words*"
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2440,6 +2626,7 @@ version = "3.5.0+0"
 # ╟─c129dec7-eb81-4cab-91d5-2ef7a1c06b24
 # ╟─6060f7ec-52c1-4504-9fc9-dfaaff4c1109
 # ╟─1f9e1561-405d-4d49-a2ee-af2dfeb2d409
+# ╟─4f30bb25-0f69-4c5a-948c-df89d75a0a24
 # ╟─07958953-43c8-441b-b6d6-6bcf0e027603
 # ╠═88580398-8b68-4830-9df9-ec1a1aeaf243
 # ╠═186b1fe4-4462-4c0d-a874-256ee3e3f700
@@ -2461,6 +2648,27 @@ version = "3.5.0+0"
 # ╟─25dae65d-65a6-462f-aba2-afd498bf4d5a
 # ╠═93a79265-110d-4fb9-b2a7-97da4667f8c6
 # ╠═3946c3f6-3044-42e4-b161-09f4394b7147
+# ╟─4712bc8d-4e63-47c9-8367-dc417f1a7649
+# ╟─54722cbe-6a91-4275-a78c-8a50715b86c8
+# ╟─eb1e20e7-9873-45bd-ae30-ed147a70b457
+# ╟─28bbf56b-1bdf-486f-8230-b9a6ee19a955
+# ╟─7f0bad7b-439a-4639-bba4-5f0a52560042
+# ╟─497c6314-6f0f-4d45-9bd2-17d6f6b00ab9
+# ╠═3abaa20d-a24d-4b2f-8d8d-4e01b719ab5e
+# ╟─d41cd681-2434-4525-9c67-9e184fdd1f67
+# ╟─9a8b8946-e083-49f3-8a86-7ba2df4636fe
+# ╠═e7eb6784-e947-4a14-8227-888d4646855e
+# ╠═23bd3f41-7c81-4b15-a07c-720c3a393118
+# ╟─e6f4813b-86bb-45a8-b017-c2d32f3c74b0
+# ╟─207d92a3-b8fa-45e3-88b1-bb95bb7d981c
+# ╠═5a12e196-99b2-4d45-b373-8aec03f6cc0e
+# ╟─be0f68e9-36ad-4500-b941-fe47e1865eba
+# ╟─0a7b61c5-8e11-4025-b6ad-8fcfc2701464
+# ╠═f596a5cc-d291-4358-b568-9b3872bc2dc8
+# ╟─dcdd349e-3edb-413f-b315-994b9395c3bc
+# ╟─c177b994-cf6c-4a90-8d64-a4feef88fd56
+# ╠═71185d5e-ae37-4571-b380-a5b9f2b65205
+# ╟─75b27e3b-f8b3-4345-ac43-2974d624ea72
 # ╟─942580bf-60d3-49fe-be2a-2fab9869322d
 # ╟─0cb23460-2db6-4327-a01c-a013eb471a9e
 # ╟─b542043b-b4ac-4207-b092-18b283c65524
@@ -2514,6 +2722,11 @@ version = "3.5.0+0"
 # ╠═f950f7a5-4277-43bc-8700-21f6cd0d9c9f
 # ╠═602e44bc-4d5b-4f7f-9a75-bf9b1576ac11
 # ╠═db5a2982-8986-48e3-85f5-75892afdb12a
+# ╟─dd257094-78c5-403b-942a-f0b29064e29e
+# ╠═335ec769-9a1c-413a-8130-033669343030
+# ╠═d5808058-cc75-4091-8fd0-c5f163ba3cb9
+# ╠═09debe63-1ccc-45fa-8f73-e8f05b794726
+# ╠═dd3f555f-c7e3-4a01-b3b0-06e01dd7a075
 # ╟─d7139b58-1b84-4c61-9060-c3e8e27083a9
 # ╠═ceaebe3d-a6b8-48d4-98fd-0fd3055b2943
 # ╠═f61a2b9a-d36c-4f03-95b4-226f31e7acba
