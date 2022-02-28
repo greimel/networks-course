@@ -252,7 +252,7 @@ function sidebar_code(book_model)
     <div class="container sidebar-sticky">
     <div class="sidebar-about">
     <br>
-    <img src="$(SLASH_PREPATH)/assets/julia-logo.svg" style="margin-left:1em; width: 80px; height: auto; display: inline">
+	<img src="$(SLASH_PREPATH)/assets/uva_logo.svg" style="width: 160px; height: auto; display: inline">
     <div style="font-weight: bold; margin-bottom: 0.5em"><a href="$(SLASH_PREPATH)/semesters/">$(TERM)</a> <span style="opacity: 0.6;">| $(INSTITUTION)</span></div>
     <h1><a href="$(SLASH_PREPATH)/">$(TITLE)</a></h1>
     <h2>$(SUBTITLE)</h2>
