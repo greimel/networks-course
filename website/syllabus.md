@@ -20,11 +20,11 @@
 | 4A | Tutorial 2: SIR       | Feb 28, 2022 | Cees   | [notebook](/notebooks/notebooks_school-closures) | |
 | 4B | Social Connectedness  | Mar  3, 2022 | Fabian | [notebook](/notebooks/notebooks_facebook) | [Bailey et al. (2018)](https://www.aeaweb.org/articles?id=10.1257/jep.32.3.259) | 
 | 4C | Network Games         | Mar  4, 2022 | Fabian | | Jackson Ch. 9 |
-| 5A | Tutorial 3: SCI       | Mar  7, 2022 | Fabian | | |
+| 5A | Tutorial 3: Financial stability | Mar  7, 2022 | Fabian | [notebook](/notebooks/notebooks_systemic-risk)  | |
 | 5B | Production networks 1 | Mar 10, 2022 | Fabian | [notebook](/notebooks/notebooks_production) | [Carvalho (2014)](https://www.aeaweb.org/articles.php?doi=10.1257/jep.28.4.23), [Long & Plosser (1982)](https://www.jstor.org/stable/1840430) |
 | 5C | Production networks 2 | Mar 11, 2022 | Fabian | [notebook](/notebooks/notebooks_production) | [Carvalho (2014)](https://www.aeaweb.org/articles.php?doi=10.1257/jep.28.4.23), [Acemoglu et al. (2012)](https://economics.mit.edu/files/8135) |
 | 6A | Econometrics          | Mar 14, 2022 | Cees   | | |
-| 6B | Tutorial 4: Financial networks | Mar 17, 2022 | Fabian | | |
+| 6B | Tutorial 4: SCI | Mar 17, 2022 | Fabian | | |
 | 6C | Tutorial 5: Covid Crisis       | Mar 18, 2022 | Fabian | | |
 
 
