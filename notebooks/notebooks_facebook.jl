@@ -17,14 +17,14 @@ end
 
 # ╔═╡ 47594b98-6c72-11eb-264f-e5416a8faa32
 md"""
-`facebook.jl` | **Version 1.3** | *last updated: Mar 3, 2022*
+`facebook.jl` | **Version 1.4** | *last updated: Mar 3, 2022*
 """
 
 # ╔═╡ 7f8a57f0-6c72-11eb-27dd-2dae50f00232
 md"""
 # Social Connectedness: What Friendships on Facebook Tell Us About the World
 
-This notebook will be the basis for part of **Lecture 5** *and* **Assignment 3**. Here is what we will cover.
+Here is what we will cover.
 
 #### Lecture Notes
 
@@ -52,7 +52,7 @@ There at least two ways to visualize social connectedness.
 """
 
 # ╔═╡ 710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
-country = "TR"
+country = "NL"
 
 # ╔═╡ 6d30c04a-6cb2-11eb-220b-998e7d5cc469
 sci_country_fig = let
@@ -383,7 +383,7 @@ md"""
 
 # ╔═╡ 1600f95e-8b98-47fe-be7d-b1983c6a07b0
 md"""
-# Assignment 3: The Social Connectedness Index
+# Assignment 4: The Social Connectedness Index
 """
 
 # ╔═╡ 50e332de-6f9a-11eb-3888-d15d986aca8e
