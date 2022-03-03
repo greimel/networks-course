@@ -7,36 +7,8 @@ using InteractiveUtils
 # ╔═╡ 11fb9a53-01a3-4646-9498-3d3b6624e82c
 using GADM
 
-# ╔═╡ 261be467-93a6-4f25-81fb-b491e139ccb1
-begin
-	using GeometryBasics: AbstractGeometry, Polygon, MultiPolygon, Point2f
-	using GeoInterface: coordinates, geotype
-	
-	to_points(ring) = map(Point2f, ring)
-
-	function to_polygon(rings)
-		exterior, interiors... = map(to_points, rings)
-		return Polygon(exterior, interiors)
-	end
-
-	function to_multipolygon(coords)
-		polygons = map(to_polygon, coords)
-		return MultiPolygon(polygons)
-	end
-
-	function to_geometry(shape)
-		type = geotype(shape)
-		coords = coordinates(shape)
-		if type === :Polygon
-			return to_polygon(coords)
-		elseif type === :MultiPolygon
-			return to_multipolygon(coords)
-		else
-			msg = "Only `:Polygon` and `:MultiPolygon` are supported"
-			throw(ArgumentError(msg))
-		end
-	end
-end
+# ╔═╡ 0baf1637-46b7-446c-8737-9ef25436ec83
+using AlgebraOfGraphics: to_geometry
 
 # ╔═╡ 393969b9-6447-4493-8af0-231811611c22
 using AlgebraOfGraphics
@@ -51,6 +23,9 @@ using Makie:
 # ╔═╡ 13f8193c-57a7-495f-b52b-511adf792903
 using Colors: RGBA
 
+# ╔═╡ 4c889111-8368-4d52-b0b5-4afd8aeeaebf
+using AoGExtensions
+
 # ╔═╡ bbf69c13-4757-4829-8690-16b1f201c24f
 using DataFrameMacros
 
@@ -62,7 +37,8 @@ using DataFrames: DataFrames, DataFrame,
 		select, select!, transform, transform!, combine,
 		leftjoin, innerjoin, rightjoin,
 		groupby, ByRow, Not,
-		disallowmissing!, dropmissing!, disallowmissing
+		disallowmissing!, dropmissing!, disallowmissing,
+		stack, rename
 
 # ╔═╡ 61986f4e-7386-478c-898a-aa2109e794e0
 using CategoricalArrays: cut
@@ -109,19 +85,9 @@ begin
 	end
 end
 
-# ╔═╡ 19ecd707-b12e-438a-a3ce-ecb0ec38a64c
-md"""
-!!! danger "Under construction!"
-
-	This notebook is used for the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
-
-	**The notebook will get updated for Spring 2022.**
-
-"""
-
 # ╔═╡ 47594b98-6c72-11eb-264f-e5416a8faa32
 md"""
-`facebook.jl` | **Version 1.3** | *last updated: Feb 28, 2022*
+`facebook.jl` | **Version 1.3** | *last updated: Mar 3, 2022*
 """
 
 # ╔═╡ 7f8a57f0-6c72-11eb-27dd-2dae50f00232
@@ -134,16 +100,14 @@ This notebook will be the basis for part of **Lecture 5** *and* **Assignment 3**
 
 1. Define the Social Connectedness Index, discuss its limitations
 2. Measuring concentration of Social Networks
+3. Approximating friends' characteristics
 
 #### Pluto Notebook
 
-3. Visualize social connectedness of a region
-4. Regard the social connectedness index as the weights of network of regions. 
-5. Compute the network concentration of US counties, we show that counties with higher network concentration were more likely to vote for Trump in the US presidential election 2020.
-
-#### Assignment
-
-6. Get an overview of how social connectedness has been used in economic research.
+4. Visualize social connectedness of a region
+5. Regard the social connectedness index as the weights of network of regions. 
+6. Compute the network concentration of US counties
+7. Analyze the US presidential election 2020 using these concepts
 """
 
 # ╔═╡ 547d93f4-6c74-11eb-28fe-c5be4dc7aaa6
@@ -158,7 +122,7 @@ There at least two ways to visualize social connectedness.
 """
 
 # ╔═╡ 710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
-country = "BE"
+country = "TR"
 
 # ╔═╡ 8bee74ea-7140-11eb-3441-330ab08a9f38
 md"""
@@ -176,7 +140,9 @@ md"""
 """
 
 # ╔═╡ cf24412e-7125-11eb-1c82-7f59f4640c72
-county_name = "Cook"; state = "Illinois"
+#county_name = "Cook"; state = "Illinois"
+county_name = "Los Angeles"; state = ""
+# county_name = "New York"; state = ""
 
 # ╔═╡ e0d17116-710d-11eb-1719-e18f188a6229
 md"""
@@ -197,28 +163,12 @@ md"""
 # US Presidential Elections 2020
 """
 
-# ╔═╡ 7b50095c-6f9a-11eb-2cf5-31805fc10804
+# ╔═╡ a3c5e85b-7bf1-4456-a3a3-02816f530239
 md"""
-## (End of Lecture)
+## Partisan exposure and election outcomes
+
+*(see Assignment)*
 """
-
-# ╔═╡ 8a0e113c-6f9a-11eb-3c3b-bfb0c9220562
-group_members = ([
-	(firstname = "Ella-Louise", lastname = "Flores"),
-	(firstname = "Padraig", 	lastname = "Cope"),
-	(firstname = "Christy",  	lastname = "Denton")
-	]);
-
-# ╔═╡ 94895ab8-6f9a-11eb-3c04-dbe13f545acc
-group_number = 99
-
-# ╔═╡ a3176884-6f9a-11eb-1831-41486221dedb
-if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
-	md"""
-!!! danger "Note!"
-    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in the top cell.
-	"""
-end
 
 # ╔═╡ 1600f95e-8b98-47fe-be7d-b1983c6a07b0
 md"""
@@ -250,7 +200,7 @@ Take another look at the list of *most central countries* according to the socia
 
 # ╔═╡ da7f397a-6fa6-11eb-19d5-972c93f11f91
 md"""
-This list contains some surprises countries. Would you have thought that Papua New Guinea and Vanuatu are the most central countries? There are two possibilities.
+Are you surprised by this list? Would you have expected some other countries at the top? There are two possibilities.
 
 1. Our prior beliefs are wrong.
 
@@ -301,16 +251,16 @@ Your answer goes here ...
 
 # ╔═╡ e4a28c46-6fa8-11eb-0b80-658ffbab932b
 md"""
-### Task 3: Using the Social Connectedness Index (4 points)
+### Task 3: Partisan exposure and election outcomes (4 points)
 
-The Social Connectedness Index dataset is a very recent dataset. Thus, there is plenty of room for further exploration.
-
-Look for papers that have used the Social Connectedness Index for economic research. (You can start on [Theresa Kuchler's website](http://pages.stern.nyu.edu/~tkuchler/index.html)). Select the two papers that have the most interesting titles or abstracts.
+In the figure below you find the partisan exposure measure (which approximates the fraction of friends that votes Republican) against the outcome of the election. Each dot corresponds to one county.
 """
 
 # ╔═╡ 39ea6d9a-6fab-11eb-2b00-f3eda1cd2677
 md"""
-👉 (3.1 | 2 points) List the two papers and explain in <150 words (per paper) why the papers are interesting from a network and/or policy perspective.
+There is a pretty strong correlation between these two measures. To some extent, this strong correlation is purely by construction. 
+
+👉 (3.1 | 1.5 points) Why is that? Explain what's going on. (< 100 words)
 """
 
 # ╔═╡ 2816c75e-713d-11eb-11ec-5391cb16ecc3
@@ -318,9 +268,16 @@ answer31 = md"""
 Your answer goes here ...
 """
 
+# ╔═╡ 07fd582c-223d-4b9c-805b-1ed396cde5bc
+threshold = 300
+
 # ╔═╡ 272f7770-6fab-11eb-32b9-01af616ae967
 md"""
-👉 (3.2 | 2 points) Formulate in <300 words a (research) question that can be answered using the Social Connectedness Index and describe how the SCI can help.
+One way to remedy this sitation is to comment out line 6. Still, let us be cautious in interpreting this correlation causally.
+
+One concern is, that this correlation is driven by *spatial autocorrelation*. That is, regions that are close are similar in many dimensions.
+
+👉 (3.2 | 1.5 points) Why can't we interpret the correlation causally if there is spatial autocorrelation? Why is the problem alleviated (a bit) by commenting out line 7. What changes if you increase the threshold (currently $threshold)? (< 200 words)
 """
 
 # ╔═╡ 2a61d17a-713d-11eb-2457-11e5c4dd792f
@@ -328,18 +285,67 @@ answer32 = md"""
 Your answer goes here ...
 """
 
-# ╔═╡ a81a894a-713d-11eb-0dd8-9d9e8dffee35
+# ╔═╡ e0b9ac6c-a648-4b08-85cc-a0a040408f9d
 md"""
-#### Before you submit ...
+👉 (3.3 | 1 points) Are there other reasons to believe that the correlation is not causal? Explain. (< 200 words)
+"""
 
-👉 Make sure you have added your names and your group number at the top.
+# ╔═╡ ec3a1a46-b1de-4a1d-939c-bf12ee55b658
+answer33 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ e5f7cdab-c496-4309-bd9d-e0cf6f1d40d1
+md"""
+### Before you submit ...
+
+👉 Make sure you have added your names and your group number in the cells below.
 
 👉 Make sure that that **all group members proofread** your submission (especially your little essay).
 
 👉 Make sure that you are **within the word limit**. Short and concise answers are appreciated. Answers longer than the word limit will lead to deductions.
 
-👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. In addition, **upload the source code** of the notebook (the .jl file).
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
 """
+
+# ╔═╡ 378c8a92-7129-4655-ac0b-f6aa02c600c6
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]);
+
+# ╔═╡ f5882ac7-b1f2-4285-9bab-8abdd975afd1
+group_number = 99
+
+# ╔═╡ a3176884-6f9a-11eb-1831-41486221dedb
+if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
+	md"""
+!!! danger "Note!"
+    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in [this cell](#378c8a92-7129-4655-ac0b-f6aa02c600c6) and [this cell](#f5882ac7-b1f2-4285-9bab-8abdd975afd1)
+	"""
+end
+
+# ╔═╡ 529053c2-4e8d-47c7-b135-0468f34b6ced
+md"""
+### Appendix to Task 3 
+"""
+
+# ╔═╡ 8e339232-88de-4757-b675-0ade22828b0f
+#= exposure_df1 =
+	@chain sci_with_distance begin
+	innerjoin(_, df_elect, on = :fr_loc => :county_fips)
+	@groupby(:user_loc)
+	@combine(
+		@t begin
+			sci_pop = dot(:scaled_sci, :population)
+			:rep_exp = dot(:scaled_sci, :votes_gop) / sci_pop
+			:dem_exp = dot(:scaled_sci, :votes_dem) / sci_pop
+			:vot_exp = dot(:scaled_sci, :total_votes) / sci_pop
+		end
+	)
+	rename(:user_loc => :fips)
+end =#
 
 # ╔═╡ 3062715a-6c75-11eb-30ef-2953bc64adb8
 md"""
@@ -713,16 +719,18 @@ function csv_from_url(url, args...; kwargs...)
 end
 
 # ╔═╡ 09109488-6c87-11eb-2d64-43fc9df7d8c8
-csv_from_url(url_country_codes)
+codes_df = csv_from_url(url_country_codes)
 
 # ╔═╡ c8d9234a-6c82-11eb-0f81-c17abae3e1c7
 iso2c_to_fips = begin
-	df = csv_from_url(url_country_codes)
-	select!(df, "ISO3166-1-Alpha-2" => :iso2c,
-				"ISO3166-1-Alpha-3" => :iso3c,
-				:FIPS => :fips, 
-				:official_name_en => :country, :Continent => :continent)
-	dropmissing!(df)
+	df = @chain codes_df begin
+		@select(:iso2c = $("ISO3166-1-Alpha-2"),
+				 :iso3c = $("ISO3166-1-Alpha-3"),
+				 :fips = :FIPS,
+				 :country = :official_name_en,
+				 :continent = :Continent)
+		dropmissing!
+	end
 	
 	missing_countries = DataFrame([
 			(iso2c = "XK", iso3c = "KOS", country = "Kosovo", fips = "KV", continent = "EU"),
@@ -731,6 +739,9 @@ iso2c_to_fips = begin
 	
 	[df; missing_countries]
 end
+
+# ╔═╡ ce3486cf-8b42-4a7f-8cb5-04a27ad013d1
+iso2c_to_fips
 
 # ╔═╡ baecfe58-6cb6-11eb-3a4e-31bbb8da02ae
 begin
@@ -780,7 +791,7 @@ end
 
 # ╔═╡ 99eb89dc-7129-11eb-0f61-79af19d18589
 concentration_df0 = combine(groupby(df_c, :user_loc)) do all
-		close = filter(:distance => <(distance), all)
+		close = @subset(all, :distance < distance)
 		
 		concentration = dot(close.scaled_sci, close.population) / dot(all.scaled_sci, all.population)
 		
@@ -790,6 +801,11 @@ end
 # ╔═╡ e1dae81c-712b-11eb-0fb8-654147206526
 extrema(skipmissing(df_c.mi_to_county))
 
+# ╔═╡ b281826c-5092-4de5-8f6e-5cf95273e1cf
+sci_with_distance = @chain df_c begin
+	@select(:user_loc, :fr_loc, :scaled_sci, :distance)
+end
+
 # ╔═╡ 2759d19a-a5bf-4c8a-ba95-f91c36c9a167
 county_shapes_df = let
 
@@ -798,7 +814,8 @@ county_shapes_df = let
 		leftjoin(_, county_shapes, on = [:state, :county_match], makeunique=true)
 		# drop counties for which there is no shape (mostly Alaska)
 		@aside begin
-			not_matched = filter([:county_1, :fips] => (x,y) -> any(ismissing.([x,y])), _)
+			not_matched = @subset(_, any(ismissing.([:county_1, :fips])))
+#			not_matched = filter([:county_1, :fips] => (x,y) -> any(ismissing.([x,y])), _)
 		end
 		@subset!(!ismissing(:shape))
 		# drop Alaska and Hawaii (for better plotting)
@@ -810,12 +827,12 @@ end
 
 # ╔═╡ 2f525ae6-7125-11eb-1254-3732191908e5
 fips, _df_ = let
-	_df_ = filter(:county => contains(county_name), county_shapes_df)
+	_df_ = @subset(county_shapes_df, contains(county_name)(:county))
 	
 	if size(_df_, 1) == 1
 		fips = only(_df_.fips)
 	else
-		filter!(:state => ==(state), _df_)
+		@subset!(_df_, :state == state)
 		if size(_df_, 1) == 1
 			fips = only(_df_.fips)
 		else
@@ -909,17 +926,10 @@ end
 
 # ╔═╡ 8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
 let
-	dta = @chain df_elect begin
-		groupby(:conc_grp)
-		@combine(
-			:vote_share = mean(:per_gop, weights(:population)),
-			:concentration = mean(:concentration, weights(:population))
-		)
-	end
-	
-	aog = data(dta) * (visual(Scatter) + smooth()) * mapping(
+	aog = data(df_elect) * binscatter() * mapping(
+		weights = :population,
 		:concentration => "network concentration",
-		:vote_share => "Trump's vote share"
+		:per_gop => "Trump's vote share"
 	)
 	
 	draw(aog)
@@ -927,20 +937,48 @@ end
 
 # ╔═╡ 109bb1ea-71f6-11eb-37f4-054f691b2f23
 let
-	dta = @chain df_elect begin
-		groupby(:conc_grp)
-		@combine(
-			:vote_share = mean(:per_gop, weights(:population)),
-			:centrality = mean(:eigv_c, weights(:population)),
-		)
-	end
-	
-	aog = data(dta) * (visual(Scatter) + linear()) * mapping(
-		:centrality => log => "log(eigenvector centrality)",
-		:vote_share => "Trump's vote share"
+	aog = data(df_elect) * binscatter() * mapping(
+		weights = :population,
+		:eigv_c => log => "log(eigenvector centrality)",
+		:per_gop => "Trump's vote share"
 	)
 	
 	draw(aog)
+end
+
+# ╔═╡ 22372514-1708-4a13-af50-bc7c45a43c52
+exposure_df = @chain sci_with_distance begin
+	groupby(:user_loc)
+	combine(_) do gdf
+		@chain gdf begin
+			# @subset(:user_loc == :fr_loc)
+			# @subset(:user_loc ≠ :fr_loc)
+			# @subset(:distance > threshold)
+			innerjoin(_, df_elect, on = :fr_loc => :county_fips)
+			@aside sci_pop = dot(_.scaled_sci, _.population)
+			(; 
+				rep_exp = dot(_.scaled_sci, _.population .* _.per_gop) / sci_pop,
+				dem_exp = dot(_.scaled_sci, _.population .* _.per_dem) / sci_pop,
+				vot_exp = dot(_.scaled_sci, _.total_votes) / sci_pop
+			)
+		end
+	end
+	rename(:user_loc => :fips)
+end
+
+# ╔═╡ 2bbeebe4-cf24-42b3-8696-3f3b70633b5b
+df_elect_exposure = @chain df_elect begin
+	@select(:fips = :county_fips, :per_gop, :per_dem, :turnout = :total_votes / :population)
+	innerjoin(exposure_df, on = :fips)
+end
+
+# ╔═╡ 99c795b5-f7e9-4edf-8ae8-576753acdc2a
+@chain df_elect_exposure begin
+	data(_) * mapping(
+		:rep_exp => "approximate share of Republican friends",
+		:per_gop => "Republican vote share 2020"
+	) * visual(Scatter)
+	draw
 end
 
 # ╔═╡ 86d4b686-f0d0-4999-91d3-e7bf040df013
@@ -1007,12 +1045,11 @@ sort(df_nodes, :eigv_c, rev = true)
 df_nodes1; sort(df_nodes, :eigv_c, rev = true)
 
 # ╔═╡ 64b321e8-6c84-11eb-35d4-b16736c24cea
-begin
-	no_data = filter(:iso2c => !in(node_names), iso2c_to_fips)
-	no_data = leftjoin(no_data, shapes_df, on = :iso3c, makeunique=true)
-	
-	filter!(:shape => !ismissing, no_data)
-	disallowmissing!(no_data)
+no_data = @chain iso2c_to_fips begin
+	@subset(:iso2c ∉ node_names)
+	leftjoin(shapes_df, on = :iso3c, makeunique=true)
+	@subset(!ismissing(:shape))	
+	disallowmissing!
 end
 
 # ╔═╡ 6d30c04a-6cb2-11eb-220b-998e7d5cc469
@@ -1066,13 +1103,16 @@ let
 end
 
 # ╔═╡ 4da91cd0-6c86-11eb-31fd-2fe037228a52
-filter(:continent => ismissing, shapes_df)
+@subset(shapes_df, ismissing(:continent))
 
 # ╔═╡ fdc229f8-6c84-11eb-1ae9-d133fc05035e
-nomatch = filter(!in(filter(!ismissing, shapes_df.iso2c)), node_names)
+nomatch = @chain shapes_df begin
+	@subset(!ismissing(:iso2c))
+	filter(∉(_.iso2c), node_names)
+end
 
 # ╔═╡ 34b2982a-6c89-11eb-2ae6-77e735c49966
-filter(:iso2c => in(nomatch), iso2c_to_fips) # too small
+@subset(iso2c_to_fips, :iso2c ∈ nomatch) # too small
 
 # ╔═╡ 8a5dd546-a59e-42ae-9bf6-0a97982906cc
 #using WorldBankData
@@ -1150,6 +1190,9 @@ begin
 	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
 end
 
+# ╔═╡ 52b29c95-35f7-44f7-b0f2-e2fb2231f7d5
+hint(md"Uncomment line 5 in the cell below.")
+
 # ╔═╡ 86d213e8-95ea-456c-b27b-a428ecd97348
 function show_words_limit(answer, limit)
 	count = wordcount(answer)
@@ -1170,10 +1213,13 @@ show_words_limit(answer21, 200)
 show_words_limit(answer22, 200)
 
 # ╔═╡ 4dd44354-713d-11eb-164b-0d143e507815
-show_words_limit(answer31, 150)
+show_words_limit(answer31, 100)
 
 # ╔═╡ 54291450-713d-11eb-37d2-0db48a0e8a85
-show_words_limit(answer32, 300)
+show_words_limit(answer32, 200)
+
+# ╔═╡ a6816468-0d3f-4050-80e1-29df52e471c1
+show_words_limit(answer33, 200)
 
 # ╔═╡ c069fd72-6f9a-11eb-000c-1fa67ae5bed4
 md"""
@@ -1187,6 +1233,7 @@ TableOfContents()
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
+AoGExtensions = "7df18d33-496e-4cfd-8564-72cba2c0b329"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
@@ -1196,8 +1243,6 @@ DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
 DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GADM = "a8dd9ffe-31dc-4cf5-a379-ea69100a8233"
-GeoInterface = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
-GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -1212,6 +1257,7 @@ ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [compat]
 AlgebraOfGraphics = "~0.6.5"
+AoGExtensions = "~0.1.9"
 CSV = "~0.10.2"
 CairoMakie = "~0.7.4"
 CategoricalArrays = "~0.10.2"
@@ -1221,8 +1267,6 @@ DataDeps = "~0.7.7"
 DataFrameMacros = "~0.2.1"
 DataFrames = "~1.3.2"
 GADM = "~0.2.4"
-GeoInterface = "~0.5.7"
-GeometryBasics = "~0.4.1"
 Graphs = "~1.6.0"
 HTTP = "~0.9.17"
 Makie = "~0.16.5"
@@ -1274,6 +1318,12 @@ deps = ["Colors"]
 git-tree-sha1 = "e81c509d2c8e49592413bfb0bb3b08150056c79d"
 uuid = "27a7e980-b3e6-11e9-2bcd-0b925532e340"
 version = "0.4.1"
+
+[[deps.AoGExtensions]]
+deps = ["AlgebraOfGraphics", "CategoricalArrays", "Chain", "DataFrameMacros", "DataFrames", "InteractiveUtils", "Makie", "Markdown", "NamedDims", "PlutoTest", "PlutoUI", "Statistics", "StatsBase", "UnPack"]
+git-tree-sha1 = "b2bcacd764e6f3e05650139499eb0caa2fbdb856"
+uuid = "7df18d33-496e-4cfd-8564-72cba2c0b329"
+version = "0.1.9"
 
 [[deps.ArchGDAL]]
 deps = ["CEnum", "ColorTypes", "Dates", "DiskArrays", "GDAL", "GeoFormatTypes", "GeoInterface", "ImageCore", "Tables"]
@@ -1435,6 +1485,12 @@ deps = ["StaticArrays"]
 git-tree-sha1 = "9f02045d934dc030edad45944ea80dbd1f0ebea7"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.5.7"
+
+[[deps.CovarianceEstimation]]
+deps = ["LinearAlgebra", "Statistics", "StatsBase"]
+git-tree-sha1 = "a3e070133acab996660d31dcf479ea42849e368f"
+uuid = "587fd27a-f159-11e8-2dae-1979310e6154"
+version = "0.2.7"
 
 [[deps.Crayons]]
 git-tree-sha1 = "249fe38abf76d48563e2f4556bebd215aa317e15"
@@ -2084,6 +2140,12 @@ git-tree-sha1 = "b086b7ea07f8e38cf122f5016af580881ac914fe"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "0.3.7"
 
+[[deps.NamedDims]]
+deps = ["AbstractFFTs", "ChainRulesCore", "CovarianceEstimation", "LinearAlgebra", "Pkg", "Requires", "Statistics"]
+git-tree-sha1 = "64a54c2992d5da90e3fa19e1bcf65c06bcda2bac"
+uuid = "356022a1-0364-5f58-8944-0da4b18d706f"
+version = "0.2.46"
+
 [[deps.Netpbm]]
 deps = ["FileIO", "ImageCore"]
 git-tree-sha1 = "18efc06f6ec36a8b801b23f076e3c6ac7c3bf153"
@@ -2228,6 +2290,12 @@ deps = ["ColorSchemes", "Colors", "Dates", "Printf", "Random", "Reexport", "Stat
 git-tree-sha1 = "6f1b25e8ea06279b5689263cc538f51331d7ca17"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.1.3"
+
+[[deps.PlutoTest]]
+deps = ["HypertextLiteral", "InteractiveUtils", "Markdown", "Test"]
+git-tree-sha1 = "cd214d5c737563369887ac465a6d3c0fd7c1f854"
+uuid = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
+version = "0.2.1"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
@@ -2534,6 +2602,11 @@ version = "1.3.0"
 deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
+[[deps.UnPack]]
+git-tree-sha1 = "387c1f73762231e86e0c9c5443ce3b4a0a9a0c2b"
+uuid = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
+version = "1.0.2"
+
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
@@ -2699,17 +2772,18 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─19ecd707-b12e-438a-a3ce-ecb0ec38a64c
-# ╟─47594b98-6c72-11eb-264f-e5416a8faa32
 # ╟─44ef5554-713f-11eb-35fc-1b93349ca7fa
+# ╟─a3176884-6f9a-11eb-1831-41486221dedb
+# ╟─47594b98-6c72-11eb-264f-e5416a8faa32
 # ╟─7f8a57f0-6c72-11eb-27dd-2dae50f00232
 # ╟─547d93f4-6c74-11eb-28fe-c5be4dc7aaa6
-# ╟─710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
+# ╠═710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
 # ╟─6d30c04a-6cb2-11eb-220b-998e7d5cc469
 # ╠═4f14a79c-6cb3-11eb-3335-2bbb61da25d9
 # ╠═aa423d14-6cb3-11eb-0f1c-65ebbf99d539
 # ╟─8bee74ea-7140-11eb-3441-330ab08a9f38
 # ╠═f25cf8be-6cb3-11eb-0c9c-f9ed04ded513
+# ╠═ce3486cf-8b42-4a7f-8cb5-04a27ad013d1
 # ╠═baecfe58-6cb6-11eb-3a4e-31bbb8da02ae
 # ╠═cd3fd39a-6cb7-11eb-1d7f-459f25a393e4
 # ╟─e90eb932-6c74-11eb-3338-618a4ea9c211
@@ -2743,10 +2817,7 @@ version = "3.5.0+0"
 # ╠═281198fa-712f-11eb-02ae-99a2d48099eb
 # ╠═8ea60d76-712f-11eb-3fa6-8fd89f3e8bdf
 # ╠═109bb1ea-71f6-11eb-37f4-054f691b2f23
-# ╟─7b50095c-6f9a-11eb-2cf5-31805fc10804
-# ╠═8a0e113c-6f9a-11eb-3c3b-bfb0c9220562
-# ╠═94895ab8-6f9a-11eb-3c04-dbe13f545acc
-# ╟─a3176884-6f9a-11eb-1831-41486221dedb
+# ╟─a3c5e85b-7bf1-4456-a3a3-02816f530239
 # ╟─1600f95e-8b98-47fe-be7d-b1983c6a07b0
 # ╟─50e332de-6f9a-11eb-3888-d15d986aca8e
 # ╟─96e4482c-6f9a-11eb-0e47-c568006368b6
@@ -2768,13 +2839,26 @@ version = "3.5.0+0"
 # ╠═840a7d80-713d-11eb-19d5-594bcbb61ec0
 # ╠═df16a43e-713c-11eb-15db-cdcdb1756588
 # ╟─e4a28c46-6fa8-11eb-0b80-658ffbab932b
+# ╟─99c795b5-f7e9-4edf-8ae8-576753acdc2a
 # ╟─39ea6d9a-6fab-11eb-2b00-f3eda1cd2677
 # ╠═2816c75e-713d-11eb-11ec-5391cb16ecc3
 # ╟─4dd44354-713d-11eb-164b-0d143e507815
+# ╟─52b29c95-35f7-44f7-b0f2-e2fb2231f7d5
+# ╠═22372514-1708-4a13-af50-bc7c45a43c52
+# ╠═07fd582c-223d-4b9c-805b-1ed396cde5bc
 # ╟─272f7770-6fab-11eb-32b9-01af616ae967
 # ╠═2a61d17a-713d-11eb-2457-11e5c4dd792f
 # ╟─54291450-713d-11eb-37d2-0db48a0e8a85
-# ╟─a81a894a-713d-11eb-0dd8-9d9e8dffee35
+# ╟─e0b9ac6c-a648-4b08-85cc-a0a040408f9d
+# ╠═ec3a1a46-b1de-4a1d-939c-bf12ee55b658
+# ╟─a6816468-0d3f-4050-80e1-29df52e471c1
+# ╟─e5f7cdab-c496-4309-bd9d-e0cf6f1d40d1
+# ╠═378c8a92-7129-4655-ac0b-f6aa02c600c6
+# ╠═f5882ac7-b1f2-4285-9bab-8abdd975afd1
+# ╟─529053c2-4e8d-47c7-b135-0468f34b6ced
+# ╠═b281826c-5092-4de5-8f6e-5cf95273e1cf
+# ╠═2bbeebe4-cf24-42b3-8696-3f3b70633b5b
+# ╠═8e339232-88de-4757-b675-0ade22828b0f
 # ╟─3062715a-6c75-11eb-30ef-2953bc64adb8
 # ╟─0e556b16-5909-4853-9f78-76a071916f8d
 # ╠═ea4d4bba-5f8b-48ee-a171-7e7b90c2b062
@@ -2822,13 +2906,14 @@ version = "3.5.0+0"
 # ╠═11fb9a53-01a3-4646-9498-3d3b6624e82c
 # ╠═581b8793-808e-469a-9a4a-27e5ccce85ea
 # ╠═2759d19a-a5bf-4c8a-ba95-f91c36c9a167
-# ╠═261be467-93a6-4f25-81fb-b491e139ccb1
+# ╠═0baf1637-46b7-446c-8737-9ef25436ec83
 # ╟─39d717a4-6c75-11eb-15f0-d537959a41b8
 # ╟─7d28c5fa-4fe8-498a-97ca-095fa9d2d994
 # ╠═5191b535-3f4a-4b83-86ff-bd8085ff5615
 # ╠═393969b9-6447-4493-8af0-231811611c22
 # ╠═d5139528-6dae-4e76-9b3a-c378219ea965
 # ╠═13f8193c-57a7-495f-b52b-511adf792903
+# ╠═4c889111-8368-4d52-b0b5-4afd8aeeaebf
 # ╟─156b04d4-4e34-4128-a9b0-4e7b72c44623
 # ╠═bbf69c13-4757-4829-8690-16b1f201c24f
 # ╠═7b1f3d74-e132-4f29-aa81-219bc78f7aaa
