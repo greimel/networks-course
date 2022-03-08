@@ -93,7 +93,7 @@ md"""
 
 # ╔═╡ 186b1fe4-4462-4c0d-a874-256ee3e3f700
 answer11 = md"""
-Your answer goes here ...
+Your answer goes here...
 """
 
 # ╔═╡ f7a60a89-40b2-4656-98a6-a258a4a5741d
@@ -145,7 +145,7 @@ Your answer goes here ... You can type math like this: ``\hat p = 17``, ``\hat \
 md"""
 ### Before you submit ...
 
-👉 Make sure you have added your names and your group number [in the cells below](#d73b9db2-742d-4c75-9ff0-2cdce26a8ec8).
+👉 Make sure you have added **your names** and **your group number** in the cells below.
 
 👉 Make sure that that **all group members proofread** your submission (especially your little essays).
 
@@ -1210,6 +1210,16 @@ visualize_equilibrium(peq)
 md"""
 ## Assignment infrastructure
 """
+
+# ╔═╡ 6270dbc8-5002-4328-88a4-f1c7f060f571
+begin
+	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
+	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
+	still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
+	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
+	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
+	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
+end
 
 # ╔═╡ 7f0ad695-ea05-483b-86c4-a63df55689e9
 members = let
@@ -2675,7 +2685,7 @@ version = "3.5.0+0"
 # ╟─4712bc8d-4e63-47c9-8367-dc417f1a7649
 # ╟─54722cbe-6a91-4275-a78c-8a50715b86c8
 # ╟─eb1e20e7-9873-45bd-ae30-ed147a70b457
-# ╟─28bbf56b-1bdf-486f-8230-b9a6ee19a955
+# ╠═28bbf56b-1bdf-486f-8230-b9a6ee19a955
 # ╟─7f0bad7b-439a-4639-bba4-5f0a52560042
 # ╟─497c6314-6f0f-4d45-9bd2-17d6f6b00ab9
 # ╠═3abaa20d-a24d-4b2f-8d8d-4e01b719ab5e
@@ -2783,6 +2793,7 @@ version = "3.5.0+0"
 # ╠═41d5e579-418b-4988-9a6f-f75afeffe821
 # ╠═fd3dc6bf-f1e5-46de-b0b0-94adbc845d81
 # ╟─2d1f7620-de37-4e9f-8044-9459abda92ac
+# ╠═6270dbc8-5002-4328-88a4-f1c7f060f571
 # ╠═7f0ad695-ea05-483b-86c4-a63df55689e9
 # ╠═76bc41d8-c97f-4120-9b13-679997411ca6
 # ╠═b72dedc8-bd5a-457e-ba67-13f26a0148dd
