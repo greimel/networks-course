@@ -706,7 +706,7 @@ function ring_network(n, ȳ)
 	Y = zeros(n, n)
 	
 	for i in 1:(n-1)
-		Y[i,i+1] = ȳ
+		Y[i, i+1] = ȳ
 	end
 	Y[n, 1] = ȳ
 	
