@@ -13,6 +13,18 @@ using GraphMakie, CairoMakie
 # ╔═╡ 3a4ff1ba-4c89-4a46-b338-90844e1b6db0
 using LinearAlgebra: dot, I
 
+# ╔═╡ 6a49f714-7e33-4061-bdc0-b7f2ca97ab09
+using Graphs
+
+# ╔═╡ bd5365e8-ecef-40ff-aa1a-b05fdf2e98fd
+using DataFrames
+
+# ╔═╡ 6eca3673-39f3-41e1-a3ab-72e86e3fc877
+using Chain
+
+# ╔═╡ 2816b7c7-7256-4533-9801-3d972bdcfaa6
+using AlgebraOfGraphics
+
 # ╔═╡ deb54328-9fb8-11ec-1add-01b9ee7126dd
 pizza = let
 	industries = [:🥛, :🧂, :🧀, :🍅, :🍍, :🍕]
@@ -22,12 +34,12 @@ pizza = let
 	recipe_🧀 = [0.99, 0.01, 0.0, 0.0, 0.0, 0.0]
 	recipe_🍕 = [0.0, 0.01, 0.5, 0.49, 0.0, 0.0]
 
-	IO = fill(0.0, n, n) + I
-	IO[end, end] = 0.0
+	IO = fill(0.0, n, n)#+ I
+	#IO[end, end] = 0.0
 	IO[end,1:end-1] .= 1/(n-1)
 
-	IO = fill(0.0, n, n)
-	IO[1:end-1,end] .= 1
+	#IO = fill(0.0, n, n)
+	#IO[1:end-1,end] .= 1
 	
 	#IO = IO + I
 #	IO[3, :] .= recipe_🧀
@@ -40,7 +52,10 @@ pizza = let
 end
 
 # ╔═╡ 99f34964-333e-439a-9894-2e6ff5cf9ee2
-graphplot(pizza.graph, arrow_size = 15)
+graphplot(pizza.graph, arrow_size = 15, nlabels = string.(vertices(pizza.graph)))
+
+# ╔═╡ 2e1a35a6-a8b7-4faa-8e48-59d9b98ec77f
+vertices(pizza.graph)
 
 # ╔═╡ 25568966-370d-4e47-9500-b22dabd316d0
 IO = pizza.IO .* 0.99
@@ -52,16 +67,26 @@ N = size(IO, 1)
 θ₀ = 0.1
 
 # ╔═╡ 449351fc-5b31-46ac-806b-b251e481e44b
-θ = fill(1/N, N)
+θ = fill(eps(), N); θ[[1,4]] .= (1 - (N-1)*eps()) ./ 2
+
+# ╔═╡ f99d640c-3335-4539-a81b-519edc395320
+begin
+	fig = Figure()
+
+	graphplot(fig[1,1], pizza.graph, arrow_size = 15, nlabels = string.(vertices(pizza.graph)))
+
+	lines(fig[1,2], θ, axis = (title = "utility weights θ", xlabel = "goods"))
+	fig
+end
+
+# ╔═╡ 2951ea53-441d-4689-b479-7784dec8286d
+θ
 
 # ╔═╡ e58805a3-6552-43c7-a3b3-546bdd6c2365
 β = 0.95
 
 # ╔═╡ 6427f772-fa31-446c-b8dc-25dd857fc684
 γ = (θ' / (I - β * IO))'
-
-# ╔═╡ 1390d9e1-679c-4d08-af49-a72cbe29ba42
-
 
 # ╔═╡ 39fc78f1-31dc-4463-adaf-303d3c39e4d2
 # labor share
@@ -87,7 +112,7 @@ L = (β * Z / θ₀) .* γ .* b
 @assert L ≈ L_alt
 
 # ╔═╡ 5fc9508b-edc1-40e4-816b-732985783fb5
-function Xₜ(IO, Yₜ)
+function Xₜ(IO, Yₜ, γ, β)
 	X = similar(IO)
 	N = size(IO, 1)
 	for i in 1:N
@@ -98,9 +123,6 @@ function Xₜ(IO, Yₜ)
 	X
 end
 
-# ╔═╡ cb07a17b-b48e-4c4c-9df5-f0f570a39801
-Y₀ = fill(1.1, N)
-
 # ╔═╡ c8e145c3-fb65-4c31-8896-ffe4c3e51c8f
 function Yₜ₊₁(Lₜ, Xₜ, λₜ₊₁, IO)
 	N = size(IO, 1)
@@ -110,6 +132,15 @@ function Yₜ₊₁(Lₜ, Xₜ, λₜ₊₁, IO)
 	end
 	Y
 end
+
+# ╔═╡ c86c0355-c1f0-4394-a978-282008f07189
+C(Y, θ, γ) = θ ./ γ .* Y
+
+# ╔═╡ 27911a78-20f0-40e2-b8d3-464b19927f74
+P(Y, γ) = γ ./ Y
+
+# ╔═╡ f7b69702-2713-41c8-9407-87f623d0b63b
+W(θ₀, γ, b, H) = (θ₀ + dot(γ, b)) / H
 
 # ╔═╡ c1932e2f-b3d2-422b-be10-838d115b7bb7
 #κ = fill(1/N, N)
@@ -137,7 +168,41 @@ end
 y₀ = (I - IO) \ κ
 
 # ╔═╡ 851a6199-c0c4-44ef-b5fd-36fc1ca83673
-Y = exp.(y₀)
+Y₀ = exp.(y₀)
+
+# ╔═╡ b7a7c2be-8fdd-4d88-8275-fe1c0ae55c17
+let
+	Y_old = copy(Y₀)
+	
+	produced = Yₜ₊₁(L, Xₜ(IO, Y_old, γ, β), ones(N), IO)
+
+#	@info W(θ₀, γ, b, H)
+	consumed = C(produced, θ, γ)
+	price = P(produced, γ)
+	input = produced - consumed
+	df = DataFrame(; good = 1:N, produced, consumed, input, price)
+
+	X = Xₜ(IO, produced, γ, β)
+
+	@assert vec(sum(X, dims = 1)) + consumed ≈ produced
+
+	fg = @chain df begin
+		stack([:consumed, :input], :good, variable_name = :usage)
+		data(_) * mapping(
+			:good, :value, color = :usage, stack = :usage
+		) * visual(BarPlot)
+		draw(_, legend = (position = :top, ))
+	end
+
+	fig = fg.figure
+
+	ax, plt = graphplot(fig[:,0], pizza.graph, arrow_size = 15, nlabels = string.(vertices(pizza.graph)))
+	hidedecorations!(ax)
+
+	lines(fig[end+1,1], θ, axis = (title = "utility weights θ", xlabel = "goods"))
+	lines(fig[end, 2], df.price, axis = (title = "price", ))
+	fig
+end
 
 # ╔═╡ fdaf205b-6c47-418a-8703-c526f14d8196
 function update_Y(Y, λ)
@@ -146,42 +211,33 @@ function update_Y(Y, λ)
 	Y_next = exp.(y_next)
 end
 
-# ╔═╡ 93a996e9-3864-40a0-ae25-fd6baef24bd5
-let
-	fig = Figure()
-	ax = Axis(fig[1,1])
-	
-	Y_old = copy(Y₀)
-	
-	for t ∈ 1:100
-		Y_next = Yₜ₊₁(L, Xₜ(IO, Y_old), ones(N), IO)
-		@assert Y_next ≈ update_Y(Y_old, ones(N))
-		
-		lines!(ax, Y_next, label = string(t))
-		if Y_old ≈ Y_next
-			@info t
-			break
-		end
-		Y_old .= Y_next
-	end
-	axislegend(ax)
-	fig
-end
-
 # ╔═╡ d709e9d5-8bb7-4d75-9618-c546ddb06775
+md"""
+# Other statistics
+"""
+
+# ╔═╡ e52a3b87-d7fb-4b26-b9e1-60e793466dae
 
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 
 [compat]
+AlgebraOfGraphics = "~0.6.5"
 CairoMakie = "~0.7.4"
+Chain = "~0.4.10"
+DataFrames = "~1.3.2"
 GraphMakie = "~0.3.3"
+Graphs = "~1.6.0"
 SimpleWeightedGraphs = "~1.2.1"
 """
 
@@ -208,6 +264,12 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "af92965fb30777147966f58acb05da51c5616b5f"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 version = "3.3.3"
+
+[[deps.AlgebraOfGraphics]]
+deps = ["Colors", "Dates", "Dictionaries", "FileIO", "GLM", "GeoInterface", "GeometryBasics", "GridLayoutBase", "KernelDensity", "Loess", "Makie", "PlotUtils", "PooledArrays", "RelocatableFolders", "StatsBase", "StructArrays", "Tables"]
+git-tree-sha1 = "032144cbb772cf0aef2954dfe5cc2c0bebeaaadd"
+uuid = "cbdf2221-f076-402e-a563-3d30da359d67"
+version = "0.6.5"
 
 [[deps.Animations]]
 deps = ["Colors"]
@@ -283,6 +345,11 @@ git-tree-sha1 = "f641eb0a4f00c343bbc32346e1217b86f3ce9dad"
 uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
 version = "0.5.1"
 
+[[deps.Chain]]
+git-tree-sha1 = "339237319ef4712e6e5df7758d0bccddf5c237d9"
+uuid = "8be319e6-bccf-4806-a6f7-6fae938471bc"
+version = "0.4.10"
+
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "c9a6160317d1abe9c44b3beb367fd448117679ca"
@@ -341,10 +408,21 @@ git-tree-sha1 = "9f02045d934dc030edad45944ea80dbd1f0ebea7"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.5.7"
 
+[[deps.Crayons]]
+git-tree-sha1 = "249fe38abf76d48563e2f4556bebd215aa317e15"
+uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
+version = "4.1.1"
+
 [[deps.DataAPI]]
 git-tree-sha1 = "cc70b17275652eb47bc9e5f81635981f13cea5c8"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.9.0"
+
+[[deps.DataFrames]]
+deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Reexport", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
+git-tree-sha1 = "ae02104e835f219b8930c7664b8012c93475c340"
+uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+version = "1.3.2"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -370,6 +448,18 @@ deps = ["InverseFunctions", "Test"]
 git-tree-sha1 = "80c3e8639e3353e5d2912fb3a1916b8455e2494b"
 uuid = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 version = "0.4.0"
+
+[[deps.Dictionaries]]
+deps = ["Indexing", "Random"]
+git-tree-sha1 = "63004a55faf43a5f7be7f5eca36ce355e9a75b2c"
+uuid = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
+version = "0.3.18"
+
+[[deps.Distances]]
+deps = ["LinearAlgebra", "SparseArrays", "Statistics", "StatsAPI"]
+git-tree-sha1 = "3258d0659f812acde79e8a74b11f17ac06d0ca04"
+uuid = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
+version = "0.10.7"
 
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
@@ -493,6 +583,22 @@ git-tree-sha1 = "aa31987c2ba8704e23c6c8ba8a4f769d5d7e4f91"
 uuid = "559328eb-81f9-559d-9380-de523a88c83c"
 version = "1.0.10+0"
 
+[[deps.Future]]
+deps = ["Random"]
+uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
+
+[[deps.GLM]]
+deps = ["Distributions", "LinearAlgebra", "Printf", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "StatsModels"]
+git-tree-sha1 = "fb764dacfa30f948d52a6a4269ae293a479bbc62"
+uuid = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+version = "1.6.1"
+
+[[deps.GeoInterface]]
+deps = ["RecipesBase"]
+git-tree-sha1 = "6b1a29c757f56e0ae01a35918a2c39260e2c4b98"
+uuid = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
+version = "0.5.7"
+
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
 git-tree-sha1 = "83ea630384a13fc4f002b77690bc0afeb4255ac9"
@@ -581,6 +687,11 @@ git-tree-sha1 = "87f7662e03a649cffa2e05bf19c303e168732d3e"
 uuid = "905a6f67-0a94-5f89-b386-d35d92009cd1"
 version = "3.1.2+0"
 
+[[deps.Indexing]]
+git-tree-sha1 = "ce1566720fd6b19ff3411404d4b977acd4814f9f"
+uuid = "313cdc1a-70c2-5d6a-ae34-0150d3930a38"
+version = "1.1.1"
+
 [[deps.IndirectArrays]]
 git-tree-sha1 = "012e604e1c7458645cb8b436f8fba789a51b257f"
 uuid = "9b13fd28-a010-5f03-acff-a1bbcff69959"
@@ -618,6 +729,11 @@ deps = ["Test"]
 git-tree-sha1 = "a7254c0acd8e62f1ac75ad24d5db43f5f19f3c65"
 uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
 version = "0.1.2"
+
+[[deps.InvertedIndices]]
+git-tree-sha1 = "bee5f1ef5bf65df56bdd2e40447590b272a5471f"
+uuid = "41ab1584-1d38-5bbf-9106-f11c6c58b48f"
+version = "1.1.0"
 
 [[deps.IrrationalConstants]]
 git-tree-sha1 = "7fd44fd4ff43fc60815f8e764c0f352b83c49151"
@@ -749,6 +865,12 @@ version = "2.36.0+0"
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
+[[deps.Loess]]
+deps = ["Distances", "LinearAlgebra", "Statistics"]
+git-tree-sha1 = "46efcea75c890e5d820e670516dc156689851722"
+uuid = "4345ca2d-374a-55d4-8d30-97f9976e7612"
+version = "0.5.4"
 
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
@@ -974,11 +1096,23 @@ git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
 uuid = "647866c9-e3ac-4575-94e7-e3d426903924"
 version = "0.1.2"
 
+[[deps.PooledArrays]]
+deps = ["DataAPI", "Future"]
+git-tree-sha1 = "db3a23166af8aebf4db5ef87ac5b00d36eb771e2"
+uuid = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
+version = "1.4.0"
+
 [[deps.Preferences]]
 deps = ["TOML"]
 git-tree-sha1 = "de893592a221142f3db370f48290e3a2ef39998f"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.2.4"
+
+[[deps.PrettyTables]]
+deps = ["Crayons", "Formatting", "Markdown", "Reexport", "Tables"]
+git-tree-sha1 = "dfb54c4e414caa595a1f2ed759b160f5a3ddcba5"
+uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
+version = "1.3.1"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -1015,6 +1149,11 @@ deps = ["Requires"]
 git-tree-sha1 = "dc84268fe0e3335a62e315a3a7cf2afa7178a734"
 uuid = "c84ed2f1-dad5-54f0-aa8e-dbefe2724439"
 version = "0.4.3"
+
+[[deps.RecipesBase]]
+git-tree-sha1 = "6bf3f380ff52ce0832ddd3a2a7b9538ed1bcca7d"
+uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+version = "1.2.1"
 
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
@@ -1071,6 +1210,11 @@ uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 [[deps.SharedArrays]]
 deps = ["Distributed", "Mmap", "Random", "Serialization"]
 uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
+
+[[deps.ShiftedArrays]]
+git-tree-sha1 = "22395afdcf37d6709a5a0766cc4a5ca52cb85ea0"
+uuid = "1277b4bf-5013-50f5-be3d-901d8477a67a"
+version = "1.0.0"
 
 [[deps.Showoff]]
 deps = ["Dates", "Grisu"]
@@ -1160,6 +1304,12 @@ deps = ["ChainRulesCore", "HypergeometricFunctions", "InverseFunctions", "Irrati
 git-tree-sha1 = "25405d7016a47cf2bd6cd91e66f4de437fd54a07"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "0.9.16"
+
+[[deps.StatsModels]]
+deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Printf", "REPL", "ShiftedArrays", "SparseArrays", "StatsBase", "StatsFuns", "Tables"]
+git-tree-sha1 = "03c99c7ef267c8526953cafe3c4239656693b8ab"
+uuid = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
+version = "0.6.29"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
@@ -1362,14 +1512,17 @@ version = "3.5.0+0"
 # ╠═e5a6fd5c-b10c-4836-8302-66467e589085
 # ╠═3a4ff1ba-4c89-4a46-b338-90844e1b6db0
 # ╠═deb54328-9fb8-11ec-1add-01b9ee7126dd
+# ╠═6a49f714-7e33-4061-bdc0-b7f2ca97ab09
 # ╠═99f34964-333e-439a-9894-2e6ff5cf9ee2
+# ╠═2e1a35a6-a8b7-4faa-8e48-59d9b98ec77f
 # ╠═25568966-370d-4e47-9500-b22dabd316d0
 # ╠═00b4bb5d-6e67-4c58-891e-dafdefa3a59e
 # ╠═4f62e517-7dfa-4a84-b075-6ea93ee8e7f4
 # ╠═449351fc-5b31-46ac-806b-b251e481e44b
+# ╠═f99d640c-3335-4539-a81b-519edc395320
+# ╠═2951ea53-441d-4689-b479-7784dec8286d
 # ╠═e58805a3-6552-43c7-a3b3-546bdd6c2365
 # ╠═6427f772-fa31-446c-b8dc-25dd857fc684
-# ╠═1390d9e1-679c-4d08-af49-a72cbe29ba42
 # ╠═39fc78f1-31dc-4463-adaf-303d3c39e4d2
 # ╠═823fe81a-9fbf-4372-8681-cf093556c080
 # ╠═e241cbfb-bcdc-48f1-b516-a46359aad5be
@@ -1377,14 +1530,20 @@ version = "3.5.0+0"
 # ╠═a9786b10-ae69-45fd-88b5-44a40db82c44
 # ╠═c39bc84f-8564-4bde-beb0-41bed9207c8f
 # ╠═5fc9508b-edc1-40e4-816b-732985783fb5
-# ╠═cb07a17b-b48e-4c4c-9df5-f0f570a39801
 # ╠═c8e145c3-fb65-4c31-8896-ffe4c3e51c8f
-# ╠═93a996e9-3864-40a0-ae25-fd6baef24bd5
+# ╠═bd5365e8-ecef-40ff-aa1a-b05fdf2e98fd
+# ╠═b7a7c2be-8fdd-4d88-8275-fe1c0ae55c17
+# ╠═6eca3673-39f3-41e1-a3ab-72e86e3fc877
+# ╠═2816b7c7-7256-4533-9801-3d972bdcfaa6
+# ╠═c86c0355-c1f0-4394-a978-282008f07189
+# ╠═27911a78-20f0-40e2-b8d3-464b19927f74
+# ╠═f7b69702-2713-41c8-9407-87f623d0b63b
 # ╠═c1932e2f-b3d2-422b-be10-838d115b7bb7
 # ╠═64362656-c282-42d8-b13a-5d6603a7bf81
 # ╠═851a6199-c0c4-44ef-b5fd-36fc1ca83673
 # ╠═62e80ea0-d511-4176-96b0-a14bee59be6c
 # ╠═fdaf205b-6c47-418a-8703-c526f14d8196
-# ╠═d709e9d5-8bb7-4d75-9618-c546ddb06775
+# ╟─d709e9d5-8bb7-4d75-9618-c546ddb06775
+# ╠═e52a3b87-d7fb-4b26-b9e1-60e793466dae
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
