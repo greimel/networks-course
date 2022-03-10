@@ -4,8 +4,21 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
 # ╔═╡ 6a49f714-7e33-4061-bdc0-b7f2ca97ab09
 using Graphs
+
+# ╔═╡ d9abc061-7769-49d3-b3e0-537a8f06c907
+using NetworkLayout
 
 # ╔═╡ 533fc093-b72b-4753-b376-8307cce58453
 using DataFrameMacros
@@ -39,62 +52,10 @@ md"""
 # Simulating the model of Long & Plosser
 """
 
-# ╔═╡ deb54328-9fb8-11ec-1add-01b9ee7126dd
-pizza = let
-	industries = [:🥛, :🧂, :🧀, :🍅, :🍍, :🍕]
-	industries2= ["milk", "salt", "cheese", "tomatoes", "pineapple", "pizza"]
-	n = length(industries)
-
-	recipe_🧀 = [0.99, 0.01, 0.0, 0.0, 0.0, 0.0]
-	recipe_🍕 = [0.0, 0.01, 0.5, 0.49, 0.0, 0.0]
-
-	IO = fill(0.0, n, n)
-	IO[end,1:end-1] .= 1/(n-1)
-
-	IO = fill(0.0, n, n)
-	IO[1:end-1,end] .= 1
-	
-	#IO = IO + I
-#	IO[3, :] .= recipe_🧀
-#	IO[6, :] .= recipe_🍕
-
-	order = [3, 2, 5, 6, 4, 1] 
-
-	_io_ = IO[order,order]
-	(IO = _io_, G = _io_', industries = industries2[order], graph = SimpleWeightedDiGraph(_io_'))
-end
-
 # ╔═╡ 210f3af5-7add-42aa-baa2-a73157daec26
 md"""
 ## Specifying the parameters
 """
-
-# ╔═╡ 22c97d66-83c4-41b0-9bfb-efceb12e7e1e
-md"""
-#### Utility weights
-"""
-
-# ╔═╡ e58805a3-6552-43c7-a3b3-546bdd6c2365
-param = let
-	IO = pizza.IO
-	
-	N = size(IO, 1)
-	
-	β = 0.95
-	θ = fill(eps(), N); θ[[1,4]] .= (1 - (N-1)*eps()) ./ 2
-	θ₀ = 0.1
-	
-	# labor share
-	b = map(eachrow(IO)) do recipeᵢ
-		∑aᵢ = sum(recipeᵢ) # non-labor input share
-		@assert 0 ≤ ∑aᵢ ≤ 1
-		bᵢ = 1.0 - ∑aᵢ
-	end
-	
-	param = (; b, β, θ, θ₀, IO, N)
-
-	
-end
 
 # ╔═╡ 9d28410e-3dbc-43db-b403-a8094af890f9
 md"""
@@ -186,19 +147,18 @@ md"""
 """
 
 # ╔═╡ 64362656-c282-42d8-b13a-5d6603a7bf81
-y₀(param) = (I - param.IO) \ κ(param)
+function y₀(param)
+	try
+		return (I - param.IO) \ κ(param)
+	catch
+		@info "there is no steady state"
+		(; N) = param
+		return fill(1/N, N)
+	end
+end		
 
 # ╔═╡ 851a6199-c0c4-44ef-b5fd-36fc1ca83673
 Y₀(param) = exp.(y₀(param))
-
-# ╔═╡ 17988cda-0f0b-47b7-bd4f-d98a77690a78
-let
-	(; N) = param
-	λ = rand(N)
-	Y_old = Y₀(param)
-	@test Yₜ₊₁_V2(Y_old, λ, H, param) ≈ Yₜ₊₁_V3(Y_old, λ, param)
-	
-end
 
 # ╔═╡ 28aca776-52c4-4582-984a-e7cca484b689
 md"""
@@ -229,12 +189,8 @@ md"""
 """
 
 # ╔═╡ b7a7c2be-8fdd-4d88-8275-fe1c0ae55c17
-function static_viz(param, H)
-	Y_old = Y₀(param)
-
-	λₜ₊₁ = ones(param.N)
-	λₜ₊₁[4] = 0.9
-	
+function static_viz(param, H, λₜ₊₁)
+	Y_old = Y₀(param)	
 
 	is_shocked = ifelse.(λₜ₊₁ .< 1, :red, :black)
 
@@ -264,19 +220,10 @@ function static_viz(param, H)
 	fig
 end
 
-# ╔═╡ 9732589c-bcc0-4e83-8eaa-7628ac002b7f
-static_viz(param, H)
-
 # ╔═╡ 8a8002b3-700c-4197-8bf0-401ad8af5b9d
-function IRF(param, H)
+function IRF(param, H, λ_vec)
 	Y_old = Y₀(param)
-	(; N) = param
-	λ₀ = ones(N)
-	λ₁ = ones(N)
-	λ₁[4] = 0.9
-
-	λ_vec = [λ₀, λ₀, λ₁, λ₁, λ₀, λ₀, λ₀]
-
+	
 	γ = get_γ(param)
 
 	dfs = DataFrame[]
@@ -303,8 +250,111 @@ function IRF(param, H)
 	
 end
 
+# ╔═╡ 38959cd0-c3ca-4be9-8f60-393a28eccd13
+md"""
+## Simple Networks
+"""
+
+# ╔═╡ 0385c022-4d35-4065-9800-d1c16e5227ae
+function my_out_StarGraph(N)
+	A = zeros(N, N)
+	A[2:end,1] .= 1
+	
+	SimpleWeightedDiGraph(A')
+end
+
+# ╔═╡ 40e182d7-34fc-467c-8ee7-58fb8241ad15
+function my_in_StarGraph(N)
+	A = zeros(N, N)
+	A[1,2:end] .= 1/(N-1)
+	A[1,:] .= A[1,:] ./ sum(A[1,:])
+	SimpleWeightedDiGraph(A')
+end
+
+# ╔═╡ d6008175-2d2e-4ddf-b5f9-e43494fc43ab
+function my_vertical(N)
+	A = zeros(N, N)
+	for i ∈ 1:N-1
+		A[i,i+1] = 1.0
+	end
+	
+	SimpleWeightedDiGraph(A')
+end
+
+# ╔═╡ e58805a3-6552-43c7-a3b3-546bdd6c2365
+param = let
+
+	grph = my_vertical(5)
+	#grph = my_in_StarGraph(5)
+	#grph = my_out_StarGraph(5)
+	#graphplot(grph, arrow_size = 15)
+
+	IO = weights(grph)'
+	
+	N = size(IO, 1)
+	
+	β = 0.95
+#	θ = fill(eps(), N); θ[[1,4]] .= (1 - (N-1)*eps()) ./ 2
+	θ = fill(1/N, N)#; θ[[1,4]] .= (1 - (N-1)*eps()) ./ 2
+	
+	θ₀ = 0.1
+	
+	# labor share
+	b = map(eachrow(IO)) do recipeᵢ
+		∑aᵢ = sum(recipeᵢ) # non-labor input share
+		@assert 0 ≤ ∑aᵢ ≤ 1
+		bᵢ = 1.0 - ∑aᵢ
+	end
+	
+	param = (; b, β, θ, θ₀, IO, N)	
+end
+
+# ╔═╡ abb88d38-137a-4a86-976a-42b5d55cdbc4
+md"""
+* duration of shock: $(@bind T_shocked NumberField(1:3))
+* shocked firm: $(@bind i_shocked NumberField(0:param.N))
+"""
+
+# ╔═╡ 9732589c-bcc0-4e83-8eaa-7628ac002b7f
+let
+	λₜ₊₁ = ones(param.N)
+	if i_shocked != 0
+		λₜ₊₁[i_shocked] = 0.9
+	end
+	static_viz(param, H, λₜ₊₁)
+end
+
 # ╔═╡ a9946e17-0c08-4626-ad28-41261d40b3b1
-IRF(param, H)
+let
+	(; N) = param
+	λ₀ = ones(N)
+	λ₁ = ones(N)
+	if i_shocked != 0
+		λ₁[i_shocked] = 0.9
+	end
+	
+	λ_vec = fill(λ₀, T_shocked * 2 + 2 + N)
+	λ_vec[(1:T_shocked) .+ 2] .= Ref(λ₁)
+
+	IRF(param, H, λ_vec)
+end
+
+# ╔═╡ 17988cda-0f0b-47b7-bd4f-d98a77690a78
+let
+	(; N) = param
+	λ = rand(N)
+	Y_old = Y₀(param)
+	@test Yₜ₊₁_V2(Y_old, λ, H, param) ≈ Yₜ₊₁_V3(Y_old, λ, param)
+	
+end
+
+# ╔═╡ 7f466861-4359-458f-a8f6-de9d390478ce
+function my_complete_DiGraph(N)
+	A = fill(1/(N-1), N, N)
+	A = A - 1/(N-1) * I
+		
+	SimpleWeightedDiGraph(A')
+end
 
 # ╔═╡ 75200e08-8e46-42a5-b065-9f8c4a831d06
 md"""
@@ -325,6 +375,7 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 PlutoTest = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
@@ -337,6 +388,7 @@ DataFrameMacros = "~0.2.1"
 DataFrames = "~1.3.2"
 GraphMakie = "~0.3.3"
 Graphs = "~1.6.0"
+NetworkLayout = "~0.4.4"
 PlutoTest = "~0.2.1"
 PlutoUI = "~0.7.35"
 SimpleWeightedGraphs = "~1.2.1"
@@ -1651,11 +1703,11 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╟─866ae0b6-426e-41f1-b498-e2e7f38100fe
-# ╠═deb54328-9fb8-11ec-1add-01b9ee7126dd
 # ╠═6a49f714-7e33-4061-bdc0-b7f2ca97ab09
 # ╟─210f3af5-7add-42aa-baa2-a73157daec26
-# ╟─22c97d66-83c4-41b0-9bfb-efceb12e7e1e
 # ╠═e58805a3-6552-43c7-a3b3-546bdd6c2365
+# ╠═d9abc061-7769-49d3-b3e0-537a8f06c907
+# ╟─abb88d38-137a-4a86-976a-42b5d55cdbc4
 # ╠═9732589c-bcc0-4e83-8eaa-7628ac002b7f
 # ╠═a9946e17-0c08-4626-ad28-41261d40b3b1
 # ╟─9d28410e-3dbc-43db-b403-a8094af890f9
@@ -1683,6 +1735,11 @@ version = "3.5.0+0"
 # ╟─e11223ae-2c54-46b7-a3b7-806d8f5108e2
 # ╠═b7a7c2be-8fdd-4d88-8275-fe1c0ae55c17
 # ╠═8a8002b3-700c-4197-8bf0-401ad8af5b9d
+# ╟─38959cd0-c3ca-4be9-8f60-393a28eccd13
+# ╠═0385c022-4d35-4065-9800-d1c16e5227ae
+# ╠═40e182d7-34fc-467c-8ee7-58fb8241ad15
+# ╠═d6008175-2d2e-4ddf-b5f9-e43494fc43ab
+# ╠═7f466861-4359-458f-a8f6-de9d390478ce
 # ╟─75200e08-8e46-42a5-b065-9f8c4a831d06
 # ╠═533fc093-b72b-4753-b376-8307cce58453
 # ╠═6eca3673-39f3-41e1-a3ab-72e86e3fc877
