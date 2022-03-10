@@ -14,43 +14,48 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 55a868c8-0614-4074-9389-c957cf64cb20
+# ╔═╡ 82a47f6a-7ba6-404c-a250-3f85cea0dd6a
 md"""
-!!! danger "Under construction!"
-
-	This notebook is used for the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
-
-	**The notebook will get updated for Spring 2022.**
-
+*Assignment submitted by* **$members** (*group $(group_number)*)
 """
+
+# ╔═╡ 6481888a-8c19-46c6-b5b8-d2a86c3749a8
+if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
+	md"""
+!!! danger "Note!"
+    **Before you submit**, please replace the randomly generated names above by the names of your group in [this cell](#622a2e9c-495b-43d1-b976-1743f28ff84a) and put the right group number and [this cell](#d8edddf9-0f24-4efe-88d0-ed10c84e8ce8).
+	"""
+end
 
 # ╔═╡ 38f5d048-7747-11eb-30f7-89bade5ed0a3
 md"""
 `production.jl` | **Version 1.4** | *last updated: Feb 25 2022*
 """
 
-# ╔═╡ 19b0fa00-774a-11eb-1ede-89eceed8b8ff
-md"*Assignment submitted by* **$members** (*group $(group_number)*)"
-
 # ╔═╡ f1749b26-774b-11eb-2b42-43ffcb5cd7ee
 md"""
 # The Economy as a Network of Sectors
 
-This notebook will be the basis for part of **Lectures 9 and 10** *and* **Assignment 4**. Here is what we will cover.
+This notebook will be the basis for part of **two lectures** *and* **Assignment 5**. Here is what we will cover.
 
-#### Lecture 9
+_Lecture A -- **Shock Propagation in an Input-Output Network**_ \
+based on _[Long & Plosser (1983)](https://www.jstor.org/stable/1840430), Journal of Political Economy_ and _[Carvalho (2014)](https://www.aeaweb.org/articles.php?doi=10.1257/jep.28.4.23), Journal of Economic Perspectives_.
+
 1. Introduce Input-Output Tables. Re-interpret them as a network of economic sectors connected by input-output linkages
 2. Visualize and analyze this *intersectoral network*
-3. Simulate the *dynamic* production network model of [Long & Plosser (1987)](https://www.jstor.org/stable/1840430)
+3. Simulate the *dynamic* production network model of [Long & Plosser (1983)](https://www.jstor.org/stable/1840430)
 4. Visualize propagation of shocks in the model of Long & Plosser. Discuss the role of centrality
 
-#### Lecture 10
+_Lecture B -- **Network Origins of Aggregate Fluctuations**_ \
+based on _[Acemoglu, Carvalho, Ozdaglar & Tahbaz-Salehi (2012)](https://economics.mit.edu/files/8135), Econometrica_
 
 5. Solve the *static* production network model of [Acemoglu, Carvalho, Ozdaglar & Tahbaz-Salehi (2012)](https://economics.mit.edu/files/8135)
 6. Show that sector-specific shocks don't necessarily wash out in equilibrium. 
 7. Show by simulation that iid industry-specific shocks will lead to aggregate flucuations
 
-#### Assignment
+
+
+#### Assignment 5
 
 8. Simulate how the Covid shocks propagates through the economy
 
@@ -81,6 +86,127 @@ This plot shows how industry-specific iid shocks can either $(i)$ wash out, or $
 
 # ╔═╡ d772a28a-7c3d-11eb-012f-9b81ad67f9a8
 fluct_fig
+
+# ╔═╡ cebdd63e-774a-11eb-3cd5-951c43b3c3ff
+md"""
+# Assignment 5: The Covid Crisis
+"""
+
+# ╔═╡ 2c840e2e-9bfa-4a5f-9be2-a29d8cdf328d
+md"""
+*submitted by* **$members** (*group $(group_number)*)
+"""
+
+# ╔═╡ 04e5b93a-77ae-11eb-0240-ad7517f0fde3
+md"""
+For this problem set you will simulate a Covid crisis using the model from the lecture.
+
+### Task 1: Which industries were hit by Covid? (3 points)
+
+👉 Find 5 (groups of) industries and explain how they have been hit by the Corona crisis *directly* (that is, not through propagation within the production network.)
+
+You can look through the industry definitions in `df_nodes1` (below) or go to [the BEA website](https://www.bea.gov/data/industries).
+
+"""
+
+# ╔═╡ 5df355b6-77b1-11eb-120f-9bb529b208df
+answer1 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 664efcec-77b1-11eb-2301-5da84a5de423
+show_words(answer1)
+
+# ╔═╡ ebfcbb8e-77ae-11eb-37fc-e798175197d0
+df_nodes1
+
+# ╔═╡ 85e7546c-77ae-11eb-0d0c-618c3669c903
+md"""
+### Task 2: Simulate a Covid crisis (4 points)
+
+👉 Adapt the code in simulates the the welfare effect of central industries by specifying the set of shocked nodes (from **Task 1**) and the length of the shock (assume a period is a quarter).
+
+👉 Explain your findings in <200 words. Think about how much of the welfare loss is due to the directly hit industries, how much is due to network effects?
+"""
+
+# ╔═╡ 811e741e-77b1-11eb-000e-93a9a19a9f60
+answer2 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 9298e2de-77b1-11eb-0a56-1f50bb0f4dc3
+show_words_limit(answer2, 200)
+
+# ╔═╡ 3ec33a62-77b1-11eb-0821-e547d1422e6f
+# your
+
+# ╔═╡ 4359dbee-77b1-11eb-3755-e1c1532212bb
+# code
+
+# ╔═╡ 45db03f2-77b1-11eb-2edd-6104bc85915b
+# goes
+
+# ╔═╡ 486cd850-77b1-11eb-1dd2-15ca68d98173
+# here
+
+# ╔═╡ ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6
+fig_covid = let
+	nodes_vec = [bot_n => "bottom", top_n => "top"]
+	
+	A = weighted_adjacency_matrix(network)'
+	
+	fig = Figure()
+		
+	ax = Axis(fig[1,1], title = "Welfare loss after shock to different industries")
+	
+	for (i, nodes) in enumerate(nodes_vec)
+		(; welfare) = impulse_response(10, A, params(A), nodes[1], -0.5, T_shock = 0:2)
+		lines!(ax, collect(axes(welfare, 1)), parent(welfare), label = nodes[2] * " $(length(nodes[1]))")
+	end
+	
+	Legend(fig[1,2], ax)
+
+	fig
+end
+
+# ╔═╡ 4e891b56-77b1-11eb-116d-e94250f1d70e
+
+
+# ╔═╡ 48f0ffd4-77b0-11eb-04ab-43eac927ac9d
+md"""
+### Task 3: Is this model suitable for this exercise? (3 points)
+
+👉 Explain in <200 words how well you think that the model simulation can capture the real-world Covid crisis?
+"""
+
+# ╔═╡ 9fb0a0a8-77b1-11eb-011f-7fc7a549f552
+answer3 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 9da09070-77b1-11eb-0d2e-e9a4433bf34e
+show_words_limit(answer3, 200)
+
+# ╔═╡ 8142a702-f442-4652-a004-602527c1a14d
+md"""
+### Before you submit ...
+
+👉 Make sure you have added **your names** and **your group number** in the cells below.
+
+👉 Make sure that that **all group members proofread** your submission (especially your little essays).
+
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
+"""
+
+# ╔═╡ 622a2e9c-495b-43d1-b976-1743f28ff84a
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]);
+
+# ╔═╡ d8edddf9-0f24-4efe-88d0-ed10c84e8ce8
+group_number = 99
 
 # ╔═╡ d9465a80-7750-11eb-2dd5-d3052d3d5c50
 md"""
@@ -489,136 +615,16 @@ fluct_fig = let
 	
 end
 
-# ╔═╡ d0630e36-774b-11eb-0750-370f1b1327e6
-md"""
-## (End of Lecture)
-"""
-
-# ╔═╡ 29f570c0-774b-11eb-2c1c-17a956c9fd27
-group_members = ([
-	(firstname = "Ella-Louise", lastname = "Flores"),
-	(firstname = "Padraig", 	lastname = "Cope"),
-	(firstname = "Christy",  	lastname = "Denton")
-	]);
-
-# ╔═╡ 2fa2a558-774b-11eb-396b-832d0ce9a130
-group_number = 99
-
-# ╔═╡ 3cd55fca-774b-11eb-307a-61b685db1b54
-if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
-	md"""
-!!! danger "Note!"
-    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in the top cell.
-	"""
-end
-
-# ╔═╡ cebdd63e-774a-11eb-3cd5-951c43b3c3ff
-md"""
-# Assignment 4: The Covid Crisis
-
-*submitted by* **$members** (*group $(group_number)*)
-"""
-
-# ╔═╡ 04e5b93a-77ae-11eb-0240-ad7517f0fde3
-md"""
-For this problem set you will simulate a Covid crisis using the model from the lecture.
-
-### Task 1: Which industries were hit by Covid? (3 points)
-
-👉 Find 5 (groups of) industries and explain how they have been hit by the Corona crisis *directly* (that is, not through propagation within the production network.)
-
-You can look through the industry definitions in `df_nodes1` (below) or go to [the BEA website](https://www.bea.gov/data/industries).
-
-"""
-
-# ╔═╡ 5df355b6-77b1-11eb-120f-9bb529b208df
-answer1 = md"""
-Your answer
-
-goes here ...
-"""
-
-# ╔═╡ 664efcec-77b1-11eb-2301-5da84a5de423
-md"(You have used approximately **$(wordcount(answer1))** words.)"
-
-# ╔═╡ ebfcbb8e-77ae-11eb-37fc-e798175197d0
-df_nodes1
-
-# ╔═╡ 85e7546c-77ae-11eb-0d0c-618c3669c903
-md"""
-### Task 2: Simulate a Covid crisis (4 points)
-
-👉 Adapt the code in simulates the the welfare effect of central industries by specifying the set of shocked nodes (from **Task 1**) and the length of the shock (assume a period is a quarter).
-
-👉 Explain your findings in <200 words. Think about how much of the welfare loss is due to the directly hit industries, how much is due to network effects?
-"""
-
-# ╔═╡ 811e741e-77b1-11eb-000e-93a9a19a9f60
-answer2 = md"""
-Your answer
-
-goes here ...
-"""
-
-# ╔═╡ 9298e2de-77b1-11eb-0a56-1f50bb0f4dc3
-md"(You have used approximately **$(wordcount(answer2))** words.)"
-
-# ╔═╡ 3ec33a62-77b1-11eb-0821-e547d1422e6f
-# your
-
-# ╔═╡ 4359dbee-77b1-11eb-3755-e1c1532212bb
-# code
-
-# ╔═╡ 45db03f2-77b1-11eb-2edd-6104bc85915b
-# goes
-
-# ╔═╡ 486cd850-77b1-11eb-1dd2-15ca68d98173
-# here
-
-# ╔═╡ ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6
-fig_covid = let
-	nodes_vec = [bot_n => "bottom", top_n => "top"]
-	
-	A = weighted_adjacency_matrix(network)'
-	
-	fig = Figure()
-		
-	ax = Axis(fig[1,1], title = "Welfare loss after shock to different industries")
-	
-	for (i, nodes) in enumerate(nodes_vec)
-		(; welfare) = impulse_response(10, A, params(A), nodes[1], -0.5, T_shock = 0:2)
-		lines!(ax, collect(axes(welfare, 1)), parent(welfare), label = nodes[2] * " $(length(nodes[1]))")
-	end
-	
-	Legend(fig[1,2], ax)
-
-	fig
-end
-
-# ╔═╡ 4e891b56-77b1-11eb-116d-e94250f1d70e
-
-
-# ╔═╡ 48f0ffd4-77b0-11eb-04ab-43eac927ac9d
-md"""
-### Task 3: Is this model suitable for this exercise? (3 points)
-
-👉 Explain in <200 words how well you think that the model simulation can capture the real-world Covid crisis?
-"""
-
-# ╔═╡ 9fb0a0a8-77b1-11eb-011f-7fc7a549f552
-answer3 = md"""
-Your answer
-
-goes here ...
-"""
-
-# ╔═╡ 9da09070-77b1-11eb-0d2e-e9a4433bf34e
-md"(You have used approximately **$(wordcount(answer3))** words.)"
-
 # ╔═╡ 24c076d2-774a-11eb-2412-f3747af382a2
 md"""
 # Appendix
 """
+
+# ╔═╡ 773c5304-4165-433c-bd33-f41d3fb9856a
+using PlutoUI: TableOfContents, Slider, CheckBox
+
+# ╔═╡ 3d47962f-958d-4729-bc20-e2bb5ab3e1e1
+TableOfContents()
 
 # ╔═╡ 7122605e-7753-11eb-09b8-4f0066353d17
 md"""
@@ -844,31 +850,12 @@ begin
 		
 end
 
-# ╔═╡ 8cf29922-7759-11eb-3584-6d0d967b83b7
+# ╔═╡ 39f2fdd5-27bb-40c0-a8c0-1bb90aeaccf7
 md"""
-## Packages
+## Assignment infrastructure
 """
 
-# ╔═╡ 51af2107-f20a-4588-9de9-6e7e0f9b0c43
-md"""
-## Infrastructure
-"""
-
-# ╔═╡ 773c5304-4165-433c-bd33-f41d3fb9856a
-using PlutoUI: TableOfContents, Slider, CheckBox
-
-# ╔═╡ 3d47962f-958d-4729-bc20-e2bb5ab3e1e1
-TableOfContents()
-
-# ╔═╡ 238f128b-91aa-4351-bb42-204c68853ed3
-members = let
-	names = map(group_members) do (; firstname, lastname)
-		firstname * " " * lastname
-	end
-	join(names, ", ", " & ")
-end
-
-# ╔═╡ 2792b762-d885-4c65-945e-1e89871c8a5b
+# ╔═╡ 7a2980a0-77cf-42cf-a79d-93e1686ff2d8
 begin
 	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
 	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
@@ -876,10 +863,42 @@ begin
 	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
 	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
 	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
-	function wordcount(text)
-		stripped_text = strip(replace(string(text), r"\s" => " "))
-    	words = split(stripped_text, ('-','.',',',':','_','"',';','!'))
-    	length(words)
+end
+
+# ╔═╡ ae9b740b-d0a6-46b0-a548-672a72f92e45
+members = let
+	names = map(group_members) do (; firstname, lastname)
+		firstname * " " * lastname
+	end
+	join(names, ", ", " & ")
+end
+
+# ╔═╡ 6a87bbe9-6e4b-4802-998f-e0517b11bc7e
+function wordcount(text)
+	stripped_text = strip(replace(string(text), r"\s" => " "))
+   	words = split(stripped_text, (' ', '-', '.', ',', ':', '_', '"', ';', '!', '\''))
+   	length(filter(!=(""), words))
+end
+
+# ╔═╡ 4a054faa-6d3b-4c50-89fa-12843546cc76
+using PlutoTest: @test
+
+# ╔═╡ 7a9cc068-8469-4f8d-bfa1-c49101c4dc23
+@test wordcount("  Hello,---it's me.  ") == 4
+
+# ╔═╡ 4a3d7e25-a941-486b-a1f8-8f7d563468d3
+@test wordcount("This;doesn't really matter.") == 5
+
+# ╔═╡ 1f7d4622-d3ed-4bcb-a655-289cbcaa62a6
+show_words(answer) = md"_approximately $(wordcount(answer)) words_"
+
+# ╔═╡ 03f290eb-b8ca-4ef1-a029-98f07723485a
+function show_words_limit(answer, limit)
+	count = wordcount(answer)
+	if count ≤ 1.1 * limit
+		return show_words(answer)
+	else
+		return almost(md"You are at $count words. Please shorten your text a bit, to get **below $limit words**.")
 	end
 end
 
@@ -904,6 +923,7 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 NamedArrays = "86f7a689-2022-50b4-a561-43c23ac3c673"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
+PlutoTest = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
@@ -928,6 +948,7 @@ HTTP = "~0.9.17"
 NamedArrays = "~0.9.6"
 NetworkLayout = "~0.4.4"
 OffsetArrays = "~1.10.8"
+PlutoTest = "~0.2.1"
 PlutoUI = "~0.7.35"
 SimpleWeightedGraphs = "~1.2.1"
 XLSX = "~0.7.9"
@@ -1901,6 +1922,12 @@ git-tree-sha1 = "6f1b25e8ea06279b5689263cc538f51331d7ca17"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.1.3"
 
+[[deps.PlutoTest]]
+deps = ["HypertextLiteral", "InteractiveUtils", "Markdown", "Test"]
+git-tree-sha1 = "cd214d5c737563369887ac465a6d3c0fd7c1f854"
+uuid = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
+version = "0.2.1"
+
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
 git-tree-sha1 = "85bf3e4bd279e405f91489ce518dedb1e32119cb"
@@ -2360,9 +2387,9 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╟─f5450eab-0f9f-4b7f-9b80-992d3c553ba9
-# ╟─55a868c8-0614-4074-9389-c957cf64cb20
+# ╟─82a47f6a-7ba6-404c-a250-3f85cea0dd6a
+# ╟─6481888a-8c19-46c6-b5b8-d2a86c3749a8
 # ╟─38f5d048-7747-11eb-30f7-89bade5ed0a3
-# ╟─19b0fa00-774a-11eb-1ede-89eceed8b8ff
 # ╟─f1749b26-774b-11eb-2b42-43ffcb5cd7ee
 # ╟─a771e504-77aa-11eb-199c-8778965769b6
 # ╠═94375d0e-77aa-11eb-3934-edb020ab0fd7
@@ -2370,6 +2397,27 @@ version = "3.5.0+0"
 # ╠═76e6f44e-77aa-11eb-1f12-438937941606
 # ╟─9b47991e-7c3d-11eb-1558-b5824ab10dc0
 # ╠═d772a28a-7c3d-11eb-012f-9b81ad67f9a8
+# ╟─cebdd63e-774a-11eb-3cd5-951c43b3c3ff
+# ╟─2c840e2e-9bfa-4a5f-9be2-a29d8cdf328d
+# ╟─04e5b93a-77ae-11eb-0240-ad7517f0fde3
+# ╠═5df355b6-77b1-11eb-120f-9bb529b208df
+# ╟─664efcec-77b1-11eb-2301-5da84a5de423
+# ╠═ebfcbb8e-77ae-11eb-37fc-e798175197d0
+# ╟─85e7546c-77ae-11eb-0d0c-618c3669c903
+# ╠═811e741e-77b1-11eb-000e-93a9a19a9f60
+# ╟─9298e2de-77b1-11eb-0a56-1f50bb0f4dc3
+# ╠═3ec33a62-77b1-11eb-0821-e547d1422e6f
+# ╠═4359dbee-77b1-11eb-3755-e1c1532212bb
+# ╠═45db03f2-77b1-11eb-2edd-6104bc85915b
+# ╠═486cd850-77b1-11eb-1dd2-15ca68d98173
+# ╠═ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6
+# ╟─4e891b56-77b1-11eb-116d-e94250f1d70e
+# ╟─48f0ffd4-77b0-11eb-04ab-43eac927ac9d
+# ╠═9fb0a0a8-77b1-11eb-011f-7fc7a549f552
+# ╟─9da09070-77b1-11eb-0d2e-e9a4433bf34e
+# ╟─8142a702-f442-4652-a004-602527c1a14d
+# ╠═622a2e9c-495b-43d1-b976-1743f28ff84a
+# ╠═d8edddf9-0f24-4efe-88d0-ed10c84e8ce8
 # ╟─d9465a80-7750-11eb-2dd5-d3052d3d5c50
 # ╟─cf680c48-7769-11eb-281c-d7a2d5ec8fe5
 # ╠═cbc03264-7769-11eb-345a-71ae30cc7526
@@ -2422,28 +2470,9 @@ version = "3.5.0+0"
 # ╟─ee72ef4c-7751-11eb-1781-6f4d027a9e66
 # ╠═3585b022-7853-11eb-1a05-7b4fe3921051
 # ╠═ddfcd760-7853-11eb-38f7-298a4c1cb5aa
-# ╟─d0630e36-774b-11eb-0750-370f1b1327e6
-# ╠═29f570c0-774b-11eb-2c1c-17a956c9fd27
-# ╠═2fa2a558-774b-11eb-396b-832d0ce9a130
-# ╟─3cd55fca-774b-11eb-307a-61b685db1b54
-# ╟─cebdd63e-774a-11eb-3cd5-951c43b3c3ff
-# ╟─04e5b93a-77ae-11eb-0240-ad7517f0fde3
-# ╠═5df355b6-77b1-11eb-120f-9bb529b208df
-# ╠═664efcec-77b1-11eb-2301-5da84a5de423
-# ╠═ebfcbb8e-77ae-11eb-37fc-e798175197d0
-# ╟─85e7546c-77ae-11eb-0d0c-618c3669c903
-# ╠═811e741e-77b1-11eb-000e-93a9a19a9f60
-# ╠═9298e2de-77b1-11eb-0a56-1f50bb0f4dc3
-# ╠═3ec33a62-77b1-11eb-0821-e547d1422e6f
-# ╠═4359dbee-77b1-11eb-3755-e1c1532212bb
-# ╠═45db03f2-77b1-11eb-2edd-6104bc85915b
-# ╠═486cd850-77b1-11eb-1dd2-15ca68d98173
-# ╠═ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6
-# ╟─4e891b56-77b1-11eb-116d-e94250f1d70e
-# ╟─48f0ffd4-77b0-11eb-04ab-43eac927ac9d
-# ╠═9fb0a0a8-77b1-11eb-011f-7fc7a549f552
-# ╠═9da09070-77b1-11eb-0d2e-e9a4433bf34e
 # ╟─24c076d2-774a-11eb-2412-f3747af382a2
+# ╠═773c5304-4165-433c-bd33-f41d3fb9856a
+# ╠═3d47962f-958d-4729-bc20-e2bb5ab3e1e1
 # ╟─7122605e-7753-11eb-09b8-4f0066353d17
 # ╠═b223523e-7753-11eb-1d9a-67c0281ae473
 # ╟─356d2016-7754-11eb-2e6f-07d1c12831b5
@@ -2472,11 +2501,14 @@ version = "3.5.0+0"
 # ╠═0d80d4ce-f720-4325-8255-8110f0bcb15e
 # ╟─5a931c10-774a-11eb-05cb-d7ed3da85835
 # ╠═579444bc-774a-11eb-1d80-0557b12da169
-# ╟─8cf29922-7759-11eb-3584-6d0d967b83b7
-# ╟─51af2107-f20a-4588-9de9-6e7e0f9b0c43
-# ╠═773c5304-4165-433c-bd33-f41d3fb9856a
-# ╠═3d47962f-958d-4729-bc20-e2bb5ab3e1e1
-# ╠═238f128b-91aa-4351-bb42-204c68853ed3
-# ╠═2792b762-d885-4c65-945e-1e89871c8a5b
+# ╟─39f2fdd5-27bb-40c0-a8c0-1bb90aeaccf7
+# ╠═7a2980a0-77cf-42cf-a79d-93e1686ff2d8
+# ╠═ae9b740b-d0a6-46b0-a548-672a72f92e45
+# ╠═6a87bbe9-6e4b-4802-998f-e0517b11bc7e
+# ╠═4a054faa-6d3b-4c50-89fa-12843546cc76
+# ╠═7a9cc068-8469-4f8d-bfa1-c49101c4dc23
+# ╠═4a3d7e25-a941-486b-a1f8-8f7d563468d3
+# ╠═1f7d4622-d3ed-4bcb-a655-289cbcaa62a6
+# ╠═03f290eb-b8ca-4ef1-a029-98f07723485a
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
