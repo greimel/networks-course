@@ -4,6 +4,24 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ 6a49f714-7e33-4061-bdc0-b7f2ca97ab09
+using Graphs
+
+# ╔═╡ 533fc093-b72b-4753-b376-8307cce58453
+using DataFrameMacros
+
+# ╔═╡ 6eca3673-39f3-41e1-a3ab-72e86e3fc877
+using Chain
+
+# ╔═╡ 2816b7c7-7256-4533-9801-3d972bdcfaa6
+using AlgebraOfGraphics
+
+# ╔═╡ e52a3b87-d7fb-4b26-b9e1-60e793466dae
+using PlutoUI
+
+# ╔═╡ bd5365e8-ecef-40ff-aa1a-b05fdf2e98fd
+using DataFrames
+
 # ╔═╡ 0f1a48b0-b2cc-4cf8-a2db-9bd26de245e6
 using SimpleWeightedGraphs
 
@@ -13,17 +31,13 @@ using GraphMakie, CairoMakie
 # ╔═╡ 3a4ff1ba-4c89-4a46-b338-90844e1b6db0
 using LinearAlgebra: dot, I
 
-# ╔═╡ 6a49f714-7e33-4061-bdc0-b7f2ca97ab09
-using Graphs
+# ╔═╡ 53df6cec-ef01-4153-ba01-d8e8cdb91659
+using PlutoTest
 
-# ╔═╡ bd5365e8-ecef-40ff-aa1a-b05fdf2e98fd
-using DataFrames
-
-# ╔═╡ 6eca3673-39f3-41e1-a3ab-72e86e3fc877
-using Chain
-
-# ╔═╡ 2816b7c7-7256-4533-9801-3d972bdcfaa6
-using AlgebraOfGraphics
+# ╔═╡ 866ae0b6-426e-41f1-b498-e2e7f38100fe
+md"""
+# Simulating the model of Long & Plosser
+"""
 
 # ╔═╡ deb54328-9fb8-11ec-1add-01b9ee7126dd
 pizza = let
@@ -34,12 +48,11 @@ pizza = let
 	recipe_🧀 = [0.99, 0.01, 0.0, 0.0, 0.0, 0.0]
 	recipe_🍕 = [0.0, 0.01, 0.5, 0.49, 0.0, 0.0]
 
-	IO = fill(0.0, n, n)#+ I
-	#IO[end, end] = 0.0
+	IO = fill(0.0, n, n)
 	IO[end,1:end-1] .= 1/(n-1)
 
-	#IO = fill(0.0, n, n)
-	#IO[1:end-1,end] .= 1
+	IO = fill(0.0, n, n)
+	IO[1:end-1,end] .= 1
 	
 	#IO = IO + I
 #	IO[3, :] .= recipe_🧀
@@ -51,103 +64,94 @@ pizza = let
 	(IO = _io_, G = _io_', industries = industries2[order], graph = SimpleWeightedDiGraph(_io_'))
 end
 
-# ╔═╡ 99f34964-333e-439a-9894-2e6ff5cf9ee2
-graphplot(pizza.graph, arrow_size = 15, nlabels = string.(vertices(pizza.graph)))
+# ╔═╡ 210f3af5-7add-42aa-baa2-a73157daec26
+md"""
+## Specifying the parameters
+"""
 
-# ╔═╡ 2e1a35a6-a8b7-4faa-8e48-59d9b98ec77f
-vertices(pizza.graph)
-
-# ╔═╡ 25568966-370d-4e47-9500-b22dabd316d0
-IO = pizza.IO .* 0.99
-
-# ╔═╡ 00b4bb5d-6e67-4c58-891e-dafdefa3a59e
-N = size(IO, 1)
-
-# ╔═╡ 4f62e517-7dfa-4a84-b075-6ea93ee8e7f4
-θ₀ = 0.1
-
-# ╔═╡ 449351fc-5b31-46ac-806b-b251e481e44b
-θ = fill(eps(), N); θ[[1,4]] .= (1 - (N-1)*eps()) ./ 2
-
-# ╔═╡ f99d640c-3335-4539-a81b-519edc395320
-begin
-	fig = Figure()
-
-	graphplot(fig[1,1], pizza.graph, arrow_size = 15, nlabels = string.(vertices(pizza.graph)))
-
-	lines(fig[1,2], θ, axis = (title = "utility weights θ", xlabel = "goods"))
-	fig
-end
-
-# ╔═╡ 2951ea53-441d-4689-b479-7784dec8286d
-θ
+# ╔═╡ 22c97d66-83c4-41b0-9bfb-efceb12e7e1e
+md"""
+#### Utility weights
+"""
 
 # ╔═╡ e58805a3-6552-43c7-a3b3-546bdd6c2365
-β = 0.95
+param = let
+	IO = pizza.IO
+	
+	N = size(IO, 1)
+	
+	β = 0.95
+	θ = fill(eps(), N); θ[[1,4]] .= (1 - (N-1)*eps()) ./ 2
+	θ₀ = 0.1
+	
+	# labor share
+	b = map(eachrow(IO)) do recipeᵢ
+		∑aᵢ = sum(recipeᵢ) # non-labor input share
+		@assert 0 ≤ ∑aᵢ ≤ 1
+		bᵢ = 1.0 - ∑aᵢ
+	end
+	
+	param = (; b, β, θ, θ₀, IO, N)
 
-# ╔═╡ 6427f772-fa31-446c-b8dc-25dd857fc684
-γ = (θ' / (I - β * IO))'
-
-# ╔═╡ 39fc78f1-31dc-4463-adaf-303d3c39e4d2
-# labor share
-b = map(eachrow(IO)) do recipeᵢ
-	∑aᵢ = sum(recipeᵢ) # non-labor input share
-	@assert 0 ≤ ∑aᵢ ≤ 1
-	bᵢ = 1.0 - ∑aᵢ
+	
 end
 
-# ╔═╡ 823fe81a-9fbf-4372-8681-cf093556c080
-H = 1.0
+# ╔═╡ 9d28410e-3dbc-43db-b403-a8094af890f9
+md"""
+## Solving the model
+"""
+
+# ╔═╡ 6427f772-fa31-446c-b8dc-25dd857fc684
+get_γ((; θ, β, IO)) = (θ' / (I - β * IO))' # equation (10b)
 
 # ╔═╡ e241cbfb-bcdc-48f1-b516-a46359aad5be
-Z = θ₀ * H / (θ₀ + β * dot(γ, b))
+#Zₜ(γ, H, (; b, β, θ₀)) = θ₀ * H / (θ₀ + β * dot(γ, b)) # equation (13)
 
 # ╔═╡ f8dc59d7-cef7-48bb-acf5-4896abb0f7e9
-L_alt = γ .* b * β * H / (θ₀ + β * dot(γ, b))
+Lₜ(γ, H, (; b, β, θ₀)) = γ .* b * β * H / (θ₀ + β * dot(γ, b)) # equation (15)
 
-# ╔═╡ a9786b10-ae69-45fd-88b5-44a40db82c44
-L = (β * Z / θ₀) .* γ .* b
-
-# ╔═╡ c39bc84f-8564-4bde-beb0-41bed9207c8f
-@assert L ≈ L_alt
+# ╔═╡ 823fe81a-9fbf-4372-8681-cf093556c080
+H = 1.0 # FIXME
 
 # ╔═╡ 5fc9508b-edc1-40e4-816b-732985783fb5
-function Xₜ(IO, Yₜ, γ, β)
-	X = similar(IO)
-	N = size(IO, 1)
-	for i in 1:N
-		for j in 1:N
-			X[i,j] = β * γ[i] / γ[j] * IO[i,j] * Yₜ[j]
-		end
-	end
-	X
+function Xₜ(Yₜ, γ, (; IO, β, N)) # equation  (14)
+	[β * γ[i] / γ[j] * IO[i,j] * Yₜ[j] for i ∈ 1:N, j ∈ 1:N]
 end
 
 # ╔═╡ c8e145c3-fb65-4c31-8896-ffe4c3e51c8f
-function Yₜ₊₁(Lₜ, Xₜ, λₜ₊₁, IO)
-	N = size(IO, 1)
-	Y = fill(0.0, N)
-	for i ∈ 1:N
-		Y[i] = λₜ₊₁[i] * Lₜ[i]^b[i] * prod(Xₜ[i,:] .^ IO[i,:])
-	end
-	Y
+function Yₜ₊₁(Lₜ, Xₜ, λₜ₊₁, (; b, IO, N))
+	[λₜ₊₁[i] * Lₜ[i]^b[i] * prod(Xₜ[i,:] .^ IO[i,:]) for i ∈ 1:N]
+end
+
+# ╔═╡ 84f5f8e8-fdff-4a09-a622-5a9848145ed8
+function Yₜ₊₁_V2(Yₜ, λₜ₊₁, H, param; γ = get_γ(param))
+	Yₜ₊₁(Lₜ(γ, H, param), Xₜ(Yₜ, γ, param), λₜ₊₁, param)
 end
 
 # ╔═╡ c86c0355-c1f0-4394-a978-282008f07189
-C(Y, θ, γ) = θ ./ γ .* Y
+Cₜ(Yₜ, γ, (; θ)) = θ ./ γ .* Yₜ # equation (12)
 
 # ╔═╡ 27911a78-20f0-40e2-b8d3-464b19927f74
-P(Y, γ) = γ ./ Y
+Pₜ(Yₜ, γ) = γ ./ Yₜ # equation (16)
 
 # ╔═╡ f7b69702-2713-41c8-9407-87f623d0b63b
-W(θ₀, γ, b, H) = (θ₀ + dot(γ, b)) / H
+Wₜ(γ, H, (; θ₀, b)) = (θ₀ + dot(γ, b)) / H # equation 17
 
-# ╔═╡ c1932e2f-b3d2-422b-be10-838d115b7bb7
-#κ = fill(1/N, N)
+# ╔═╡ 3b0838a8-4540-471f-bf8a-a226b3ff37fc
+md"""
+## Helpers for simulating the model
+"""
+
+# ╔═╡ 90b97e96-470e-45a4-bcf7-17152d41ac67
+md"""
+#### Represent ``\log(Y_t)`` as AR(1)
+"""
 
 # ╔═╡ 62e80ea0-d511-4176-96b0-a14bee59be6c
-κ = let
-	N = size(IO, 1)
+function κ(param)
+	(; IO, β, b, N) = param
+	γ = get_γ(param)
+	L = Lₜ(γ, H, param)
 	κ = zeros(N)
 	for i in 1:N
 		summand(j) = begin
@@ -164,27 +168,81 @@ W(θ₀, γ, b, H) = (θ₀ + dot(γ, b)) / H
 	κ
 end
 
+# ╔═╡ ad5df94d-4076-4e97-a46b-b20ef07fe1b5
+function yₜ₊₁(yₜ, λₜ₊₁, param)
+	(; IO) = param
+	yₜ₊₁ = κ(param) .+ log.(λₜ₊₁) .+ IO * yₜ # equation (20)
+end
+
+# ╔═╡ fdaf205b-6c47-418a-8703-c526f14d8196
+function Yₜ₊₁_V3(Yₜ, λₜ₊₁, param)
+	yₜ = log.(Yₜ)
+	Yₜ₊₁ = exp.(yₜ₊₁(yₜ, λₜ₊₁, param))
+end
+
+# ╔═╡ 735acdc5-3ed4-42ea-9ad5-3c5d8b5b4728
+md"""
+#### Initial condition
+"""
+
 # ╔═╡ 64362656-c282-42d8-b13a-5d6603a7bf81
-y₀ = (I - IO) \ κ
+y₀(param) = (I - param.IO) \ κ(param)
 
 # ╔═╡ 851a6199-c0c4-44ef-b5fd-36fc1ca83673
-Y₀ = exp.(y₀)
+Y₀(param) = exp.(y₀(param))
+
+# ╔═╡ 17988cda-0f0b-47b7-bd4f-d98a77690a78
+let
+	(; N) = param
+	λ = rand(N)
+	Y_old = Y₀(param)
+	@test Yₜ₊₁_V2(Y_old, λ, H, param) ≈ Yₜ₊₁_V3(Y_old, λ, param)
+	
+end
+
+# ╔═╡ 28aca776-52c4-4582-984a-e7cca484b689
+md"""
+#### Container for all the output
+"""
+
+# ╔═╡ c9b6dda0-a9c9-4bc2-9586-e1753a4e4c55
+function outputₜ₊₁(Yₜ, λₜ₊₁, H, param; γ = get_γ(param))
+	Yₜ₊₁ = Yₜ₊₁_V3(Yₜ, λₜ₊₁, param)
+	Cₜ₊₁ = Cₜ(Yₜ₊₁, γ, param)
+
+	#X = Xₜ(Yₜ₊₁, γ, param)
+	#@assert vec(sum(X, dims = 1)) + Cₜ₊₁ ≈ Yₜ₊₁
+
+	df = DataFrame(;
+		good = 1:param.N,
+		produced = Yₜ₊₁,
+		consumed = Cₜ₊₁, 
+		input = Yₜ₊₁ - Cₜ₊₁,
+		price = Pₜ(Yₜ₊₁, γ),
+		productivity = λₜ₊₁
+	)
+end
+
+# ╔═╡ e11223ae-2c54-46b7-a3b7-806d8f5108e2
+md"""
+## Running the simulations
+"""
 
 # ╔═╡ b7a7c2be-8fdd-4d88-8275-fe1c0ae55c17
-let
-	Y_old = copy(Y₀)
+function static_viz(param, H)
+	Y_old = Y₀(param)
+
+	λₜ₊₁ = ones(param.N)
+	λₜ₊₁[4] = 0.9
 	
-	produced = Yₜ₊₁(L, Xₜ(IO, Y_old, γ, β), ones(N), IO)
 
-#	@info W(θ₀, γ, b, H)
-	consumed = C(produced, θ, γ)
-	price = P(produced, γ)
-	input = produced - consumed
-	df = DataFrame(; good = 1:N, produced, consumed, input, price)
+	is_shocked = ifelse.(λₜ₊₁ .< 1, :red, :black)
 
-	X = Xₜ(IO, produced, γ, β)
+	df = outputₜ₊₁(Y_old, λₜ₊₁, H, param)
+	
+	X = Xₜ(df.produced, get_γ(param), param)
 
-	@assert vec(sum(X, dims = 1)) + consumed ≈ produced
+	@test vec(sum(X, dims = 1)) + df.consumed ≈ df.produced
 
 	fg = @chain df begin
 		stack([:consumed, :input], :good, variable_name = :usage)
@@ -194,30 +252,67 @@ let
 		draw(_, legend = (position = :top, ))
 	end
 
+	graph = SimpleWeightedDiGraph(param.IO')
+	
 	fig = fg.figure
 
-	ax, plt = graphplot(fig[:,0], pizza.graph, arrow_size = 15, nlabels = string.(vertices(pizza.graph)))
+	ax, plt = graphplot(fig[:,0], graph, arrow_size = 15, nlabels = string.(vertices(graph)), node_color = is_shocked)
 	hidedecorations!(ax)
 
-	lines(fig[end+1,1], θ, axis = (title = "utility weights θ", xlabel = "goods"))
+	lines(fig[end+1,1], param.θ, axis = (title = "utility weights θ", xlabel = "goods"))
 	lines(fig[end, 2], df.price, axis = (title = "price", ))
 	fig
 end
 
-# ╔═╡ fdaf205b-6c47-418a-8703-c526f14d8196
-function update_Y(Y, λ)
-	y = log.(Y)
-	y_next = κ .+ log.(λ) .+ IO * y
-	Y_next = exp.(y_next)
+# ╔═╡ 9732589c-bcc0-4e83-8eaa-7628ac002b7f
+static_viz(param, H)
+
+# ╔═╡ 8a8002b3-700c-4197-8bf0-401ad8af5b9d
+function IRF(param, H)
+	Y_old = Y₀(param)
+	(; N) = param
+	λ₀ = ones(N)
+	λ₁ = ones(N)
+	λ₁[4] = 0.9
+
+	λ_vec = [λ₀, λ₀, λ₁, λ₁, λ₀, λ₀, λ₀]
+
+	γ = get_γ(param)
+
+	dfs = DataFrame[]
+	
+	for (ₜ₊₁, λₜ₊₁) ∈ enumerate(λ_vec)
+		dfₜ₊₁ = outputₜ₊₁(Y_old, λₜ₊₁, H, param)		
+		@transform!(dfₜ₊₁, :t = ₜ₊₁)
+		push!(dfs, dfₜ₊₁)
+
+		Y_old .= dfₜ₊₁.produced
+	end
+
+	df = vcat(dfs...)
+	
+	@chain df begin
+		stack([:input, :consumed, :produced, :productivity, :price], [:good, :t])
+		data(_) * mapping(
+			:t, :value,
+			color = :good => nonnumeric, #stack = :variable,
+			layout = :variable, #:t => nonnumeric
+		) * visual(Lines)
+		draw(facet = (linkyaxes = false, ))
+	end	
+	
 end
 
-# ╔═╡ d709e9d5-8bb7-4d75-9618-c546ddb06775
+# ╔═╡ a9946e17-0c08-4626-ad28-41261d40b3b1
+IRF(param, H)
+
+# ╔═╡ 75200e08-8e46-42a5-b065-9f8c4a831d06
 md"""
-# Other statistics
+# Appendix
 """
 
-# ╔═╡ e52a3b87-d7fb-4b26-b9e1-60e793466dae
-
+# ╔═╡ 3944300c-1072-45ff-947c-7f0122aba2c7
+TableOfContents()
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -225,19 +320,25 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
+DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PlutoTest = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 
 [compat]
 AlgebraOfGraphics = "~0.6.5"
 CairoMakie = "~0.7.4"
 Chain = "~0.4.10"
+DataFrameMacros = "~0.2.1"
 DataFrames = "~1.3.2"
 GraphMakie = "~0.3.3"
 Graphs = "~1.6.0"
+PlutoTest = "~0.2.1"
+PlutoUI = "~0.7.35"
 SimpleWeightedGraphs = "~1.2.1"
 """
 
@@ -253,6 +354,12 @@ deps = ["ChainRulesCore", "LinearAlgebra"]
 git-tree-sha1 = "6f1d9bc1c08f9f4a8fa92e3ea3cb50153a1b40d4"
 uuid = "621f4979-c628-5d54-868e-fcf4e3e8185c"
 version = "1.1.0"
+
+[[deps.AbstractPlutoDingetjes]]
+deps = ["Pkg"]
+git-tree-sha1 = "8eaf9f1b4921132a4cff3f36a1d9ba923b14a481"
+uuid = "6e696c72-6542-2067-7265-42206c756150"
+version = "1.1.4"
 
 [[deps.AbstractTrees]]
 git-tree-sha1 = "03e0550477d86222521d254b741d470ba17ea0b5"
@@ -417,6 +524,12 @@ version = "4.1.1"
 git-tree-sha1 = "cc70b17275652eb47bc9e5f81635981f13cea5c8"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.9.0"
+
+[[deps.DataFrameMacros]]
+deps = ["DataFrames"]
+git-tree-sha1 = "cff70817ef73acb9882b6c9b163914e19fad84a9"
+uuid = "75880514-38bc-4a95-a458-c2aea5a3a702"
+version = "0.2.1"
 
 [[deps.DataFrames]]
 deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Reexport", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
@@ -663,6 +776,23 @@ deps = ["DualNumbers", "LinearAlgebra", "SpecialFunctions", "Test"]
 git-tree-sha1 = "65e4589030ef3c44d3b90bdc5aac462b4bb05567"
 uuid = "34004b35-14d8-5ef3-9330-4cdb6864b03a"
 version = "0.3.8"
+
+[[deps.Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.4"
+
+[[deps.HypertextLiteral]]
+git-tree-sha1 = "2b078b5a615c6c0396c77810d92ee8c6f470d238"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.3"
+
+[[deps.IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "0.2.2"
 
 [[deps.IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
@@ -1091,6 +1221,18 @@ git-tree-sha1 = "6f1b25e8ea06279b5689263cc538f51331d7ca17"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.1.3"
 
+[[deps.PlutoTest]]
+deps = ["HypertextLiteral", "InteractiveUtils", "Markdown", "Test"]
+git-tree-sha1 = "cd214d5c737563369887ac465a6d3c0fd7c1f854"
+uuid = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
+version = "0.2.1"
+
+[[deps.PlutoUI]]
+deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
+git-tree-sha1 = "85bf3e4bd279e405f91489ce518dedb1e32119cb"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.35"
+
 [[deps.PolygonOps]]
 git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
 uuid = "647866c9-e3ac-4575-94e7-e3d426903924"
@@ -1508,42 +1650,49 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═0f1a48b0-b2cc-4cf8-a2db-9bd26de245e6
-# ╠═e5a6fd5c-b10c-4836-8302-66467e589085
-# ╠═3a4ff1ba-4c89-4a46-b338-90844e1b6db0
+# ╟─866ae0b6-426e-41f1-b498-e2e7f38100fe
 # ╠═deb54328-9fb8-11ec-1add-01b9ee7126dd
 # ╠═6a49f714-7e33-4061-bdc0-b7f2ca97ab09
-# ╠═99f34964-333e-439a-9894-2e6ff5cf9ee2
-# ╠═2e1a35a6-a8b7-4faa-8e48-59d9b98ec77f
-# ╠═25568966-370d-4e47-9500-b22dabd316d0
-# ╠═00b4bb5d-6e67-4c58-891e-dafdefa3a59e
-# ╠═4f62e517-7dfa-4a84-b075-6ea93ee8e7f4
-# ╠═449351fc-5b31-46ac-806b-b251e481e44b
-# ╠═f99d640c-3335-4539-a81b-519edc395320
-# ╠═2951ea53-441d-4689-b479-7784dec8286d
+# ╟─210f3af5-7add-42aa-baa2-a73157daec26
+# ╟─22c97d66-83c4-41b0-9bfb-efceb12e7e1e
 # ╠═e58805a3-6552-43c7-a3b3-546bdd6c2365
+# ╠═9732589c-bcc0-4e83-8eaa-7628ac002b7f
+# ╠═a9946e17-0c08-4626-ad28-41261d40b3b1
+# ╟─9d28410e-3dbc-43db-b403-a8094af890f9
 # ╠═6427f772-fa31-446c-b8dc-25dd857fc684
-# ╠═39fc78f1-31dc-4463-adaf-303d3c39e4d2
-# ╠═823fe81a-9fbf-4372-8681-cf093556c080
 # ╠═e241cbfb-bcdc-48f1-b516-a46359aad5be
 # ╠═f8dc59d7-cef7-48bb-acf5-4896abb0f7e9
-# ╠═a9786b10-ae69-45fd-88b5-44a40db82c44
-# ╠═c39bc84f-8564-4bde-beb0-41bed9207c8f
+# ╠═823fe81a-9fbf-4372-8681-cf093556c080
 # ╠═5fc9508b-edc1-40e4-816b-732985783fb5
 # ╠═c8e145c3-fb65-4c31-8896-ffe4c3e51c8f
-# ╠═bd5365e8-ecef-40ff-aa1a-b05fdf2e98fd
-# ╠═b7a7c2be-8fdd-4d88-8275-fe1c0ae55c17
-# ╠═6eca3673-39f3-41e1-a3ab-72e86e3fc877
-# ╠═2816b7c7-7256-4533-9801-3d972bdcfaa6
+# ╠═84f5f8e8-fdff-4a09-a622-5a9848145ed8
 # ╠═c86c0355-c1f0-4394-a978-282008f07189
 # ╠═27911a78-20f0-40e2-b8d3-464b19927f74
 # ╠═f7b69702-2713-41c8-9407-87f623d0b63b
-# ╠═c1932e2f-b3d2-422b-be10-838d115b7bb7
+# ╟─3b0838a8-4540-471f-bf8a-a226b3ff37fc
+# ╟─90b97e96-470e-45a4-bcf7-17152d41ac67
+# ╠═62e80ea0-d511-4176-96b0-a14bee59be6c
+# ╠═ad5df94d-4076-4e97-a46b-b20ef07fe1b5
+# ╠═fdaf205b-6c47-418a-8703-c526f14d8196
+# ╠═17988cda-0f0b-47b7-bd4f-d98a77690a78
+# ╟─735acdc5-3ed4-42ea-9ad5-3c5d8b5b4728
 # ╠═64362656-c282-42d8-b13a-5d6603a7bf81
 # ╠═851a6199-c0c4-44ef-b5fd-36fc1ca83673
-# ╠═62e80ea0-d511-4176-96b0-a14bee59be6c
-# ╠═fdaf205b-6c47-418a-8703-c526f14d8196
-# ╟─d709e9d5-8bb7-4d75-9618-c546ddb06775
+# ╟─28aca776-52c4-4582-984a-e7cca484b689
+# ╠═c9b6dda0-a9c9-4bc2-9586-e1753a4e4c55
+# ╟─e11223ae-2c54-46b7-a3b7-806d8f5108e2
+# ╠═b7a7c2be-8fdd-4d88-8275-fe1c0ae55c17
+# ╠═8a8002b3-700c-4197-8bf0-401ad8af5b9d
+# ╟─75200e08-8e46-42a5-b065-9f8c4a831d06
+# ╠═533fc093-b72b-4753-b376-8307cce58453
+# ╠═6eca3673-39f3-41e1-a3ab-72e86e3fc877
+# ╠═2816b7c7-7256-4533-9801-3d972bdcfaa6
 # ╠═e52a3b87-d7fb-4b26-b9e1-60e793466dae
+# ╠═3944300c-1072-45ff-947c-7f0122aba2c7
+# ╠═bd5365e8-ecef-40ff-aa1a-b05fdf2e98fd
+# ╠═0f1a48b0-b2cc-4cf8-a2db-9bd26de245e6
+# ╠═e5a6fd5c-b10c-4836-8302-66467e589085
+# ╠═3a4ff1ba-4c89-4a46-b338-90844e1b6db0
+# ╠═53df6cec-ef01-4153-ba01-d8e8cdb91659
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
