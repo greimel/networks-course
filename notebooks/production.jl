@@ -450,9 +450,6 @@ fig
 # ╔═╡ 95f4f0d0-7772-11eb-1b2a-d179e76950fe
 t0; fig
 
-# ╔═╡ eb1400c3-2c93-4f64-9f0d-2e326a508a3d
-fig
-
 # ╔═╡ cbb1e550-7751-11eb-1313-7ff968453f36
 md"""
 ## Big Network from Input-Output Tables
@@ -2462,7 +2459,6 @@ version = "3.5.0+0"
 # ╠═939fa06e-7772-11eb-086c-ff1bf54525f1
 # ╠═a09cb7a6-17e4-4570-ae0b-8104c39bbc24
 # ╠═50194494-7772-11eb-20ff-419e874ec00c
-# ╠═eb1400c3-2c93-4f64-9f0d-2e326a508a3d
 # ╟─cbb1e550-7751-11eb-1313-7ff968453f36
 # ╠═8212939e-7770-11eb-1f4e-9b698be25d1f
 # ╠═9aa77c76-7770-11eb-35ed-9b83924e8176

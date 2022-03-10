@@ -14,9 +14,6 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 6a49f714-7e33-4061-bdc0-b7f2ca97ab09
-using Graphs
-
 # ╔═╡ d9abc061-7769-49d3-b3e0-537a8f06c907
 using NetworkLayout
 
@@ -46,6 +43,9 @@ using LinearAlgebra: dot, I
 
 # ╔═╡ 53df6cec-ef01-4153-ba01-d8e8cdb91659
 using PlutoTest
+
+# ╔═╡ 6a49f714-7e33-4061-bdc0-b7f2ca97ab09
+using Graphs
 
 # ╔═╡ 866ae0b6-426e-41f1-b498-e2e7f38100fe
 md"""
@@ -1703,7 +1703,6 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╟─866ae0b6-426e-41f1-b498-e2e7f38100fe
-# ╠═6a49f714-7e33-4061-bdc0-b7f2ca97ab09
 # ╟─210f3af5-7add-42aa-baa2-a73157daec26
 # ╠═e58805a3-6552-43c7-a3b3-546bdd6c2365
 # ╠═d9abc061-7769-49d3-b3e0-537a8f06c907
@@ -1740,7 +1739,7 @@ version = "3.5.0+0"
 # ╠═40e182d7-34fc-467c-8ee7-58fb8241ad15
 # ╠═d6008175-2d2e-4ddf-b5f9-e43494fc43ab
 # ╠═7f466861-4359-458f-a8f6-de9d390478ce
-# ╟─75200e08-8e46-42a5-b065-9f8c4a831d06
+# ╠═75200e08-8e46-42a5-b065-9f8c4a831d06
 # ╠═533fc093-b72b-4753-b376-8307cce58453
 # ╠═6eca3673-39f3-41e1-a3ab-72e86e3fc877
 # ╠═2816b7c7-7256-4533-9801-3d972bdcfaa6
@@ -1751,5 +1750,6 @@ version = "3.5.0+0"
 # ╠═e5a6fd5c-b10c-4836-8302-66467e589085
 # ╠═3a4ff1ba-4c89-4a46-b338-90844e1b6db0
 # ╠═53df6cec-ef01-4153-ba01-d8e8cdb91659
+# ╠═6a49f714-7e33-4061-bdc0-b7f2ca97ab09
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
