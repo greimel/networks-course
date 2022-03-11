@@ -47,6 +47,11 @@ using PlutoTest
 # ╔═╡ 6a49f714-7e33-4061-bdc0-b7f2ca97ab09
 using Graphs
 
+# ╔═╡ 35721b85-c06a-4c57-99d1-2a7bd4bff22f
+md"""
+`long-plosser.jl` | **Version 1.0** | *last updated: Mar 10 2022*
+"""
+
 # ╔═╡ 866ae0b6-426e-41f1-b498-e2e7f38100fe
 md"""
 # Simulating the model of Long & Plosser
@@ -263,31 +268,11 @@ function my_out_StarGraph(N)
 	SimpleWeightedDiGraph(A')
 end
 
-# ╔═╡ 40e182d7-34fc-467c-8ee7-58fb8241ad15
-function my_in_StarGraph(N)
-	A = zeros(N, N)
-	A[1,2:end] .= 1/(N-1)
-	A[1,:] .= A[1,:] ./ sum(A[1,:])
-	SimpleWeightedDiGraph(A')
-end
-
-# ╔═╡ d6008175-2d2e-4ddf-b5f9-e43494fc43ab
-function my_vertical(N)
-	A = zeros(N, N)
-	for i ∈ 1:N-1
-		A[i,i+1] = 1.0
-	end
-	
-	SimpleWeightedDiGraph(A')
-end
-
 # ╔═╡ e58805a3-6552-43c7-a3b3-546bdd6c2365
 param = let
-
-	grph = my_vertical(5)
+	#grph = my_vertical(5)
 	#grph = my_in_StarGraph(5)
-	#grph = my_out_StarGraph(5)
-	#graphplot(grph, arrow_size = 15)
+	grph = my_out_StarGraph(5)
 
 	IO = weights(grph)'
 	
@@ -346,6 +331,24 @@ let
 	Y_old = Y₀(param)
 	@test Yₜ₊₁_V2(Y_old, λ, H, param) ≈ Yₜ₊₁_V3(Y_old, λ, param)
 	
+end
+
+# ╔═╡ 40e182d7-34fc-467c-8ee7-58fb8241ad15
+function my_in_StarGraph(N)
+	A = zeros(N, N)
+	A[1,2:end] .= 1/(N-1)
+	A[1,:] .= A[1,:] ./ sum(A[1,:])
+	SimpleWeightedDiGraph(A')
+end
+
+# ╔═╡ d6008175-2d2e-4ddf-b5f9-e43494fc43ab
+function my_vertical(N)
+	A = zeros(N, N)
+	for i ∈ 1:N-1
+		A[i,i+1] = 1.0
+	end
+	
+	SimpleWeightedDiGraph(A')
 end
 
 # ╔═╡ 7f466861-4359-458f-a8f6-de9d390478ce
@@ -1702,6 +1705,7 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
+# ╟─35721b85-c06a-4c57-99d1-2a7bd4bff22f
 # ╟─866ae0b6-426e-41f1-b498-e2e7f38100fe
 # ╟─210f3af5-7add-42aa-baa2-a73157daec26
 # ╠═e58805a3-6552-43c7-a3b3-546bdd6c2365
@@ -1739,7 +1743,7 @@ version = "3.5.0+0"
 # ╠═40e182d7-34fc-467c-8ee7-58fb8241ad15
 # ╠═d6008175-2d2e-4ddf-b5f9-e43494fc43ab
 # ╠═7f466861-4359-458f-a8f6-de9d390478ce
-# ╠═75200e08-8e46-42a5-b065-9f8c4a831d06
+# ╟─75200e08-8e46-42a5-b065-9f8c4a831d06
 # ╠═533fc093-b72b-4753-b376-8307cce58453
 # ╠═6eca3673-39f3-41e1-a3ab-72e86e3fc877
 # ╠═2816b7c7-7256-4533-9801-3d972bdcfaa6
