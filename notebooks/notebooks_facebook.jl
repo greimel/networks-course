@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.18.1
+# v0.18.2
 
 using Markdown
 using InteractiveUtils
@@ -52,7 +52,7 @@ There at least two ways to visualize social connectedness.
 """
 
 # ╔═╡ 710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
-country = "NL"
+country = "BE"
 
 # ╔═╡ 6d30c04a-6cb2-11eb-220b-998e7d5cc469
 sci_country_fig = let
