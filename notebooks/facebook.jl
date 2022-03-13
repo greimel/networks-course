@@ -122,7 +122,7 @@ There at least two ways to visualize social connectedness.
 """
 
 # ╔═╡ 710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
-country = "NL"
+country = "BE"
 
 # ╔═╡ 8bee74ea-7140-11eb-3441-330ab08a9f38
 md"""
