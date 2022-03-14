@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.18.2
+# v0.18.0
 
 using Markdown
 using InteractiveUtils
@@ -13,6 +13,9 @@ macro bind(def, element)
         el
     end
 end
+
+# ╔═╡ f5450eab-0f9f-4b7f-9b80-992d3c553ba9
+
 
 # ╔═╡ 82a47f6a-7ba6-404c-a250-3f85cea0dd6a
 md"""
@@ -29,7 +32,7 @@ end
 
 # ╔═╡ 38f5d048-7747-11eb-30f7-89bade5ed0a3
 md"""
-`production.jl` | **Version 1.5** | *last updated: Mar 10 2022*
+`production.jl` | **Version 1.6** | *last updated: Mar 10 2022*
 """
 
 # ╔═╡ f1749b26-774b-11eb-2b42-43ffcb5cd7ee
@@ -124,7 +127,7 @@ df_nodes1
 md"""
 ### Task 2: Simulate a Covid crisis (4 points)
 
-👉 Adapt the code in simulates the the welfare effect of central industries by specifying the set of shocked nodes (from **Task 1**) and the length of the shock (assume a period is a quarter).
+👉 Adapt the code in [this cell](#ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6) to simulate the Covid crisis. In particular, specify the set of shocked nodes (from **Task 1**) and the length of the shock (assume a period is a quarter).
 
 👉 Explain your findings in <200 words. Think about how much of the welfare loss is due to the directly hit industries, how much is due to network effects?
 """
@@ -168,9 +171,6 @@ fig_covid = let
 
 	fig
 end
-
-# ╔═╡ 4e891b56-77b1-11eb-116d-e94250f1d70e
-
 
 # ╔═╡ 48f0ffd4-77b0-11eb-04ab-43eac927ac9d
 md"""
@@ -2407,8 +2407,7 @@ version = "3.5.0+0"
 # ╠═4359dbee-77b1-11eb-3755-e1c1532212bb
 # ╠═45db03f2-77b1-11eb-2edd-6104bc85915b
 # ╠═486cd850-77b1-11eb-1dd2-15ca68d98173
-# ╠═ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6
-# ╟─4e891b56-77b1-11eb-116d-e94250f1d70e
+# ╟─ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6
 # ╟─48f0ffd4-77b0-11eb-04ab-43eac927ac9d
 # ╠═9fb0a0a8-77b1-11eb-011f-7fc7a549f552
 # ╟─9da09070-77b1-11eb-0d2e-e9a4433bf34e
