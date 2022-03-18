@@ -159,10 +159,25 @@ For this problem set you will simulate a Covid crisis using the model from the l
 
 ### Task 1: Which industries were hit by Covid? (3 points)
 
-👉 Find 5 (groups of) industries and explain how they have been hit by the Corona crisis *directly* (that is, not through propagation within the production network.)
+Find 5 (groups of) industries that were hit by the Corona crisis *directly* (that is, not through propagation within the production network.)
 
 You can look through the industry definitions in `df_nodes1` (below) or go to [the BEA website](https://www.bea.gov/data/industries).
 
+👉 Put the codes of these industries into the `hit_industries` vector below.
+"""
+
+# ╔═╡ 3ec33a62-77b1-11eb-0821-e547d1422e6f
+# your code
+
+# ╔═╡ 45db03f2-77b1-11eb-2edd-6104bc85915b
+# goes here
+
+# ╔═╡ 2f672417-ab56-4e7b-b7b4-88655c2404c8
+hit_industries = ["111200", "111300"]
+
+# ╔═╡ 23100fcb-8118-471e-8dd8-47da26a981ae
+md"""
+👉 Explain your choice. _(< 300 words)_
 """
 
 # ╔═╡ 5df355b6-77b1-11eb-120f-9bb529b208df
@@ -174,23 +189,8 @@ Your answer goes here ...
 md"""
 ### Task 2: Simulate a Covid crisis (4 points)
 
-👉 Put your selected industries (from **Task 1**) in the `hit_industries` vector in  the cell below to simulate the Covid crisis. You can also vary the length of the shock in [this cell](#ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6) (assume a period is a quarter).
+👉 By putting your selected industries into the `hit_industries` vector in **Task 1**, you have already simulated the Covid crisis. You can also vary the length of the shock in [this cell](#ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6) (assume a period is a quarter).
 """
-
-# ╔═╡ 3ec33a62-77b1-11eb-0821-e547d1422e6f
-# your
-
-# ╔═╡ 4359dbee-77b1-11eb-3755-e1c1532212bb
-# code
-
-# ╔═╡ 45db03f2-77b1-11eb-2edd-6104bc85915b
-# goes
-
-# ╔═╡ 486cd850-77b1-11eb-1dd2-15ca68d98173
-# here
-
-# ╔═╡ 2f672417-ab56-4e7b-b7b4-88655c2404c8
-hit_industries = ["331110", "111300"]
 
 # ╔═╡ c3472d5b-c03e-4ff2-8cf9-bb0932ceb064
 md"""
@@ -891,9 +891,6 @@ end
 # ╔═╡ 1f7d4622-d3ed-4bcb-a655-289cbcaa62a6
 show_words(answer) = md"_approximately $(wordcount(answer)) words_"
 
-# ╔═╡ 664efcec-77b1-11eb-2301-5da84a5de423
-show_words(answer1)
-
 # ╔═╡ 03f290eb-b8ca-4ef1-a029-98f07723485a
 function show_words_limit(answer, limit)
 	count = wordcount(answer)
@@ -903,6 +900,9 @@ function show_words_limit(answer, limit)
 		return almost(md"You are at $count words. Please shorten your text a bit, to get **below $limit words**.")
 	end
 end
+
+# ╔═╡ 664efcec-77b1-11eb-2301-5da84a5de423
+show_words_limit(answer1, 300)
 
 # ╔═╡ 9298e2de-77b1-11eb-0a56-1f50bb0f4dc3
 show_words_limit(answer2, 200)
@@ -2407,16 +2407,15 @@ version = "3.5.0+0"
 # ╟─cebdd63e-774a-11eb-3cd5-951c43b3c3ff
 # ╟─2c840e2e-9bfa-4a5f-9be2-a29d8cdf328d
 # ╟─04e5b93a-77ae-11eb-0240-ad7517f0fde3
+# ╠═3ec33a62-77b1-11eb-0821-e547d1422e6f
+# ╠═45db03f2-77b1-11eb-2edd-6104bc85915b
+# ╠═2f672417-ab56-4e7b-b7b4-88655c2404c8
+# ╟─2b54193b-ed2e-4f22-bdfb-e95f0a274812
+# ╟─23100fcb-8118-471e-8dd8-47da26a981ae
 # ╠═5df355b6-77b1-11eb-120f-9bb529b208df
 # ╟─664efcec-77b1-11eb-2301-5da84a5de423
 # ╠═ebfcbb8e-77ae-11eb-37fc-e798175197d0
 # ╟─85e7546c-77ae-11eb-0d0c-618c3669c903
-# ╠═3ec33a62-77b1-11eb-0821-e547d1422e6f
-# ╠═4359dbee-77b1-11eb-3755-e1c1532212bb
-# ╠═45db03f2-77b1-11eb-2edd-6104bc85915b
-# ╠═486cd850-77b1-11eb-1dd2-15ca68d98173
-# ╠═2f672417-ab56-4e7b-b7b4-88655c2404c8
-# ╠═2b54193b-ed2e-4f22-bdfb-e95f0a274812
 # ╟─c3472d5b-c03e-4ff2-8cf9-bb0932ceb064
 # ╠═811e741e-77b1-11eb-000e-93a9a19a9f60
 # ╟─9298e2de-77b1-11eb-0a56-1f50bb0f4dc3
