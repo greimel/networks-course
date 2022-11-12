@@ -6,7 +6,8 @@ The official course information can be found on Canvas.
 
 This website is under construction.
 
-#### Acknowledgement
+> **Acknowledgement** \\
+> The design of this website is based on _**Computational Thinking**, a live online Julia/Pluto textbook._ [(computationalthinking.mit.edu)](https://computationalthinking.mit.edu)
 
-The design of this website is based on 
-_**Computational Thinking**, a live online Julia/Pluto textbook._ [(computationalthinking.mit.edu)](https://computationalthinking.mit.edu)
+## Build your own course website using https://github.com/greimel/pluto-course-template
+
