@@ -79,11 +79,18 @@
                 "preview_image_url": ""
             },
             {
-                "name": "Systemic risk (with Assignment 3)",
+                "name": "Systemic risk (updated for TI)",
+                "notebook_path": "notebooks/systemic-risk-new.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            },
+            {
+                "name": "Systemic risk (old)",
                 "notebook_path": "notebooks/systemic-risk.jl",
                 "video_id": "",
                 "preview_image_url": ""
             }
+
         ]
     },
     {

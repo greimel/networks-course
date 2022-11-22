@@ -23,7 +23,7 @@ jobs:
               with:
                   version: 1.7
             - name: Run Pluto notebooks and generate website
-              run: cp generate.jl generate2.jl; julia -e 'import Pkg; Pkg.add(Pkg.PackageSpec(name="Pluto", version="0.18.0")); import Pluto; Pluto.activate_notebook_environment("generate2.jl"); Pkg.instantiate(); include("generate.jl")'
+              run: cp generate.jl generate2.jl; julia -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://gitlab.com/greimel/GreimelRegistry")); Pkg.Registry.add("General"); Pkg.add(Pkg.PackageSpec(name="Pluto", version="0.18.0")); import Pluto; Pluto.activate_notebook_environment("generate2.jl"); Pkg.instantiate(); include("generate.jl")'
               working-directory: generate
             - name: Build and Deploy
               uses: JamesIves/github-pages-deploy-action@releases/v3
