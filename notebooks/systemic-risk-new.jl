@@ -174,6 +174,12 @@ md"""
 4. still not enough? (partially) default on external liabilities ``ν``
 """
 
+# ╔═╡ 6af1e245-aaf8-4b7d-977a-1d76998f7cf8
+
+
+# ╔═╡ 5b6f26db-f63f-4db5-ae3e-d41ae476948f
+
+
 # ╔═╡ 523e177c-f74d-4805-8a2b-9c27a4b0bc63
 md"""
 * size of shock $(@bind ε_cash Slider(0.0:0.05:1.0, show_value = true, default = 0.0))
@@ -2512,6 +2518,8 @@ version = "3.5.0+0"
 # ╟─a0ac4092-cd27-4523-85f9-f4a4d81456b3
 # ╟─6fddaaa4-688d-4f40-a1b3-04bf62024955
 # ╟─01eb57fd-a815-41f2-9e25-7730bff7917d
+# ╠═6af1e245-aaf8-4b7d-977a-1d76998f7cf8
+# ╠═5b6f26db-f63f-4db5-ae3e-d41ae476948f
 # ╟─523e177c-f74d-4805-8a2b-9c27a4b0bc63
 # ╠═4ae1b6c2-bb63-4ca8-b8ec-057c8d2a371f
 # ╠═efbc1a42-ecc2-4907-a981-bd1d29ca0803
