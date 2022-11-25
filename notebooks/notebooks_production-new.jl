@@ -43,7 +43,7 @@ based on _[Acemoglu, Carvalho, Ozdaglar & Tahbaz-Salehi (2012)](https://economic
 5. Show that sector-specific shocks don't necessarily wash out in equilibrium--_see the lecture notes_ 
 6. Show by simulation that iid industry-specific shocks will lead to aggregate flucuations
 
-#### Exercises 5
+#### Exercises
 
 7. Simulate how the Covid shocks propagates through the economy
 
@@ -2500,7 +2500,7 @@ version = "3.5.0+0"
 # ╠═3585b022-7853-11eb-1a05-7b4fe3921051
 # ╠═ddfcd760-7853-11eb-38f7-298a4c1cb5aa
 # ╟─cebdd63e-774a-11eb-3cd5-951c43b3c3ff
-# ╠═04e5b93a-77ae-11eb-0240-ad7517f0fde3
+# ╟─04e5b93a-77ae-11eb-0240-ad7517f0fde3
 # ╠═5df355b6-77b1-11eb-120f-9bb529b208df
 # ╠═664efcec-77b1-11eb-2301-5da84a5de423
 # ╠═ebfcbb8e-77ae-11eb-37fc-e798175197d0
