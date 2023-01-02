@@ -27,7 +27,7 @@ end
 
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`twitter.jl` | **Version 1.9** | *last changed: Feb 28, 2022*"
+`twitter.jl` | **Version 1.10** | *last changed: Dec 7, 2023*"
 
 # ╔═╡ da51e362-6176-11eb-15b2-b7bcebc2cbb6
 md"""
@@ -237,7 +237,15 @@ function download_twitter_data(keyword::String;
 	
 	# if file exists, overwrite it
 	isfile(filename) && rm(filename)
-	twint.run.Search(c)
+	try
+		twint.run.Search(c)
+	catch e
+		if isfile(filename)
+			DataFrame(CSV.File(filename))
+		else
+			rethrow(e)
+		end
+	end
 	
 	filename
 end
@@ -275,8 +283,8 @@ tweet_df = @select(tweet_df0,
 	 # "parse_hashtags" is defined in the appendix
 	:hashtags = parse_hashtags(:hashtags),
     :user_id,
-	:username = @c(categorical(:username)),
-	:language = @c(categorical(:language))
+	:username = @bycol(categorical(:username)),
+	:language = @bycol(categorical(:language))
 )
 
 # ╔═╡ 97337aec-60e4-11eb-0b15-99ffcf8376fa
@@ -308,8 +316,8 @@ begin
 
 	node_names = edge_list.user1 ∪ edge_list.user2 
 
-	@transform!(edge_list, :user1 = @c categorical(:user1; levels = node_names))
-	@transform!(edge_list, :user2 = @c categorical(:user2; levels = node_names))
+	@transform!(edge_list, :user1 = @bycol categorical(:user1; levels = node_names))
+	@transform!(edge_list, :user2 = @bycol categorical(:user2; levels = node_names))
 	
 	edge_list
 end
@@ -335,7 +343,7 @@ md"""
 """
 
 # ╔═╡ 5ceea932-60ef-11eb-3c13-37ddf8e09f6f
-let
+begin
 	all_hashtags = vcat(tweet_df.hashtags...)
 	freqs = freqtable(all_hashtags)
 	
@@ -343,10 +351,13 @@ let
 	sort!(df_hashtags, :freqs, rev = true)
 end
 
+# ╔═╡ c103db75-a5bd-4836-9137-f42bce1bf86d
+highlighted_hashtag = df_hashtags.hashtag[5]
+
 # ╔═╡ 76c50e74-60f3-11eb-1e25-cdcaeae76c38
 node_df = @chain user_df begin
 	@subset(:username ∈ node_names)
-	@transform!(:highlighted_nodes = "covid19" ∈ :hashtags)
+	@transform!(:highlighted_nodes = highlighted_hashtag ∈ :hashtags)
 	@transform!(:node_color = :highlighted_nodes == true ? colorant"red" : colorant"blue")
 end
 
@@ -377,9 +388,9 @@ begin
 			Pkg.PackageSpec(name="Chain"),
 			Pkg.PackageSpec(name="DataAPI",           version="1"),
 			Pkg.PackageSpec(name="DataFrames",        version="1"),
-			Pkg.PackageSpec(name="DataFrameMacros"),
-			Pkg.PackageSpec(name="CSV",               version="0.8"),
-			Pkg.PackageSpec(name="CategoricalArrays", version="0.9"),
+			Pkg.PackageSpec(name="DataFrameMacros",   version="0.4"),
+			Pkg.PackageSpec(name="CSV",               version="0.10"),
+			Pkg.PackageSpec(name="CategoricalArrays", version="0.10"),
 			
 			])
 	
@@ -400,11 +411,6 @@ begin
 	
 	_a_ = 1 # make sure that this is cell #1
 	nothing
-end
-
-# ╔═╡ 87b7bc86-60df-11eb-3f9f-2375449c77f6
-begin
-	Base.show(io::IO, ::MIME"text/html", x::CategoricalArrays.CategoricalValue) = print(io, get(x))
 end
 
 # ╔═╡ a1d99d9e-60dc-11eb-391c-b52c2e16aedd
@@ -589,6 +595,7 @@ _**Computational Thinking**, a live online Julia/Pluto textbook._ [(computationa
 # ╠═15ecf0aa-60e2-11eb-1ef4-ebfc215e5ca7
 # ╟─4df1e8ae-60ef-11eb-3772-1154f708eecb
 # ╠═5ceea932-60ef-11eb-3c13-37ddf8e09f6f
+# ╠═c103db75-a5bd-4836-9137-f42bce1bf86d
 # ╠═76c50e74-60f3-11eb-1e25-cdcaeae76c38
 # ╠═eb9773ea-c66f-4079-b625-9e483413171a
 # ╠═94e542c2-a3f0-453f-a40c-545a412510b9
@@ -596,7 +603,6 @@ _**Computational Thinking**, a live online Julia/Pluto textbook._ [(computationa
 # ╟─eea5accc-60db-11eb-3889-c992db2ec8ec
 # ╟─d07dc2ac-67b1-11eb-1bee-c52695fb4f28
 # ╠═400cc04e-4784-11eb-11a2-ff8e245cad27
-# ╠═87b7bc86-60df-11eb-3f9f-2375449c77f6
 # ╟─a1d99d9e-60dc-11eb-391c-b52c2e16aedd
 # ╠═6535e16c-6146-11eb-35c0-31aef62a631c
 # ╟─1f927f3c-60e5-11eb-0304-f1639b68468d
