@@ -97,7 +97,7 @@ using PlutoUI
 
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`twitter.jl` | **Version 1.10** | *last changed: Dec 7, 2023*"
+`twitter.jl` | **Version 1.10** | *last changed: Dec 7, 2022*"
 
 # ╔═╡ 39feff38-617d-11eb-0682-874b2f747ff8
 md"""
