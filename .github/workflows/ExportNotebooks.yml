@@ -21,10 +21,31 @@ jobs:
             - name: Install Julia
               uses: julia-actions/setup-julia@v1
               with:
-                  version: 1.7
+                  version: 1
+            - name: Install R
+              uses: r-lib/actions/setup-r@v2
+            - name: Add RHOME to LD_LIBRARY_PATH
+              run: echo "LD_LIBRARY_PATH=$(R RHOME)/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+              # if: matrix.os == 'ubuntu-latest'
+            - name: Install R packages
+              shell: Rscript {0}
+              run: |
+                install.packages("nets")
             - name: Run Pluto notebooks and generate website
-              run: cp generate.jl generate2.jl; julia -e 'import Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://gitlab.com/greimel/GreimelRegistry")); Pkg.Registry.add("General"); Pkg.add(Pkg.PackageSpec(name="Pluto", version="0.18.0")); import Pluto; Pluto.activate_notebook_environment("generate2.jl"); Pkg.instantiate(); include("generate.jl")'
-              working-directory: generate
+              shell: julia --color=yes --project=. {0} 
+              run: |
+                dir0 = pwd()
+                dir1 = joinpath(dir0, "generate")
+                cd(dir1)
+                run(`cp generate.jl generate2.jl`)
+                import Pkg
+                Pkg.Registry.add(Pkg.RegistrySpec(url="https://gitlab.com/greimel/GreimelRegistry"))
+                Pkg.Registry.add("General")
+                Pkg.add(Pkg.PackageSpec(name="Pluto", version="0.18.0"))
+                import Pluto
+                Pluto.activate_notebook_environment(joinpath(dir1, "generate2.jl"))
+                Pkg.instantiate()
+                include(joinpath(dir1, "generate.jl"))
             - name: Build and Deploy
               uses: JamesIves/github-pages-deploy-action@releases/v3
               with:

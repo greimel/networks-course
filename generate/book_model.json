@@ -47,6 +47,17 @@
         ]
     },
     {
+        "title": "Econometrics of Networks",
+        "contents": [
+            {
+                "name": "Recovering the network using `nets`",
+                "notebook_path": "notebooks/nets.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            }
+        ]
+    },
+    {
         "title": "Diffusion on Networks",
         "contents": [
             {
