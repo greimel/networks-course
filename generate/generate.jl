@@ -64,7 +64,7 @@ SUBTITLE = "Theory, Computation and Data"
 INSTITUTION = "University of Amsterdam"
 
 # ╔═╡ ab7186a4-2287-41da-a939-70f142bfeacd
-TERM = "2022"
+TERM = "2023"
 
 # ╔═╡ 83130e69-9b67-44b5-ad32-500162abc0d2
 md"""
@@ -209,7 +209,7 @@ end
 
 # ╔═╡ 3e93e57c-3660-416f-9874-d43abf99e60e
 INSTRUCTORS = [
-	(name = "Cees Diks", href= "https://www.uva.nl/en/profile/c.g.h.diks"),
+	(name = "Simon Trimborn", href= "https://www.simontrimborn.de"),
 	(name = "Fabian Greimel", href = "https://www.greimel.eu")
 ] |> instructors
 
