@@ -43,6 +43,12 @@
                 "notebook_path": "notebooks/random-networks.jl",
                 "video_id": "",
                 "preview_image_url": ""
+            },
+            {
+                "name": "Using the Twitter API (V2)",
+                "notebook_path": "notebooks/twitter-api.jl",
+                "video_id": "",
+                "preview_image_url": ""
             }
         ]
     },
