@@ -21,8 +21,8 @@
                 "preview_image_url": ""
             },
             {
-                "name": "Degrees follow a Power law",
-                "notebook_path": "notebooks/power_law.jl",
+                "name": "Typical properties of social networks",
+                "notebook_path": "notebooks/stylized-facts.jl",
                 "video_id": "",
                 "preview_image_url": ""
             },
