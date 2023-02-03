@@ -1,6 +1,6 @@
 [
-    {
-        "title": "Networks Basics",
+        {
+        "title": "Introduction to Julia",
         "contents": [
             {
                 "name": "Basic Julia",
@@ -8,6 +8,17 @@
                 "video_id": "",
                 "preview_image_url": ""
             },
+            {
+                "name": "More Julia",
+                "notebook_path": "notebooks/more-julia.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            }
+        ]
+    },
+    {
+        "title": "Networks Basics",
+        "contents": [
             {
                 "name": "First networks",
                 "notebook_path": "notebooks/first-networks.jl",
