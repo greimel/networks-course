@@ -38,8 +38,8 @@
                 "preview_image_url": ""
             },
             {
-                "name": "Some Exercises",
-                "notebook_path": "notebooks/exercises-week1.jl",
+                "name": "Random networks",
+                "notebook_path": "notebooks/random-networks.jl",
                 "video_id": "",
                 "preview_image_url": ""
             },
@@ -50,13 +50,13 @@
                 "preview_image_url": ""
             },
             {
-                "name": "Random networks",
-                "notebook_path": "notebooks/random-networks.jl",
+                "name": "Some Exercises",
+                "notebook_path": "notebooks/exercises-week1.jl",
                 "video_id": "",
                 "preview_image_url": ""
             },
             {
-                "name": "Using the Twitter API (V2)",
+                "name": "[TI] Using the Twitter API (V2)",
                 "notebook_path": "notebooks/twitter-api.jl",
                 "video_id": "",
                 "preview_image_url": ""
