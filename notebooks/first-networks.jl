@@ -4,6 +4,19 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
+# ╔═╡ 915ca82e-f358-4515-889a-5a226539223d
+using Colors: @colorant_str
+
 # ╔═╡ de6c3f24-618b-44a1-a9ef-b56bd35b4b87
 using Graphs # for analyzing networks
 
@@ -35,7 +48,10 @@ using FreqTables
 using StatsBase: ecdf
 
 # ╔═╡ 2ecf4ffd-d41d-494c-9fec-d681a176a8ba
-using PlutoUI: TableOfContents
+using PlutoUI: TableOfContents, Slider
+
+# ╔═╡ b4cec279-9bd4-46c5-8dc3-13003730916f
+using PlutoUI
 
 # ╔═╡ eb6a3510-6477-11eb-0e4e-33557d794e45
 md"""
@@ -105,7 +121,7 @@ Note, that you can build directed graphs using `SimpleDiGraph`. Replace `SimpleD
 """
 
 # ╔═╡ d3feb786-2c69-416f-8fda-e2b4da0c0c1c
-graphplot(my_network, layout=Shell(), node_size=20, arrow_size=20, node_color="orange")
+graphplot(my_network, layout=Shell(), node_size=20, arrow_size=20, node_color="orange", nlabels = string.(1:nv(my_network)) )
 
 # ╔═╡ 7057b8a6-91a9-495f-ac29-669d5652c8d0
 md"""
@@ -137,69 +153,178 @@ graphplot(big_network,
 	edge_color = (:orange, 0.01)
 )
 
-# ╔═╡ 541303e2-02b3-4537-ab92-e3947652f6f6
+# ╔═╡ 3956c45f-23a9-4ec2-846f-d33706373d72
 md"""
-# Analyzing networks with Graphs.jl
+# Language for network analysis
+
+We will discuss some useful concepts for analyzing networks. We will divide them into four groups.
 
 **NOTE** The concepts of this section are introduced in the first lectures of the course. Have a look if you're curious. But it is rather meant as a references for your assignments.
 
 If you cannot find what you need in this notebook, check out the excellent [documentation of Graphs.jl](https://juliagraphs.org/Graphs.jl/dev/).
+
+#### Counting friends
+* neighborhood
+* degree (in/out)
+* degree distribution, average degree
+
+#### Are my friends friends themselves?
+* clustering (average, total)
+
+#### Friends of friends of friends ...
+* walk
+* path
+* connected pair
+* distance
+* diameter
+* connected network
+* components
+
+#### Cool kids
+
+* centralities
 """
 
-# ╔═╡ 7e163209-7c52-4116-bcc2-572060b90fde
+# ╔═╡ d25c59f6-8f99-4a83-8750-10518a13f6ae
+network = big_network[∪(([k; neighbors(big_network, k)] for k ∈ [5, 50, 101, 500])...)]
+
+# ╔═╡ 63fff52b-d485-4fb3-be2c-80039e6ebc2a
+nodes = rand(1:nv(big_network), 10) |> unique
+
+# ╔═╡ edbb8f3b-f133-481b-8972-fdcd87b5acef
 md"""
-## Counting the number of neighbors: The degree of a node
+## Neighborhood and degree of a node _(Counting friends)_
 
-Let's count the number of neighbors for each node. That is, how many links does each node have?
+The **neighborhood of a node ``i``** is the set of friends of (_nodes that are connected to_) ``i``.
 
-For illustration, let's plot the degree of each node for the `simple_network` from above.
+Let ``i = ``$(@bind i Slider(1:nv(network), default = 1, show_value=true)), then the neighborhood of ``i`` is shown below.
+
+The **degree of a node ``i``** is number of friends (_connected nodes_) of ``i``. (Show degree $(@bind show_degree CheckBox(default = false)))
 """
 
-# ╔═╡ b34c0187-86dd-482c-a1dd-11a461bc0be2
-graphplot(
-	simple_network,
-	nlabels = string.(degree(simple_network)),
-	nlabels_offset = Point(0.01, 0.05),
-	node_size = 20,
-	node_color = "orange"
+# ╔═╡ 75194951-3f88-4855-98d4-a987430f5b00
+md"""
+The **degree distribution** is the distribution of the number of friends. We can  compute statistics of the distribution (e.g. the **average degree**: $(round(mean(degree(network)), digits=2))). Or we can visualize the full distribution in a histogram.
+"""
+
+# ╔═╡ 4b0dc2b4-a56d-45e3-8d58-a53978c4ff7f
+hist(degree(network), bins=1:25, normalization=:probability, axis=(title = "The degree distribution (The distribution of the number of friends)", ylabel = "relative frequency", xlabel="degree (number of friends)"))
+
+# ╔═╡ 609dfa37-2208-40b7-bc47-60d0c9ec54c8
+md"""
+## Clustering _(Are my friends friends themselves?)_
+
+This time we look at node ``j = ``$(@bind j Slider(1:nv(network), default = 12, show_value=true)).
+"""
+
+# ╔═╡ ac1291c8-e560-4457-ad58-47c70ade7dca
+degree_of_j = degree(network, j)
+
+# ╔═╡ 228237f5-4884-4575-9dc4-a5c33b9afdae
+actual_links, possible_links = local_clustering(network, j)
+
+# ╔═╡ 0cd4e0a0-fa38-4b05-8688-6396093d2652
+md"""
+We see that the node has $degree_of_j friends. These $degree_of_j friends can form at most $degree_of_j ⋅ $(degree_of_j - 1) / 2 = $possible_links friendships. We see that there are $actual_links friendships _(red edges)_. The clustering coefficient of node $i is ``\frac{\text{actual}}{\text{possible}} =`` $(round(local_clustering_coefficient(network, j), digits=2)). (Show clustering coefficient $(@bind show_clustering CheckBox(default = false)))
+"""
+
+# ╔═╡ 7c9f2f26-329e-46f8-8be9-c95cd680d51d
+local_clustering_coefficient(network, j)
+
+# ╔═╡ 7ba0f472-f8a3-497d-8093-6f9275365841
+global_clustering_coefficient(network)
+
+# ╔═╡ f2a97e1c-f9d9-45eb-a197-6325da142845
+𝒩 = neighbors(network, j)
+
+# ╔═╡ 3d32cc06-db5f-49a1-9510-c129fb064440
+md"""
+## Distance between nodes _(Friends of friends of friends ...)_
+"""
+
+# ╔═╡ 49627e46-c654-49b6-80ee-b664b61a68ac
+md"""
+* walk
+* path
+* connected pair
+* distance
+* diameter
+* connected network
+* components
+"""
+
+# ╔═╡ 2a07742e-4413-4a20-b417-b7dda8cb7c49
+from = 13
+
+# ╔═╡ 7b8a732f-a834-488b-9cdf-37d4f0b31eab
+to = 23
+
+# ╔═╡ 32dd4b65-15a4-4247-afe7-15a4daec2294
+path = a_star(network, from, to)
+
+# ╔═╡ aa91eb44-8cf9-4df4-a926-23dc6cc92cda
+length(path)
+
+# ╔═╡ 26fbde25-c520-4ca3-8bfd-22753d9a7a94
+function color_nodes(graph, sets_of_nodes)
+	default_color = colorant"lightgray"
+	colors = [Makie.wong_colors()[1:length(sets_of_nodes)]; default_color]
+	
+	extended_sets = [sets_of_nodes..., 1:nv(graph)]
+	groups = map(1:nv(graph)) do i
+		findfirst(set -> i ∈ set, extended_sets)
+	end
+	colors[groups]
+end
+
+# ╔═╡ f26e4c88-fc29-41fe-b932-c136047dabb6
+graphplot(network,
+	node_size = 15,
+	edge_width = 1,
+	nlabels =
+		!show_clustering ? 
+			string.(1:nv(network)) :
+			string.(1:nv(network)) .* " (cl: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
+		#string.(1:nv(network)) .* " (clust.: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
+	
+	node_color = color_nodes(network, [[from, to]]),
+	edge_color = [e ∈ path || reverse(e) ∈ path ? :red : :gray
+	 for e ∈ edges(network)]
 )
 
-# ╔═╡ 7dead69c-36c1-4676-a072-3442d20ba899
-md"
-Now, let's compute it for the big network.
-"
+# ╔═╡ 4a5319ed-14f6-4635-8f58-a387de0cd8ad
+function highlight_neighbors(graph, i)
+	color_nodes(graph, [[i], neighbors(graph, i)])
+end
 
-# ╔═╡ 97d36935-3d2d-4079-a141-1bd030196328
-degrees = degree(big_network)
+# ╔═╡ 77cc233a-d916-4959-a73c-7138cfdd03af
+graphplot(network,
+	node_size = 15,
+	edge_width = 1,
+	nlabels =
+		!show_degree ? 
+			string.(1:nv(network)) :
+			string.(1:nv(network)) .* " (degree: " .* string.(degree(network)) .* ")",
+		#string.(1:nv(network)) .* " (clust.: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
+	
+	node_color = highlight_neighbors(network, i),
+	edge_color = (:black, 0.5)
+)
 
-# ╔═╡ b1d74829-82fd-48b0-a0d9-3d2ae2b802b0
-(deg, node) = findmax(degrees)
-
-# ╔═╡ 3e0e847a-cc7f-4bda-a321-0f8dcfc75bd7
-md"""
-The first node has $(degrees[1]) neighbors ("friends"), the second node has $(degrees[2]), and so on.
-
-We can look for the nodes with the most neighbors. Node $node has $deg neighbours.
-"""
-
-# ╔═╡ afb8492d-a95e-40ae-9c34-a8fc9ce8a25e
-md"
-Can you guess how to find the node with the least neighbors?
-"
-
-# ╔═╡ 313359ed-a84c-4eb8-86da-3da41cf475d4
-md"""
-We can have a look at the full degree distribution by plotting a histogram.
-"""
-
-# ╔═╡ a1fe05e9-b3e3-4055-831c-ca6289086fbe
-hist(degrees)
-
-# ╔═╡ a5a085cf-b4dd-48c0-a3c2-967abc1445c2
-mean(degrees)
-
-# ╔═╡ b0ab1ac5-8433-4818-8579-f2c36d0dee30
-std(degrees)
+# ╔═╡ 9b3ede7b-6e55-4d98-8f8f-6b18382fcb43
+graphplot(network,
+	node_size = 15,
+	edge_width = 1,
+	nlabels =
+		!show_clustering ? 
+			string.(1:nv(network)) :
+			string.(1:nv(network)) .* " (cl: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
+		#string.(1:nv(network)) .* " (clust.: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
+	
+	node_color = highlight_neighbors(network, j),
+	edge_color = [src(e) ∈ 𝒩 && dst(e) ∈ 𝒩 ? :red : :gray
+	 for e ∈ edges(network)]
+)
 
 # ╔═╡ 5d7adf23-4fef-4597-a3ac-18adbef08d8e
 md"""
@@ -207,11 +332,17 @@ md"""
 
 """
 
-# ╔═╡ 7ba0f472-f8a3-497d-8093-6f9275365841
-global_clustering_coefficient(big_network)
+# ╔═╡ 383c5cca-2301-4f9e-9610-9e5b7fdb13b5
+components = connected_components(network)
+
+# ╔═╡ 56ffb909-1dce-49c4-90a5-b45ede78e624
+subnetwork = network[components[1]]
+
+# ╔═╡ 7784fe91-ceb0-4756-8571-65efa217a065
+diameter(subnetwork)
 
 # ╔═╡ 9f083058-6a12-41cc-bb65-ad81e5d79aea
-diameter(big_network)
+diameter(network)
 
 # ╔═╡ a22c9ec0-647b-11eb-2141-974fa4223428
 md"""
@@ -219,16 +350,10 @@ To get the length of shortest path from node `i` to node `j` use `gdistances(gra
 """
 
 # ╔═╡ 257c32c8-647b-11eb-1244-e1d2baa5c58d
-distances_from_1 = gdistances(simple_network, 1)
+distances_from_1 = gdistances(network, 1)
 
 # ╔═╡ d9428a14-647b-11eb-336d-778226dd13e1
 dist_from_1_to_5 = distances_from_1[5]
-
-# ╔═╡ 2c703f99-5d25-44db-8651-92dd6427a605
-diameter(simple_network)
-
-# ╔═╡ 7381cca1-5f12-48d3-8a33-4642e8f80072
-components = connected_components(my_network)
 
 # ╔═╡ 9c3d3a6a-4ad5-4c45-bb07-8e75b4380290
 function giant_component(graph)
@@ -247,14 +372,14 @@ end
 giant_component(my_network)
 
 # ╔═╡ 7f457cac-c153-44a8-a13c-af03ffd6eef1
-subgraph, node_list = induced_subgraph(my_network, giant_component(my_network))
+subgraph, node_list = induced_subgraph(network, giant_component(network))
 
 # ╔═╡ ba4ddf01-d02e-4d9f-beb7-15467a03b08a
 graphplot(subgraph, node_size=20, arrow_size=20, node_color="orange")
 
 # ╔═╡ ef85efd2-da5c-4197-831e-110aebe5a1d7
 let
-	f(x) = log(1 - ecdf(degrees)(x))
+	f(x) = log(1 - ecdf(degree(network))(x))
 	x_vec = exp.(0:0.01:6)
 
 	lines(x_vec, f.(x_vec))
@@ -419,6 +544,7 @@ md"""
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 FreqTables = "da1fdf0e-e0ff-5433-a45f-9bb5ff651cb1"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
@@ -432,6 +558,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 CairoMakie = "~0.10.2"
+Colors = "~0.12.10"
 FreqTables = "~0.4.5"
 GraphMakie = "~0.5.2"
 Graphs = "~1.7.4"
@@ -449,7 +576,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "1adebb2e570110f4f98e9c8a6aec2079e8c837de"
+project_hash = "7ba0ef23908b79e4d47a2c0a7c297de0f013e687"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -1843,26 +1970,39 @@ version = "3.5.0+0"
 # ╠═c28b2d55-63dc-4794-bfcd-a03172cb7f25
 # ╟─c3946663-eddf-4bc1-bb52-9c82c8f7258c
 # ╠═07f7ed69-3e9a-4a6b-a10f-de8d09aa0db5
-# ╟─541303e2-02b3-4537-ab92-e3947652f6f6
-# ╟─7e163209-7c52-4116-bcc2-572060b90fde
-# ╠═b34c0187-86dd-482c-a1dd-11a461bc0be2
-# ╟─7dead69c-36c1-4676-a072-3442d20ba899
-# ╠═97d36935-3d2d-4079-a141-1bd030196328
-# ╟─3e0e847a-cc7f-4bda-a321-0f8dcfc75bd7
-# ╠═b1d74829-82fd-48b0-a0d9-3d2ae2b802b0
-# ╟─afb8492d-a95e-40ae-9c34-a8fc9ce8a25e
-# ╟─313359ed-a84c-4eb8-86da-3da41cf475d4
-# ╠═a1fe05e9-b3e3-4055-831c-ca6289086fbe
-# ╠═a5a085cf-b4dd-48c0-a3c2-967abc1445c2
-# ╠═b0ab1ac5-8433-4818-8579-f2c36d0dee30
-# ╟─5d7adf23-4fef-4597-a3ac-18adbef08d8e
+# ╟─3956c45f-23a9-4ec2-846f-d33706373d72
+# ╠═d25c59f6-8f99-4a83-8750-10518a13f6ae
+# ╠═63fff52b-d485-4fb3-be2c-80039e6ebc2a
+# ╟─edbb8f3b-f133-481b-8972-fdcd87b5acef
+# ╟─77cc233a-d916-4959-a73c-7138cfdd03af
+# ╟─75194951-3f88-4855-98d4-a987430f5b00
+# ╟─4b0dc2b4-a56d-45e3-8d58-a53978c4ff7f
+# ╟─609dfa37-2208-40b7-bc47-60d0c9ec54c8
+# ╟─0cd4e0a0-fa38-4b05-8688-6396093d2652
+# ╟─9b3ede7b-6e55-4d98-8f8f-6b18382fcb43
+# ╠═ac1291c8-e560-4457-ad58-47c70ade7dca
+# ╠═228237f5-4884-4575-9dc4-a5c33b9afdae
+# ╠═7c9f2f26-329e-46f8-8be9-c95cd680d51d
 # ╠═7ba0f472-f8a3-497d-8093-6f9275365841
+# ╠═f2a97e1c-f9d9-45eb-a197-6325da142845
+# ╟─3d32cc06-db5f-49a1-9510-c129fb064440
+# ╟─49627e46-c654-49b6-80ee-b664b61a68ac
+# ╠═2a07742e-4413-4a20-b417-b7dda8cb7c49
+# ╠═7b8a732f-a834-488b-9cdf-37d4f0b31eab
+# ╟─f26e4c88-fc29-41fe-b932-c136047dabb6
+# ╠═32dd4b65-15a4-4247-afe7-15a4daec2294
+# ╠═aa91eb44-8cf9-4df4-a926-23dc6cc92cda
+# ╠═4a5319ed-14f6-4635-8f58-a387de0cd8ad
+# ╠═915ca82e-f358-4515-889a-5a226539223d
+# ╠═26fbde25-c520-4ca3-8bfd-22753d9a7a94
+# ╟─5d7adf23-4fef-4597-a3ac-18adbef08d8e
+# ╠═383c5cca-2301-4f9e-9610-9e5b7fdb13b5
+# ╠═56ffb909-1dce-49c4-90a5-b45ede78e624
+# ╠═7784fe91-ceb0-4756-8571-65efa217a065
 # ╠═9f083058-6a12-41cc-bb65-ad81e5d79aea
 # ╟─a22c9ec0-647b-11eb-2141-974fa4223428
 # ╠═257c32c8-647b-11eb-1244-e1d2baa5c58d
 # ╠═d9428a14-647b-11eb-336d-778226dd13e1
-# ╠═2c703f99-5d25-44db-8651-92dd6427a605
-# ╠═7381cca1-5f12-48d3-8a33-4642e8f80072
 # ╠═9c3d3a6a-4ad5-4c45-bb07-8e75b4380290
 # ╠═2ec96593-85fa-4f45-aceb-f3869717884e
 # ╠═7f457cac-c153-44a8-a13c-af03ffd6eef1
@@ -1909,5 +2049,6 @@ version = "3.5.0+0"
 # ╠═431229ad-a4f5-415c-8946-9888dc335857
 # ╟─f45dfb17-aef7-4540-a790-9148fa921d25
 # ╠═2ecf4ffd-d41d-494c-9fec-d681a176a8ba
+# ╠═b4cec279-9bd4-46c5-8dc3-13003730916f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
