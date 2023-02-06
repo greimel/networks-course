@@ -55,7 +55,7 @@ using PlutoUI
 
 # ╔═╡ eb6a3510-6477-11eb-0e4e-33557d794e45
 md"""
-`first-networks.jl` | **Version 1.4** | *last updated: Feb 2 2023*
+`first-networks.jl` | **Version 1.5** | *last updated: Feb 6 2023*
 """
 
 # ╔═╡ 6009f070-5ef8-11eb-340a-d9780be085ad
