@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.16
+# v0.19.22
 
 using Markdown
 using InteractiveUtils
@@ -97,7 +97,7 @@ using PlutoUI
 
 # ╔═╡ 8493134e-6183-11eb-0059-6d6ecf0f17bf
 md"
-`twitter.jl` | **Version 1.10** | *last changed: Dec 7, 2022*"
+`twitter.jl` | **Version 1.11** | *last changed: Feb 8, 2023*"
 
 # ╔═╡ 39feff38-617d-11eb-0682-874b2f747ff8
 md"""
@@ -573,7 +573,7 @@ _**Computational Thinking**, a live online Julia/Pluto textbook._ [(computationa
 # ╟─e4dcc0a6-60e3-11eb-2717-5347187c73c0
 # ╟─14e6dece-60dc-11eb-2d5a-275b8c9e382d
 # ╟─bdc32cf2-6611-11eb-080c-6fd828280754
-# ╠═02509edc-6611-11eb-2451-0fa79effbee7
+# ╟─02509edc-6611-11eb-2451-0fa79effbee7
 # ╟─ea8bc558-620d-11eb-24e8-57cd8d41e912
 # ╟─c76895aa-620e-11eb-3da2-b572953e6d34
 # ╠═85838053-8aa3-4e56-ae9d-17293937fe4f
