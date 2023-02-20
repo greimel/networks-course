@@ -45,7 +45,7 @@ using DataFrames: DataFrame, stack, Not
 using AlgebraOfGraphics: data, mapping, visual, draw
 
 # ╔═╡ 3e9756ae-8a55-4d0d-8ae6-e8aa8bcd71fb
-using DataFrameMacros: @transform
+using DataFrameMacros: @transform!
 
 # ╔═╡ 0b79fb30-66d3-11eb-052b-89cfca69b3a6
 md"""
@@ -134,12 +134,6 @@ T_selector
 
 # ╔═╡ 8ed6464e-70ad-11eb-22d1-53ae9a60fa65
 T^10_000
-
-# ╔═╡ 5d438de1-9ea6-4f4b-9c28-64ecb0075c1c
-# ╠═╡ disabled = true
-#=╠═╡
-T4^10_001
-  ╠═╡ =#
 
 # ╔═╡ 0ec5eee0-70ae-11eb-2d6f-ebc6c9621c72
 md"
