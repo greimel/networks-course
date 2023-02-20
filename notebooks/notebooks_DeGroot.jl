@@ -125,12 +125,6 @@ T_selector
 # ╔═╡ 8ed6464e-70ad-11eb-22d1-53ae9a60fa65
 T^10_000
 
-# ╔═╡ 5d438de1-9ea6-4f4b-9c28-64ecb0075c1c
-# ╠═╡ disabled = true
-#=╠═╡
-T4^10_001
-  ╠═╡ =#
-
 # ╔═╡ 0ec5eee0-70ae-11eb-2d6f-ebc6c9621c72
 md"
 ### Exercise 3
@@ -226,7 +220,7 @@ using DataFrames: DataFrame, stack, Not
 using AlgebraOfGraphics: data, mapping, visual, draw
 
 # ╔═╡ 3e9756ae-8a55-4d0d-8ae6-e8aa8bcd71fb
-using DataFrameMacros: @transform
+using DataFrameMacros: @transform!
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1718,7 +1712,6 @@ version = "3.5.0+0"
 # ╟─cded1e0c-70ad-11eb-0b7c-b9b5ddcbdbf0
 # ╟─a60eaa0b-8aea-4dbb-87c6-3f002c588691
 # ╠═8ed6464e-70ad-11eb-22d1-53ae9a60fa65
-# ╠═5d438de1-9ea6-4f4b-9c28-64ecb0075c1c
 # ╟─0ec5eee0-70ae-11eb-2d6f-ebc6c9621c72
 # ╟─cb386335-d482-41e7-aa5b-e426c396d61a
 # ╠═0c36064b-3c67-4641-aa75-726f65367524
