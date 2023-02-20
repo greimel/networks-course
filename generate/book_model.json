@@ -98,6 +98,17 @@
         ]
     },
     {
+        "title": "Social Connectedness",
+        "contents": [
+            {
+                "name": "What Facebook friendships tell us about the world",
+                "notebook_path": "notebooks/facebook.jl",
+                "video_id": "",
+                "preview_image_url": ""
+            }
+        ]
+    },
+    {
         "title": "Financial Networks",
         "contents": [
             {
@@ -119,17 +130,6 @@
                 "preview_image_url": ""
             }
 
-        ]
-    },
-    {
-        "title": "Social Connectedness",
-        "contents": [
-            {
-                "name": "[light version] What Facebook friendships tell us about the world",
-                "notebook_path": "notebooks/facebook-light.jl",
-                "video_id": "",
-                "preview_image_url": ""
-            }
         ]
     },
     {
