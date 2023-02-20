@@ -72,7 +72,7 @@ md"""
 md"""
 # Diffusion on Networks: Modeling Transmission of Disease
 
-This notebook will be the basis for part of **Lecture 3**. Here is what we will cover.
+This notebook will be the basis for part of **Lecture 3C** and **Assignment 3**. Here is what we will cover.
 
 1. We will model the diffusion of disease on a network. We will analyze how the parameters of the model change the outcomes.
 """
