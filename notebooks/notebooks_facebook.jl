@@ -20,7 +20,7 @@ end
 
 # ╔═╡ 47594b98-6c72-11eb-264f-e5416a8faa32
 md"""
-`facebook-light.jl` | **Version 1.5** | *last updated: Feb 20, 2023*
+`facebook.jl` | **Version 1.5** | *last updated: Feb 20, 2023*
 """
 
 # ╔═╡ 7f8a57f0-6c72-11eb-27dd-2dae50f00232
@@ -174,11 +174,80 @@ end
 
 # ╔═╡ d127df3e-710d-11eb-391a-89f3aeb8c219
 md"""
-# US Counties and US elections (shortened)
+# US Counties and US elections
 """
 
 # ╔═╡ b20ab98c-710d-11eb-0a6a-7de2477acf35
 county_df = SCI_data(:US_counties)
+
+# ╔═╡ e1c5a635-c008-4ead-b170-6f2353693e20
+begin
+	node_county_ids, wgts2 = make_sci_graph(county_df)
+	g_county = SimpleWeightedGraph(wgts2)
+end
+
+# ╔═╡ 759dd2da-f043-468f-891c-4fd17d701045
+county_centrality_df = DataFrame(
+	fips = node_county_ids,
+	eigv_c = eigenvector_centrality(g_county)
+	);
+
+# ╔═╡ 575ea397-6ce1-4424-aa49-fca631c89570
+let
+	fig = Figure()
+	ax = Axis(fig[1,1], title = "Social connectedness between US counties")
+	
+	image!(ax, RGBA.(0,0,0, min.(1.0, wgts2 .* 10_000)))
+	
+	fig
+end
+
+# ╔═╡ edf0f1e5-29eb-4bc9-88ca-2c1e0fbae7aa
+#county_name = "Cook"; state = "Illinois"
+county_name = "Los Angeles"; state = ""
+# county_name = "New York"; state = ""
+
+# ╔═╡ 3e01f0b2-0d1a-4fff-94c2-b3eb959fd08a
+# ╠═╡ disabled = true
+#=╠═╡
+county_shapes_df = get_county_shapes_info_df()
+  ╠═╡ =#
+
+# ╔═╡ 57368fa0-8f46-4711-9e76-bd7cc088efcb
+#=╠═╡
+fips, _df_ = let
+	_df_ = @subset(county_shapes_df, contains(county_name)(:county))
+	
+	if size(_df_, 1) == 1
+		fips = only(_df_.fips)
+	else
+		@subset!(_df_, :state == state)
+		if size(_df_, 1) == 1
+			fips = only(_df_.fips)
+		else
+			_df_
+		end
+	end
+	fips, _df_
+end
+  ╠═╡ =#
+
+# ╔═╡ c7bddeb3-943a-458e-83d0-8d6371b59529
+#=╠═╡
+let
+	df = @chain county_df begin
+		@subset(:user_loc == fips)
+		@select!(:fips = :fr_loc, :scaled_sci)
+		innerjoin(county_shapes_df, _, on=:fips)
+	end
+	
+	axis = (; title = "Social Connectedness with $county_name")
+	
+	aog = data(df) * visual(Poly) * mapping(:shape, color = :scaled_sci => log)
+	
+	draw(aog; axis)
+end
+  ╠═╡ =#
 
 # ╔═╡ e0d17116-710d-11eb-1719-e18f188a6229
 md"""
@@ -203,6 +272,86 @@ df_c = @chain county_df begin
 	disallowmissing!(:population)
 end
 
+# ╔═╡ 6f0b7a68-e830-4d37-a2bb-353205adb65f
+distance = 150
+
+# ╔═╡ afef1939-e7e8-4432-85c9-734d5c5c64ba
+concentration_df0 = combine(groupby(df_c, :user_loc)) do all
+		close = @subset(all, :distance < distance)
+		
+		concentration = dot(close.scaled_sci, close.population) / dot(all.scaled_sci, all.population)
+		
+		(; concentration)
+end
+
+# ╔═╡ c20c6133-73a3-4742-bf22-35a479a99a9b
+#=╠═╡
+concentration_df = let
+	df = innerjoin(county_shapes_df, concentration_df0, on=:fips => :user_loc)
+	
+	n = 40
+	q = quantile(df.concentration, weights(df.population), 0:1/n:1)
+	
+	df.conc_grp = cut(df.concentration, q, extend = true, labels = format)
+	df
+end;
+  ╠═╡ =#
+
+# ╔═╡ f7b9f84e-5b98-4b3c-a491-c14461bbcee8
+#=╠═╡
+centrality_df = let
+	df = innerjoin(county_shapes_df, county_centrality_df, on = :fips)
+	
+	n = 40
+	q = quantile(df.eigv_c, weights(df.population), 0:1/n:1)
+	
+	df.conc_grp = cut(df.eigv_c, q, extend = true, labels = format)
+	df
+end;
+  ╠═╡ =#
+
+# ╔═╡ cbed5f29-b55a-47a8-8986-0e98d4aed34b
+format(a, b, i; kwargs...) = "$i"
+
+# ╔═╡ c4c63797-1946-4a10-a03f-4c578ec5ae13
+#=╠═╡
+let
+	fig = Figure(resolution = (900, 330))
+	ax_1 = Axis(fig[1,1], title = "Scatter plot", ylabel = "log(population)")
+	ax_2 = Axis(fig[1,2], title = "Binned scatter plot", yticksvisible=false, yticklabelsvisible=false)
+	linkaxes!(ax_1, ax_2)
+	# common xlabel
+	Label(fig[1,1:2,Bottom()], "network concentration", padding = (0, 0, 0, 30))
+
+	df_co = concentration_df
+		
+	scatter!(ax_1, df_co.concentration, log.(df_co.population), color = (:black, 0.1), strokewidth = 0, label = "scatter")
+	
+	var = [:population, :concentration]
+	df = combine(
+		groupby(df_co, :conc_grp), 
+		([v, :population] => ((x,p) -> mean(x, weights(p))) => v for v in var)...
+	)
+	scatter!(ax_2, df.concentration, log.(df.population), color = :deepskyblue, label = "binscatter")
+		
+	fig
+end
+  ╠═╡ =#
+
+# ╔═╡ d47df7ce-4be0-41b9-8f7f-28a4abd54518
+extrema(skipmissing(df_c.mi_to_county))
+
+# ╔═╡ 147cfa50-9a8b-432e-881c-5b16a6711d5c
+#=╠═╡
+let	
+	aog = data(concentration_df) * visual(Poly) * mapping(:shape, color = :concentration)
+
+	# Set plot attributes
+	axis = (; title = "Network Concentration (% of friends closer than $distance mi)")
+	draw(aog; axis)
+end
+  ╠═╡ =#
+
 # ╔═╡ f3b6d9be-712e-11eb-2f2d-af92e85304b5
 md"""
 # US Presidential Elections 2020
@@ -223,7 +372,7 @@ md"""
 
 # ╔═╡ 1600f95e-8b98-47fe-be7d-b1983c6a07b0
 md"""
-# Exercise: The Social Connectedness Index
+# Assignment 4: The Social Connectedness Index
 """
 
 # ╔═╡ 50e332de-6f9a-11eb-3888-d15d986aca8e
@@ -831,14 +980,10 @@ md"""
 """
 
 # ╔═╡ 11fb9a53-01a3-4646-9498-3d3b6624e82c
-# ╠═╡ disabled = true
-#=╠═╡
 using GADM
-  ╠═╡ =#
 
 # ╔═╡ 581b8793-808e-469a-9a4a-27e5ccce85ea
-#=╠═╡
-county_shapes = let
+function get_county_shapes()
 	country_code = "USA"
 	lev2 = GADM.get(country_code, depth = 2)
 	
@@ -848,14 +993,13 @@ county_shapes = let
 		@transform!(:county_match = clean_county_name_for_matching(:county))
 	end
 end
-  ╠═╡ =#
 
 # ╔═╡ 2759d19a-a5bf-4c8a-ba95-f91c36c9a167
-#=╠═╡
-county_shapes_df = let
+function get_county_shapes_info_df()
+	shapes_df = get_county_shapes()
 	@chain pop_df begin
 		# join population with shapes
-		leftjoin(_, county_shapes, on = [:state, :county_match], makeunique=true)
+		leftjoin(_, shapes_df, on = [:state, :county_match], makeunique=true)
 		# drop counties for which there is no shape (mostly Alaska)
 		@aside begin
 			not_matched = @subset(_, any(ismissing.([:county_1, :fips])))
@@ -868,7 +1012,6 @@ county_shapes_df = let
 		disallowmissing!
 	end
 end
-  ╠═╡ =#
 
 # ╔═╡ 39d717a4-6c75-11eb-15f0-d537959a41b8
 md"""
@@ -895,6 +1038,9 @@ using Makie:
 		Legend, Figure, Axis, Colorbar,
 		lines!, scatter, scatter!, poly!, vlines!, hlines!, image!,
 		hidedecorations!, hidespines!
+
+# ╔═╡ d9dc06a2-74b6-4c3a-adc0-b80f883456e4
+using Makie: Label, Bottom, linkaxes!
 
 # ╔═╡ 13f8193c-57a7-495f-b52b-511adf792903
 using Colors: RGBA
@@ -2801,10 +2947,25 @@ version = "3.5.0+0"
 # ╠═d38c51d4-6cbb-11eb-09dc-a92080dea6c7
 # ╟─d127df3e-710d-11eb-391a-89f3aeb8c219
 # ╠═b20ab98c-710d-11eb-0a6a-7de2477acf35
+# ╠═e1c5a635-c008-4ead-b170-6f2353693e20
+# ╠═759dd2da-f043-468f-891c-4fd17d701045
+# ╟─575ea397-6ce1-4424-aa49-fca631c89570
+# ╠═edf0f1e5-29eb-4bc9-88ca-2c1e0fbae7aa
+# ╠═3e01f0b2-0d1a-4fff-94c2-b3eb959fd08a
+# ╠═57368fa0-8f46-4711-9e76-bd7cc088efcb
+# ╠═c7bddeb3-943a-458e-83d0-8d6371b59529
 # ╟─e0d17116-710d-11eb-1719-e18f188a6229
 # ╠═aab55326-7127-11eb-2f03-e9d3f30d1947
 # ╠═30350a46-712a-11eb-1d4b-81de61879835
 # ╠═b9c0be22-7128-11eb-3da8-bb3a49e95fd7
+# ╠═6f0b7a68-e830-4d37-a2bb-353205adb65f
+# ╠═afef1939-e7e8-4432-85c9-734d5c5c64ba
+# ╠═c20c6133-73a3-4742-bf22-35a479a99a9b
+# ╠═f7b9f84e-5b98-4b3c-a491-c14461bbcee8
+# ╠═cbed5f29-b55a-47a8-8986-0e98d4aed34b
+# ╟─c4c63797-1946-4a10-a03f-4c578ec5ae13
+# ╠═d47df7ce-4be0-41b9-8f7f-28a4abd54518
+# ╠═147cfa50-9a8b-432e-881c-5b16a6711d5c
 # ╟─f3b6d9be-712e-11eb-2f2d-af92e85304b5
 # ╠═1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
 # ╠═281198fa-712f-11eb-02ae-99a2d48099eb
@@ -2902,6 +3063,7 @@ version = "3.5.0+0"
 # ╠═393969b9-6447-4493-8af0-231811611c22
 # ╠═0baf1637-46b7-446c-8737-9ef25436ec83
 # ╠═d5139528-6dae-4e76-9b3a-c378219ea965
+# ╠═d9dc06a2-74b6-4c3a-adc0-b80f883456e4
 # ╠═13f8193c-57a7-495f-b52b-511adf792903
 # ╟─156b04d4-4e34-4128-a9b0-4e7b72c44623
 # ╠═bbf69c13-4757-4829-8690-16b1f201c24f
