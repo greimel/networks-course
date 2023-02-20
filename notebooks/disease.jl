@@ -60,6 +60,9 @@ using NearestNeighbors: BallTree, knn
 # ╔═╡ c178b435-98ac-4366-b4c9-d57b5be13897
 using Distributions: Distributions, LogNormal
 
+# ╔═╡ 54db603a-2751-425d-8e76-b9d0048869bf
+using PlutoTest: @test
+
 # ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
 md"""
 `disease.jl` | **Version 1.5** | *last updated: Feb 20, 2023*
@@ -237,7 +240,7 @@ p_range = 0.1:0.1:0.9
 md"""
 ## School closures
 
-_**See Assignment 2.**_
+__*See [last year's assignment](https://greimel.github.io/networks-course/notebooks_school-closures/)*__
 """
 
 # ╔═╡ 9f040172-36bd-4e46-9827-e25c5c7fba12
@@ -257,19 +260,32 @@ It's really hard to see the difference, so let's use an alternative visualizatio
 
 # ╔═╡ 79f3c8b7-dea6-473c-87e5-772e391a51f4
 md"""
-# Class Exercises
+# Assignment 3: Whom to vaccinate?
+
+> If you have 100 doses at your disposal, whom would you vaccinate?
 """
 
-# ╔═╡ ebd641ff-3249-49b7-ae77-3f7e0d4fd59d
-md"""
-## Class Exercise 1: Whom to vaccinate?
+# ╔═╡ 3bf0f92a-991d-42d3-ad30-28fb0acb3269
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]);
 
-Can you think of a way to improve the effectiveness of the vaccination program? If you have 100 doses at your disposal, whom would you vaccinate?
-"""
+# ╔═╡ 1e2189d3-58c5-4f7d-b76c-2e0ad5b7a803
+group_number = 99
+
+# ╔═╡ fd20d87b-204d-4f0c-b830-bfbe1b396fcb
+if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
+	md"""
+!!! danger "Note!"
+    **Before you submit**, please replace the randomly generated names [in this cell](#3bf0f92a-991d-42d3-ad30-28fb0acb3269) by the names of your group and put the right group number in [this cell](#1e2189d3-58c5-4f7d-b76c-2e0ad5b7a803).
+	"""
+end
 
 # ╔═╡ 12d7647e-6a13-11eb-2b1e-9f77bdb3a87a
 md"""
-## Class Exercise 2: Distinguishing Recovered and Dead
+## Task 1: Distinguishing `R`ecovered and `D`ead (3 points)
 """
 
 # ╔═╡ 98d449ac-695f-11eb-3daf-dffb377aa5e2
@@ -297,26 +313,27 @@ Great! You can now have a look how the simulations from the lecture have automat
 
 # ╔═╡ fac414f6-6961-11eb-03bb-4f58826b0e61
 md"""
-## Class Exercise 3a: Introduce age-specific death rates
+## Task 2: Introduce age-specific death rates (2 points)
 
-The death probabilities are highly heterogeneous across age groups. See for example [this article in Nature.](https://www.nature.com/articles/s41586-020-2918-0)
-
->  We find that age-specific IFRs estimated by the ensemble model range from 0.001% (95% credible interval, 0–0.001) in those aged 5–9 years old (range, 0–0.002% across individual national-level seroprevalence surveys) to 8.29% (95% credible intervals, 7.11–9.59%) in those aged 80+ (range, 2.49–15.55% across individual national-level seroprevalence surveys).
-
-$(Markdown.MD(Markdown.Admonition("danger", "Beware!", [md"These data are outdated."])))
-
-Below find the data from supplementary table S3 from this article.
+The death probabilities are highly heterogeneous across age groups. See for example [this (_dated_) article in Nature.](https://www.nature.com/articles/s41586-020-2918-0) Let us assume there are the following age groups with age specific $\delta$. *(Feel free to experiment a bit and change how these are computed.)*
 """
 
-# ╔═╡ 75b4c0c2-69f3-11eb-1ebc-75efd2d0bf1f
+# ╔═╡ b92329ed-668d-46b0-9d21-65b04294cf83
 md"""
-Let us assume there are the following age groups with age specific $\delta$. *(Feel free to experiment a bit and change how these are computed.)*
+We randomly assign each node into an age bin. This is visualized below.
+"""
+
+# ╔═╡ 6b93d1ab-ead5-4d3b-9d19-0d287611fbb6
+md"""
+We want to adjust the code so that it can handle node-specific $\delta$. The way we are going to do it is to pass a vector $\vec \delta = (\delta_1, \ldots, \delta_N)$ that holds the death probability for each node.
+
+👉 Go the the definition of `transition(::I, ...)`, make sure you understand the code snippet in the comment and uncomment the lines.
 
 """
 
 # ╔═╡ 1978febe-657c-11eb-04ac-e19b2d0e5a85
 md"""
-## Class Exercise 3b: Whom to vaccinate?
+## Task 3: Whom to vaccinate? (5 points)
 
 Can you think of a way to improve the effectiveness of the vaccination program? If you have 100 doses at your disposal, whom would you vaccinate?
 """
@@ -332,9 +349,43 @@ md"""
 👉 Decide which nodes you want to vaccinate and adjust the cell below. Make sure you only vaccinate `N_vacc` nodes.
 """
 
+# ╔═╡ 655dcc5d-9b81-4734-ba83-1b0570bed8e4
+answer3 = md"""
+Your answer
+
+goes here ...
+"""
+
+# ╔═╡ 00bd3b6a-19de-4edd-82c3-9c57b4de64f1
+md"""
+#### Before you submit ...
+
+👉 Make sure you have added your names [in this cell](#3bf0f92a-991d-42d3-ad30-28fb0acb3269) and your group number [in this cell](#1e2189d3-58c5-4f7d-b76c-2e0ad5b7a803).
+
+👉 Make sure that that **all group members proofread** your submission (especially your little essay).
+
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. In addition, **upload the source code** of the notebook (the .jl file).
+"""
+
+# ╔═╡ a81600e1-6b52-460c-808f-a785989bd4a6
+md"""
+## Appendix to Assignment
+"""
+
 # ╔═╡ 515edb16-69f3-11eb-0bc9-a3504565b80b
 md"""
 ### Details on age-specific infection fatality rates
+"""
+
+# ╔═╡ deb1435b-6267-40a9-8f94-b3491c0f1c6b
+md"""
+The death probabilities are highly heterogeneous across age groups. See for example [this article in Nature.](https://www.nature.com/articles/s41586-020-2918-0)
+
+>  We find that age-specific IFRs estimated by the ensemble model range from 0.001% (95% credible interval, 0–0.001) in those aged 5–9 years old (range, 0–0.002% across individual national-level seroprevalence surveys) to 8.29% (95% credible intervals, 7.11–9.59%) in those aged 80+ (range, 2.49–15.55% across individual national-level seroprevalence surveys).
+
+$(Markdown.MD(Markdown.Admonition("danger", "Beware!", [md"These data are outdated."])))
+
+Below find the data from supplementary table S3 from this article.
 """
 
 # ╔═╡ 74c35594-69f0-11eb-015e-2bf4b55e658c
@@ -745,88 +796,6 @@ end
 # ╔═╡ 7ed6b942-695f-11eb-38a1-e79655aedfa2
 fig_vaccc
 
-# ╔═╡ 29036938-69f4-11eb-09c1-63a7a75de61d
-age_graph = let
-	N = 1000
-	p = 0.5
-
-	node_df = DataFrame(
-		node_id = 1:N,
-		ρ = 0.5, δ = 0.01
-#		age_group = rand(Distributions.Categorical([0.4, 0.35, 0.25]), N)
-	)
-#	@chain node_df begin
-#		leftjoin!(_, ifr_df, on  = :age_group)
-#		@transform!(:δ = 20 * :δ)
-#	end
-	
-	@info node_df
-	
-	par = (; p)
-
-	graph, node_positions = spatial_graph(N)
-	
-	
-	(; par, graph, node_positions, node_df)
-end;	
-
-# ╔═╡ dceb5318-69fc-11eb-2e1b-0b8cef279e05
-vacc_age = let
-		
-	(; par, graph, node_positions, node_df) = age_graph
-	N = nv(graph)
-	
-	N_vacc = N ÷ 5
-
-	centr = betweenness_centrality(graph)
-	
-	split = 50
-	vaccinated = [
-		"none"    => [],
-		"random"  => pseudo_random(N, N_vacc, 4),
-		"central 1"=> sortperm(centr, rev=true)[1:N_vacc],
-		"central 2"=> sortperm(degree_centrality(graph), rev=true)[1:N_vacc],
-		# place your suggestions here!
-		]
-	
-	infected_nodes = pseudo_random(N, N ÷ 10, 1)
-	
-	sims = map(vaccinated) do (label, vacc_nodes)
-		init = initial_state(N, infected_nodes, vacc_nodes)
-		
-		sim = simulate(graph, par, 100, init; node_df)
-		
-		label => sim
-	end
-	
-	(; graph, node_positions, sims=sims)
-end;
-
-# ╔═╡ da82d3ea-69f6-11eb-343f-a30cdc36228a
-fig_vacc_age = let
-	state = "D"
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "#$(state) when vaccinating different groups")
-	
-	colors = cgrad(:viridis, min(5, length(vacc_age.sims)), categorical=true)
-
-	for (i, (lab, sim)) in enumerate(vacc_age.sims)
-				
-		df0 = fractions_over_time(sim)
-		
-		filter!(:state => ==(state), df0)
-		
-		lines!(df0.t, df0.fraction, label = lab, color = colors[i])
-	end
-	
-	# some attributes to make the legend nicer
-	attr = (orientation = :horizontal, tellwidth = :false, tellheight = true)
-
-	leg = Legend(fig[2,1], ax; attr...)
-
-	fig
-end
-
 # ╔═╡ 5fe4d47c-64b4-11eb-2a44-473ef5b19c6d
 md"""
 ## Utils
@@ -892,11 +861,6 @@ ifr_df0 = @chain ifr_csv begin
 	)
 end
 
-# ╔═╡ d18f1b0c-69ee-11eb-2fc0-4f14873847fb
-scatterlines(ifr_df0.age, ifr_df0.IFR_pc, 
-			 axis = (xlabel="age group", ylabel = "infection fatality ratio (%)")
-			)
-
 # ╔═╡ 57a72310-69ef-11eb-251b-c5b8ab2c6082
 ifr_df = @chain ifr_df0 begin
 	groupby(:age_bin)
@@ -905,6 +869,107 @@ ifr_df = @chain ifr_df0 begin
 	@transform(:ρ = 1/7)
 	@transform(:δ = get_δ_from_ifr(:IFR_pc, :ρ))
 end
+
+# ╔═╡ 29036938-69f4-11eb-09c1-63a7a75de61d
+age_graph = let
+	N = 1000
+	p = 0.5
+
+	node_df = DataFrame(
+		node_id = 1:N,
+#		ρ = 0.5, δ = 0.01
+		age_group = rand(Distributions.Categorical([0.4, 0.35, 0.25]), N)
+	)
+	@chain node_df begin
+		leftjoin!(_, ifr_df, on  = :age_group)
+		@transform!(:δ = 20 * :δ)
+	end
+	
+	par = (; p)
+
+	graph, node_positions = spatial_graph(N)
+	
+	(; par, graph, node_positions, node_df)
+end
+
+# ╔═╡ 97b92593-b859-4553-b8d0-a8f3f1445df3
+let
+	(; graph, node_positions, node_df) = age_graph
+
+	age_groups = unique(node_df.age_bin)
+	
+	colors = Makie.wong_colors()[[5,2,3,1,6,4,7]]
+	color_dict = Dict(s => colors[i] for (i,s) in enumerate(age_groups))
+
+	node_color = [color_dict[grp] for grp ∈ node_df.age_bin]
+	fig, ax, _ = graphplot(graph; layout = _ -> node_positions, node_color)
+
+	leg_df = [(; label, element = MarkerElement(; marker=:circle, color)) for (label, color) ∈ pairs(color_dict)] |> DataFrame
+
+	leg_df
+	axislegend(ax, leg_df.element, leg_df.label, "age bin")
+
+	fig
+end
+
+# ╔═╡ dceb5318-69fc-11eb-2e1b-0b8cef279e05
+vacc_age = let
+		
+	(; par, graph, node_positions, node_df) = age_graph
+	N = nv(graph)
+
+	#@info node_df
+	
+	N_vacc = N ÷ 5
+
+	centr = betweenness_centrality(graph)
+	
+	split = 50
+	vaccinated = [
+		"none"    => [],
+		"random"  => pseudo_random(N, N_vacc, 4),
+		"central 1"=> sortperm(centr, rev=true)[1:N_vacc],
+		# place your suggestions here!
+		]
+	
+	infected_nodes = pseudo_random(N, N ÷ 10, 1)
+	
+	sims = map(vaccinated) do (label, vacc_nodes)
+		init = initial_state(N, infected_nodes, vacc_nodes)
+		
+		sim = simulate(graph, par, 100, init; node_df)
+		
+		label => sim
+	end
+	
+	(; graph, node_positions, sims=sims)
+end;
+
+# ╔═╡ da82d3ea-69f6-11eb-343f-a30cdc36228a
+fig_vacc_age = let
+	state = isdefined(Main, :D) ? "D" : "I"
+
+	fig = Figure()
+	ax = Axis(fig[1,1], title = "#$(state) when vaccinating different groups")
+
+	for (i, (lab, sim)) in enumerate(vacc_age.sims)
+				
+		df0 = fractions_over_time(sim)
+		
+		filter!(:state => ==(state), df0)
+		
+		lines!(df0.t, df0.fraction, label = lab)
+	end
+	
+	axislegend(ax)
+
+	fig
+end
+
+# ╔═╡ d18f1b0c-69ee-11eb-2fc0-4f14873847fb
+scatterlines(ifr_df0.age, ifr_df0.IFR_pc, 
+			 axis = (xlabel="age group", ylabel = "infection fatality ratio (%)")
+			)
 
 # ╔═╡ 7f57095f-88c5-4d65-b758-3bc928ea8d76
 md"""
@@ -932,11 +997,6 @@ begin
 	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
 	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
 	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
-	function wordcount(text)
-		stripped_text = strip(replace(string(text), r"\s" => " "))
-    	words = split(stripped_text, ('-','.',',',':','_','"',';','!'))
-    	length(words)
-	end
 end
 
 # ╔═╡ b9c7df54-6a0c-11eb-1982-d7157b2c5b92
@@ -986,6 +1046,57 @@ begin
 	end
 end
 
+# ╔═╡ ff0608aa-4653-430c-a050-f7a987c5d520
+function wordcount(text)
+	stripped_text = strip(replace(string(text), r"\s" => " "))
+   	words = split(stripped_text, (' ', '-', '.', ',', ':', '_', '"', ';', '!', '\''))
+   	length(filter(!=(""), words))
+end
+
+# ╔═╡ d994b4c2-0e64-4d4b-b526-a876b4e0b0e3
+@test wordcount("  Hello,---it's me.  ") == 4
+
+# ╔═╡ 5cc16d98-a809-4276-8b17-2e858e8ec42a
+@test wordcount("This;doesn't really matter.") == 5
+
+# ╔═╡ 259a640c-73cf-4694-8bd2-da3f4dbdb2ce
+show_words(answer) = md"_approximately $(wordcount(answer)) words_"
+
+# ╔═╡ 989dd65c-c598-4dfc-9099-6f986847aa52
+function show_words_limit(answer, limit)
+	count = wordcount(answer)
+	if count < 1.02 * limit
+		return show_words(answer)
+	else
+		return almost(md"You are at $count words. Please shorten your text a bit, to get **below $limit words**.")
+	end
+end
+
+# ╔═╡ 3c83862c-3603-4f85-9a57-89e662b250df
+limit3 = 300; show_words_limit(answer3, limit3)
+
+# ╔═╡ eacde133-b154-4a09-b582-84d59dda3984
+md"""
+Now write a short essay describing your choice. *(Your simulation results are subject to random noise. Make sure you run you simulations multiple times to make sure they are robust.)*
+
+👉 Describe how you would select nodes to be vaccinated
+
+👉 Be accurate but concise. Aim at no more than $limit3 words.
+"""
+
+# ╔═╡ 7740e8e6-2063-4d9d-9c07-b7c164cf3310
+members = let
+	names = map(group_members) do (; firstname, lastname)
+		firstname * " " * lastname
+	end
+	join(names, ", ", " & ")
+end
+
+# ╔═╡ 1f53eee1-c160-468f-93b3-d43a87a863ec
+md"""
+*submitted by* **$members** (*group $(group_number)*)
+"""
+
 # ╔═╡ 96f5a53b-72ab-44db-b8f3-37ceb802bf1a
 md"""
 ## Acknowledgement
@@ -1017,6 +1128,7 @@ Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 NearestNeighbors = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
+PlutoTest = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
@@ -1035,6 +1147,7 @@ Graphs = "~1.8.0"
 Makie = "~0.19.2"
 NearestNeighbors = "~0.4.13"
 NetworkLayout = "~0.4.4"
+PlutoTest = "~0.2.2"
 PlutoUI = "~0.7.50"
 """
 
@@ -1044,7 +1157,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "83d84548b02f88901a44b0867b1dd4230147b46a"
+project_hash = "7846715c5ae5755e719f9293224115bb7b04b990"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -2008,6 +2121,12 @@ git-tree-sha1 = "c95373e73290cf50a8a22c3375e4625ded5c5280"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.3.4"
 
+[[deps.PlutoTest]]
+deps = ["HypertextLiteral", "InteractiveUtils", "Markdown", "Test"]
+git-tree-sha1 = "17aa9b81106e661cffa1c4c36c17ee1c50a86eda"
+uuid = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
+version = "0.2.2"
+
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
 git-tree-sha1 = "5bb5129fdd62a2bbbe17c2756932259acf467386"
@@ -2515,6 +2634,7 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
+# ╟─fd20d87b-204d-4f0c-b830-bfbe1b396fcb
 # ╟─0e30624c-65fc-11eb-185d-1d018f68f82c
 # ╟─f4266196-64aa-11eb-3fc1-2bf0e099d19c
 # ╟─43a25dc8-6574-11eb-3607-311aa8d5451e
@@ -2540,7 +2660,7 @@ version = "3.5.0+0"
 # ╟─ce75fe16-6570-11eb-3f3a-577eac7f9ee8
 # ╟─37972f08-db05-4e84-9528-fe16cd86efbf
 # ╟─f4cd5fb2-6574-11eb-37c4-73d4b21c1883
-# ╟─1bd2c660-6572-11eb-268c-732fd2210a58
+# ╠═1bd2c660-6572-11eb-268c-732fd2210a58
 # ╠═f8bfd21a-60eb-4293-bc66-89b194608be5
 # ╠═0b35f73f-6976-4d85-b61f-b4188440043e
 # ╟─2fd3fa39-5314-443c-a690-bf27de93e479
@@ -2551,13 +2671,15 @@ version = "3.5.0+0"
 # ╟─65df78ae-1533-4fad-835d-e301581d1c35
 # ╟─9f040172-36bd-4e46-9827-e25c5c7fba12
 # ╟─34b1a3ba-657d-11eb-17fc-5bf325945dce
-# ╠═83b817d2-657d-11eb-3cd2-332a348142ea
+# ╟─83b817d2-657d-11eb-3cd2-332a348142ea
 # ╟─bb924b8e-69f9-11eb-1e4e-7f841ac1c1bd
 # ╟─0d610e80-661e-11eb-3b9a-93af6b0ad5de
 # ╟─e8b7861e-661c-11eb-1c06-bfedd6ab563f
 # ╠═02b1e334-661d-11eb-3194-b382045810ef
 # ╟─79f3c8b7-dea6-473c-87e5-772e391a51f4
-# ╟─ebd641ff-3249-49b7-ae77-3f7e0d4fd59d
+# ╟─1f53eee1-c160-468f-93b3-d43a87a863ec
+# ╠═3bf0f92a-991d-42d3-ad30-28fb0acb3269
+# ╠═1e2189d3-58c5-4f7d-b76c-2e0ad5b7a803
 # ╟─12d7647e-6a13-11eb-2b1e-9f77bdb3a87a
 # ╟─98d449ac-695f-11eb-3daf-dffb377aa5e2
 # ╟─b9c7df54-6a0c-11eb-1982-d7157b2c5b92
@@ -2569,16 +2691,24 @@ version = "3.5.0+0"
 # ╟─11c507a2-6a0f-11eb-35bf-55e1116a3c72
 # ╟─48818cf0-6962-11eb-2024-8fca0690dd78
 # ╟─fac414f6-6961-11eb-03bb-4f58826b0e61
-# ╠═d18f1b0c-69ee-11eb-2fc0-4f14873847fb
-# ╟─75b4c0c2-69f3-11eb-1ebc-75efd2d0bf1f
-# ╠═57a72310-69ef-11eb-251b-c5b8ab2c6082
-# ╠═29036938-69f4-11eb-09c1-63a7a75de61d
+# ╟─57a72310-69ef-11eb-251b-c5b8ab2c6082
+# ╟─b92329ed-668d-46b0-9d21-65b04294cf83
+# ╟─97b92593-b859-4553-b8d0-a8f3f1445df3
+# ╟─6b93d1ab-ead5-4d3b-9d19-0d287611fbb6
+# ╟─29036938-69f4-11eb-09c1-63a7a75de61d
 # ╟─1978febe-657c-11eb-04ac-e19b2d0e5a85
 # ╠═18e84a22-69ff-11eb-3909-7fd30fcf3040
 # ╟─0d2b1bdc-6a14-11eb-340a-3535d7bfbec1
-# ╠═dceb5318-69fc-11eb-2e1b-0b8cef279e05
+# ╟─eacde133-b154-4a09-b582-84d59dda3984
+# ╠═655dcc5d-9b81-4734-ba83-1b0570bed8e4
+# ╟─3c83862c-3603-4f85-9a57-89e662b250df
+# ╟─dceb5318-69fc-11eb-2e1b-0b8cef279e05
 # ╟─da82d3ea-69f6-11eb-343f-a30cdc36228a
+# ╟─00bd3b6a-19de-4edd-82c3-9c57b4de64f1
+# ╟─a81600e1-6b52-460c-808f-a785989bd4a6
 # ╟─515edb16-69f3-11eb-0bc9-a3504565b80b
+# ╟─deb1435b-6267-40a9-8f94-b3491c0f1c6b
+# ╟─d18f1b0c-69ee-11eb-2fc0-4f14873847fb
 # ╠═1abd6992-6962-11eb-3db0-f3dbe5f095eb
 # ╠═07c102c2-69ee-11eb-3b29-25e612df6911
 # ╟─74c35594-69f0-11eb-015e-2bf4b55e658c
@@ -2627,6 +2757,13 @@ version = "3.5.0+0"
 # ╟─bed07322-64b1-11eb-3324-7b7ac5e8fba2
 # ╠═31bbc540-68cd-4d4a-b87a-d648e003524c
 # ╠═21dfdec3-db5f-40d7-a59e-b1c323a69fc8
+# ╠═ff0608aa-4653-430c-a050-f7a987c5d520
+# ╠═54db603a-2751-425d-8e76-b9d0048869bf
+# ╠═d994b4c2-0e64-4d4b-b526-a876b4e0b0e3
+# ╠═5cc16d98-a809-4276-8b17-2e858e8ec42a
+# ╠═259a640c-73cf-4694-8bd2-da3f4dbdb2ce
+# ╠═989dd65c-c598-4dfc-9099-6f986847aa52
+# ╠═7740e8e6-2063-4d9d-9c07-b7c164cf3310
 # ╟─96f5a53b-72ab-44db-b8f3-37ceb802bf1a
 # ╟─7e754b5f-0078-43e7-b0ca-eaef2fcf3e53
 # ╟─00000000-0000-0000-0000-000000000001
