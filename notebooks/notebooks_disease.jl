@@ -94,6 +94,19 @@ end
 # ╔═╡ f48fa122-649a-11eb-2041-bbf0d0c4670c
 const States = Union{subtypes(State)...}
 
+# ╔═╡ b3eebd0f-fb4c-420e-b2ca-e0b836e191c6
+function noise(x::S)
+	"I am fine!"
+end
+
+# ╔═╡ ea87e96c-1a3d-4b4e-a59d-6a6f64a754df
+function noise(x::I)
+	"I scream!"
+end
+
+# ╔═╡ 8cd0fdd3-b281-4846-9d30-56b7967b6b91
+noise(I())
+
 # ╔═╡ 10dd6814-f796-42ea-8d40-287ed7c9d239
 md"
 ## Define the transitions
@@ -302,15 +315,20 @@ out_vacc.fig
 # ╔═╡ bb924b8e-69f9-11eb-1e4e-7f841ac1c1bd
 vacc = let
 	N = 1000
+	N_vacc = N ÷ 5
 
 	par = (; p = 0.1)
 	
 	graph, node_positions = spatial_graph(N)
 	node_df = DataFrame(node_id = 1:nv(graph), ρ = ρ0, δ = δ0)
 	
+	@transform!(node_df, :degree = @bycol degree(graph))
+	sort!(node_df, :degree, rev=true)
+	
 	vaccinated = [
 		"none"   => [],
-		"random" => pseudo_random(N, N ÷ 5, 3),	
+		"random" => pseudo_random(N, N_vacc, 3),	
+		"degree" => node_df.node_id[1:N_vacc],
 		# place for your suggestions
 		]
 	
@@ -905,7 +923,7 @@ function plot_diffusion!(figpos, graph, sim, t, color_dict; kwargs...)
 	hidedecorations!(ax)
 
 	N, T = size(sim)
-	msize = N < 20 ? 15 : N < 100 ? 5 : 3
+	msize = N < 20 ? 15 : N ≤ 100 ? 10 : 7
 
 	graphplot!(ax, graph;
 		node_size  = msize,
@@ -1160,7 +1178,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "7846715c5ae5755e719f9293224115bb7b04b990"
+project_hash = "360743077ccdfc5209359b0723cabca6fed13299"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -2649,6 +2667,9 @@ version = "3.5.0+0"
 # ╟─2f9f008a-64aa-11eb-0d9a-0fdfc41d4657
 # ╠═b8d874b6-648d-11eb-251c-636c5ebc1f42
 # ╠═f48fa122-649a-11eb-2041-bbf0d0c4670c
+# ╠═b3eebd0f-fb4c-420e-b2ca-e0b836e191c6
+# ╠═ea87e96c-1a3d-4b4e-a59d-6a6f64a754df
+# ╠═8cd0fdd3-b281-4846-9d30-56b7967b6b91
 # ╟─10dd6814-f796-42ea-8d40-287ed7c9d239
 # ╠═8ddb6f1e-649e-11eb-3982-83d2d319b31f
 # ╠═61a36e78-57f8-4ef0-83b4-90e5952c116f
@@ -2664,14 +2685,14 @@ version = "3.5.0+0"
 # ╟─ce75fe16-6570-11eb-3f3a-577eac7f9ee8
 # ╟─37972f08-db05-4e84-9528-fe16cd86efbf
 # ╟─f4cd5fb2-6574-11eb-37c4-73d4b21c1883
-# ╠═1bd2c660-6572-11eb-268c-732fd2210a58
+# ╟─1bd2c660-6572-11eb-268c-732fd2210a58
 # ╠═f8bfd21a-60eb-4293-bc66-89b194608be5
-# ╠═0b35f73f-6976-4d85-b61f-b4188440043e
+# ╟─0b35f73f-6976-4d85-b61f-b4188440043e
 # ╟─2fd3fa39-5314-443c-a690-bf27de93e479
 # ╟─78e729f8-ac7d-43c5-ad93-c07d9ac7f30e
 # ╠═49b21e4e-6577-11eb-38b2-45d30b0f9c80
 # ╠═7b43d3d6-03a0-4e0b-96e2-9de420d3187f
-# ╠═c5f48079-f52e-4134-8e6e-6cd4c9ee915d
+# ╟─c5f48079-f52e-4134-8e6e-6cd4c9ee915d
 # ╟─65df78ae-1533-4fad-835d-e301581d1c35
 # ╟─9f040172-36bd-4e46-9827-e25c5c7fba12
 # ╟─34b1a3ba-657d-11eb-17fc-5bf325945dce
@@ -2679,7 +2700,7 @@ version = "3.5.0+0"
 # ╟─bb924b8e-69f9-11eb-1e4e-7f841ac1c1bd
 # ╟─0d610e80-661e-11eb-3b9a-93af6b0ad5de
 # ╟─e8b7861e-661c-11eb-1c06-bfedd6ab563f
-# ╠═02b1e334-661d-11eb-3194-b382045810ef
+# ╟─02b1e334-661d-11eb-3194-b382045810ef
 # ╟─79f3c8b7-dea6-473c-87e5-772e391a51f4
 # ╟─1f53eee1-c160-468f-93b3-d43a87a863ec
 # ╠═3bf0f92a-991d-42d3-ad30-28fb0acb3269
@@ -2706,7 +2727,7 @@ version = "3.5.0+0"
 # ╟─eacde133-b154-4a09-b582-84d59dda3984
 # ╠═655dcc5d-9b81-4734-ba83-1b0570bed8e4
 # ╟─3c83862c-3603-4f85-9a57-89e662b250df
-# ╟─dceb5318-69fc-11eb-2e1b-0b8cef279e05
+# ╠═dceb5318-69fc-11eb-2e1b-0b8cef279e05
 # ╟─da82d3ea-69f6-11eb-343f-a30cdc36228a
 # ╟─00bd3b6a-19de-4edd-82c3-9c57b4de64f1
 # ╟─a81600e1-6b52-460c-808f-a785989bd4a6
