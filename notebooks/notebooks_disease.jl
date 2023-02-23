@@ -27,7 +27,7 @@ end
 
 # ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
 md"""
-`disease.jl` | **Version 1.5** | *last updated: Feb 20, 2023*
+`disease.jl` | **Version 1.6** | *last updated: Feb 23, 2023*
 """
 
 # ╔═╡ f4266196-64aa-11eb-3fc1-2bf0e099d19c
@@ -626,7 +626,7 @@ end;
 
 # ╔═╡ da82d3ea-69f6-11eb-343f-a30cdc36228a
 fig_vacc_age = let
-	state = isdefined(Main, :D) ? "D" : "I"
+	state = @isdefined(D) ? "D" : "I"
 
 	fig = Figure()
 	ax = Axis(fig[1,1], title = "#$(state) when vaccinating different groups")
