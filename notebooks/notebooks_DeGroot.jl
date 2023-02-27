@@ -19,7 +19,7 @@ end
 
 # ╔═╡ 0b79fb30-66d3-11eb-052b-89cfca69b3a6
 md"""
-`DeGroot.jl` | **Version 1.1** | *last updated: Feb 20, 2023*
+`DeGroot.jl` | **Version 1.2** | *last updated: Feb 21, 2023*
 """
 
 # ╔═╡ 7c18cc0e-66d3-11eb-3e8e-09d869dd5731
@@ -54,12 +54,13 @@ let
 	fig = Figure()
 	graphs = SimpleWeightedDiGraph.(Ts)
 
-	graphplot(fig[1,1], graphs[1]; attr..., axis=(; minimal..., title = L"T_1"))
-	graphplot(fig[1,2], graphs[2]; attr..., axis=(; minimal..., title = L"T_2"))
-	graphplot(fig[2,1], graphs[3]; attr..., axis=(; minimal..., title = L"T_3"))
-	graphplot(fig[2,2], graphs[4]; attr..., axis=(; minimal..., title = L"T_4"))
+	graphplot_attr = attr()
+	namedgraphplot(fig[1,1], graphs[1]; graphplot_attr, axis=minimal(title = L"T_1"))
+	namedgraphplot(fig[1,2], graphs[2]; graphplot_attr, axis=minimal(title = L"T_2"))
+	namedgraphplot(fig[2,1], graphs[3]; graphplot_attr, axis=minimal(title = L"T_3"))
+	namedgraphplot(fig[2,2], graphs[4]; graphplot_attr, axis=minimal(title = L"T_4"))
 
-	fig
+	fig |> as_svg
 end
 
 # ╔═╡ d40534d4-70a6-11eb-1328-ab8035477d42
@@ -68,18 +69,17 @@ b0 = [0.2, 0.4, 0.6, 0.8, 1.0]
 # ╔═╡ ee95d1c0-70a4-11eb-1e80-e14803784028
 graph = SimpleWeightedDiGraph(T)
 
-# ╔═╡ 4fc6519d-cffc-41a6-80ba-0be59425391a
-T_selector = @bind T Select(Ts .=> string.("T_", 1:4))
-
 # ╔═╡ 0768c5b2-70a6-11eb-0f12-8d88a86c926b
-graphplot(graph;
-	nlabels = string.(vertices(graph)),
-	elabels = string.(weight.(edges(graph))),
-	attr..., axis=minimal
-)
+namedgraphplot(graph;
+	graphplot_attr = attr(elabels=string.(weight.(edges(graph)))),
+	axis=minimal()
+) |> as_svg
 
 # ╔═╡ a219b85a-70a6-11eb-383e-7fabc0c25676
-T^50 * b0
+(T^50 * b0)
+
+# ╔═╡ 4fc6519d-cffc-41a6-80ba-0be59425391a
+T_selector = @bind T Select(Ts .=> string.("T_", 1:4))
 
 # ╔═╡ 10ef06bc-70ab-11eb-027d-fb5b67cccd8b
 data(b_stacked(T,b0,50)) * mapping(:t => L"time $t$", :opinion, color=:node) * visual(Lines) |> draw
@@ -125,6 +125,12 @@ T_selector
 # ╔═╡ 8ed6464e-70ad-11eb-22d1-53ae9a60fa65
 T^10_000
 
+# ╔═╡ 5d438de1-9ea6-4f4b-9c28-64ecb0075c1c
+# ╠═╡ disabled = true
+#=╠═╡
+T4^10_001
+  ╠═╡ =#
+
 # ╔═╡ 0ec5eee0-70ae-11eb-2d6f-ebc6c9621c72
 md"
 ### Exercise 3
@@ -148,13 +154,13 @@ real_if_real(x) = isreal(x) ? real(x) : x
 normalized_eigvecs = unit_eigvecs ./ sum(unit_eigvecs, dims=1) |> real_if_real
 
 # ╔═╡ 484cadde-b23e-46ed-a990-47603908b3d6
-graphplot(graph;
-	nlabels = 
-		string.(vertices(graph)) .* ", " .*
-		string.("eigvec: ", round.(vec(sum(normalized_eigvecs, dims=2)), digits=2)),
-	elabels = string.(weight.(edges(graph))),
-	attr..., axis=minimal
-)
+namedgraphplot(graph;
+	graphplot_attr = attr(
+		elabels = string.(weight.(edges(graph))),
+		nlabels = string.("eigvec: ", round.(vec(sum(normalized_eigvecs, dims=2)), digits=2))
+	),
+	axis=minimal()
+) |> as_svg
 
 # ╔═╡ cfc9f604-6604-11eb-23bc-699617b17d7d
 md"""
@@ -170,18 +176,15 @@ md"""
 """
 
 # ╔═╡ 31153893-9bc0-4ab6-ba6a-df93b1ab73b9
-fixed_layout(_) = Point2{Float64}[(0,1), (1,0), (1, 1), (1,2), (2,1)]
-
-# ╔═╡ 15613eff-74e5-4220-8986-2341198db46d
-node_attr = (markersize = 20, color = "orange", strokewidth = 1, strokecolor = :black)
+fixed_layout(_) = Point2{Float64}[(2,1), (1,2), (1, 1), (0,1), (1,0)]
 
 # ╔═╡ a0e827fa-0d0e-4595-beb2-da38c79b47f2
-attr = (; layout = fixed_layout, node_attr, arrow_size = 20, elabels_distance = 15, nlabels_distance = 10)
+attr(; args...) = (; layout = fixed_layout, arrow_size = 20, elabels_distance = 15, nlabels_distance = 10, args...)
 
 # ╔═╡ 6566756b-3ae7-40d3-ad7f-c22508154155
-minimal = (; 
+minimal(; args...) = (; 
 	xgridvisible=false, xticksvisible=false, xticklabelsvisible=false,
-	ygridvisible=false, yticksvisible=false, yticklabelsvisible=false
+	ygridvisible=false, yticksvisible=false, yticklabelsvisible=false, args...
 )
 
 # ╔═╡ 6783eac7-4c3a-4ebf-83d2-33b3378f5c8b
@@ -196,7 +199,7 @@ using PlutoUI
 using Graphs
 
 # ╔═╡ 7f631fb1-85ab-4195-923e-b8916c3ab7f7
-using GraphMakie: graphplot
+using GraphMakie: graphplot, graphplot!
 
 # ╔═╡ 3dcf6694-f107-4f79-88d0-66730b515cbf
 using CairoMakie
@@ -221,6 +224,109 @@ using AlgebraOfGraphics: data, mapping, visual, draw
 
 # ╔═╡ 3e9756ae-8a55-4d0d-8ae6-e8aa8bcd71fb
 using DataFrameMacros: @transform!
+
+# ╔═╡ f1cdcf84-96d5-4da4-acb6-3cb11b77c35b
+md"""
+## Named GraphPlot
+"""
+
+# ╔═╡ 4763df34-59da-4230-8589-793fad7b7376
+using GraphMakie: automatic
+
+# ╔═╡ f1d2ed15-b90b-4bb0-a773-e130d7554ec9
+begin
+	@recipe(NamedGraphPlot, graph) do scene
+	    scatter_theme = default_theme(scene, Scatter)
+	    lineseg_theme = default_theme(scene, LineSegments)
+	    labels_theme = default_theme(scene, Makie.Text)
+	    Attributes(
+			graphplot_attr = Attributes(),
+	        # node attributes (Scatter)
+	        node_color = :orange, #lightgray,
+			node_strokewidth = 0.5,
+	        node_size = automatic,
+	        node_marker = :circle,
+			node_aspect = :regular, # need for a better name
+			node_labels = automatic,
+			node_font=labels_theme.fonts.regular,
+			node_fontsize=labels_theme.fontsize
+	    )
+	end
+	
+	function Makie.plot!(ngp::NamedGraphPlot)
+		# Extract attributes from plot object
+		(; graph, graphplot_attr,
+		   node_color, node_strokewidth, node_size, node_aspect,
+		   node_marker, node_labels, node_font, node_fontsize) = ngp
+
+		# Compute marker sizes
+		out = lift(
+				 node_labels, graph, node_size, node_fontsize, node_font, node_aspect
+			) do node_labels, graph, node_size, node_fontsize, node_font, node_aspect
+			
+			if node_labels === automatic
+				node_labels = string.(1:nv(graph))
+			end
+				
+			# Extract text sizes and layout accordingly
+		    label_sizes = [widths(text_bbox(
+				string(label), 
+				node_fontsize,
+				node_font,
+				(:center, :center),
+				0f0, 0, 0
+			)) for label in node_labels]
+		
+			# if regular: use circle/square, otherwise elipse/rectangle
+			if node_aspect === :regular
+				label_sizes = [max(pt...) for pt in label_sizes]
+			end
+				
+			# We can specify markersize as a Vec2f, which is the eltype of label_sizes.
+		    # Thus, we can explicitly cause the node drawing to be large enough
+			# to accomodate the marker size.
+			if node_size === automatic
+				node_size = map(x -> 1.7x .+ 0node_fontsize, label_sizes)
+			end
+	
+			(; node_labels, label_sizes, node_size)
+		end
+	
+		@lift (; node_labels, label_sizes, node_size) = $out
+		
+		node_attr = (; 
+	        marker = node_marker,
+			color = node_color,
+	        strokewidth = node_strokewidth,
+			markersize = node_size, 
+	        markerspace = :pixel,
+	    )
+	
+		if hasproperty(graphplot_attr, :node_attr)
+			@warn "Ignoring :node_attr"
+			delete!(graphplot_attr, :node_attr)
+		end
+	
+		gp = graphplot!(ngp, graph; graphplot_attr..., node_attr)
+	
+		positions = @lift($(gp[:layout])($graph))
+		
+		text!(ngp, positions; text=node_labels, font=node_font, fontsize=node_fontsize, align = (:center, :center))
+		
+	    return ngp
+	end
+end
+
+# ╔═╡ 7e7b4610-f904-45fc-8a28-982a90b32ba5
+function text_bbox(textstring::AbstractString, fontsize::Union{AbstractVector, Number}, font, align, rotation, justification, lineheight)
+    glyph_collection = Makie.layout_text(
+            textstring, fontsize,
+            font, nothing, align, rotation, justification, lineheight,
+            RGBAf(0,0,0,0), RGBAf(0,0,0,0), 0f0, 100
+        )
+
+    return Rect2f(Makie.boundingbox(glyph_collection, Point3f(0), Makie.to_rotation(rotation)))
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1702,9 +1808,9 @@ version = "3.5.0+0"
 # ╟─ddc5227d-fa44-4b43-aca4-143a1c667d08
 # ╠═d40534d4-70a6-11eb-1328-ab8035477d42
 # ╠═ee95d1c0-70a4-11eb-1e80-e14803784028
-# ╟─4fc6519d-cffc-41a6-80ba-0be59425391a
 # ╟─0768c5b2-70a6-11eb-0f12-8d88a86c926b
 # ╠═a219b85a-70a6-11eb-383e-7fabc0c25676
+# ╟─4fc6519d-cffc-41a6-80ba-0be59425391a
 # ╟─10ef06bc-70ab-11eb-027d-fb5b67cccd8b
 # ╠═7fa6510c-70a9-11eb-0982-15947053cc29
 # ╠═852bd999-ae17-4de3-9c6a-4885acd7b3f1
@@ -1712,18 +1818,18 @@ version = "3.5.0+0"
 # ╟─cded1e0c-70ad-11eb-0b7c-b9b5ddcbdbf0
 # ╟─a60eaa0b-8aea-4dbb-87c6-3f002c588691
 # ╠═8ed6464e-70ad-11eb-22d1-53ae9a60fa65
+# ╠═5d438de1-9ea6-4f4b-9c28-64ecb0075c1c
 # ╟─0ec5eee0-70ae-11eb-2d6f-ebc6c9621c72
 # ╟─cb386335-d482-41e7-aa5b-e426c396d61a
 # ╠═0c36064b-3c67-4641-aa75-726f65367524
 # ╠═8a55a6c3-2432-49c1-87f4-839beabe87f1
 # ╠═80eae80c-9762-42ae-8e85-f61d37d029ee
 # ╠═5f653efe-138d-4841-b5a5-229bca236f81
-# ╟─484cadde-b23e-46ed-a990-47603908b3d6
+# ╠═484cadde-b23e-46ed-a990-47603908b3d6
 # ╟─cfc9f604-6604-11eb-23bc-699617b17d7d
 # ╠═a77dc094-8f4d-4eaf-b395-121f4412e086
 # ╟─9c43a3db-d669-473a-a16d-7ad5e1102997
 # ╠═31153893-9bc0-4ab6-ba6a-df93b1ab73b9
-# ╠═15613eff-74e5-4220-8986-2341198db46d
 # ╠═a0e827fa-0d0e-4595-beb2-da38c79b47f2
 # ╠═6566756b-3ae7-40d3-ad7f-c22508154155
 # ╟─6783eac7-4c3a-4ebf-83d2-33b3378f5c8b
@@ -1738,5 +1844,9 @@ version = "3.5.0+0"
 # ╠═50d7de9b-b2b7-4b2c-baa8-c09e82ced9a1
 # ╠═fbf3a3ca-4130-49b6-baaa-e42388204003
 # ╠═3e9756ae-8a55-4d0d-8ae6-e8aa8bcd71fb
+# ╟─f1cdcf84-96d5-4da4-acb6-3cb11b77c35b
+# ╠═4763df34-59da-4230-8589-793fad7b7376
+# ╠═f1d2ed15-b90b-4bb0-a773-e130d7554ec9
+# ╠═7e7b4610-f904-45fc-8a28-982a90b32ba5
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
