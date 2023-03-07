@@ -118,14 +118,14 @@
                 "preview_image_url": ""
             },
             {
-                "name": "Systemic risk (updated for TI)",
-                "notebook_path": "notebooks/systemic-risk-new.jl",
+                "name": "Systemic risk",
+                "notebook_path": "notebooks/systemic-risk.jl",
                 "video_id": "",
                 "preview_image_url": ""
             },
             {
                 "name": "Systemic risk (old)",
-                "notebook_path": "notebooks/systemic-risk.jl",
+                "notebook_path": "notebooks/systemic-risk-old.jl",
                 "video_id": "",
                 "preview_image_url": ""
             }
