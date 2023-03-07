@@ -17,9 +17,6 @@ end
 # ╔═╡ 36ac25b9-27e5-4728-bbcf-920f231ff6ab
 using Revise
 
-# ╔═╡ 022f88ba-e36a-497e-9374-e9f71ae30603
-using DocStringExtensions
-
 # ╔═╡ 4878d013-053d-4490-b7c6-db0de4bf0a82
 using PlutoUI: NumberField
 
@@ -80,6 +77,9 @@ using DataFrames, DataFrameMacros
 # ╔═╡ 955c190a-1d00-4c78-bdfb-daac31edf76f
 using Roots: find_zero
 
+# ╔═╡ fc01674e-73de-4cbf-9c80-fa1ea47fcb21
+using Colors: @colorant_str
+
 # ╔═╡ 00a4054a-dd10-4c5c-ae20-c0dc176e8e18
 using Statistics: mean
 
@@ -91,6 +91,12 @@ using NamedTupleTools
 
 # ╔═╡ 8f15ccf5-860a-47ca-b5c2-842c4e6f861a
 using CairoMakie: @key_str, @lift, @L_str
+
+# ╔═╡ 3758f272-297c-4325-9a7c-042b4f41d615
+using CairoMakie, AlgebraOfGraphics, Colors
+
+# ╔═╡ a349099a-64aa-4e86-9bf2-b6157feff394
+using LaTeXStrings
 
 # ╔═╡ c9775558-94f2-4c8c-9d0e-ab948fa5ead4
 using PlutoTest: @test
@@ -133,21 +139,6 @@ md"""
 ## Model I: Banks
 """
 
-# ╔═╡ 9bfa4a0b-b87a-4d53-acb6-c1e5e49561bb
-"""
-This is a bank
-
-$(FIELDS)
-"""
-Base.@kwdef struct Bank
-	"Outside (senior) obligations (liability)."
-	ν = 4.5
-	"Outside (senior) assets (cash)."
-	c = 0.0
-	"shares in firms"
-	shares = [0.5]
-end
-
 # ╔═╡ acfdf348-e8bf-41ee-aa19-fe7ec29087cc
 md"""
 ## Model II: Firms
@@ -158,32 +149,6 @@ md"""
 * final pay-off ``(1-\tilde ℓ) A``
 
 """
-
-# ╔═╡ 72c429c6-8214-43b5-87f7-a2021d57c32c
-firms_doc = raw"""
-Firms start with a working capital of ``1``. The working capital is needed for production. If the firm stays fully capitalized it will pay out dividends ``z_i = a - \varepsilon_i`` in period ``t = 1`` and ``A`` in period ``t=2``. The payments are 
-```math
-(z_i, A).
-```
-""";
-
-# ╔═╡ d2b7000c-a74d-4467-a16f-ba4b291a00e7
-Markdown.parse(firms_doc)
-
-# ╔═╡ b8568c28-9abf-4740-90f0-14e74da176e5
-"""
-$firms_doc
-
-$(FIELDS)
-"""
-Base.@kwdef struct Firm{T}
-	"Payoff in ``t=2``"
-	A::T = 3.0
-	"Payoff in ``t=1`` (absent shock; think _dividend_)"
-	a::T = 1.0
-	"fraction of non-replacable capital that can be recovered in case of liquidation"
-	ζ::T = 0.1
-end
 
 # ╔═╡ 2f69a836-7fed-42e6-a509-096bc8cabbc2
 dividend((; a), ε) = max(a - ε, 0.0)
@@ -197,16 +162,6 @@ function cashflow₁(firm, ε, ℓ)
 	rec = recovery(firm, ℓ)
 	cf = div + rec
 	(; cf, div, rec)
-end
-
-# ╔═╡ 3786db5d-d07b-4a56-8e9d-26f69a12cc22
-let
-	f = Firm()
-	ε = 0.0
-	ℓ = 0.0
-	dividend(f, ε)
-	recovery(f, ℓ)
-	cashflow₁(f, ε, ℓ)
 end
 
 # ╔═╡ a0ac4092-cd27-4523-85f9-f4a4d81456b3
@@ -233,6 +188,13 @@ md"""
 # ╔═╡ 0e4a53b5-1751-4723-a05d-a5504e427e3c
 
 
+# ╔═╡ 523e177c-f74d-4805-8a2b-9c27a4b0bc63
+md"""
+* size of shock $(@bind ε_cash Slider(0.0:0.05:1.0, show_value = true, default = 0.0))
+* show illiquid firm value ``A`` $(@bind show_illiquid CheckBox(default = false))
+* recovery rate ``ζ`` $(@bind recovery_rate Slider(0:0.1:0.5, show_value = true, default = 0.0))
+""" |> aside
+
 # ╔═╡ 7f058e4a-9b12-41c9-9fd7-4ad023058a14
 md"""
 # III. Financial Contagion
@@ -241,6 +203,21 @@ md"""
 * ``\implies`` lower interbank receivables for other banks
 * ``\implies`` reduces distance to default
 """
+
+# ╔═╡ 96878ebb-fbc0-4d53-998a-210e13a42492
+md"""
+| variable            | value                                                        |
+|:------------------- | :----------------------------------------------------------- |
+| ring vs complete ``γ`` | $(@bind γ2 Slider(0:0.01:1, default=0.5, show_value=true))|
+| dividend ``a``      | $(@bind a Slider(0:0.01:1, default=0.7, show_value=true))    |
+| recovery rate ``ζ`` | $(@bind ζ Slider(0:0.01:1, default=0.3, show_value=true))    |
+| **external**        | |
+| cash ``c``          | $(@bind c Slider(0:0.1:2, default=1.2, show_value=true))     |
+| shock ``ε``         | $(@bind ε Slider(0:0.1:2, default=0.0, show_value=true))     |
+| deposits ``ν``      | $(@bind ν Slider(0.0:0.1:2, default=1.8, show_value=true))   |
+| **internal**        | |
+| interbank ``y``     | $(@bind y Slider(0:0.1:2, default=1.0, show_value=true))     |
+""" |> aside
 
 # ╔═╡ 9446b4db-4d93-4153-84e2-73d01fb31254
 
@@ -490,6 +467,24 @@ exX = let
 	(; n, color = df.color, node_styles)
 end;
 
+# ╔═╡ b1c0d43c-f483-4290-998f-177ce79f41fa
+function node_legend(figpos, node_styles, title = "")
+	
+	elems = [MarkerElement(; color, markersize = 15, marker = :circle) for color ∈ node_styles.color]
+
+	if length(title) == 0
+		title_tuple = ()
+	else
+		title_tuple = (title, )
+	end
+	
+	Legend(
+		figpos,
+    	elems, node_styles.label, title_tuple...;
+		orientation=:horizontal, titleposition=:left, framevisible=false
+	)
+end
+
 # ╔═╡ 4e9b785f-ad74-4aa8-ad48-89fa8b236939
 md"""
 # Appendix
@@ -507,9 +502,6 @@ md"""
 md"""
 ## Packages
 """
-
-# ╔═╡ f5a24d09-e1af-4040-ba6f-90f12778a2ad
-
 
 # ╔═╡ 11d6ac4f-e910-4a9f-9ee4-bdd270e9400b
 md"""
@@ -536,6 +528,13 @@ md"""
 
 # ╔═╡ cc1ff1e6-2968-4baf-b513-e963ab2ff1b4
 blur(text) = @htl("""<span class="blurry-text">$text</span>""")
+
+# ╔═╡ 1d5d8c8a-8d86-426f-bb17-bd2279d91ff1
+md"""
+* ring vs complete ``(γ)``: $(@bind _γ_ Slider(0:0.1:1.0, show_value = true, default = 0.5))
+* shock to bank ``1`` ``(ε)``: $(@bind _ε_ Slider(0.0:0.05:1, show_value = true, default = 0.0))
+*  $(blur("number of islands:")) $(@bind n_islands Slider(1:3, show_value = true, default = 1))
+"""
 
 # ╔═╡ c65323f5-211d-4a95-aed3-d6129bdd083e
 strike(text) = @htl("<s>$text</s>")
@@ -644,6 +643,9 @@ hatch_dict = Dict(
 # ╔═╡ d285879a-bdfd-4efa-aa5d-9dacf08a2dc6
 hatches = [:\, :/, :-, :|, :x, :+]
 
+# ╔═╡ 70bbb90e-06f1-4b60-a952-275866945c58
+line_pattern(hatch; width=1.5, tilesize=(10,10), linecolor=:black, color=:white) = Makie.LinePattern(; direction=hatch_dict[Symbol(hatch)], width, tilesize, linecolor, background_color=color)
+
 # ╔═╡ 3040803d-e95a-40bc-aa72-92c7d158e226
 md"""
 # FinancialNetworks.jl
@@ -655,37 +657,26 @@ md"""
 """
 
 # ╔═╡ 7871b479-2aaf-42c1-ad84-42ac17cfc6e1
-function _repay_((; c, ν), (; x̄, ȳ), firm, (; ωᵢ, ε))
+function repay((; c, ν), (; x, y), firm, ε)
 	
-	assets(ℓ) = x̄ + c + ωᵢ * cashflow₁(firm, ε, ℓ).cf
+	assets(ℓ) = x + c + cashflow₁(firm, ε, ℓ).cf
 
-	if ν + ȳ ≤ assets(0.0)
+	if ν + y ≤ assets(0.0)
 		out = (; ℓ=0, y_pc=1.0, ν_pc=1.0)
-	elseif assets(0.0) < ν + ȳ ≤ assets(1.0)
-		ℓ = find_zero(ℓ_ -> ν + ȳ - assets(ℓ_), (0.0, 1.0))
+	elseif assets(0.0) < ν + y ≤ assets(1.0)
+		ℓ = find_zero(ℓ_ -> ν + y - assets(ℓ_), (0.0, 1.0))
 		out = (; ℓ,   y_pc=1.0, ν_pc=1.0)
 	else
 		ℓ = 1.0
 		ass = assets(ℓ)
-		if ν ≤ ass < ν + ȳ
-			out = (; ℓ, y_pc = (ass - ν)/ȳ, ν_pc = 1.0)
+		if ν ≤ ass < ν + y
+			out = (; ℓ, y_pc = (ass - ν)/y, ν_pc = 1.0)
 		else # assets < ν
 			out = (; ℓ, y_pc = 0.0, ν_pc = ass/ν)
 		end
 	end		
 
-	(; out..., assets = assets(out.ℓ), cashflow₁(firm, ε, out.ℓ)..., firm_pc = 1 - out.ℓ, x̄, ȳ = ȳ * out.y_pc)
-	
-end
-
-# ╔═╡ 7f88efc7-7931-4499-91d5-7253c0410d76
-function repay((; c, ν, shares), (; x̄, ȳ), firms, εs, ℓ̄₋ᵢ)
-	i_firm = only(findall(shares .> 0))
-	ωᵢ = shares[i_firm]
-	firm = firms[i_firm]
-	ε = εs[i_firm]
-
-	_repay_((; c, ν), (; x̄, ȳ), firm, (; ωᵢ, ε, ℓ̄₋ᵢ,))
+	(; out..., assets = assets(out.ℓ), cashflow₁(firm, ε, out.ℓ)..., firm_pc = 1 - out.ℓ, x, y = y * out.y_pc)
 	
 end
 
@@ -694,10 +685,206 @@ md"""
 ## Visualize bank-firm-network
 """
 
+# ╔═╡ 3998e822-d7e0-40f2-a866-71a3d81c4ca3
+function add_legend!(figpos; kwargs...)
+	dict = [:lightgray => "solvent", :orange => "insolvent", :red => "bankrupt"]
+	
+	elements = [
+		MarkerElement(marker = :circle, strokewidth=1, markersize = 20, color = c) for c in first.(dict)
+	]
+
+	Legend(figpos, elements, last.(dict); kwargs...)
+
+	figpos
+end
+
 # ╔═╡ 0d207cbe-5b97-4bd7-accf-fc49ce4522e9
 md"""
 ## Visualize bank balance sheet
 """
+
+# ╔═╡ 5104f0a5-a551-4f4c-8f89-2b8f834b3587
+function balance_sheet_palette()
+	palette_df = DataFrame(
+		label = ["external", "interbank", "firm", "liquidated", "shortfall"],
+		color = [Makie.wong_colors()[[5, 2, 4, 3, ]]..., Pattern("/")]
+	)
+	
+	palette_df.label .=> palette_df.color
+end
+
+# ╔═╡ f63aee78-1209-40dd-9c9d-2699194807d8
+function _balance_sheet_df_((; c, x, div, ill, rec, ν_paid, y_paid, shortfall))
+	receivable = DataFrame([
+		(color = "external",   val=c,   lab=L"cash $c$"),
+		(color = "interbank",  val=x,   lab=L"IB deposit $x$"),
+		(color = "firm",       val=div, lab=L"dividend $δ$"),
+		(color = "firm",       val=ill, lab="illiquid"),
+		(color = "liquidated", val=rec, lab=L"recovered $ρ$"),
+	])
+
+	payable = DataFrame([
+		(color = "external",  val=ν_paid,    lab=L"deposits $ν$"),
+		(color = "interbank", val=y_paid,    lab=L"IB debt $y$"),
+		(color = "shortfall", val=shortfall, lab=""),
+	])
+
+	nt = (; receivable, payable)
+
+	vcat(nt..., source = :side => collect(string.(keys(nt))))
+end
+
+# ╔═╡ 6a2b3b9c-df52-41c3-908b-5dbf052ad107
+function balance_sheet_df_new(bank, firm, (; x, y); ε_cash=get(bank, :ε, 0.0))
+	c₀ = bank.c
+	c = max(c₀ - ε_cash, 0.0)
+	bank = (; c, bank.ν)
+	
+	(; y_pc, ν_pc, ℓ, rec, div) = 
+		repay(bank, (; x, y), firm, ε)
+
+	(; a, A) = firm
+	(; ν, c) = bank
+	y_paid = y_pc * y
+	ν_paid = ν_pc * ν
+	shortfall = (1-ν_pc) * ν + (1-y_pc) * y
+	ill = (1-ℓ) * A
+	
+	df = _balance_sheet_df_((; c, x, div, ill, rec, ν_paid, y_paid, shortfall))
+
+	bs_max = max((A + a) + x + c₀, y + ν)
+	
+	(; df, bs_max, ℓ, shortfall)
+end
+
+# ╔═╡ 1b9c8f2b-8011-46f1-b46d-479031eb9ac3
+function _visualize_simple_balance_sheet_(bank, firm, (; x, y); show_illiquid=true, fontsize=15)
+
+	(; df, bs_max, ℓ, shortfall) = balance_sheet_df_new(bank, firm, (; x, y))
+
+	@transform!(df, :stack = :lab == "illiquid" ? :lab : :color)
+	
+	if !show_illiquid || ℓ ≈ 1
+		@subset!(df, :lab ≠ "illiquid")
+	end
+	if ℓ * firm.ζ ≈ 0
+		@subset!(df, :color ≠ "liquidated")
+	end
+	@subset!(df, :val > 0)
+	@transform!(df, @subset(:val < 0.3), :lab = "")
+
+	df.color = categorical(df.color)
+	
+	ordered = @chain begin
+		["external", "interbank", "firm", "liquidated", "shortfall"]
+		filter(∈(unique(df.color)), _)
+	end
+	levels!(df.color, ordered)
+
+	df.stack = categorical(df.stack)
+	ordered = @chain begin
+		["external", "interbank", "firm", "liquidated", "illiquid", "shortfall"]
+		filter(∈(unique(df.stack)), _)
+	end
+	levels!(df.stack, ordered)
+	
+	plt = data(df) * mapping(
+		:side => sorter("receivable", "payable") => "", 
+		:val => "",
+		stack=:stack, color=:color => "",
+		bar_labels=:lab => verbatim
+	) * visual(BarPlot, flip_labels_at = 0, label_size=fontsize, strokewidth=0.5)
+
+	(; plt, bs_max)
+end
+
+# ╔═╡ ebf41ae2-3985-439b-b193-eabfab701d16
+function visualize_simple_balance_sheet(args...; figure=(;), legend=(;), kwargs...)
+	(; plt, bs_max) = _visualize_simple_balance_sheet_(args...; kwargs...)
+
+	if isempty(legend)
+		legend = (; position = :top, titleposition=:left, framevisible=false)
+	end
+	
+	draw(
+		plt;
+		axis = (limits = (nothing, nothing, 0, 1.05 * bs_max),),
+		figure,
+		palettes = (; color=balance_sheet_palette()),
+		legend,
+	)
+end
+
+# ╔═╡ b7d74679-904c-44c4-bedd-89f1b68a5e42
+function visualize_simple_balance_sheet!(figpos, legpos, args...; legend=(;), kwargs...)
+	(; plt, bs_max) = _visualize_simple_balance_sheet_(args...; kwargs...)
+
+	fg = draw!(
+		figpos,
+		plt,
+		palettes = (; color=balance_sheet_palette())
+	)
+	
+	legend!(legpos, fg; legend...)
+end
+
+# ╔═╡ ab1cf7ab-80fb-4423-a924-1d6e24e9c9bc
+function balance_sheet_df((; ν, c), (; a, A, ζ), (; ℓ, y_pc, ν_pc, x, y, div, rec))
+
+	y_paid = y
+	y = y / y_pc
+	ν_paid = ν_pc * ν
+	shortfall = (1-ν_pc) * ν + (1-y_pc) * y
+	ill = (1-ℓ) * A
+	
+	df = _balance_sheet_df_((; c, x, div, ill, rec, ν_paid, y_paid, shortfall))
+
+	@subset!(df, :lab ≠ "illiquid")
+	
+	bs_max = max(a + x + c, y + ν) * 1.05
+
+	(; df, bs_max = isfinite(bs_max) ? bs_max : zero(bs_max))
+end
+
+# ╔═╡ 0ff81eb8-d843-49a4-af93-ec2414797e87
+function visualize_balance_sheets!(figpos, bank_df, banks, firm)
+	
+	bank_dfs = [
+		balance_sheet_df(banks[i], firm, bank_df[i,:]) for i ∈ 1:length(banks)
+	] |> StructArray
+
+	combined_bank_df = vcat(
+		bank_dfs.df..., source = :bank
+	)
+
+	@transform!(combined_bank_df, :bank = "bank $(:bank)")
+	
+	bs_max = maximum(bank_dfs.bs_max)
+
+	plt = @chain combined_bank_df begin
+		data(_) * mapping(
+			:side => sorter("receivable", "payable") => "",
+			:val => "",
+			color = :color => "", stack = :color,
+			layout = :bank
+		) * visual(BarPlot, strokewidth=0.5)
+	end
+
+	fg = draw!(figpos[2,1], plt, 
+		axis = (limits = (nothing, nothing, 0, 1.05 * bs_max),),
+		palettes=(color=balance_sheet_palette(),)
+	)
+	legend!(figpos[1,1], fg, orientation=:horizontal, titleposition=:left, framevisible=false)
+
+	nothing
+end
+
+# ╔═╡ 0f03f537-f589-4abd-9587-0bb18835d9b9
+function visualize_balance_sheets(out, banks, firms, shares)
+	fig = Figure()
+	visualize_balance_sheets!(fig[1,1], out, banks, firms, shares)
+	fig
+end
 
 # ╔═╡ ffe50130-a9cb-4ba9-a861-c247bf688873
 md"""
@@ -709,6 +896,63 @@ md"""
 ## Regular interbank market
 """
 
+# ╔═╡ 38a1f960-7178-4968-89e4-6b659b64baa2
+function payments_received((; promises, pc_served))
+	Y = Graphs.weights(promises) .* adjacency_matrix(promises)
+	Y * pc_served	
+end
+
+# ╔═╡ f689810f-8f43-4368-a822-0ee4f3015271
+function payments_promised((; promises))
+	Y = Graphs.weights(promises) .* adjacency_matrix(promises)
+	dropdims(sum(Y, dims=2), dims=2)
+end
+
+# ╔═╡ 601b1453-20bd-4e93-abb7-4fad4f5adf8c
+function iterate_payments(banks, promises, pc_served, firm, εs_firm, ℓs = zeros(length(banks)))
+	ys = payments_promised((; promises))
+	
+	x_new = copy(y)
+	out = map(enumerate(banks)) do (i, bank)
+		# compute repayment
+		xs = payments_received((; promises, pc_served))
+		internal = (; x=xs[i], y=ys[i])
+		
+		rpy = repay(bank, internal, firm, εs_firm[i])
+		(; y_pc, ℓ) = rpy
+	
+		ℓs[i] = ℓ
+		pc_served[i] = y_pc
+		# return bank's choices
+		(; bank = i, rpy...)
+	end
+
+	(; pc_served, out, ℓs)
+end
+
+# ╔═╡ 9cdc97e5-67f8-4e71-97d8-9cda5e9d7bd8
+function equilibrium(banks, promises, firm, ε_firms; maxit = 100)
+	n_banks = length(banks)
+	
+	pc_served = ones(n_banks)
+	ℓs = zeros(n_banks)
+
+	for it ∈ 1:maxit
+		ℓs_old = copy(ℓs)
+		pc_served_old = copy(pc_served)
+		
+		(; pc_served, out, ℓs) = iterate_payments(banks, promises, pc_served, firm, ε_firms, ℓs)
+		converged = pc_served_old ≈ pc_served && ℓs_old ≈ ℓs
+		
+		if converged || it == maxit
+			bank_df = DataFrame(out)
+			
+			return (; bank_df, it, success = it != maxit, banks)
+		end
+	end
+	
+end
+
 # ╔═╡ 5bde1113-5297-4e93-b052-7a0f93f4ea84
 function is_regular(Y)
 	vec(sum(Y, dims=1)) ≈ vec(sum(Y, dims=2))
@@ -719,99 +963,11 @@ function is_regular(Y, ȳ)
 	is_regular(Y) && mean(sum(Y, dims=1)) ≈ ȳ
 end
 
-# ╔═╡ 055a811c-bc4a-4959-88f1-bc71e8749313
-updated_network(interbank_market) = interbank_market.payments
-
-# ╔═╡ 8a97ef2b-280b-45ec-b4ef-0797928a656f
-abstract type FinancialNetwork end
-
-# ╔═╡ 03ec9b2b-a4c6-4899-8ce1-683a00551543
-Graphs.adjacency_matrix(network::FinancialNetwork) = network.Y
-
-# ╔═╡ 58c842cc-89f8-413e-8df4-73e01218d583
-swg(IM) = SimpleWeightedDiGraph(adjacency_matrix(IM.network))
-
-# ╔═╡ ff23f4cf-470b-4e14-8f0f-54bb48b60027
-struct InterbankMarket{FN <: FinancialNetwork}
-	network::FN
-	payments
-	function InterbankMarket(network::FN) where FN
-		new{FN}(network, copy(adjacency_matrix(network)))
-	end
-end
-
 # ╔═╡ e6def365-4438-4591-acbd-60d9de466b0a
 initial_network(interbank_market) = adjacency_matrix(interbank_market.network)
 
-# ╔═╡ bb81bf74-e61e-4209-9877-0fc88ccc5f8a
-begin
-	payables(IM) = sum(initial_network(IM), dims = 2)
-	receivables(IM) = sum(initial_network(IM), dims = 1)
-	
-	paid(IM) = sum(updated_network(IM), dims = 2)
-	received(IM) = sum(updated_network(IM), dims = 1)
-end
-
-# ╔═╡ 601b1453-20bd-4e93-abb7-4fad4f5adf8c
-function iterate_payments(banks, IM, firms, shares, εs, ℓs = zeros(length(banks)))
-	x = updated_network(IM)
-	y = initial_network(IM)
-	
-	x_new = copy(y)
-	out = map(enumerate(banks)) do (i, bank)
-		# compute repayment
-		x̄ = received(IM)[i]
-		ȳ = payables(IM)[i]
-
-		i_firm = findall(shares[:,i] .> 0) |> only
-		
-		co_lenders = @chain begin
-			shares[i_firm,:]
-			findall(_ .> 0)
-			filter(≠(i), _)
-		end
-		# FIXME! This assumes equal shares in firms
-		ℓ₋ᵢ = length(co_lenders) > 0 ? mean(ℓs[co_lenders]) : 0.0
-		rpy = repay(bank, (; x̄, ȳ), firms, εs, ℓ₋ᵢ)
-		(; y_pc, ℓ) = rpy
-	
-		ℓs[i] = ℓ
-		# update payment matrix
-		x_new[i, :] .*= y_pc
-		# return bank's choices
-		(; bank = i, rpy...)
-	end
-
-	(; x_new, out, ℓs)
-end
-
-# ╔═╡ 9cdc97e5-67f8-4e71-97d8-9cda5e9d7bd8
-function equilibrium(banks, IM₀, firms, shares, εs; maxit = 100)
-	IM = deepcopy(IM₀)
-	x = updated_network(IM)
-	y = initial_network(IM)
-
-	ℓs = zeros(length(banks))
-	
-	x_new = copy(x)
-	for it ∈ 1:maxit
-		ℓs_old = copy(ℓs)
-		(; x_new, out, ℓs) = iterate_payments(banks, IM, firms, shares, εs, copy(ℓs_old))
-		converged = x_new ≈ x && ℓs_old ≈ ℓs
-		x .= x_new
-		
-		if converged || it == maxit
-			bank_df = DataFrame(out)
-			
-			ℓ̄ = shares * bank_df.ℓ
-		
-			firm_df = DataFrame(; ℓ̄)
-			
-			return (; bank_df, firm_df, it, success = it != maxit, banks, IM)
-		end
-	end
-	
-end
+# ╔═╡ 055a811c-bc4a-4959-88f1-bc71e8749313
+updated_network(interbank_market) = interbank_market.payments
 
 # ╔═╡ 3c211dad-73b0-4715-b066-e10005f8f3a7
 function complete_network(n, ȳ)
@@ -825,14 +981,8 @@ function complete_network(n, ȳ)
 end
 
 # ╔═╡ e2045a53-21d3-4c7c-ad95-3fc8d2444821
-struct CompleteNetwork <: FinancialNetwork
-	Y
-	ȳ
-	function CompleteNetwork(n, ȳ)
-		Y = complete_network(n, ȳ)
-		
-		new(Y, ȳ)
-	end
+function CompleteNetwork(n, ȳ)
+	SimpleWeightedDiGraph(complete_network(n, ȳ))
 end
 
 # ╔═╡ 2a5f02e7-fec1-41b3-b8b4-b33b1cc1232c
@@ -848,62 +998,86 @@ function ring_network(n, ȳ)
 end
 
 # ╔═╡ ee10e134-84be-41f8-9e7e-c1cd68227977
-begin
-	struct RingNetwork <: FinancialNetwork
-		Y
-		ȳ
-		function RingNetwork(n, ȳ)
-			Y = ring_network(n, ȳ)
-	
-			new(Y, ȳ)
-		end
-	end
+function RingNetwork(n, ȳ)
+	SimpleWeightedDiGraph(ring_network(n, ȳ))
+end
+
+# ╔═╡ 47118d1b-8471-4288-85fe-d3e94667dc96
+function γ_network(n, ȳ, γ)
+	Y = γ * ring_network(n, ȳ) + (1-γ) * complete_network(n, ȳ)
 end
 
 # ╔═╡ dffce961-6844-4a44-beea-ab085c2f9f3f
-struct γNetwork <: FinancialNetwork
-	Y
-	ȳ
-	γ
-	function γNetwork(n, ȳ, γ)
-		Y = γ * ring_network(n, ȳ) + (1-γ) * complete_network(n, ȳ)
-		
-		new(Y, ȳ, γ)
-	end
+function γNetwork(n, ȳ, γ)
+	SimpleWeightedDiGraph(γ_network(n, ȳ, γ))
 end
 
 # ╔═╡ f708e6c0-cfac-4b4d-a3ed-69b98883294a
 function island_network(n_islands, n_banks_per_island, ȳ, γ)
-	blocks = (γNetwork(n_banks_per_island, ȳ, γ).Y for _ in 1:n_islands)
+	blocks = (γ_network(n_banks_per_island, ȳ, γ) for _ in 1:n_islands)
 	
 	cat(blocks...,dims=(1,2))
 end
 
 # ╔═╡ d6cb95c1-a075-4544-9031-58aef65c7577
 function island_network(n_banks::AbstractVector, ȳ, γ)
-	blocks = (γNetwork(n, ȳ, γ).Y for n ∈ n_banks)
+	blocks = (γ_network(n, ȳ, γ) for n ∈ n_banks)
 	
 	cat(blocks...,dims=(1,2))
 end
 
-# ╔═╡ 70783a38-2104-40c3-8982-abcf9f015609
-let
-	struct IslandNetwork <: FinancialNetwork
-		Y
-		ȳ
-		γ
-		n_islands
-		n_banks_per_island
-	end
+# ╔═╡ 1bb841e0-ddd2-4571-83a5-d929e0a8a69c
+function IslandNetwork(n_islands, n_banks_per_island, ȳ; γ=0.0)
+	Y = island_network(n_islands, n_banks_per_island, ȳ, γ)	
+	SimpleWeightedDiGraph(Y)
+end
 
-	function IslandNetwork(n_islands, n_banks_per_island, ȳ; γ=0.0)
-		Y = island_network(n_islands, n_banks_per_island, ȳ, γ)	
-		IslandNetwork(Y, ȳ, γ, n_islands, n_banks_per_island)
-	end
-	function IslandNetwork(n_banks::AbstractVector, ȳ; γ=0.0)
-		Y = island_network(n_banks, ȳ, γ)	
-		IslandNetwork(Y, ȳ, γ, length(n_banks), n_banks)
-	end
+# ╔═╡ 7fbcfbde-0b5e-4bf2-9eda-9b15a4dd6bec
+function IslandNetwork(n_banks::AbstractVector, ȳ; γ=0.0)
+	Y = island_network(n_banks, ȳ, γ)	
+	SimpleWeightedDiGraph(Y)
+end
+
+# ╔═╡ 8a2f3e4d-9c61-4a21-a229-58f731964181
+initial_analysis = let
+	n_banks = 6
+	n_firms = n_banks
+
+	ν = 2.3
+	c = 2.4
+
+	banks = [(; ν, c = max(c - (i==1)*_ε_, 0)) for i ∈ 1:n_banks]
+
+	firm = (; ζ=0.0, a=0.0, A=0.5)
+	εs = zeros(n_banks)
+
+	ȳ = 1.2
+	promises = IslandNetwork(n_islands, n_banks ÷ n_islands, ȳ; γ=_γ_)
+	
+	(; bank_df) = equilibrium(banks, promises, firm, εs)
+
+	(; promises, banks, firm, bank_df)
+end;
+
+# ╔═╡ f51fb0b2-276a-415b-b2b7-aec903b1fe9e
+initial_analysis
+
+# ╔═╡ a8a8a197-d54d-4c67-b7ce-19bdc8b64401
+transmission_analysis = let
+	n_islands = 1
+	n_banks = 4
+	
+	banks = [(; ν, c = max(c - (i==1)*ε, 0)) for i ∈ 1:n_banks]
+
+	firm = (; ζ, a, A)
+	εs = zeros(n_banks)
+
+	ȳ = y
+	IM = IslandNetwork(n_islands, n_banks ÷ n_islands, ȳ; γ=γ2)
+
+	(; bank_df) = equilibrium(banks, IM, firm, εs)
+
+	(; banks, firm, IM, bank_df)
 end
 
 # ╔═╡ ff77f7b4-52d1-4fc8-abfc-e623f7bcd423
@@ -911,13 +1085,56 @@ md"""
 ## Layout
 """
 
+# ╔═╡ c7c8581c-e82c-428e-a599-3c003cc0151c
+begin
+	function points_on_circle(n; c = Point(0, 0), r = 1, start = 0)
+		if n == 0
+			Point2[]
+		else
+			x = range(0, 2, n + 1) .+ start # .- 0.5
+			x = x[begin:end-1]
+		
+			Point2.(r * sinpi.(x), r * cospi.(x)) .+ Ref(c)
+		end
+	end
+
+	function nested_circles(inner; r=1.5, start = 0)
+		function (g)
+			n_nodes = nv(g)
+			outer = n_nodes - inner
+			[
+				points_on_circle(inner);
+				points_on_circle(outer; r, start)
+			]
+		end
+	end
+	function componentwise_circle(g::AbstractGraph; kwargs...)
+		components = connected_components(g)
+		componentwise_circle(components; kwargs...)
+	end
+			
+	function componentwise_circle(components; scale=2.5)
+		nodes = Int[]
+		node_locs = Point2f[]
+
+		N = length(components)
+		ncol = ceil(Int, sqrt(N))
+
+		for (i, component) in enumerate(components)
+			(row, col) = fldmod1(i, ncol)
+			n = length(component)
+			append!(nodes, component)
+			append!(node_locs, points_on_circle(n, c = Point(scale * (col-1), scale * (1 - row))))
+		end
+
+		node_locs[sortperm(nodes)]
+	end
+end
+
 # ╔═╡ 69698f6a-110d-49ea-bd57-16af0de90844
 md"""
 # NamedGraphPlot
 """
-
-# ╔═╡ 50112e6e-80ed-4650-be09-46157e5ae65d
-#using Colors
 
 # ╔═╡ 2c22e86e-1139-4f66-8992-093d38f4c6cb
 md"""
@@ -937,19 +1154,24 @@ minimal(; extend_limits=0.05, hidespines=true, kwargs...) = (;
 	kwargs...
 )
 
-# ╔═╡ fd3a25df-beba-4c3f-9d7c-1255cfe373ef
-
-
 # ╔═╡ ce563ab5-6324-4a86-be61-7a107ff0e3b3
-figure(xscale=1, yscale=xscale) = (; fonts = (regular = "CMU", bold = "CMU"), resolution = (xscale * 300, yscale * 300))
+figure(xscale=1, yscale=xscale) = (; resolution = (xscale * 300, yscale * 300))
 
 # ╔═╡ 4ccb52c2-a177-4b13-8ce5-2af6f286c737
 md"""
 ## Named GraphPlot
 """
 
-# ╔═╡ 07a16680-8cc4-4065-bc8d-8978de679f0d
+# ╔═╡ 4a1fd4a3-71a0-4947-8b75-cc2100fb636b
+function text_bbox(textstring::AbstractString, fontsize::Union{AbstractVector, Number}, font, align, rotation, justification, lineheight)
+    glyph_collection = Makie.layout_text(
+            textstring, fontsize,
+            font, nothing, align, rotation, justification, lineheight,
+            RGBAf(0,0,0,0), RGBAf(0,0,0,0), 0f0, 100
+        )
 
+    return Rect2f(Makie.boundingbox(glyph_collection, Point3f(0), Makie.to_rotation(rotation)))
+end
 
 # ╔═╡ 3496c181-c4c3-4b1b-a5e5-83df27182c99
 md"""
@@ -978,10 +1200,8 @@ end
 
 # ╔═╡ c4032c7a-73f4-4342-a5a7-19fd14017402
 begin
-
-using CairoMakie, AlgebraOfGraphics, Colors
-set_theme!(fonts = (regular = "CMU", bold = "CMU"))
-using Makie.LaTeXStrings
+fonts = (; regular = CairoMakie.Makie.MathTeXEngine.texfont(), bold = CairoMakie.Makie.MathTeXEngine.texfont())
+set_theme!(; fonts)
 	
 using Makie: automatic, compute_x_and_width, barplot_labels, bar_rectangle, generate_tex_elements, TeXChar, FreeTypeAbstraction, GlyphExtent, height_insensitive_boundingbox_with_advance, origin, GlyphCollection, stack_grouped_from_to, ATTRIBUTES, theme, bar_label_formatter
 	
@@ -1158,255 +1378,6 @@ end
 
 end
 
-# ╔═╡ 1d5d8c8a-8d86-426f-bb17-bd2279d91ff1
-md"""
-* ring vs complete ``(γ)``: $(@bind _γ_ Slider(0:0.1:1.0, show_value = true, default = 0.5))
-* shock to bank ``1`` ``(ε)``: $(@bind _ε_ Slider(0.0:0.05:1.0, show_value = true, default = 0.0))
-*  $(blur("number of islands:")) $(@bind n_islands Slider(1:3, show_value = true, default = 1))
-"""
-
-# ╔═╡ 8a2f3e4d-9c61-4a21-a229-58f731964181
-initial_analysis = let
-	n_banks = 6
-
-	n_firms = n_banks
-	shares = I(n_banks)
-
-	ν = 2.3
-	c = 2.4
-
-	banks = [Bank(; ν = ν, c = max(c - (i==1)*_ε_, 0), shares=shares[:,i]) for i ∈ 1:n_banks]
-
-	firms = [Firm(; ζ=0.0, a=0.0, A=0.5) for _ ∈ 1:n_firms]
-	εs = zeros(n_banks)
-
-	ȳ = 0.6
-	n = IslandNetwork(n_islands, n_banks ÷ n_islands, ȳ; γ=_γ_)
-
-	IM_old = InterbankMarket(n)
-	
-	(; bank_df, firm_df, IM) = equilibrium(banks, IM_old, firms, shares, εs)
-
-	(; banks, firms, shares, bank_df, firm_df, IM)
-end;
-
-# ╔═╡ f51fb0b2-276a-415b-b2b7-aec903b1fe9e
-initial_analysis
-
-# ╔═╡ 523e177c-f74d-4805-8a2b-9c27a4b0bc63
-md"""
-* size of shock $(@bind ε_cash Slider(0.0:0.05:1.0, show_value = true, default = 0.0))
-* show illiquid firm value ``A`` $(@bind show_illiquid CheckBox(default = false))
-* recovery rate ``ζ`` $(@bind recovery_rate Slider(0:0.1:0.5, show_value = true, default = 0.0))
-""" |> aside
-
-# ╔═╡ 96878ebb-fbc0-4d53-998a-210e13a42492
-md"""
-| variable            | value                                                        |
-|:------------------- | :----------------------------------------------------------- |
-| ring vs complete ``γ`` | $(@bind γ2 Slider(0:0.01:1, default=0.5, show_value=true))|
-| dividend ``a``      | $(@bind a Slider(0:0.01:1, default=0.7, show_value=true))    |
-| recovery rate ``ζ`` | $(@bind ζ Slider(0:0.01:1, default=0.3, show_value=true))    |
-| **external**        | |
-| cash ``c``          | $(@bind c Slider(0:0.1:2, default=1.2, show_value=true))     |
-| shock ``ε``         | $(@bind ε Slider(0:0.1:2, default=0.0, show_value=true))     |
-| deposits ``ν``      | $(@bind ν Slider(0.0:0.1:2, default=1.8, show_value=true))   |
-| **internal**        | |
-| interbank ``y``     | $(@bind y Slider(0:0.1:2, default=1.0, show_value=true))     |
-""" |> aside
-
-# ╔═╡ a8a8a197-d54d-4c67-b7ce-19bdc8b64401
-transmission_analysis = let
-	n_islands = 1
-	n_banks = 4
-	if true
-		#n_firms = 2
-		#shares = [
-		#	0.0 0.0 0.5 0.5;
-		#	0.5 0.5 0.0 0.0
-		#] 
-
-		n_firms = n_banks
-		shares = I(n_firms)
-	else
-		n_firms = 2
-		shares = [
-			0.0 0.5 0.5 0.0;
-			0.5 0.0 0.0 0.5
-		] 
-	end
-
-	
-	banks = [Bank(; ν, c = max(c - (i==1)*ε, 0), shares=shares[:,i]) for i ∈ 1:n_banks]
-
-	firms = [Firm(; ζ, a, A) for _ ∈ 1:n_firms]
-	εs = zeros(n_banks)
-
-	ȳ = y
-	n = IslandNetwork(n_islands, n_banks ÷ n_islands, ȳ; γ=γ2)
-
-	IM = InterbankMarket(n)
-
-	(;  bank_df, firm_df) = equilibrium(banks, IM, firms, shares, εs)
-
-	(; banks, firms, shares, IM, bank_df, firm_df)
-end
-
-# ╔═╡ 354cf406-eaf4-46ba-b93b-2ccde89c86b4
-# ╠═╡ disabled = true
-#=╠═╡
-x = y
-  ╠═╡ =#
-
-# ╔═╡ b1c0d43c-f483-4290-998f-177ce79f41fa
-function node_legend(figpos, node_styles, title = "")
-	
-	elems = [MarkerElement(; color, markersize = 15, marker = :circle) for color ∈ node_styles.color]
-
-	if length(title) == 0
-		title_tuple = ()
-	else
-		title_tuple = (title, )
-	end
-	
-	Legend(
-		figpos,
-    	elems, node_styles.label, title_tuple...;
-		orientation=:horizontal, titleposition=:left, framevisible=false
-	)
-end
-
-# ╔═╡ 70bbb90e-06f1-4b60-a952-275866945c58
-line_pattern(hatch; width=1.5, tilesize=(10,10), linecolor=:black, color=:white) = Makie.LinePattern(; direction=hatch_dict[Symbol(hatch)], width, tilesize, linecolor, background_color=color)
-
-# ╔═╡ 3998e822-d7e0-40f2-a866-71a3d81c4ca3
-function add_legend!(figpos; kwargs...)
-	dict = [:lightgray => "solvent", :orange => "insolvent", :red => "bankrupt"]
-	
-	elements = [
-		MarkerElement(marker = :circle, strokewidth=1, markersize = 20, color = c) for c in first.(dict)
-	]
-
-	Legend(figpos, elements, last.(dict); kwargs...)
-
-	figpos
-end
-
-# ╔═╡ 3db76a38-a506-4abf-803f-2b5ba6ce1393
-fonts = (; regular = Makie.MathTeXEngine.texfont(), bold = Makie.MathTeXEngine.texfont())
-
-# ╔═╡ 5104f0a5-a551-4f4c-8f89-2b8f834b3587
-function balance_sheet_palette()
-	palette_df = DataFrame(
-		label = ["external", "interbank", "firm", "liquidated", "shortfall"],
-		color = [Makie.wong_colors()[[5, 2, 4, 3, ]]..., Pattern("/")]
-	)
-	
-	palette_df.label .=> palette_df.color
-end
-
-# ╔═╡ f63aee78-1209-40dd-9c9d-2699194807d8
-function _balance_sheet_df_((; c, x, div, ill, rec, ν_paid, y_paid, shortfall))
-	DataFrame([
-		(color = "external",  side = "receivable", ill=false, val=c, lab=L"cash $c$"),
-		(color = "interbank", side = "receivable", ill=false, val=x, lab=L"IB deposit $x$"),
-		(color = "firm",   side = "receivable", ill=false, val=div, lab=L"dividend $δ$"),
-		
-		(color = "firm",   side = "receivable", ill=true,  val=ill, lab="illiquid"),
-		(color = "liquidated", side = "receivable", ill=false, val=rec, lab=L"recovered $ρ$"),
-		
-		(color = "external",  side = "payable",    ill=false, val=ν_paid, lab=L"deposits $ν$"),
-		(color = "interbank", side = "payable",    ill=false, val=y_paid, lab=L"IB debt $y$"),
-		(color = "shortfall", side = "payable",    ill=false,  val=shortfall, lab=""),
-	])
-end
-
-# ╔═╡ 6a2b3b9c-df52-41c3-908b-5dbf052ad107
-function balance_sheet_df_new(bank, firm, (; x, y); ωᵢ=1.0, ε=0.0, ℓ̄₋ᵢ=0.0)
-	c₀ = bank.c
-	ε_cash = get(bank, :ε, 0.0)
-
-	c = max(c₀ - ε_cash, 0.0)
-	bank = (; c, bank.ν)
-	
-	(; y_pc, ν_pc, ℓ, rec, div) = 
-		_repay_(bank, (; x̄=x, ȳ=y), firm, (; ωᵢ, ε))
-
-	(; a, A) = firm
-	(; ν, c) = bank
-	y_paid = y_pc * y
-	ν_paid = ν_pc * ν
-	shortfall = (1-ν_pc) * ν + (1-y_pc) * y
-	rec =  ωᵢ * rec
-	ill = (1-ℓ) * ωᵢ * A
-	div = ωᵢ * div
-
-	
-	df = _balance_sheet_df_((; c, x, div, ill, rec, ν_paid, y_paid, shortfall))
-
-	bs_max = max(ωᵢ * (A + a) + x + c₀, y + ν)
-	
-	(; df, bs_max, ℓ, shortfall)
-end
-
-# ╔═╡ 1b9c8f2b-8011-46f1-b46d-479031eb9ac3
-function _visualize_simple_balance_sheet_(bank, firm, (; x, y); show_illiquid=true, fontsize=15)
-
-	(; df, bs_max, ℓ, shortfall) = balance_sheet_df_new(bank, firm, (; x, y))
-
-	@transform!(df, :stack = :lab == "illiquid" ? :lab : :color)
-	
-	if !show_illiquid || ℓ ≈ 1
-		@subset!(df, :lab ≠ "illiquid")
-	end
-	if ℓ * firm.ζ ≈ 0
-		@subset!(df, :color ≠ "liquidated")
-	end
-	@subset!(df, :val > 0)
-	@transform!(df, @subset(:val < 0.3), :lab = "")
-
-	df.color = categorical(df.color)
-	
-	ordered = @chain begin
-		["external", "interbank", "firm", "liquidated", "shortfall"]
-		filter(∈(unique(df.color)), _)
-	end
-	levels!(df.color, ordered)
-
-	df.stack = categorical(df.stack)
-	ordered = @chain begin
-		["external", "interbank", "firm", "liquidated", "illiquid", "shortfall"]
-		filter(∈(unique(df.stack)), _)
-	end
-	levels!(df.stack, ordered)
-	
-	plt = data(df) * mapping(
-		:side => sorter("receivable", "payable") => "", 
-		:val => "",
-		stack=:stack, color=:color => "",
-		bar_labels=:lab => verbatim
-	) * visual(BarPlot, flip_labels_at = 0, label_size=fontsize, strokewidth=0.5)
-
-	(; plt, bs_max)
-end
-
-# ╔═╡ ebf41ae2-3985-439b-b193-eabfab701d16
-function visualize_simple_balance_sheet(args...; figure=(;), legend=(;), kwargs...)
-	(; plt, bs_max) = _visualize_simple_balance_sheet_(args...; kwargs...)
-
-	if isempty(legend)
-		legend = (; position = :top, titleposition=:left, framevisible=false)
-	end
-	
-	draw(
-		plt;
-		axis = (limits = (nothing, nothing, 0, 1.05 * bs_max),),
-		figure,
-		palettes = (; color=balance_sheet_palette()),
-		legend,
-	)
-end
-
 # ╔═╡ efbc1a42-ecc2-4907-a981-bd1d29ca0803
 balance_sheet = let
 	c = 0.7
@@ -1429,174 +1400,6 @@ aside(md"$(balance_sheet)")
 
 # ╔═╡ 6fddaaa4-688d-4f40-a1b3-04bf62024955
 aside(md"$balance_sheet")
-
-# ╔═╡ b7d74679-904c-44c4-bedd-89f1b68a5e42
-function visualize_simple_balance_sheet!(figpos, legpos, args...; legend=(;), kwargs...)
-	(; plt, bs_max) = _visualize_simple_balance_sheet_(args...; kwargs...)
-
-	fg = draw!(
-		figpos,
-		plt,
-		palettes = (; color=balance_sheet_palette())
-	)
-	
-	legend!(legpos, fg; legend...)
-end
-
-# ╔═╡ ab1cf7ab-80fb-4423-a924-1d6e24e9c9bc
-function balance_sheet_df((; ν, c), (; a, A, ζ), (; ℓᵢ, ωᵢ, y_pc, ν_pc, x̄, ȳ, div, rec))
-
-	x = x̄
-	y = ȳ / y_pc
-	y_paid = y * y_pc
-	ν_paid = ν_pc * ν
-	shortfall = (1-ν_pc) * ν + (1-y_pc) * y
-	rec =  ωᵢ * rec #(rec_field + rec_machines)
-	ill = (1-ℓᵢ) * ωᵢ * A
-	div = ωᵢ * div
-	
-	df = _balance_sheet_df_((; c, x, div, ill, rec, ν_paid, y_paid, shortfall))
-
-	@subset!(df, :lab ≠ "illiquid")
-	
-	bs_max = max(ωᵢ * a + x + c, y + ν) * 1.05
-
-	(; df, bs_max = isfinite(bs_max) ? bs_max : zero(bs_max))
-end
-
-# ╔═╡ 0ff81eb8-d843-49a4-af93-ec2414797e87
-function visualize_balance_sheets!(figpos, bank_df, banks, firms, shares)
-
-	function firm(i)
-		i_firm = findall(shares[:,i] .> 0) |> only
-		ωᵢ = shares[i_firm,i]
-		firm = firms[i_firm]
-		(; ωᵢ, firm)
-	end
-
-	f_sh = firm.(1:length(banks)) |> StructArray
-
-	bank_df = @chain bank_df begin
-		rename(:ℓ => :ℓᵢ)
-		@transform!(:ωᵢ = @bycol f_sh.ωᵢ)
-	end
-	
-	bank_dfs = [
-		balance_sheet_df(banks[i], f_sh.firm[i], bank_df[i,:]) for i ∈ 1:length(banks)
-	] |> StructArray
-
-	combined_bank_df = vcat(
-		bank_dfs.df..., source = :bank
-	)
-
-	@transform!(combined_bank_df, :bank = "bank $(:bank)")
-	
-	bs_max = maximum(bank_dfs.bs_max)
-
-	plt = @chain combined_bank_df begin
-		data(_) * mapping(
-			:side => sorter("receivable", "payable") => "",
-			:val => "",
-			color = :color => "", stack = :color,
-			layout = :bank
-		) * visual(BarPlot, strokewidth=0.5)
-	end
-
-	fg = draw!(figpos[2,1], plt, 
-		axis = (limits = (nothing, nothing, 0, 1.05 * bs_max),),
-		palettes=(color=balance_sheet_palette(),)
-	)
-	legend!(figpos[1,1], fg, orientation=:horizontal, titleposition=:left, framevisible=false)
-
-	nothing
-end
-
-# ╔═╡ 0f03f537-f589-4abd-9587-0bb18835d9b9
-function visualize_balance_sheets(out, banks, firms, shares)
-	fig = Figure()
-	visualize_balance_sheets!(fig[1,1], out, banks, firms, shares)
-	fig
-end
-
-# ╔═╡ 89526137-1502-4600-a456-2bcef13cf8fb
-function label(nw::γNetwork)
-	(; γ) = nw
-	if γ == 1
-		latexstring("\$\\gamma = $γ\$ (Ring)")
-	elseif γ == 0
-		latexstring("\$\\gamma = $γ\$ (Complete)")
-	else
-		latexstring("\\gamma = $γ")
-	end
-end
-
-# ╔═╡ 898efe6d-698e-48f4-ac0d-3d24bb8a88cd
-function label(nw::IslandNetwork)
-	(; n_banks_per_island, n_islands) = nw
-	if length(n_banks_per_island) == 1
-		bank_or_banks = n_banks_per_island == 1 ? "bank" : "banks"
-		return latexstring("\$ $n_islands \\times $n_banks_per_island \$ $bank_or_banks")
-	else
-		return latexstring("\$ $n_islands \$ islands ")
-	end		
-end
-
-# ╔═╡ c7c8581c-e82c-428e-a599-3c003cc0151c
-begin
-	function points_on_circle(n; c = Point(0, 0), r = 1, start = 0)
-		if n == 0
-			Point2[]
-		else
-			x = range(0, 2, n + 1) .+ start # .- 0.5
-			x = x[begin:end-1]
-		
-			Point2.(r * sinpi.(x), r * cospi.(x)) .+ Ref(c)
-		end
-	end
-
-	function nested_circles(inner; r=1.5, start = 0)
-		function (g)
-			n_nodes = nv(g)
-			outer = n_nodes - inner
-			[
-				points_on_circle(inner);
-				points_on_circle(outer; r, start)
-			]
-		end
-	end
-	function componentwise_circle(g::AbstractGraph; kwargs...)
-		components = connected_components(g)
-		componentwise_circle(components; kwargs...)
-	end
-			
-	function componentwise_circle(components; scale=2.5)
-		nodes = Int[]
-		node_locs = Point2f[]
-
-		N = length(components)
-		ncol = ceil(Int, sqrt(N))
-
-		for (i, component) in enumerate(components)
-			(row, col) = fldmod1(i, ncol)
-			n = length(component)
-			append!(nodes, component)
-			append!(node_locs, points_on_circle(n, c = Point(scale * (col-1), scale * (1 - row))))
-		end
-
-		node_locs[sortperm(nodes)]
-	end
-end
-
-# ╔═╡ 4a1fd4a3-71a0-4947-8b75-cc2100fb636b
-function text_bbox(textstring::AbstractString, fontsize::Union{AbstractVector, Number}, font, align, rotation, justification, lineheight)
-    glyph_collection = Makie.layout_text(
-            textstring, fontsize,
-            font, nothing, align, rotation, justification, lineheight,
-            RGBAf(0,0,0,0), RGBAf(0,0,0,0), 0f0, 100
-        )
-
-    return Rect2f(Makie.boundingbox(glyph_collection, Point3f(0), Makie.to_rotation(rotation)))
-end
 
 # ╔═╡ 1f23193e-0bca-4bee-82b1-453100721ab6
 begin
@@ -1687,13 +1490,13 @@ out = let
 	#n = 6
 	#m = 3
 	ȳ = 2.1
-	#IM1 = InterbankMarket(CompleteNetwork(n, ȳ))
-	#IM2 = InterbankMarket(IslandNetwork(n ÷ m, m, ȳ))
-	IM1 = InterbankMarket(IslandNetwork([3, 3, 5], ȳ))
-	IM2 = InterbankMarket(IslandNetwork([6, 2, 1, 1, 1], ȳ))
+	#IM1 = CompleteNetwork(n, ȳ)
+	#IM2 = IslandNetwork(n ÷ m, m, ȳ)
+	IM1 = IslandNetwork([3, 3, 5], ȳ)
+	IM2 = IslandNetwork([6, 2, 1, 1, 1], ȳ)
 
-	n1 = size(IM1.network.Y, 1)
-	n2 = size(IM2.network.Y, 1)
+	n1 = nv(IM1)
+	n2 = nv(IM2)
 	if n1 == n2
 		n = n1
 	else
@@ -1707,8 +1510,8 @@ out = let
 	ax1 = Axis(fig[1,1]; minimal(hidespines=false, title = L"interbank market $y$")...)
 	ax2 = Axis(fig[1,2]; minimal(hidespines=false, title = L"interbank market $\tilde{y}$")...)
 
-	namedgraphplot!(ax1, swg(IM1), graphplot_attr = (; layout))
-	namedgraphplot!(ax2, swg(IM2), graphplot_attr = (; layout))
+	namedgraphplot!(ax1, IM1, graphplot_attr = (; layout))
+	namedgraphplot!(ax2, IM2, graphplot_attr = (; layout))
 
 	(; IM1, IM2, fig, n, ȳ)
 end; out.fig |> as_svg
@@ -1730,11 +1533,11 @@ For this exercise you can use the tool below, to simulate the payment equilibriu
 # ╔═╡ c7b99d3c-5d32-45e6-84fa-8a6513e6beb9
 let
 	ȳ = 2.1
-	IM1 = InterbankMarket(IslandNetwork([3, 2], ȳ; γ=0.0))
-	IM2 = InterbankMarket(IslandNetwork([3, 2], ȳ; γ=1.0))
+	IM1 = IslandNetwork([3, 2], ȳ; γ=0.0)
+	IM2 = IslandNetwork([3, 2], ȳ; γ=1.0)
 
-	n1 = size(IM1.network.Y, 1)
-	n2 = size(IM2.network.Y, 1)
+	n1 = nv(IM1)
+	n2 = nv(IM2)
 	if n1 == n2
 		n = n1
 	else
@@ -1746,8 +1549,8 @@ let
 	ax1 = Axis(fig[1,1]; minimal(hidespines=false, title = L"interbank market $y$")...)
 	ax2 = Axis(fig[1,2]; minimal(hidespines=false, title = L"interbank market $\tilde{y}$")...)
 
-	namedgraphplot!(ax1, swg(IM1); graphplot_attr=(; layout))
-	namedgraphplot!(ax2, swg(IM2); graphplot_attr=(; layout))
+	namedgraphplot!(ax1, IM1; graphplot_attr=(; layout))
+	namedgraphplot!(ax2, IM2; graphplot_attr=(; layout))
 
 	fig |> as_svg
 end
@@ -1773,24 +1576,25 @@ let
 end
 
 # ╔═╡ 222665dc-397b-4e58-b3ee-935b115cf13d
-function visualize_bank_firm_network!(ax, IM, shares, bank_df, firm_df; r = 1.4, start = Makie.automatic, layout=Makie.automatic, show_firms=true, kwargs...)
+function visualize_bank_firm_network!(ax, IM, bank_df; r = 1.4, start = Makie.automatic, layout=Makie.automatic, show_firms=true, kwargs...)
 
-	n = IM.network
-	g₀ = SimpleWeightedDiGraph(n.Y)
-	A = adjacency_matrix(g₀)
+	A = adjacency_matrix(IM)
+	n_banks = nv(IM)
 
 	if show_firms
+		n_firms = n_banks
+		shares = I(n_firms)
 		big_A = [A       shares';
-	    	     0 * shares 0 * I]	
-
+	    	     0 * shares 0 * I]
+		
 	else
 		big_A = A
+		
 	end
 	
 	g = big_A |> SimpleWeightedDiGraph
 
 	n_banks = size(A, 1)
-	n_firms = size(shares, 1)
 
 	edge_attr_df = map(edges(g)) do (; src, dst, weight)
 		if src ≤ n_banks && dst ≤ n_banks
@@ -1818,7 +1622,7 @@ function visualize_bank_firm_network!(ax, IM, shares, bank_df, firm_df; r = 1.4,
 		
 		node_color = [
 			node_color;
-			[mix_with_white(colorant"limegreen", 1-α) for α ∈ firm_df.δ_pc]
+			fill(colorant"limegreen", n_firms)
 		]
 	end
 	
@@ -1842,22 +1646,22 @@ end
 
 # ╔═╡ e2041c57-0e3d-4dad-9bab-d70434f18509
 let
-	(; IM, shares, firms, banks, bank_df, firm_df) = transmission_analysis
+	(; IM, firm, banks, bank_df) = transmission_analysis
 
 	fig = Figure(resolution = (800, 400))
 		
-	visualize_bank_firm_network!(Axis(fig[1,1]; minimal(extend_limits=0.1)...), IM, shares, bank_df, firm_df; start = 1/8, show_firms=false)
+	visualize_bank_firm_network!(Axis(fig[1,1]; minimal(extend_limits=0.1)...), IM, bank_df; start = 1/8, show_firms=false)
 
-	visualize_balance_sheets!(fig[1,2:3], bank_df, banks, firms, shares)
+	visualize_balance_sheets!(fig[1,2:3], bank_df, banks, firm)
 
 	fig |> as_svg
 end
 
 # ╔═╡ 7b70a862-faf4-4c42-917c-238718c43708
-function visualize_bank_firm_network(IM, shares, bank_df, firm_df; figure = figure(), add_legend=false, hidespines=true, kwargs...)
+function visualize_bank_firm_network(IM, bank_df; figure = figure(), add_legend=false, hidespines=true, kwargs...)
 	fig = Figure(; figure...)
 	ax = Axis(fig[1,1]; minimal(; hidespines, extend_limits=0.1)...)
-	visualize_bank_firm_network!(ax, IM, shares, bank_df, firm_df; kwargs...)
+	visualize_bank_firm_network!(ax, IM, bank_df; kwargs...)
 
 	if add_legend
 		add_legend!(fig[0,:], orientation=:horizontal, framevisible=false)
@@ -1867,9 +1671,9 @@ end
 
 # ╔═╡ 073982c7-6333-43f6-866a-91a49f8ba7eb
 fig = let
-	(; IM, shares, bank_df, firm_df) = initial_analysis
+	(; promises, bank_df) = initial_analysis
 	
-	visualize_bank_firm_network(IM, shares, bank_df, firm_df; figure=figure(), start = 1/6, show_firms=false)
+	visualize_bank_firm_network(promises, bank_df; figure=figure(), start = 1/6, show_firms=false)
 end;
 
 # ╔═╡ 1d13564d-7256-4cf1-919f-6d8298cc476b
@@ -1899,23 +1703,17 @@ $(aside_figure(fig))
 
 # ╔═╡ 7970090f-eb3a-488e-b225-ce4198494f1d
 firm_bank_aside = let
-	(; IM, shares, firms, banks, bank_df, firm_df) = transmission_analysis
+	(; IM, firm, banks, bank_df) = transmission_analysis
 		
-	visualize_bank_firm_network(IM, shares, bank_df, firm_df; show_firms=false, start = 1/8) |> as_svg |> x -> md"$(x)" |> aside
+	visualize_bank_firm_network(IM, bank_df; show_firms=false, start = 1/8) |> as_svg |> x -> md"$(x)" |> aside
 end
 
 # ╔═╡ 0d18cdf0-441e-4ca9-98e3-50bc3efa837f
 let
-	IM = deepcopy(_IM)
 	i = i_bank
 	#_ε4 = 0.4
-	
-	updated_network(IM) .= initial_network(IM)
-
-	x = updated_network(IM)
-	y = initial_network(IM)
-	
-	n_banks = size(y, 1)
+	IM = _IM
+	n_banks = nv(IM)
 
 	ν = 2.0
 	c = 0.0
@@ -1926,20 +1724,17 @@ let
 	
 	shares = I(n_banks)
 	
-	banks = [Bank(; ν, c = c, shares=shares[i,:]) for i ∈ 1:n_banks]
+	banks = [(; ν, c = c) for i ∈ 1:n_banks]
 
-	firms = [Firm(; ζ, a=max(a - (i==i_bank)*ε, 0), A) for i ∈ 1:n_banks]
+	firm = (; ζ, a, A)
 	εs = zeros(n_banks)
-
-	IMx = deepcopy(IM)
+	εs[i_bank] = min(ε, a)
 	
-	(; bank_df, firm_df) = equilibrium(banks, IMx, firms, shares, εs)
-
-	shares = fill(0.0, (0, size(shares, 2)))
+	(; bank_df) = equilibrium(banks, IM, firm, εs)
 
 	layout = (_) -> componentwise_circle([1:6, 6 .+ (1:5)])
 	
-	visualize_bank_firm_network(IM, shares, bank_df, firm_df; figure=figure(1.25, 1.0), hidespines=false, start = 1/6, layout, add_legend=true, show_firms=false) |> as_svg
+	visualize_bank_firm_network(IM, bank_df; figure=figure(1.25, 1.0), hidespines=false, start = 1/6, layout, add_legend=true, show_firms=false) |> as_svg
 end
 
 # ╔═╡ b54dc329-7764-41e6-8716-ef20bef0b29b
@@ -2022,11 +1817,11 @@ Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 DataAPI = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
@@ -2052,11 +1847,11 @@ Colors = "~0.12.10"
 DataAPI = "~1.14.0"
 DataFrameMacros = "~0.4.1"
 DataFrames = "~1.5.0"
-DocStringExtensions = "~0.9.3"
 GeometryBasics = "~0.4.5"
 GraphMakie = "~0.5.3"
 Graphs = "~1.8.0"
 HypertextLiteral = "~0.9.4"
+LaTeXStrings = "~1.3.0"
 Makie = "~0.19.2"
 MarkdownLiteral = "~0.1.1"
 NamedTupleTools = "~0.14.3"
@@ -2078,7 +1873,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "f9cf32143a098ac080692448764f69fd19bc1916"
+project_hash = "a79ce4a828f0c4da7303c24e89efd794fde31c5e"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -3623,14 +3418,8 @@ version = "3.5.0+0"
 # ╟─8e6bdcfd-3cb0-4f6b-8dcf-f99f4afe87c2
 # ╟─bafc7db1-ac1d-4314-be83-0b9f6c63b5fc
 # ╠═ba39c037-c4e1-465e-a232-e5194caa14ba
-# ╠═022f88ba-e36a-497e-9374-e9f71ae30603
-# ╠═9bfa4a0b-b87a-4d53-acb6-c1e5e49561bb
 # ╟─acfdf348-e8bf-41ee-aa19-fe7ec29087cc
 # ╠═834ff5a0-3bae-44ca-a413-f45d3394b511
-# ╠═d2b7000c-a74d-4467-a16f-ba4b291a00e7
-# ╠═72c429c6-8214-43b5-87f7-a2021d57c32c
-# ╠═b8568c28-9abf-4740-90f0-14e74da176e5
-# ╠═3786db5d-d07b-4a56-8e9d-26f69a12cc22
 # ╠═2f69a836-7fed-42e6-a509-096bc8cabbc2
 # ╠═26a5c4f4-75c1-4a4c-a813-5fad0c571da1
 # ╠═5d283f89-4419-4b14-81ba-9826b4f1689e
@@ -3645,7 +3434,7 @@ version = "3.5.0+0"
 # ╠═efbc1a42-ecc2-4907-a981-bd1d29ca0803
 # ╟─7f058e4a-9b12-41c9-9fd7-4ad023058a14
 # ╟─96878ebb-fbc0-4d53-998a-210e13a42492
-# ╟─e2041c57-0e3d-4dad-9bab-d70434f18509
+# ╠═e2041c57-0e3d-4dad-9bab-d70434f18509
 # ╠═9446b4db-4d93-4153-84e2-73d01fb31254
 # ╠═aaffd333-3aa1-48ee-b5db-d577bd7da830
 # ╠═a8a8a197-d54d-4c67-b7ce-19bdc8b64401
@@ -3654,7 +3443,6 @@ version = "3.5.0+0"
 # ╟─bf719f30-72c1-488e-ba77-c183effb7c60
 # ╟─a0767d80-0857-47ef-90a1-72bc34064716
 # ╠═c920d82c-cfe9-462a-bacd-436f01c314cf
-# ╠═354cf406-eaf4-46ba-b93b-2ccde89c86b4
 # ╟─72e5f4d3-c3e4-464d-b35c-2cf19fa9d4b5
 # ╟─d6345a8b-6d8f-4fd2-972b-199412cbdc26
 # ╟─c99e52e2-6711-4fb6-bcc0-8e4f378ed479
@@ -3706,7 +3494,6 @@ version = "3.5.0+0"
 # ╠═1a997e44-f29c-4c55-a953-a9039f096d47
 # ╟─78bedfcc-3671-4852-985b-3e1b5aaade5a
 # ╠═0f03f537-f589-4abd-9587-0bb18835d9b9
-# ╠═58c842cc-89f8-413e-8df4-73e01218d583
 # ╟─25e84f19-9cd8-43ad-ae6a-d500b8ac74b6
 # ╠═74262581-3c64-4e5b-9328-416c4e1efc91
 # ╠═2b405f2b-3256-4c47-8334-c2d93713d409
@@ -3723,7 +3510,6 @@ version = "3.5.0+0"
 # ╠═8b75bc15-e07b-43e5-adb3-c5d6481ee9d8
 # ╠═cf61ebba-6800-4bfa-bb7c-cb9a6c846b65
 # ╠═36ac25b9-27e5-4728-bbcf-920f231ff6ab
-# ╠═f5a24d09-e1af-4040-ba6f-90f12778a2ad
 # ╟─11d6ac4f-e910-4a9f-9ee4-bdd270e9400b
 # ╠═c1b1a22b-8e18-4d19-bb9b-14d2853f0b72
 # ╠═cc1ff1e6-2968-4baf-b513-e963ab2ff1b4
@@ -3742,19 +3528,17 @@ version = "3.5.0+0"
 # ╠═d285879a-bdfd-4efa-aa5d-9dacf08a2dc6
 # ╠═70bbb90e-06f1-4b60-a952-275866945c58
 # ╟─3040803d-e95a-40bc-aa72-92c7d158e226
-# ╠═f13e010a-d394-4e40-9535-c5e2e3e226aa
-# ╠═bb81bf74-e61e-4209-9877-0fc88ccc5f8a
+# ╟─f13e010a-d394-4e40-9535-c5e2e3e226aa
 # ╠═9cdc97e5-67f8-4e71-97d8-9cda5e9d7bd8
 # ╠═601b1453-20bd-4e93-abb7-4fad4f5adf8c
 # ╠═955c190a-1d00-4c78-bdfb-daac31edf76f
 # ╠═7871b479-2aaf-42c1-ad84-42ac17cfc6e1
-# ╠═7f88efc7-7931-4499-91d5-7253c0410d76
 # ╟─7c026a42-1c05-4968-b068-c8561ca5a2db
 # ╠═7b70a862-faf4-4c42-917c-238718c43708
+# ╠═fc01674e-73de-4cbf-9c80-fa1ea47fcb21
 # ╠═222665dc-397b-4e58-b3ee-935b115cf13d
 # ╠═3998e822-d7e0-40f2-a866-71a3d81c4ca3
 # ╟─0d207cbe-5b97-4bd7-accf-fc49ce4522e9
-# ╠═3db76a38-a506-4abf-803f-2b5ba6ce1393
 # ╠═ebf41ae2-3985-439b-b193-eabfab701d16
 # ╠═b7d74679-904c-44c4-bedd-89f1b68a5e42
 # ╠═1b9c8f2b-8011-46f1-b46d-479031eb9ac3
@@ -3764,42 +3548,40 @@ version = "3.5.0+0"
 # ╠═ab1cf7ab-80fb-4423-a924-1d6e24e9c9bc
 # ╠═0ff81eb8-d843-49a4-af93-ec2414797e87
 # ╟─ffe50130-a9cb-4ba9-a861-c247bf688873
-# ╠═d3e5b8f2-51b1-4ba4-97b4-2be156a74643
+# ╟─d3e5b8f2-51b1-4ba4-97b4-2be156a74643
 # ╠═00a4054a-dd10-4c5c-ae20-c0dc176e8e18
+# ╠═38a1f960-7178-4968-89e4-6b659b64baa2
+# ╠═f689810f-8f43-4368-a822-0ee4f3015271
 # ╠═5bde1113-5297-4e93-b052-7a0f93f4ea84
 # ╠═73456a8f-8534-4b55-8af6-ff7952bd3a3a
-# ╠═ff23f4cf-470b-4e14-8f0f-54bb48b60027
 # ╠═e6def365-4438-4591-acbd-60d9de466b0a
 # ╠═055a811c-bc4a-4959-88f1-bc71e8749313
-# ╠═03ec9b2b-a4c6-4899-8ce1-683a00551543
-# ╠═8a97ef2b-280b-45ec-b4ef-0797928a656f
 # ╠═e2045a53-21d3-4c7c-ad95-3fc8d2444821
 # ╠═3c211dad-73b0-4715-b066-e10005f8f3a7
 # ╠═ee10e134-84be-41f8-9e7e-c1cd68227977
 # ╠═2a5f02e7-fec1-41b3-b8b4-b33b1cc1232c
+# ╠═47118d1b-8471-4288-85fe-d3e94667dc96
 # ╠═dffce961-6844-4a44-beea-ab085c2f9f3f
-# ╠═89526137-1502-4600-a456-2bcef13cf8fb
 # ╠═f708e6c0-cfac-4b4d-a3ed-69b98883294a
 # ╠═d6cb95c1-a075-4544-9031-58aef65c7577
-# ╠═70783a38-2104-40c3-8982-abcf9f015609
-# ╠═898efe6d-698e-48f4-ac0d-3d24bb8a88cd
+# ╠═1bb841e0-ddd2-4571-83a5-d929e0a8a69c
+# ╠═7fbcfbde-0b5e-4bf2-9eda-9b15a4dd6bec
 # ╟─ff77f7b4-52d1-4fc8-abfc-e623f7bcd423
 # ╠═c7c8581c-e82c-428e-a599-3c003cc0151c
 # ╟─69698f6a-110d-49ea-bd57-16af0de90844
 # ╠═7d2d3618-7810-444d-90c0-0d592f8eba8c
 # ╠═12968f5e-6e75-4429-bff8-0d1c644330a7
-# ╠═50112e6e-80ed-4650-be09-46157e5ae65d
 # ╟─2c22e86e-1139-4f66-8992-093d38f4c6cb
 # ╠═60293fac-4d20-409b-bfd2-d5283f189320
 # ╠═bef59a5b-6952-42aa-b700-4ad81d848fe4
-# ╠═fd3a25df-beba-4c3f-9d7c-1255cfe373ef
 # ╠═ce563ab5-6324-4a86-be61-7a107ff0e3b3
 # ╟─4ccb52c2-a177-4b13-8ce5-2af6f286c737
 # ╠═1f23193e-0bca-4bee-82b1-453100721ab6
 # ╠═4a1fd4a3-71a0-4947-8b75-cc2100fb636b
-# ╠═07a16680-8cc4-4065-bc8d-8978de679f0d
 # ╟─3496c181-c4c3-4b1b-a5e5-83df27182c99
 # ╠═8f15ccf5-860a-47ca-b5c2-842c4e6f861a
+# ╠═3758f272-297c-4325-9a7c-042b4f41d615
+# ╠═a349099a-64aa-4e86-9bf2-b6157feff394
 # ╠═c4032c7a-73f4-4342-a5a7-19fd14017402
 # ╠═e8d198fa-11db-43b2-846e-311abe9f59aa
 # ╠═2711b045-b879-4225-afae-13328a4e14b3
