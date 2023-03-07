@@ -19,7 +19,7 @@ end
 
 # ╔═╡ 2148f702-32ee-40d8-896d-48ae684647bc
 md"""
-`risk-sharing.jl` | **Version 1.1** | *last updated: Feb 24*
+`risk-sharing.jl` | **Version 1.2** | *last updated: Mar 6, 2023*
 """
 
 # ╔═╡ 5d057554-f8af-4242-8291-0e584cf24764

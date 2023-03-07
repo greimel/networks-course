@@ -17,147 +17,36 @@ end
 # ╔═╡ f5450eab-0f9f-4b7f-9b80-992d3c553ba9
 
 
-# ╔═╡ a2a69f22-35bc-4e7b-8d59-20fb32bf0e3e
-danger(md"""Before running this notebook you will need to run the following lines of code in `julia`.
-
-```julia
-import Pkg
-Pkg.Registry.add(
-	Pkg.RegistrySpec(url="https://gitlab.com/greimel/GreimelRegistry")
-)
-Pkg.Registry.add("General")
-```
-
-You need to do this just once.
-""")
-
-# ╔═╡ 7e83f39f-5701-424e-a4c6-0e8e81f9e8c7
+# ╔═╡ 8573d925-e4bd-4544-a264-b3a7ba8610a3
 md"""
-`systemic-risk-new.jl` | _last updated on November 22_
+*Assignment submitted by* **$members** (*group $(group_number)*)
 """
 
-# ╔═╡ 72e25b9c-89e3-441b-bf89-c1122535318a
-present_button()
-
-# ╔═╡ a4dba7da-9d63-4d0d-a736-565d6ccf7d09
-space = 10
-
-# ╔═╡ 9038f512-8201-476c-be2a-846546e4d29b
-aside(warning_box(md"""Is does not only hold for unconnected islands, but also for islands with weak enough links (_``δ``-connected networks_)."""))
-
-# ╔═╡ cdfc35e1-5082-4959-9d30-3abb2dc8a7ac
-md"""
-# Systemic Risk in Financial Networks
-
-#### _by_ Fabian Greimel
-
-##### _Economics of Networks_ | Tinbergen Institute | November 25, 2022
-
-\
-based on _[Acemoglu, Ozdaglar & Tahbaz-Salehi, 2015](https://www.aeaweb.org/articles?id=10.1257/aer.20130456), American Economic Review_
-"""
-
-# ╔═╡ 944b07ed-20e5-4068-ac5e-8a48f866fdd2
-md"""
-## Overview: Contagion on Financial Networks
-
-> _Financial network_:  banks linked by interbank lending
-"""
-
-# ╔═╡ 1d13564d-7256-4cf1-919f-6d8298cc476b
-md"""
-1. _How do shocks propagate_ on a financial network?
-2. _How should a network look_ so that shocks don't spread? $(fig |> aside)
-"""
-
-# ╔═╡ 1d5d8c8a-8d86-426f-bb17-bd2279d91ff1
-md"""
-* ring vs complete ``(γ)``: $(@bind _γ_ Slider(0:0.1:1.0, show_value = true, default = 0.5))
-* shock to bank ``1`` ``(ε)``: $(@bind _ε_ Slider(0.0:0.05:1.0, show_value = true, default = 0.0))
-*  $(blur("number of islands:")) $(@bind n_islands Slider(1:3, show_value = true, default = 1))
-"""
-
-# ╔═╡ 7b876239-8ddc-4929-ad52-752edb72c0eb
-Foldable("Take-away", 
-	proposition(md"""
-**Small Shocks:** more complete ``\implies`` fewer defaults
-
-**Large shocks:** split up network ``\implies`` fewer defaults $(Foldable("in their words", md"> Not all financial systems, however, are as fragile in the presence of large shocks. In fact, as part ``(ii)`` shows, for small enough values of ``δ``, any ``δ``-connected financial network is strictly more stable and resilient than both the complete and the ring networks. The presence of such _weakly connected_ components in the network guarantees that the losses—rather than being transmitted to all other banks—are borne in part by the distressed bank’s senior creditors."
-	))
-""",
-title = "Acemoglu, Ozdaglar & Tahbaz-Salehi (2015)", )
-)
-
-# ╔═╡ d4eedc29-26b6-48a6-80f1-e94efb81b2cd
-begin
-	ass = assumption(md"""
-Each bank "lends" to exactly one firm
-""",
-title = "Acemoglu, Ozdaglar & Tahbaz-Salehi (2015)", )
-
-	Foldable("Caveat", md"""
-	$(ass)
-	show  $(@bind show_firms CheckBox(default = false)) |
-	break $(@bind common_lenders CheckBox(default = false))
-	""")
+# ╔═╡ 2db89e2d-4d89-454d-bd1a-976a1f415623
+if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
+	md"""
+!!! danger "Note!"
+    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in [this cell](#93a79265-110d-4fb9-b2a7-97da4667f8c6).
+	"""
 end
 
-# ╔═╡ e11a99df-d0f2-4838-b325-473d3043be98
-vertical_space()
-
-# ╔═╡ 073982c7-6333-43f6-866a-91a49f8ba7eb
-fig = let
-	(; IM, shares, out) = initial_analysis
-	if !show_firms
-		shares = fill(0.0, (0, size(shares, 2)))
-	end
-	visualize_bank_firm_network(IM, shares, out; figure=figure(300), start = 1/6) |> as_svg |> x -> md"$(x)"
-end;
-
-# ╔═╡ f51fb0b2-276a-415b-b2b7-aec903b1fe9e
-initial_analysis
-
-# ╔═╡ 8a2f3e4d-9c61-4a21-a229-58f731964181
-initial_analysis = let
-	n_banks = 6
-
-	if !common_lenders
-		n_firms = n_banks
-		shares = I(n_banks)
-	else
-		n_firms = 3
-		shares = [
-			0.5 0.5 0.0 0.0 0.0 0.0;
-			0.0 0.0 0.5 0.5 0.0 0.0;
-			0.0 0.0 0.0 0.0 0.5 0.5
-		] 
-	end
-
-	ν = 2.3
-	c = 2.4
-
-	banks = [Bank(; ν = ν, c = max(c - (i==1)*_ε_, 0), shares=shares[:,i]) for i ∈ 1:n_banks]
-
-	firms = [Firm(; α=0.0, ζ=0.0, ζ_α=1.0, a=0.0, A=0.5) for _ ∈ 1:n_firms]
-	εs = zeros(n_banks)
-
-	ȳ = 0.6
-	n = IslandNetwork(n_islands, n_banks ÷ n_islands, ȳ; γ=_γ_)
-
-	IM_old = InterbankMarket(n)
-	
-	(; out, IM) = equilibrium(banks, IM_old, firms, shares, εs)
-
-	(; banks, firms, shares, out, IM)
-end;
-
-# ╔═╡ 73ba4210-d8f6-4a74-bf4d-d7bc0902bb5e
+# ╔═╡ 815648ae-78f2-42f1-a216-81b10c0a7850
 md"""
-$(aside(fig))
+`systemic-risk.jl` | **Version 1.2** | *last updated: Feb 28, 2022*
+"""
 
-## Plan for the lecture
+# ╔═╡ c129dec7-eb81-4cab-91d5-2ef7a1c06b24
+md"""
+# Risk Sharing and Systemic Risk in Financial Networks
 
-> **_Goal_**: Understand model and key results of Acemoglu, Ozdaglar & Tahbaz-Salehi (2015)
+_Part A -- **Risk sharing** -- What's good about financial networks?_ \
+based on _[Allen & Gale, 2000](https://www.jstor.org/stable/10.1086/262109), Journal of Political Economy_
+* I. banks provide liquidity
+* II. banks are fragile (subject to bank runs)
+* III. an interbank market can **avoid default**, **prevent bank runs**
+
+👉 _Part B -- **Systemic Risk** -- What's bad about financial networks?_ \
+based on _[Acemoglu, Ozdaglar & Tahbaz-Salehi, 2015](https://www.aeaweb.org/articles?id=10.1257/aer.20130456), American Economic Review_
 
 * I. Model setup
 * II. **insolvency** and **bankruptcy** in the payment equilibrium
@@ -166,294 +55,63 @@ $(aside(fig))
   * more interbank lending leads to higher fragility
   * densely connected networks are **robust, yet fragile**
   * with **big shocks**, we want to have **disconnected components**
-* V. Empirical relevance, Outlook
-
 """
 
-# ╔═╡ eba94b09-f061-432a-80ce-a68be83e6a99
+# ╔═╡ 6060f7ec-52c1-4504-9fc9-dfaaff4c1109
 md"""
-# I. Model Setup
+# Assignment 3: Financial stability
 """
 
-# ╔═╡ ffc743af-b97c-4083-a02e-ea5725829f2a
+# ╔═╡ 1f9e1561-405d-4d49-a2ee-af2dfeb2d409
 md"""
-## Model I: Banks
+*submitted by* **$members** (*group $(group_number)*)
 """
 
-# ╔═╡ 8e6bdcfd-3cb0-4f6b-8dcf-f99f4afe87c2
-aside(md"$(balance_sheet)")
-
-# ╔═╡ bafc7db1-ac1d-4314-be83-0b9f6c63b5fc
+# ╔═╡ 4f30bb25-0f69-4c5a-948c-df89d75a0a24
 md"""
-### Bank
-
-* external debt (deposits) ``ν``
-* external assets (cash) ``c``
-* borrowing and lending on _**financial network**_ (see below)
-* investment in $(strike("loan to")) _**firm**_ (see below)
-
-### Financial network
-
-* ``n`` banks
-* ``y_{ij} > 0 ⟺`` bank ``i`` has debt with bank ``j``
-* the network is **_regular_** \
-  ``\forall i \sum_{j} y_{ij} = \sum_{j} y_{ji} = \bar y``
+!!! info "Note on Task 3"
+    **Task 3** is not graded, but it will be discussed in the tutorial. You are invited to submit solutions for **Task 3**, but you don't have to.
 """
 
-# ╔═╡ acfdf348-e8bf-41ee-aa19-fe7ec29087cc
+# ╔═╡ 07958953-43c8-441b-b6d6-6bcf0e027603
 md"""
-## Model II: Firms
+### Task 1: Imminent bank runs in Russia? (4 points)
 
-* fixed initial size
-* dividend ``\delta = a - ε`` paid to bank (``ε`` is a shock)
-* fraction ``\tilde ℓ`` can be liquidated (recover ``\tilde ℓ ζ A``)
-* final pay-off ``(1-\tilde ℓ) A``
-
+Following the Russian aggression against Ukraine, the US and the EU have imposed sanctions on Russia. Some commentators point out the possibility of bank runs in the following days. (See, for example [this bloomberg article](https://www.bloomberg.com/news/articles/2022-02-26/u-s-weighs-sanctions-on-russia-s-central-bank-over-ukraine)).
 """
 
-# ╔═╡ a0ac4092-cd27-4523-85f9-f4a4d81456b3
+# ╔═╡ 88580398-8b68-4830-9df9-ec1a1aeaf243
 md"""
-# II. Payment equilibrium
+👉 (1.1 | 2 points) Briefly summarize _(some of)_ the measures that target the Russian financial system. (<200 words)
 """
 
-# ╔═╡ 6fddaaa4-688d-4f40-a1b3-04bf62024955
-aside(md"$balance_sheet")
-
-# ╔═╡ 01eb57fd-a815-41f2-9e25-7730bff7917d
-md"""
-### Banks' choice
-
-1. payables > receivables: repay all debt (**_solvent_**)
-2. not enough? liquidate (part) of the firm ``ℓ > 0`` (**_insolvent_**)
-3. still not enough? (partially) default on interbank debt (**_bankrupt_**)
-4. still not enough? (partially) default on external liabilities ``ν``
+# ╔═╡ 186b1fe4-4462-4c0d-a874-256ee3e3f700
+answer11 = md"""
+Your answer goes here...
 """
 
-# ╔═╡ 6af1e245-aaf8-4b7d-977a-1d76998f7cf8
+# ╔═╡ b13cbc28-5658-4f24-879e-bd6c10f7c7f0
+show_words_limit(answer11, 200)
 
-
-# ╔═╡ 5b6f26db-f63f-4db5-ae3e-d41ae476948f
-
-
-# ╔═╡ 523e177c-f74d-4805-8a2b-9c27a4b0bc63
+# ╔═╡ f7a60a89-40b2-4656-98a6-a258a4a5741d
 md"""
-* size of shock $(@bind ε_cash Slider(0.0:0.05:1.0, show_value = true, default = 0.0))
-* show illiquid firm value ``A`` $(@bind show_illiquid CheckBox(default = false))
-* recovery rate ``ζ`` $(@bind recovery_rate Slider(0:0.1:0.5, show_value = true, default = 0.0))
-""" |> aside
-
-# ╔═╡ 4ae1b6c2-bb63-4ca8-b8ec-057c8d2a371f
-vertical_space()
-
-# ╔═╡ efbc1a42-ecc2-4907-a981-bd1d29ca0803
-balance_sheet = let
-	c = 0.7
-	ν = 1.2
-	x = 1.0
-	a = 0.7
-	y = 1.0
-	A = 1.0
-	ζ = recovery_rate
-	shortfall = max(y + ν - (c - ε_cash + x + a), 0)
-	
-	if shortfall > 0 
-		if shortfall < ζ * A
-			ℓ = shortfall / (ζ * A)
-		else
-			ℓ = 1.0
-		end
-	else
-		ℓ = 0.0
-	end
-
-	shortfall = shortfall - ℓ * ζ * A
-
-	y_paid = y - shortfall
-	
-	df = DataFrame([
-		(color = "external",  side = "receivable", ill=false, y=c-ε_cash, lab="cash 𝑐"),
-		(color = "external",  side = "payable",    ill=false, y=ν, lab="deposits ν"),
-		(color = "interbank", side = "receivable", ill=false, y=x, lab="IB deposit 𝑥"),
-		(color = "interbank", side = "payable",    ill=false, y=y_paid, lab="IB debt 𝑦"),
-		(color = "firm",   side = "receivable", ill=false, y=a, lab="dividend δ"),
-		(color = "firm",   side = "receivable", ill=true,  y=(1-ℓ) * A, lab="illiquid"),
-		(color = "liquidated", side = "receivable", ill=false, y=ℓ * A * ζ, lab=""),
-		(color = "shortfall", side = "payable",    ill=false,  y=shortfall, lab=""),
-	])
-
-	if !show_illiquid || (1-ℓ) * A ≈ 0
-		@subset!(df, :lab ≠ "illiquid")
-	end
-	if ℓ * ζ ≈ 0
-		@subset!(df, :color ≠ "liquidated")
-	end
-	
-	fig = Figure(; font="CMU", resolution=(350, 300))
-	ax = Axis(fig[2,1], xticks = (1:2, ["receivables", "payables"]), limits = (nothing, nothing, 0, 3.5))
-
-	color_df = DataFrame(
-		color = ["external", "interbank", "firm", "liquidated", "shortfall"],
-		i_color = [1, 2, 4, 3, 5]
-	)
-	
-	@chain df begin
-		leftjoin(_, color_df, on=:color)
-		disallowmissing!
-		@transform!(:i_side = :side == "receivable" ? 1 : 2)
-		@transform!(:fill = (Makie.wong_colors()[:i_color], 0.5 + 0.5 * (:ill == false)))
-		barplot!(ax, _.i_side, _.y, stack = _.i_color, color = _.fill, bar_labels = _.lab, flip_labels_at = 0
-		)
-	end
-
-	df = @chain color_df begin
-		@subset(:color ∈ ["external", "interbank", "firm"])
-		@transform!(:legend = PolyElement(color = Makie.wong_colors()[:i_color]))
-	end
-
-	Legend(fig[1,1], df.legend, df.color, orientation = :horizontal)
-
-	fig |> as_svg
-end	
-
-# ╔═╡ 7f058e4a-9b12-41c9-9fd7-4ad023058a14
-md"""
-# III. Financial Contagion
-
-* default on interbank market 
-* ``\implies`` lower interbank receivables for other banks
-* ``\implies`` reduces distance to default
+👉 (1.2 | 2 points) What do think will be the implications of these measures on financial stability in Russia? Aim at making a connection to _(some of)_ the models we discussed in the lecture (_Diamond & Dybvig (1983)_, _Allen & Gale (2000)_, _Acemoglu et al (2015)_) (<200 words)
 """
 
-# ╔═╡ 96878ebb-fbc0-4d53-998a-210e13a42492
-md"""
-| variable            | value                                                        |
-|:------------------- | :----------------------------------------------------------- |
-| ring vs complete ``γ`` | $(@bind γ2 Slider(0:0.01:1, default=0.5, show_value=true))|
-| dividend ``a``      | $(@bind a Slider(0:0.01:1, default=0.7, show_value=true))    |
-| recovery rate ``ζ`` | $(@bind ζ Slider(0:0.01:1, default=0.3, show_value=true))    |
-| **external**        | |
-| cash ``c``          | $(@bind c Slider(0:0.1:2, default=1.2, show_value=true))     |
-| shock ``ε``         | $(@bind ε Slider(0:0.1:2, default=0.0, show_value=true))     |
-| deposits ``ν``      | $(@bind ν Slider(0.0:0.1:2, default=1.8, show_value=true))   |
-| **internal**        | |
-| interbank ``y``     | $(@bind y Slider(0:0.1:2, default=1.0, show_value=true))     |
-""" |> aside
-
-# ╔═╡ e2041c57-0e3d-4dad-9bab-d70434f18509
-let
-	(; IM, shares, firms, banks, out) = transmission_analysis
-
-	fig = Figure(resolution = (800, 300))
-		
-	visualize_bank_firm_network!(Axis(fig[1,1]), IM, shares, out; start = 1/8)
-
-	visualize_balance_sheets!(fig[1,2:4], out, banks, firms, shares)
-
-	fig |> as_svg
-end
-
-# ╔═╡ aaffd333-3aa1-48ee-b5db-d577bd7da830
-vertical_space()
-
-# ╔═╡ a8a8a197-d54d-4c67-b7ce-19bdc8b64401
-transmission_analysis = let
-	n_islands = 1
-	n_banks = 4
-	if true
-		#n_firms = 2
-		#shares = [
-		#	0.0 0.0 0.5 0.5;
-		#	0.5 0.5 0.0 0.0
-		#] 
-
-		n_firms = n_banks
-		shares = I(n_firms)
-	else
-		n_firms = 2
-		shares = [
-			0.0 0.5 0.5 0.0;
-			0.5 0.0 0.0 0.5
-		] 
-	end
-
-	α = 0.0
-	ζ_α = 0.0
-	#par = (; a=_a_, A, α, ζ_α, ω₂, ω₁, y, x, c)
-	#λs = (; λ_ν, λ_ζ)
-	#a = 1.0
-	#ν = 0.5 # ν(par, λs)
-	#ζ = 0.1 #ζ(par, λs)
-	
-	banks = [Bank(; ν, c = max(c - (i==1)*ε, 0), shares=shares[:,i]) for i ∈ 1:n_banks]
-
-	firms = [Firm(; α, ζ, ζ_α, a, A) for _ ∈ 1:n_firms]
-	εs = zeros(n_banks)
-
-	ȳ = y
-	n = IslandNetwork(n_islands, n_banks ÷ n_islands, ȳ; γ=γ2)
-
-	IM = InterbankMarket(n)
-
-	(; out, IM) = equilibrium(banks, IM, firms, shares, εs)
-
-	(; banks, firms, IM, shares, out)
-end
-
-# ╔═╡ 7970090f-eb3a-488e-b225-ce4198494f1d
-firm_bank_aside = let
-	(; IM, shares, firms, banks, out) = transmission_analysis
-		
-	visualize_bank_firm_network(IM, shares, out; start = 1/8) |> as_svg |> x -> md"$(x)" |> aside
-end
-
-# ╔═╡ da7c558d-a2b5-41a8-9c78-3e39a00dfd31
-md"""
-# IV. Stability and Resilience
+# ╔═╡ 70e40546-b5e8-45dc-86a0-bfbef5403e30
+answer12 = md"""
+Your answer goes here ...
 """
 
-# ╔═╡ bf719f30-72c1-488e-ba77-c183effb7c60
+# ╔═╡ 0a7829f4-c3a9-488d-aacc-6e8a02c3ef79
+show_words_limit(answer12, 200)
+
+# ╔═╡ 496f01ef-6422-412b-9142-c3893476bc0d
 md"""
-### 1. More interbank lending leads to less stability and less resilience
-
-Formally, for a given regular financial network ``(y_{ij})`` let ``\tilde y_{ij} = \beta y_{ij}`` for ``\beta > 1``. Financial network ``\tilde y`` is less resilient and less stable *(see __Proposition 3__)*.
-
-* _Proposition 3_: More interbank lending leads to a more fragile system. (For a given network topology, the defaults are increasing in ``\bar y``.)
+### Task 2: _Systemic Risk_ (6 points)
 """
 
-# ╔═╡ a0767d80-0857-47ef-90a1-72bc34064716
-md"""
-### 2. Densely connected networks are _robust, yet fragile_
-
-> Our results thus confirm a conjecture of Andrew Haldane (2009, then Executive Director for Financial Stability at the Bank of England), who suggested that highly interconnected financial networks may be “robust-yet-fragile” in the sense that “within a certain range, connections serve as shock-absorbers [and] connectivity engenders robustness.” However, beyond that range, interconnections start to serve as a mechanism for the propagation of shocks, “the system [flips to] the wrong side of the knife-edge,” and fragility prevails.
-
-* Upto some ``\varepsilon^*``, the shock does not spread
-* Above this value, all banks default
-* This is an example for a _phase transition_: it flips from being the most to the least stable and resilient network
-
-__Compare *Propositions 4 and 6*__:
-* _Proposition 4_: For small shocks and big ``\bar y``, the complete network ist the most resilitient and most stable financial network and the ring is the least resilient and least stable.
-
-* _Proposition 6_: For big shocks, the ring and complete networks are the least resilient and least stable.
-
-"""
-
-# ╔═╡ c920d82c-cfe9-462a-bacd-436f01c314cf
-A = 0.5
-
-# ╔═╡ 354cf406-eaf4-46ba-b93b-2ccde89c86b4
-x = y
-
-# ╔═╡ 72e5f4d3-c3e4-464d-b35c-2cf19fa9d4b5
-md"""
-# Exercises
-"""
-
-# ╔═╡ d6345a8b-6d8f-4fd2-972b-199412cbdc26
-md"""
-### Task 1
-"""
-
-# ╔═╡ c99e52e2-6711-4fb6-bcc0-8e4f378ed479
+# ╔═╡ 1e38675b-3482-4f85-b4fa-f476e84fb520
 out = let
 	#n = 6
 	#m = 3
@@ -470,23 +128,22 @@ out = let
 	else
 		n = (n1, n2)
 	end
-	c = 1.6
-	fig = Figure(; figure(c * 440, c * 220)...)
+	
+	fig = Figure()
 	ax1 = Axis(fig[1,1], aspect = 1, title = L"interbank market $y$")
 	ax2 = Axis(fig[1,2], aspect = 1, title = L"interbank market $\tilde{y}$")
-	hidedecorations!.([ax1, ax2])
-	numbered_graphplot!(ax1, IM1, minimal=false)
-	numbered_graphplot!(ax2, IM2, minimal=false)
+	numbered_graphplot!(ax1, IM1; layout = componentwise_circle)
+	numbered_graphplot!(ax2, IM2; layout = componentwise_circle)
 
 	(; IM1, IM2, fig, n, ȳ)
-end; out.fig |> as_svg
+end; out.fig
 
-# ╔═╡ 15f45669-516b-4f3f-9ec1-f9e2c1d2e71a
+# ╔═╡ 21dd99b3-ee5b-46e5-adf5-9c9ff9448272
 @markdown("""
 Consider the interbank networks ``y`` and ``\\tilde y`` of $(out.n) banks as depicted above. For all non-isolated banks the sum of interbank liabilities equal the sum of interbank claims (``y = $(out.ȳ)``).
 """)
 
-# ╔═╡ d7111001-f632-4d0d-a2c7-7bbfd67bf87d
+# ╔═╡ febcd0aa-0a19-405c-b5ed-5c73dab8929c
 md"""
 For this exercise you can use the tool below, to simulate the payment equilibrium for a given interbank market, shock size, and the bank that is hit by the shock.
 
@@ -495,491 +152,1111 @@ For this exercise you can use the tool below, to simulate the payment equilibriu
 * Select ``y`` or ``\tilde y`` $(@bind _IM Select([out.IM1 => "y", out.IM2 => "ỹ"]))
 """
 
-# ╔═╡ 0d18cdf0-441e-4ca9-98e3-50bc3efa837f
+# ╔═╡ cee410bb-1470-41f9-8e98-b96591eac7ca
 let
-	IM = deepcopy(_IM)
+	IM = _IM
 	i = i_bank
 	#_ε4 = 0.4
 	
-	NetworksUtils.updated_network(IM) .= NetworksUtils.initial_network(IM)
+	updated_network(IM) .= initial_network(IM)
 
-	x = NetworksUtils.updated_network(IM)
-	y = NetworksUtils.initial_network(IM)
+	x = updated_network(IM)
+	y = initial_network(IM)
 	
 	n_banks = size(y, 1)
 
-	α = 0.0
-	ζ_α = 0.0
+	# failed bank
+	bank₀ = Bank(; ν = 2.0, c = 0.0, project = Project(; ζ = 0.1, A = 3.5, a = 2.0, ε = _ε4), γ = Failure())
+	# sucessful bank
+	bank₁ = Bank(; ν = 2.0, c = 0.0, project = Project(; ζ = 0.1, A = 3.5, a = 2.0))
 
-	ν = 2.0
-	c = 0.0
-	ζ = 0.1
-	A = 3.5
-	a = 2.0
-	ε = _ε4
-	
-	shares = I(n_banks)
-	
-	banks = [Bank(; ν, c = c, shares=shares[i,:]) for i ∈ 1:n_banks]
-
-	firms = [Firm(; α, ζ, ζ_α, a=max(a - (i==i_bank)*ε, 0), A) for i ∈ 1:n_banks]
-	εs = zeros(n_banks)
-
-	(; out, IM) = equilibrium(banks, IM, firms, shares, εs)
-
-
-	shares = fill(0.0, (0, size(shares, 2)))
-	
-	visualize_bank_firm_network(IM, shares, out; figure=figure(300), start = 1/6, layout=componentwise_circle, add_legend=true) |> as_svg |> x -> md"$(x)"
-end
-
-# ╔═╡ 51bfc57f-7b06-4e27-af32-51df38af30a1
-md"""
-👉 (1.1 | 2 points) Consider financial network ``y``. What is the minimal number of shocks ``p`` that have to occur to wipe out the whole financial system. Which banks have to be hit? How big would the shocks ``\varepsilon`` have to be?
-"""
-
-# ╔═╡ b817cdf6-dfe6-4607-98da-2299a33d4906
-answer11 = md"""
-Your answer goes here ... You can type math like this: ``p = 17``, ``\varepsilon = 1.1``
-"""
-
-# ╔═╡ 07e9c77f-e05e-452c-8c47-cdd9dfc8e2fc
-md"""
-👉 (1.2 | 2 points) Consider financial network ``\tilde y``. What is the minimal number of shocks ``\tilde p`` that have to occur to wipe out the whole financial system. Which banks have to be hit? How big would the shocks ``\tilde \varepsilon`` have to be?
-"""
-
-# ╔═╡ f5293bee-9413-4507-8568-54836eb6d4a2
-answer12 = md"""
-Your answer goes here ... You can type math like this: ``\tilde p = 17``, ``\tilde \varepsilon = 1.1``
-"""
-
-# ╔═╡ 49c2fb2d-de6e-4ab2-a558-59fb153cf703
-md"""
-👉 (1.3 | 2 points) Now consider ``\hat \varepsilon > \max\{\varepsilon, \tilde \varepsilon \}`` and ``\hat p = 1``. Which network is more stable? Which network is more resilient?
-"""
-
-# ╔═╡ c0c711de-6916-4ab9-ab73-c476654332c4
-answer13 = md"""
-Your answer goes here ... You can type math like this: ``\hat p = 17``, ``\hat \varepsilon = 1.1``
-"""
-
-# ╔═╡ a95431eb-14a0-4dc3-bbe6-9c409f6cc596
-md"""
-## Task 2
-
-Consider the model of systemic risk by _Acemoglu, Ozdaglar & Tahbaz-Salehi (2015)_ with $n = 5$ banks. There are two scenarios that differ by the structure of the financial network ($\tilde y$ vs. $\hat y$).  Both $\tilde y$ and $\hat y$ are regular financial networks with parameter $y$.
-"""
-
-# ╔═╡ c7b99d3c-5d32-45e6-84fa-8a6513e6beb9
-let
-	ȳ = 2.1
-	IM1 = InterbankMarket(IslandNetwork([3, 2], ȳ; γ=0.0))
-	IM2 = InterbankMarket(IslandNetwork([3, 2], ȳ; γ=1.0))
-
-	n1 = size(IM1.network.Y, 1)
-	n2 = size(IM2.network.Y, 1)
-	if n1 == n2
-		n = n1
-	else
-		n = (n1, n2)
+	# vector of banks
+	banks = let
+		banks = [fill(bank₁, n_banks-1); bank₀]
+		banks .= Ref(bank₁)
+		banks[i] = bank₀
+		banks
 	end
-	layout = NetworksUtils.nested_circles(n)
-	c = 1.6
-	fig = Figure(; figure(c * 440, c * 220)...)
-	ax1 = Axis(fig[1,1], aspect = 1, title = L"interbank market $y$")
-	ax2 = Axis(fig[1,2], aspect = 1, title = L"interbank market $\tilde{y}$")
-	hidedecorations!.([ax1, ax2])
-	numbered_graphplot!(ax1, IM1; minimal=false, layout)
-	numbered_graphplot!(ax2, IM2; minimal=false, layout)
-
-	(; IM1, IM2, fig, n, ȳ)
-
-	fig |> as_svg
+	visualize_equilibrium(equilibrium(banks, IM))
 end
 
-# ╔═╡ f00d9e1a-b111-4b6a-95f5-b9736329befe
+# ╔═╡ 6733025d-20f0-48cd-b6d8-0dfb02bb7482
 md"""
-Each bank owns a project that pays $z_i = a - \varepsilon_i$ in the intermediate period. $\varepsilon_i > 0$ is a shock. Let $\tilde p$ be the minimal number of shocks, and $\tilde \varepsilon$  be the minimal shock size that can wipe out the whole system (that is, a simultaneous default of all banks) under the financial network $\tilde y$.
-
-👉 (2.1 | 1 points) Consider financial network ``y``. What is the minimal number of shocks ``p`` that have to occur to wipe out the whole financial system. Which banks have to be hit? How big would the shocks ``\varepsilon`` have to be?
+👉 (2.1 | 2 points) Consider financial network ``y``. What is the minimal number of shocks ``p`` that have to occur to wipe out the whole financial system. Which banks have to be hit? How big would the shocks ``\varepsilon`` have to be?
 """
 
-# ╔═╡ 65429eeb-72ba-4a72-9902-28d88ad6d3f5
+# ╔═╡ 33bf5bdd-6e13-4375-bf26-bdac273d6738
 answer21 = md"""
 Your answer goes here ... You can type math like this: ``p = 17``, ``\varepsilon = 1.1``
 """
 
-# ╔═╡ f8eb242f-a974-48aa-9173-b0bc7ff697d5
+# ╔═╡ 07fc0a5c-8d9f-46a7-9893-fefa23007878
 md"""
-👉 (2.2 | 3 points) What is $\tilde p$? Explain which banks would have to be hit to wipe out the whole system.
+👉 (2.2 | 2 points) Consider financial network ``\tilde y``. What is the minimal number of shocks ``\tilde p`` that have to occur to wipe out the whole financial system. Which banks have to be hit? How big would the shocks ``\tilde \varepsilon`` have to be?
 """
 
-# ╔═╡ c2633df1-2e30-4387-8749-de3280b0602d
+# ╔═╡ 1f52926c-fc07-4652-97a8-6abbdb3e3b5e
 answer22 = md"""
-Your answer goes here ... You can type math like this: ``p = 17``, ``\varepsilon = 1.1``
+Your answer goes here ... You can type math like this: ``\tilde p = 17``, ``\tilde \varepsilon = 1.1``
 """
 
-# ╔═╡ 253ab06f-6284-4cbf-b2a2-232ff99548c9
+# ╔═╡ e903ac6c-1b5c-40ea-a925-e7243cbf9b02
 md"""
-👉 (2.3 | 5 points) Let $\delta > 0$ be very small and shock size $\varepsilon' \in (\tilde \varepsilon - \delta, \tilde \varepsilon)$. Conditional on $p' = 1$ and $\varepsilon'$, which network is more resilient and which network is more stable? Explain.
+👉 (2.3 | 2 points) Now consider ``\hat \varepsilon > \max\{\varepsilon, \tilde \varepsilon \}`` and ``\hat p = 1``. Which network is more stable? Which network is more resilient?
 """
 
-# ╔═╡ 1d058f8b-16f5-4744-8425-452876006c47
+# ╔═╡ 751e1643-43c2-4071-87cf-a904560e2bc4
 answer23 = md"""
-Your answer goes here ... You can type math like this: ``p = 17``, ``\varepsilon = 1.1``
+Your answer goes here ... You can type math like this: ``\hat p = 17``, ``\hat \varepsilon = 1.1``
 """
 
-# ╔═╡ 4e9b785f-ad74-4aa8-ad48-89fa8b236939
+# ╔═╡ 25dae65d-65a6-462f-aba2-afd498bf4d5a
+md"""
+### Before you submit ...
+
+👉 Make sure you have added **your names** and **your group number** in the cells below.
+
+👉 Make sure that that **all group members proofread** your submission (especially your little essays).
+
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
+"""
+
+# ╔═╡ 93a79265-110d-4fb9-b2a7-97da4667f8c6
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]);
+
+# ╔═╡ 3946c3f6-3044-42e4-b161-09f4394b7147
+group_number = 99
+
+# ╔═╡ 4712bc8d-4e63-47c9-8367-dc417f1a7649
+md"""
+### Task 3 (not graded): Avoiding a bank run
+"""
+
+# ╔═╡ 54722cbe-6a91-4275-a78c-8a50715b86c8
+md"""
+Consider the setup of Allen & Gale with banks ``i \in \{1, 2, 3, 4\}``. Banks know that a fraction ``\gamma`` of the population are _early types_. In the social optimum, banks offer deposit contracts ``(c_1, c_2)``. The fraction of early types ``\omega_i`` in each bank is random. There are three possible states ``S_j = (\omega_{1j}, \omega_{2j}, \omega_{3j}, \omega_{4j})``
+
+```math
+\begin{align}
+S_1 &= (\gamma, \gamma, \gamma, \gamma) \\
+S_2 &= (\gamma + \varepsilon, \gamma + \varepsilon, \gamma - \varepsilon, \gamma - \varepsilon) \\
+S_3 &= (\gamma - \varepsilon, \gamma - \varepsilon, \gamma + \varepsilon, \gamma + \varepsilon) \\
+\end{align}
+```
+
+The states are shown in the figure below. The red dots mean "more early customers" (``\gamma + \varepsilon``), the green dots mean "more late customers" (``\gamma - \varepsilon``) and the gray dots mean "no shock" (``\gamma``).
+"""
+
+# ╔═╡ eb1e20e7-9873-45bd-ae30-ed147a70b457
+md"""
+Select state (the ``i`` in ``S_i``): $(@bind i_state NumberField(1:length(states))).
+"""
+
+# ╔═╡ 28bbf56b-1bdf-486f-8230-b9a6ee19a955
+let
+	g = SimpleDiGraph(G_minimal)
+
+	fig, ax, _ = minimal_graphplot(g;
+		theme...,
+		node_color = exX.color,
+		nlabels = string.(vertices(g)),
+		nlabels_offset = Point2(0.05, 0.05),
+		exX.node_styles,
+		axis = (title = latexstring("Interbank network in state \$ S_$i_state \$"), )
+	)
+
+	fig
+end
+
+# ╔═╡ 7f0bad7b-439a-4639-bba4-5f0a52560042
+states = [
+	[:none, :none, :none, :none],
+	[:early, :early, :late, :late],
+	[:late, :late, :early, :early],
+]
+
+# ╔═╡ 497c6314-6f0f-4d45-9bd2-17d6f6b00ab9
+md"""
+👉 **(a)** What is the minimal number of edges that will prevent a bank run in period ``t=1`` in state ``S_1``? Explain briefly.
+"""
+
+# ╔═╡ 3abaa20d-a24d-4b2f-8d8d-4e01b719ab5e
+answer_a = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ d41cd681-2434-4525-9c67-9e184fdd1f67
+show_words(answer_a)
+
+# ╔═╡ 9a8b8946-e083-49f3-8a86-7ba2df4636fe
+md"""
+👉 **(b)** What is the minimal number of edges that will prevent a bank run in period ``t=1`` in all possible states? Explain and adjust the adjacency matrix `G_minimal` accordingly.
+"""
+
+# ╔═╡ e7eb6784-e947-4a14-8227-888d4646855e
+G_minimal = [
+	0 1 1 1;
+    0 0 1 1;
+	1 0 0 1;
+	1 1 0 0
+]
+
+# ╔═╡ 23bd3f41-7c81-4b15-a07c-720c3a393118
+answer_b = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ e6f4813b-86bb-45a8-b017-c2d32f3c74b0
+show_words(answer_b)
+
+# ╔═╡ 207d92a3-b8fa-45e3-88b1-bb95bb7d981c
+md"""
+👉 **(c)** Assume that your minimal network from **(a)** has _uniform weights_. What is the lower bound ``y_\text{min}`` for that weight that will allow the socially optimal allocation in all states?
+"""
+
+# ╔═╡ 5a12e196-99b2-4d45-b373-8aec03f6cc0e
+answer_c = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ be0f68e9-36ad-4500-b941-fe47e1865eba
+show_words(answer_c)
+
+# ╔═╡ 0a7b61c5-8e11-4025-b6ad-8fcfc2701464
+md"""
+👉 **(d)** What will happen if ``y < y_\text{min}``?
+"""
+
+# ╔═╡ f596a5cc-d291-4358-b568-9b3872bc2dc8
+answer_d = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ dcdd349e-3edb-413f-b315-994b9395c3bc
+show_words(answer_d)
+
+# ╔═╡ c177b994-cf6c-4a90-8d64-a4feef88fd56
+md"""
+👉 **(e)** Assume that there is a complete interbank network with a uniform weights to ensure the socially optimal allocation in all states. What would be an alternative state ``S_4`` in which the complete interbank network has a better outcome?
+"""
+
+# ╔═╡ 71185d5e-ae37-4571-b380-a5b9f2b65205
+answer_e = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 75b27e3b-f8b3-4345-ac43-2974d624ea72
+show_words(answer_e)
+
+# ╔═╡ 942580bf-60d3-49fe-be2a-2fab9869322d
+md"""
+# Part B -- *Systemic risk in financial networks*
+"""
+
+# ╔═╡ 0cb23460-2db6-4327-a01c-a013eb471a9e
+md"""
+## I. Model setup
+"""
+
+# ╔═╡ b542043b-b4ac-4207-b092-18b283c65524
+md"""
+### Interbank market – A network of promises
+
+```math
+y_{ij} > 0 \iff i \to j \iff
+\begin{cases}
+\text{$i$ promises to pay to $j$} \\
+\text{$i$ has a liability with $j$} \\
+\end{cases}
+```
+
+
+```math
+(y_{ij}) = \begin{pmatrix} 
+y_{11} & y_{12} & \cdots & y_{1j} & \cdots & y_{1n} \\
+y_{21} & y_{22} & \cdots & y_{2j} & \cdots & y_{2n} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+y_{i1} & y_{i2} & \cdots & y_{ij} & \cdots & y_{in} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+y_{n1} & y_{n2} & \cdots & y_{nj} & \cdots & y_{nn}
+\end{pmatrix}
+```
+
+The promises (payables) of bank ``i`` are ``\begin{pmatrix}y_{i1} & y_{i2} & \cdots & y_{in}\end{pmatrix}``
+
+and the claims (receivables) of bank ``j`` are ``\begin{pmatrix} y_{1j} \\ y_{2j} \\ \vdots \\ y_{nj}
+\end{pmatrix}``.
+
+"""
+
+# ╔═╡ 60615cd2-aa70-47e9-b432-b4051e17f628
+begin
+	n_banks = 3
+	ȳ = 2.1
+	nw = CompleteNetwork(n_banks, ȳ)
+	IM = InterbankMarket(nw)
+
+	numbered_graphplot(SimpleWeightedDiGraph(nw.Y),
+		extend_limits = 0.1,
+		figure = figure(220)
+	)
+end
+
+# ╔═╡ e454ff61-2769-4095-8d0c-6958f79338ee
+payables(IM)
+
+# ╔═╡ b09eb768-f645-441d-a943-8c2fe373fd08
+receivables(IM)
+
+# ╔═╡ b309cc56-598f-4bd4-a523-edbbb850db58
+# paid(IM)
+
+# ╔═╡ 141e0dd3-a9bb-4ea6-8686-e18a2628d926
+# received(IM)
+
+# ╔═╡ e3ae420b-1d40-4d2d-99f3-728cfb8ca167
+md"""
+#### Ring, complete network and their mixtures
+"""
+
+# ╔═╡ 7d55098d-2665-44ec-a959-91e591ccc70e
+md"""
+specify the mixture parameter ``\gamma``: $(@bind _γ_ Slider(0:0.1:1, show_value = true, default = 0.5))
+"""
+
+# ╔═╡ 5e3fb6e9-eacb-4e4b-9a62-83632263be37
+let	
+	n = γNetwork(5, 0.5, _γ_)
+	g = SimpleWeightedDiGraph(n.Y)
+	
+	numbered_graphplot(g; 
+		extend_limits = 0.1,
+		figure = figure(220),
+		axis = (; title = label(n))
+	)
+end
+
+# ╔═╡ 8f0dc26b-45c3-44ac-a0db-73e42b09f46b
+md"""
+#### Island network
+"""
+
+# ╔═╡ f1555793-db56-4b4c-909d-c8f3bf6cd857
+md"""
+* specify number of islands $(@bind _n_islands Slider(1:6, show_value = true, default = 4))
+* specify the number of banks per island $(@bind _n_banks Slider(1:10, show_value = true, default = 5))
+"""
+
+# ╔═╡ d14e0faa-4509-46aa-bfe1-0ba89d04c8c7
+let
+	g = SimpleWeightedDiGraph(island_network(_n_islands, _n_banks, 0.5))
+
+	numbered_graphplot(g; 
+		extend_limits = 0.1,
+		figure = figure((row_col(_n_islands) .* 220)...),
+	)
+end
+
+# ╔═╡ 99b10989-c757-43e7-8fd2-65f8a5377023
+function row_col(n)
+	n_col = ceil(Int, √n)
+	n_row = ceil(Int, n / n_col)
+	(n_col, n_row)
+end
+
+# ╔═╡ d385bc7e-d9e9-4f61-a455-9973262bd37a
+banks = let
+	ν = 2.3
+	c = 2.4
+	ε = 2.4 # ȳ + 0.1 + 0.1 #4
+	[Bank(; ν = ν, c = max(c - ε, 0)); fill(Bank(; ν, c), n_banks - 1)]
+end
+
+# ╔═╡ 9a771f35-8f15-4abc-a093-4b5cb84b909a
+md"""
+### Projects (i.e. illiquid assets)
+
+The project pays ``z_i \in \{a, a-\varepsilon\}`` in period 1 and ``A`` in period two. The project can be liquidated in period on, paying ``(z_i + \ell \zeta A, 0)`` where ``\ell \in (0, 1]`` is the fraction liquidated.
+"""
+
+# ╔═╡ 1a7df5c9-3036-44a7-9eba-42ef4851d9ae
+Base.@kwdef struct Project{T}
+	"Payoff in ``t=2`` aa"
+	A::T = 0
+	"recoverable fraction when liquidating"
+	ζ::T = 0
+	"payoff in ``t=1``"
+	a::T = 0
+	"reduction of payoff after failure"
+	ε::T = 0
+	function Project(A, ζ, a, ε)		
+		new{Float64}(float(A), float(ζ), float(a), float(ε))
+	end
+end
+
+# ╔═╡ 7c7ba04a-fc84-4ca2-a903-faf1fae0a839
+begin
+	abstract type Outcome end
+	struct Success <: Outcome end
+	struct Failure <: Outcome end
+end
+
+# ╔═╡ 4d4cf195-0eef-4873-b8f8-b82c48ee6f26
+begin
+	function payoff(project, γ, ℓ)
+		(; ζ, A) = project
+		payoff(project, γ) + ℓ * A * ζ
+	end
+	
+	payoff(project, γ::Success) = project.a
+	payoff(project, γ::Failure) = project.a - project.ε
+end
+
+# ╔═╡ 3968e7cf-b56b-4e36-a89c-aea6840986d2
+let
+	project = Project(2.0, 0.8, 1.0, 0.5)
+	
+	π₁ = payoff(project, Success())
+	π₂ = payoff(project, Success(), 0.75)
+	π₃ = payoff(project, Failure())
+	
+	#(; π₁, π₂, π₃)
+end
+
+# ╔═╡ 3052a997-5084-4005-8985-7be98a08d659
+md"""
+### Banks
+"""
+
+# ╔═╡ ec82cd1e-6d3f-11ec-18d7-8dd51f5446de
+Base.@kwdef struct Bank{T, O<:Outcome}
+	ν::T = 4.5 # outside (senior) obligation (liability)
+	c::T = 0.0 # outside (senior) asset (cash)
+	project::Project{T} = Project()
+	γ::O = Success()
+end
+
+# ╔═╡ c4ccc5ad-618d-4635-9d52-13be0df55198
+md"""
+## II. Insolvency, Bankruptcy and the Payment Equilibrium
+"""
+
+# ╔═╡ 37acf7b5-f93e-4ec9-9807-b247544713ed
+_a = 5.0
+
+# ╔═╡ 8377503b-4556-4dc0-9d15-330bdd4100e6
+md"""
+specify the shock ``\varepsilon`` $(@bind _ε1 Slider(0:0.1:_a, show_value = true, default = 0))
+"""
+
+# ╔═╡ 83817687-0e03-4be0-a66b-e74dcd300b15
+let
+	bank = Bank(; c = 0.5, project = Project(ζ = 0.5, A = 2, a = _a, ε = _ε1), γ = Failure())
+	(; ν, c, project) = bank
+	(; a, A, ζ) = project
+	x, y = 1.7, 1.7
+
+	(; ℓ, y_pc, ν_pc) = repayment(bank, x, y)
+
+	bs_max = max(A + x + c + a, y + ν) * 1.05
+	
+	df = [
+		(type = "liabs", spec = "1. senior liab (deposits) ν", value = ν_pc * ν),
+		(type = "liabs", spec = "2. junior liab (interbank) y", value = y_pc * y),
+		(type = "assets", spec = "3. early payoff a - ε", value = a - _ε1),
+		(type = "assets", spec = "4. liquid assets x + c", value = x + c),
+		(type = "assets", spec = "5. liquidated assets ℓ ζ A", value = ℓ * ζ * A),
+		(type = "assets", spec = "6. illiquid asset (project) A", value = (1-ℓ) * A)
+			] |> DataFrame
+	@chain df begin
+		data(_) * visual(BarPlot) * mapping(
+			:type => "", :value, stack = :spec, color = :spec
+		)
+		draw(; axis = (limits = (nothing, nothing, nothing, bs_max),))
+	end
+
+	#(; ℓ, y_pc, ν_pc)
+end
+
+# ╔═╡ f8271303-ab1f-486a-aa34-8f1dc6b33cd2
+let
+	out = map(0:0.05:5.5) do ε
+		project = Project(; a = 5.5, ε, ζ = 0.5, A = 3.5)
+		bank = Bank(; ν = 4.7, c = 0.0, project, γ = Failure())
+		i_bank = 1
+
+		(; ε, repayment(bank, i_bank, IM)...)
+	end 
+	
+	@chain out begin
+		DataFrame
+		stack([:ℓ, :y_pc, :ν_pc])
+		@transform!(:panel = :variable == "ℓ" ? "liquidated" : "repaid")
+		@transform!(:variable = @bycol recode(:variable, 
+			"y_pc" => "% repaid (interbank)",
+			"ν_pc" => "% repaid (outside)",
+			"ℓ" => "% liquidated"
+			)
+		)
+		data(_) * visual(Lines) * mapping(
+			:ε => "size of shock ε",
+			:value => "",
+			color = :variable => "",
+			row = :panel)
+		draw(; legend = (position = :top, titleposition = :left))
+	end
+end
+
+# ╔═╡ f3e015f2-33e1-4b2f-b34a-ee6a5751d96b
+md"""
+## III. Financial contagion
+"""
+
+# ╔═╡ 27039532-1c2b-4aee-858e-f9f0a135e62f
+md"""
+!!! note "Note"
+    The plot only shows interbank assets and liabilities.
+"""
+
+# ╔═╡ 2ed68cbb-7e5b-4d17-9cb3-4f9404b63365
+visualize_equilibrium(peq)
+
+# ╔═╡ 6e3907db-9c66-4805-853b-11877c23a1d6
+md"""
+specify the shock ``\varepsilon`` $(@bind _ε3 Slider(0.0:0.2:2.0, show_value = true, default = 1.0))
+"""
+
+# ╔═╡ d07fa3a9-6687-4279-8fe7-e348152b18f4
+peq = let
+	ȳ = 2.5 # 0.2
+	n_banks = 4
+	#nw = CompleteNetwork(n_banks, ȳ)
+	nw = RingNetwork(n_banks, ȳ)
+	#nw = IslandNetwork(2, n_banks ÷ 2, ȳ)
+
+	IM = InterbankMarket(nw)
+	
+	updated_network(IM) .= initial_network(IM)
+
+	x = updated_network(IM)
+	y = initial_network(IM)
+	
+	n_banks = size(y, 1)
+
+	bank₀ = Bank(; ν = 2.0, c = 0.0, project = Project(; ζ = 0.1, A = 3.5, a = 2.0, ε = _ε3), γ = Failure())
+	bank₁ = Bank(; ν = 2.0, c = 0.0, project = Project(; ζ = 0.1, A = 3.5, a = 2.0))
+	banks = [bank₀; fill(bank₁, n_banks-1)]
+
+	equilibrium(banks, IM)
+end
+
+# ╔═╡ 78a45e6a-a772-4fa7-bd9c-d728d5ea79e8
+md"""
+## IV. Systemic Risk: Stability and Resilience
+"""
+
+# ╔═╡ e9e6c131-c334-4674-9384-273cd40929dc
+using Colors, LaTeXStrings
+
+# ╔═╡ 3726a99d-8024-4fec-a047-43d370f795d9
+blues(n) = range(colorant"lightblue", colorant"darkblue", length = n)
+
+# ╔═╡ d649a654-e515-40b4-a45b-e095f1d12da7
+md"""
+### 1. More interbank lending leads to less stability and less resilience
+
+Formally, for a given regular financial network ``(y_{ij})`` let ``\tilde y_{ij} = \beta y_{ij}`` for ``\beta > 1``. Financial network ``\tilde y`` is less resilient and less stable *(see __Proposition 3__)*.
+
+* _Proposition 3_: More interbank lending leads to a more fragile system. (For a given network topology, the defaults are increasing in ``\bar y``.)
+"""
+
+# ╔═╡ 76f41f57-2971-4020-ab2f-87fad4a92489
+shocks = (ε̲ = 1.0, ε̄ = 1000.0)
+
+# ╔═╡ 2b7c65fe-8bf8-47f2-96b1-6dfe8888d494
+let ε = 1.2
+	ȳ_vec = 0.1:0.1:2
+	γ_vec = 0:0.2:1.0
+
+	p = 1
+	n_banks = 10
+	project = Project(; A = 2.0, ζ = 0.0, a = 5.6, ε)
+	banks = [Bank(; ν = 5.45, project, γ = i ≤ p ? Failure() : Success()) for i ∈ 1:n_banks]
+	
+	fig = Figure()
+	ax = Axis(fig[1,1], palette = (color = blues(length(γ_vec)), ),
+				xlabel = L"\bar{y}",
+				ylabel = "number of defaulted banks")
+
+	max_defaulted = 0
+	min_defaulted = 1000
+	for γ in γ_vec
+		network(ȳ) = γNetwork(n_banks, ȳ, γ)
+		
+		no_defaulted = map(ȳ_vec) do ȳ
+			IM = InterbankMarket(network(ȳ))
+			(; out) = equilibrium(banks, IM)
+			defaulted_banks = sum(out.y_pc .< 1)
+		end
+		max_defaulted = max(max_defaulted, maximum(no_defaulted))
+		min_defaulted = min(min_defaulted, minimum(no_defaulted))
+		lines!(ax, ȳ_vec , no_defaulted, label = label(network(0)))
+	end
+	
+	n = (max_defaulted - min_defaulted) ÷ 3
+	ax.yticks = min_defaulted:n:max_defaulted
+	ax.yminorticksvisible = true
+	ax.yminorticks = IntervalsBetween(n)
+	ax.yminorgridvisible = true
+	
+	axislegend(ax)
+	fig	
+end	
+
+# ╔═╡ 0d4d9a5b-5e4f-4126-85ec-d31327cbf960
+md"""
+### 2. Densely connected networks are _robust, yet fragile_
+
+> Our results thus confirm a conjecture of Andrew Haldane (2009, then Executive Director for Financial Stability at the Bank of England), who suggested that highly interconnected financial networks may be “robust-yet-fragile” in the sense that “within a certain range, connections serve as shock-absorbers [and] connectivity engenders robustness.” However, beyond that range, interconnections start to serve as a mechanism for the propagation of shocks, “the system [flips to] the wrong side of the knife-edge,” and fragility prevails.
+
+* Upto some ``\varepsilon^*``, the shock does not spread
+* Above this value, all banks default
+* This is an example for a _phase transition_: it flips from being the most to the least stable and resilient network
+
+__Compare *Propositions 4 and 6*__:
+* _Proposition 4_: For small shocks and big ``\bar y``, the complete network ist the most resilitient and most stable financial network and the ring is the least resilient and least stable.
+
+* _Proposition 6_: For big shocks, the ring and complete networks are the least resilient and least stable.
+
+"""
+
+# ╔═╡ 045c54d2-c76c-49f1-b849-d607e50b182b
+let 
+	ȳ = 6 #ȳ_vec[1]
+	
+	ε_vec = 0.0:0.05:2
+	γ_vec = [0.0, 1.0] #1.0
+	γ = 0.0
+
+	p = 1
+	n_banks = 10
+	project(ε) = Project(; A = 2.0, ζ = 0.0, a = 5.6, ε)
+	banks(ε) = [Bank(; ν = 5.45, project = project(ε), γ = i ≤ p ? Failure() : Success()) for i ∈ 1:n_banks]
+	
+	island_networks = [
+		IslandNetwork(2, 5, ȳ);
+		IslandNetwork(5, 2, ȳ);
+		#IslandNetwork(10, 1, ȳ)
+	] 
+
+	networks = [γNetwork.(n_banks, ȳ, γ_vec); island_networks]
+
+	max_defaulted = 0
+	min_defaulted = 1000
+	
+	fig = Figure()
+	ax = Axis(fig[1,1], #palette = (color = blues(length(γ_vec)), ),
+				xlabel = L"shock size $ε$",
+				ylabel = "number of defaulted banks")
+		
+	for network in networks
+		
+		no_defaulted = map(ε_vec) do ε
+
+			IM = InterbankMarket(network)
+
+			(; out) = equilibrium(banks(ε), IM)
+			defaulted_banks = sum(out.y_pc .< 1)
+		end
+		lines!(ax, ε_vec , no_defaulted, label = label(network))
+		max_defaulted = max(max_defaulted, maximum(no_defaulted))
+		min_defaulted = min(min_defaulted, minimum(no_defaulted))
+	end
+
+	n = (max_defaulted - min_defaulted) ÷ 3
+	ax.yticks = min_defaulted:n:max_defaulted
+	ax.yminorticksvisible = true
+	ax.yminorticks = IntervalsBetween(n)
+	ax.yminorgridvisible = true
+	
+	axislegend(ax, position = :lt)
+	fig	
+end
+
+# ╔═╡ f5938462-ae9d-44c0-a0b1-17d61e8ac0eb
+md"""
+# Implementation details
+"""
+
+# ╔═╡ 45430bb9-8914-4839-b936-79bcbc453822
+md"""
+## The Interbank Market
+
+We look at $n_banks banks that have the same exposure to the project and the same total exposure to the interbank market.
+
+"""
+
+# ╔═╡ dafe2f99-d3b5-4450-bbab-c8ffe1ac11ea
+struct InterbankMarket{FN <: FinancialNetwork}
+	network::FN
+	payments
+	function InterbankMarket(network::FN) where FN
+		new{FN}(network, copy(adjacency_matrix(network)))
+	end
+end
+
+# ╔═╡ a99f36fe-298f-45fb-b5f5-c42d21d73e55
+initial_network(interbank_market) = adjacency_matrix(interbank_market.network)
+
+# ╔═╡ d8ddea58-b8d3-41a9-a3a4-8c53754bda32
+updated_network(interbank_market) = interbank_market.payments
+
+# ╔═╡ 44728e3a-3e88-4808-96d1-be17b58fde70
+begin
+	payables(IM::InterbankMarket) = sum(initial_network(IM), dims = 2)
+	receivables(IM::InterbankMarket) = sum(initial_network(IM), dims = 1)
+	
+	paid(IM::InterbankMarket) = sum(updated_network(IM), dims = 2)
+	received(IM::InterbankMarket) = sum(updated_network(IM), dims = 1)
+end
+
+# ╔═╡ 3a2f6c6d-432f-4f1e-a2c8-2dc11ca86aab
+md"""
+## Payments and Equilibrium
+"""
+
+# ╔═╡ a8e00a42-c018-4067-8e5b-a4d5c8f74108
+function equilibrium(banks, IM; maxit = 100)
+	x = updated_network(IM)
+	y = initial_network(IM)
+
+	x_new = copy(x)
+	for it ∈ 1:maxit
+		(; x_new, out) = iterate_payments(banks, IM)
+		converged = x_new ≈ x
+		x .= x_new
+		
+		if converged || it == maxit
+			return (; out = DataFrame(out), x, y, it, success = it != maxit, banks, IM)
+		end
+	end
+	
+end
+
+# ╔═╡ f950f7a5-4277-43bc-8700-21f6cd0d9c9f
+function iterate_payments(banks, IM)
+	x = updated_network(IM)
+	y = initial_network(IM)
+	
+	x_new = copy(y)
+	out = map(enumerate(banks)) do (i, bank)
+		# compute repayment
+		(; y_pc, ν_pc, ℓ) = repayment(bank, i, IM)
+		# update payment matrix
+		x_new[i, :] .*= y_pc
+		# return bank's choices
+		(; y_pc, ν_pc, ℓ, bank = i)
+	end
+
+	(; x_new, out)
+end
+
+# ╔═╡ 602e44bc-4d5b-4f7f-9a75-bf9b1576ac11
+function repayment(bank, i_bank, IM::InterbankMarket)
+	ȳ = payables(IM)[i_bank]
+	x̄ = received(IM)[i_bank]
+
+	repayment(bank, x̄, ȳ)
+end
+
+# ╔═╡ db5a2982-8986-48e3-85f5-75892afdb12a
+function repayment(bank, x̄, ȳ)
+	(; c, ν, project, γ) = bank
+	(; ζ, A) = project
+	
+	h      = x̄ + c + payoff(project, γ, 0)
+	assets = x̄ + c + payoff(project, γ, 1)
+
+	if ν + ȳ ≤ h  # liabilities
+		return (ℓ = 0.0, y_pc = 1.0, ν_pc = 1.0)
+	elseif h < ν + ȳ ≤ h + ζ * A
+		ℓ = (ν + ȳ - h)/(ζ * A)
+		return (; ℓ, y_pc = 1.0, ν_pc = 1.0)
+	elseif ν ≤ assets < ν + ȳ
+		return (; ℓ = 1.0, y_pc = (assets - ν)/ȳ, ν_pc = 1.0)
+	elseif assets < ν
+		return (; ℓ = 1.0, y_pc = 0.0, ν_pc = assets/ν)
+	end
+end
+
+# ╔═╡ dd257094-78c5-403b-942a-f0b29064e29e
+md"""
+## Functions for Task 3
+"""
+
+# ╔═╡ 335ec769-9a1c-413a-8130-033669343030
+theme = (
+	arrow_size = 25,
+	node_size = 15,
+	layout = Shell(),
+)
+
+# ╔═╡ d5808058-cc75-4091-8fd0-c5f163ba3cb9
+exX = let
+	S = states[i_state]
+	n = length(S)
+
+	node_styles = (title = "shock", df = DataFrame(label = string.([:early, :late, :none]), color = ["green", "red", "gray"]))
+
+	df = @chain begin
+		DataFrame(bank = 1:n, label = string.(S))
+		leftjoin(_, node_styles.df, on = :label)
+	end
+
+	(; n, color = df.color, node_styles)
+end;
+
+# ╔═╡ 09debe63-1ccc-45fa-8f73-e8f05b794726
+function node_legend(figpos, node_styles, title = "")
+	
+	elems = [MarkerElement(; color, markersize = 15, marker = :●) for color ∈ node_styles.color]
+
+	if length(title) == 0
+		title_tuple = ()
+	else
+		title_tuple = (title, )
+	end
+	
+	Legend(
+		figpos,
+    	elems, node_styles.label, title_tuple...;
+		orientation=:horizontal, titleposition=:left, framevisible=false
+	)
+end
+
+# ╔═╡ dd3f555f-c7e3-4a01-b3b0-06e01dd7a075
+function minimal_graphplot(args; node_styles = missing, kwargs...)
+	fig, ax, plt = graphplot(args; kwargs...)
+
+	hidedecorations!(ax)
+	
+	if !ismissing(node_styles)
+		(title, df) = node_styles
+		node_legend(fig[end+1,1], df, title)
+	end
+
+	(; fig, ax, plt)
+end
+
+# ╔═╡ d7139b58-1b84-4c61-9060-c3e8e27083a9
 md"""
 # Appendix
 """
 
-# ╔═╡ 1a997e44-f29c-4c55-a953-a9039f096d47
-TableOfContents()
+# ╔═╡ ceaebe3d-a6b8-48d4-98fd-0fd3055b2943
+using Chain, DataFrames, DataFrameMacros
 
-# ╔═╡ 78bedfcc-3671-4852-985b-3e1b5aaade5a
-md"""
-## Helpers
-"""
-
-# ╔═╡ 0f03f537-f589-4abd-9587-0bb18835d9b9
-function visualize_balance_sheets(out, banks, firms, shares)
-	fig = Figure()
-	visualize_balance_sheets!(fig[1,1], out, banks, firms, shares)
-	fig
-end
-
-# ╔═╡ 847a0b28-af55-48cd-972e-7105853bc7bf
-function visualize_balance_sheets!(figpos, out, banks, firms, shares)
-
-	function firm(i)
-		i_firm = findall(shares[:,i] .> 0) |> only
-		ωᵢ = shares[i_firm,i]
-		firm = firms[i_firm]
-		(; ωᵢ, firm)
-	end
-
-	f_sh = firm.(1:length(banks)) |> StructArray
-
-	out = @chain out begin
-		rename(:ℓ => :ℓᵢ)
-		@transform!(:ωᵢ = @bycol f_sh.ωᵢ)
-	end
-	
-	out_vec = [
-		balance_sheet_df(banks[i], f_sh.firm[i], out[i,:]) for i ∈ 1:length(banks)
-	] |> StructArray
-
-	df = vcat(
-		out_vec.df..., source = :bank
-	)
-
-	@transform!(df, :bank = "bank $(:bank)")
-	
-	bs_max = maximum(out_vec.bs_max)
-
-	plt = @chain df begin
-		data(_) * mapping(
-			:side => "", :value => "",
-			color = :color => "", stack = :spec,
-			layout = :bank
-		) * visual(BarPlot)
-	end
-
-	fg = draw!(figpos[1,1], plt, axis = (limits = (nothing, nothing, 0, 1.05 * bs_max),))
-	legend!(figpos[1,2], fg)
-
-	nothing
-end
-
-# ╔═╡ 1cbf510c-1a7a-4472-b21e-2233ff3eae9e
-function balance_sheet_df((; ν, c), (; a, A, ζ), (; ℓᵢ, ωᵢ, y_pc, ν_pc, x̄, ȳ, div, rec_field, rec_machines))
-
-	df = [
-		(side = "liabs", color = "external", ill = false, spec = "1. senior liab (deposits) ν", value = ν_pc * ν),
-		(side = "liabs", color = "interbank", ill = false, spec = "2. junior liab (interbank) y", value = ȳ),
-		(side = "assets", color = "dividend", ill = false, spec = "4. dividends", value = ωᵢ * div),
-		(side = "assets", color = "interbank", ill = false, spec = "3. liquid assets x", value = x̄),
-		(side = "assets", color = "external", ill = false, spec = "3. liquid assets c", value = c),
-		(side = "assets", color = "liquidated", ill = false, spec = "5. recovered", value = ωᵢ * (rec_field + rec_machines)),
-		(side = "assets", color = "firm (illiquid)", ill = true, spec = "6. illiquid asset (project) A", value = (1-ℓᵢ) * ωᵢ * A)
-		] |> DataFrame
-
-	bs_max = max(ωᵢ * (A + a) + x̄ + c, ȳ + ν) * 1.05
-	(; df, bs_max)
-end
-
-# ╔═╡ ea858bd0-03f9-4e11-8a76-19347779385b
-function visualize_recovered!(ax, (; α, ω, ℓ, A, ζ))
-	b1_final_ℓ = Rect(Vec(0, 0), Vec(ω[1] * ℓ[1], ζ * A))
-	b2_final_ℓ = Rect(Vec(ω[1] + ω[2]*(1-ℓ[2]), 0), Vec(ω[2] * ℓ[2], ζ * A))
-
-	b1_final_ℓ_α = Rect(Vec(0, ζ * A), Vec(ω[1] * ℓ[1], ζ_α * α))
-	b2_final_ℓ_α = Rect(Vec(ω[1] + ω[2]*(1-ℓ[2]), ζ * A), Vec(ω[2] * ℓ[2], ζ_α * α))
-
-	poly!(ax, b1_final_ℓ, color = :green)
-	poly!(ax, b2_final_ℓ, color = (:green, 0.5))
-
-	poly!(ax, b1_final_ℓ_α, color = :red)
-	poly!(ax, b2_final_ℓ_α, color = (:red, 0.5))
-	ax
-end
-
-# ╔═╡ d012e2e0-d467-40c5-a4c9-895cb77dab8e
-function visualize_interim!(ax, (; α, ω, ℓ, a))
-	ℓ̄ = mean(ℓ, weights(ω))
-	
-	withheld = 	ℓ̄ * α
-	left = a - withheld
-	
-	b1_dividend = Rect(Vec(0, 0), Vec(ω[1], left))
-	b2_dividend = Rect(Vec(ω[1], 0), Vec(ω[2], left))
-	withheld = Rect(Vec(0, left), Vec(1, withheld))
-	
-	poly!(ax, b1_dividend, color = :blue)
-	poly!(ax, b2_dividend, color = (:blue, 0.5))
-	poly!(ax, withheld, color = line_pattern(:x, color=:gray))
-	
-	ax
-end
-
-# ╔═╡ 16be4faa-9439-4e3a-b61f-a62e85171fcf
-function visualize_final!(ax, (; α, ω, ℓ, A, ζ))
-	
-	b1_final   = Rect(Vec(ω[1] * ℓ[1], 0), Vec(ω[1] * (1-ℓ[1]), A))
-	b1_final_ℓ = Rect(Vec(0, 0), Vec(ω[1] * ℓ[1], A))
-	b2_final   = Rect(Vec(ω[1], 0), Vec(ω[2] * (1-ℓ[2]), A))
-	b2_final_ℓ = Rect(Vec(ω[1] + ω[2]*(1-ℓ[2]), 0), Vec(ω[2] * ℓ[2], A))
-
-	poly!(ax, b1_final, color = :green)
-	poly!(ax, b1_final_ℓ, color = line_pattern(:x, color=:green))
-	poly!(ax, b2_final, color = (:green, 0.5))
-	poly!(ax, b2_final_ℓ, color = line_pattern(:x, color=(:green, 0.5)))
-	ax
-end
-
-# ╔═╡ 8a63e901-ea76-432c-9cd9-9a0b99581002
-function visualize_firm!(ax, (; α, ω, ℓ))
-	b1_mach    = Rect(Vec(ℓ[1]*ω[1], 0.0), Vec(ω[1] * (1-ℓ[1]), α))
-	b1_mach_ℓ  = Rect(Vec(0.0, 0.0), Vec(ω[1] * ℓ[1], α))
-	b1_field   = Rect(Vec(ω[1] * ℓ[1], α),   Vec(ω[1] * (1-ℓ[1]), 1-α))
-	b1_field_ℓ = Rect(Vec(0.0, α),   Vec(ω[1] * ℓ[1], 1-α))
-
-	b2_mach    = Rect(Vec(ω[1], 0.0), Vec(ω[2] * (1-ℓ[2]), α))
-	b2_mach_ℓ  = Rect(Vec(ω[1] + (1-ℓ[2])*ω[2], 0.0), Vec(ω[2] * ℓ[2], α))
-	
-	b2_field   = Rect(Vec(ω[1], α),   Vec(ω[2] * (1-ℓ[2]), 1-α))
-	b2_field_ℓ = Rect(Vec(ω[1] + (1-ℓ[2])*ω[2], α), Vec(ω[2] * ℓ[2], 1-α))
-
-	df = [
-	 (bank = 1, capital = :machine, action = :kept, rectangle = b1_mach),
-	 (bank = 1, capital = :machine, action = :liqu, rectangle = b1_mach_ℓ),
-	 (bank = 1, capital = :field,   action = :kept, rectangle = b1_field),
-	 (bank = 1, capital = :field,   action = :liqu, rectangle = b1_field_ℓ),
-	 (bank = 2, capital = :machine, action = :kept, rectangle = b2_mach),
-	 (bank = 2, capital = :machine, action = :liqu, rectangle = b2_mach_ℓ),
-	 (bank = 2, capital = :field,   action = :kept, rectangle = b2_field),
-	 (bank = 2, capital = :field,   action = :liqu, rectangle = b2_field_ℓ)
-	] |> DataFrame
-
-	@transform!(df,
-#		:col = :bank == 1 ? colorant"blue" : colorant"red",
-#		:alpha = :capital == $(:machine) ? 1.0 : 0.5,
-		:col   = :capital == $(:machine) ? colorant"red" : colorant"chocolate",
-		:alpha = :bank == 1 ? 1.0 : 0.5,
-		:hatch = :action  == $(:liqu) ? $(:x) : nothing
-	)
-
-	@transform!(df, :color = (:col, :alpha))
-	@transform!(df, :fill = isnothing(:hatch) ? :color : line_pattern(:hatch, color=:color) )
-	
-	map(eachrow(df)) do (; rectangle, fill)
-		poly!(ax, rectangle, color = fill)
-	end
-
-	remaining_firm = Rect(Vec(ℓ[1] * ω[1], 0), Vec((1-ℓ[1]) * ω[1] + (1-ℓ[2]) * ω[2], 1))
-	lines!(ax, remaining_firm, color=:black, linewidth=2)
-
-	ax
-end
-
-# ╔═╡ 25e84f19-9cd8-43ad-ae6a-d500b8ac74b6
-md"""
-## Packages
-"""
-
-# ╔═╡ 74262581-3c64-4e5b-9328-416c4e1efc91
-using MarkdownLiteral: @markdown
-
-# ╔═╡ 2b405f2b-3256-4c47-8334-c2d93713d409
-using PlutoUI: Select
-
-# ╔═╡ 103babf9-bbc3-4c77-9185-72f792a09706
-using LinearAlgebra: dot
-
-# ╔═╡ bb0e41cf-66fb-4cae-8cd9-6ad771d1acf4
-using HypertextLiteral
-
-# ╔═╡ 969aa5eb-c56f-4115-83df-bb0ec911b6aa
-using MarkdownLiteral: @mdx
-
-# ╔═╡ 935da683-a4e2-4ddc-999f-55cb61390f39
-using StructArrays
-
-# ╔═╡ b8f2bf85-c986-4dca-8f0e-62c1cc871bd5
-using Statistics: mean
-
-# ╔═╡ 2d1da571-0561-4c28-bb63-35ca5f9538d5
-using PlutoUI: PlutoUI, TableOfContents, Slider, CheckBox, as_svg
-
-# ╔═╡ 7c068d65-f472-44c2-af56-581bf9309bd5
-using StatsBase: weights
-
-# ╔═╡ 631ce85b-db76-4f3b-bda5-0c51ffb3bc43
-using CategoricalArrays
-
-# ╔═╡ fa01788e-7585-4f3f-93b2-a44541065820
-using DataAPI: refarray
-
-# ╔═╡ 6a89953d-310b-49c9-89e1-8d51c8b75be0
+# ╔═╡ f61a2b9a-d36c-4f03-95b4-226f31e7acba
 using Graphs, SimpleWeightedGraphs
 
-# ╔═╡ 50ac0182-32fe-4e21-8c6d-895ffc67ec27
-using NetworkLayout
+# ╔═╡ 707555ea-48d2-4ae6-9417-b47a972deb9d
+using CairoMakie, AlgebraOfGraphics
 
-# ╔═╡ 8b75bc15-e07b-43e5-adb3-c5d6481ee9d8
-using LinearAlgebra: I
+# ╔═╡ 4984ca28-1de2-4e5f-9d27-8c13decff996
+using CategoricalArrays: recode
 
-# ╔═╡ cf61ebba-6800-4bfa-bb7c-cb9a6c846b65
-using PlutoLinks
+# ╔═╡ 53660817-3947-4c30-bf61-3a36d6614a13
+using PlutoUI: TableOfContents, Slider, Select, NumberField
 
-# ╔═╡ 36ac25b9-27e5-4728-bbcf-920f231ff6ab
-using Revise
+# ╔═╡ d05680b7-4bf2-4d9e-99b9-fde6254a4b4c
+using MarkdownLiteral: @markdown
 
-# ╔═╡ 753a6030-aa2a-403d-9d75-c0116513a103
+# ╔═╡ 9630dabc-87b1-4bb9-82cc-7fbb59a45c34
+TableOfContents()
+
+# ╔═╡ f746a247-feb7-4291-b9bd-dba29eec7143
+md"""
+## Regular interbank market
+"""
+
+# ╔═╡ 31dca57c-b5fe-49c2-87e0-31b2999a6f65
+abstract type FinancialNetwork end
+
+# ╔═╡ 2a964fbe-80b5-4501-ad52-97686dae67bb
+adjacency_matrix(network::FinancialNetwork) = network.Y
+
+# ╔═╡ 55e97c59-79f0-4f81-b23b-079d03da6ecd
+struct CompleteNetwork <: FinancialNetwork
+	Y
+	ȳ
+	function CompleteNetwork(n, ȳ)
+		Y = complete_network(n, ȳ)
+		
+		new(Y, ȳ)
+	end
+end
+
+# ╔═╡ 4fbd40d2-0589-4ebf-adfb-ae686b25dd5c
+function complete_network(n, ȳ)
+	Y = fill(ȳ/(n-1), n, n)
+		
+	for i in 1:n
+		Y[i,i] = 0.0
+	end
+	
+	Y
+end
+
+# ╔═╡ 9484ba9a-6d4b-4417-81c7-cea34e194515
+begin
+	struct RingNetwork <: FinancialNetwork
+		Y
+		ȳ
+		function RingNetwork(n, ȳ)
+			Y = ring_network(n, ȳ)
+	
+			new(Y, ȳ)
+		end
+	end
+end
+
+# ╔═╡ 8c3cf1ef-187a-4f32-96b5-926d93519a30
+function ring_network(n, ȳ)
+	Y = zeros(n, n)
+	
+	for i in 1:(n-1)
+		Y[i, i+1] = ȳ
+	end
+	Y[n, 1] = ȳ
+	
+	Y
+end
+
+# ╔═╡ a7834a3a-ed74-48ab-99ba-581f7a790bf9
+struct γNetwork <: FinancialNetwork
+	Y
+	ȳ
+	γ
+	function γNetwork(n, ȳ, γ)
+		Y = γ * ring_network(n, ȳ) + (1-γ) * complete_network(n, ȳ)
+		
+		new(Y, ȳ, γ)
+	end
+end
+
+# ╔═╡ 46745175-c7bf-45b5-8e1a-d8ab9e9ca703
+function label(nw::γNetwork)
+	(; γ) = nw
+	if γ == 1
+		latexstring("\$\\gamma = $γ\$ (Ring)")
+	elseif γ == 0
+		latexstring("\$\\gamma = $γ\$ (Complete)")
+	else
+		latexstring("\\gamma = $γ")
+	end
+end
+
+# ╔═╡ 3e7f87ae-da71-42c4-8ebb-6dc2aef7ce03
+function island_network(n_islands, n_banks_per_island, ȳ)
+	blocks = (CompleteNetwork(n_banks_per_island, ȳ).Y for _ in 1:n_islands)
+	
+	cat(blocks...,dims=(1,2))
+end
+
+# ╔═╡ 00cabaf0-e341-4fd5-9f3f-b513591087f1
+function island_network(n_banks::AbstractVector, ȳ)
+	blocks = (CompleteNetwork(n, ȳ).Y for n ∈ n_banks)
+	
+	cat(blocks...,dims=(1,2))
+end
+
+# ╔═╡ c054bded-ad5a-4c19-9758-5e81ece988ba
+let
+	struct IslandNetwork <: FinancialNetwork
+		Y
+		ȳ
+		n_islands
+		n_banks_per_island
+	end
+
+	function IslandNetwork(n_islands, n_banks_per_island, ȳ)
+		Y = island_network(n_islands, n_banks_per_island, ȳ)	
+		IslandNetwork(Y, ȳ, n_islands, n_banks_per_island)
+	end
+	function IslandNetwork(n_banks::AbstractVector, ȳ)
+		Y = island_network(n_banks, ȳ)	
+		IslandNetwork(Y, ȳ, length(n_banks), n_banks)
+	end
+end
+
+# ╔═╡ 0ba6d675-477f-493d-a621-2431d32ad9a8
+function label(nw::IslandNetwork)
+	(; n_banks_per_island, n_islands) = nw
+	if length(n_banks_per_island) == 1
+		bank_or_banks = n_banks_per_island == 1 ? "bank" : "banks"
+		return latexstring("\$ $n_islands \\times $n_banks_per_island \$ $bank_or_banks")
+	else
+		return latexstring("\$ $n_islands \$ islands ")
+	end		
+end
+
+# ╔═╡ e6c8244a-6dca-4599-b3a5-02491bb99dfb
+md"""
+## Extending GraphMakie
+"""
+
+# ╔═╡ 9898ed0c-3510-4d05-8056-4112d3ca72c7
+using GraphMakie, NetworkLayout
+
+# ╔═╡ 8db75083-b0d6-409b-8efb-fe74a9f238b2
 begin
 	using NetworksUtils: NetworksUtils, componentwise_circle,
-	numbered_graphplot, numbered_graphplot!, label, figure,
-	γNetwork, IslandNetwork, InterbankMarket, is_regular
+	numbered_graphplot, numbered_graphplot!, figure
 
 	NetworksUtils.numbered_graphplot!(ax, IM::InterbankMarket, args...; kwargs...) = numbered_graphplot!(ax, SimpleWeightedDiGraph(adjacency_matrix(IM.network)), args...; kwargs...)
 end
 
-# ╔═╡ f5a24d09-e1af-4040-ba6f-90f12778a2ad
-
-
-# ╔═╡ 3333e85b-22cb-4188-a789-ba8b21347ade
-using FinancialNetworks: Bank, Firm, equilibrium, 
-	visualize_bank_firm_network, visualize_bank_firm_network!,
-	payables, received
-
-# ╔═╡ 11d6ac4f-e910-4a9f-9ee4-bdd270e9400b
+# ╔═╡ a50aba4a-9aba-4a90-965a-5e354969b606
 md"""
-## HTML Helpers
+## Visualizing payment equilibrium
 """
 
-# ╔═╡ c1b1a22b-8e18-4d19-bb9b-14d2853f0b72
-@htl("
-<style>
-.blurry-text {
-	color: transparent;
-	text-shadow: 0 0 5px rgba(0,0,0,0.5);
-	white-space: nowrap;
-}
+# ╔═╡ c8440043-3e63-4607-ba70-bd1ee016c5b4
+red_if_lt_one(x) = x < 1 ? :red : :gray90
 
-.blurry-text:hover {
-	color: transparent;
-	text-shadow: 0 0 0px rgba(0,0,0.5);
-	white-space: nowrap;
-}
+# ╔═╡ 3069c53d-9a1d-48e1-b0c6-ec4fae392bd7
+function visualize_equilibrium(peq; graph = (;), bs = (;))
+	(; x, banks) = peq
+	fg = viz_eq_bal_sheets((; x, banks); bs...)
 
-</style>
-")
+	graph_ax = Axis(fg.figure[:, -1:0], tellwidth = true)
+	viz_eq_graph!(graph_ax, peq; graph...)
 
-# ╔═╡ cc1ff1e6-2968-4baf-b513-e963ab2ff1b4
-blur(text) = @htl("""<span class="blurry-text">$text</span>""")
-
-# ╔═╡ c65323f5-211d-4a95-aed3-d6129bdd083e
-strike(text) = @htl("<s>$text</s>")
-
-# ╔═╡ 5d263432-856b-4e9b-a303-a476222e8963
-vertical_space(space=space) = @htl("""
-<p style="line-height:$(space)cm;"><br></p>
-""")
-
-# ╔═╡ 25a01039-25e9-44b0-afd0-c3df37c7598f
-md"""
-## Theorems, etc
-"""
-
-# ╔═╡ 71231141-c2f5-4695-ade0-548a0039f511
-function theorem_header(type, number, title)
-	out = type
-	if !isnothing(number) && length(number) > 0
-		out = out * " " * string(number)
-	end
-	if !isnothing(title) && length(title) > 0
-		out = out * ": " * string(title)
-	end
-	out
+	fg.figure
 end
 
-# ╔═╡ c993c1d8-8823-4db4-bf6e-bf2c21ea3d39
+# ╔═╡ 64248193-552e-47a0-8da5-0c58a6099b80
+function viz_eq_graph(peq; kwargs...)
+	fig = Figure()
+	viz_eq_graph!(Axis(fig[1,1]), peq; kwargs...)
+	fig
+end
+
+# ╔═╡ 41d5e579-418b-4988-9a6f-f75afeffe821
+function viz_eq_graph!(ax, peq; kwargs...)
+	(; IM, out) = peq
+	graph = SimpleWeightedDiGraph(IM.network.Y)
+
+	numbered_graphplot!(ax, graph;
+		node_size = (2.5 .- out.ℓ) .* 10,
+		node_color = red_if_lt_one.(out.y_pc),
+		nlabels = string.(vertices(graph)),
+		nlabels_offset = Point2(0.05, 0.05),
+		kwargs...
+	)
+end
+
+# ╔═╡ fd3dc6bf-f1e5-46de-b0b0-94adbc845d81
+function viz_eq_bal_sheets((; x, banks); ymax = nothing, kwargs...)
+	limits = (nothing, nothing, nothing, ymax)
+	
+	g_final = SimpleWeightedDiGraph(x)
+
+	payment_df = @chain g_final begin
+		edges
+		DataFrame
+		@transform(:edge_id = @bycol(1:ne(g_final)), :spec = "inside")
+		rename!(:weight => :value)
+	end
+
+	outside_nts = map(enumerate(banks)) do (i, (; ν, c))
+		(bank = i, liabs = ν, assets = c)
+	end
+
+	outside_df = @chain outside_nts begin
+		DataFrame
+		stack([:assets, :liabs], variable_name = :type)
+		@transform(:spec = "outside", :edge_id = missing)
+	end	
+
+	# Attention rows and columns mixed up	
+	inside_df = [
+		@select(payment_df, :bank = :src, :value, :type = "liabs",  :spec, :edge_id);
+		@select(payment_df, :bank = :dst, :value, :type = "assets", :spec, :edge_id)
+	 ]
+
+	df_bs = vcat(inside_df, outside_df, cols = :union)
+
+	fg = @chain df_bs begin
+		@subset(:spec == "inside")
+		disallowmissing!
+		@sort(:bank, :edge_id)
+		data(_) * visual(BarPlot) * mapping(:type, :value,
+			#alpha = :spec,
+			color = :edge_id => nonnumeric,
+			stack = :edge_id => nonnumeric, #stack = :spec,
+			#color = :edge_id => nonnumeric,
+			layout = :bank => nonnumeric
+		)
+		draw(_, axis = (; limits, tellwidth = true))
+	end
+end
+
+# ╔═╡ 2d1f7620-de37-4e9f-8044-9459abda92ac
+md"""
+## Assignment infrastructure
+"""
+
+# ╔═╡ 6270dbc8-5002-4328-88a4-f1c7f060f571
 begin
-	admonition(kind, title, text) = Markdown.MD(Markdown.Admonition(kind, title, [text]))
-	proposition(text; number = nothing, title = nothing) = 
-		admonition("correct", theorem_header("Proposition", number, title), text)
-	corollary(text; number = nothing, title = nothing) =
-		admonition("note", theorem_header("Corollary", number, title), text)
-	definition(text; number = nothing, title = nothing) =
-		admonition("warning", theorem_header("Definition", number, title), text)
-	assumption(text; number = nothing, title = nothing) =
-		admonition("danger", theorem_header("Assumption", number, title), text)
-#	danger(text, title="Danger")   = admonition("danger",  title, text)
-#	correct(text, title="Correct") = admonition("hint", title, text)
-
+	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
+	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
+	still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
+	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
+	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
+	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
 end
 
-# ╔═╡ f24387ee-c1cf-4ec0-a34e-4b4f33ee9010
-md"""
-## Packages
-"""
+# ╔═╡ 7f0ad695-ea05-483b-86c4-a63df55689e9
+members = let
+	names = map(group_members) do (; firstname, lastname)
+		firstname * " " * lastname
+	end
+	join(names, ", ", " & ")
+end
 
-# ╔═╡ 954d2dde-8088-4e91-bed3-f8339090b77b
-using PlutoTeachingTools
+# ╔═╡ 76bc41d8-c97f-4120-9b13-679997411ca6
+function wordcount(text)
+	stripped_text = strip(replace(string(text), r"\s" => " "))
+   	words = split(stripped_text, (' ', '-', '.', ',', ':', '_', '"', ';', '!', '\''))
+   	length(filter(!=(""), words))
+end
 
-# ╔═╡ 7ed3da36-117e-11ed-3e8c-99389cd174bc
-using CairoMakie, AlgebraOfGraphics, Colors
+# ╔═╡ b72dedc8-bd5a-457e-ba67-13f26a0148dd
+using PlutoTest: @test
 
-# ╔═╡ 2872c686-8e4f-4230-a07a-5d988aba39b7
-using Chain: @chain
+# ╔═╡ a3874185-b0ec-49da-a9d7-7875416b3b4f
+@test wordcount("  Hello,---it's me.  ") == 4
 
-# ╔═╡ 3198bb79-f0c7-4b01-8dce-ef7629e8d7e6
-using GeometryBasics: Rect, Vec2f0
+# ╔═╡ 3945c5e7-8d0c-4196-8eb1-2931cd85cd30
+@test wordcount("This;doesn't really matter.") == 5
 
-# ╔═╡ e9365f8d-6f58-458c-855d-c0444c6f409f
-using DataFrames, DataFrameMacros
+# ╔═╡ 0694c61f-bcd7-435e-8bfa-77e81bb580e7
+show_words(answer) = md"_approximately $(wordcount(answer)) words_"
 
-# ╔═╡ fbf40f06-f63a-40ca-bbe3-78104d39ee71
-md"""
-## Line patterns in AlgebraOfGraphics
-"""
-
-# ╔═╡ f863066f-270f-4972-8046-7f51cb697ac5
-hatch_dict = Dict(
-	:/ => Vec2f0(1),
-	:\ => Vec2f0(1, -1),
-	:- => Vec2f0(1, 0),
-	:| => Vec2f0(0, 1),
-	:x => [Vec2f0(1), Vec2f0(1, -1)],
-	:+ => [Vec2f0(1, 0), Vec2f0(0, 1)]
-)
-
-# ╔═╡ d285879a-bdfd-4efa-aa5d-9dacf08a2dc6
-hatches = [:\, :/, :-, :|, :x, :+]
-
-# ╔═╡ 70bbb90e-06f1-4b60-a952-275866945c58
-line_pattern(hatch; width=1.5, tilesize=(10,10), linecolor=:black, color=:white) = Makie.LinePattern(; direction=hatch_dict[Symbol(hatch)], width, tilesize, linecolor, background_color=color)
+# ╔═╡ fe70e69a-1c07-4e50-b29e-6ca028bb1a3d
+function show_words_limit(answer, limit)
+	count = wordcount(answer)
+	if count < 1.02 * limit
+		return show_words(answer)
+	else
+		return almost(md"You are at $count words. Please shorten your text a bit, to get **below $limit words**.")
+	end
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -989,25 +1266,17 @@ CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
-DataAPI = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-FinancialNetworks = "c73f5c1d-977f-41e1-b4fe-bd0ab588d05d"
-GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
-HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
-LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 NetworksUtils = "4943429a-ba68-4c19-ade3-7332adbb3997"
-PlutoLinks = "0ff47ea0-7a50-410d-8455-4348d5de0420"
-PlutoTeachingTools = "661c6b06-c737-4d37-b85c-46df65de6f69"
+PlutoTest = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 
 [compat]
 AlgebraOfGraphics = "~0.6.12"
@@ -1015,32 +1284,26 @@ CairoMakie = "~0.9.3"
 CategoricalArrays = "~0.10.7"
 Chain = "~0.5.0"
 Colors = "~0.12.8"
-DataAPI = "~1.13.0"
 DataFrameMacros = "~0.4.0"
 DataFrames = "~1.4.3"
-FinancialNetworks = "~0.1.5"
-GeometryBasics = "~0.4.5"
+GraphMakie = "~0.4.3"
 Graphs = "~1.7.4"
-HypertextLiteral = "~0.9.4"
+LaTeXStrings = "~1.3.0"
 MarkdownLiteral = "~0.1.1"
 NetworkLayout = "~0.4.4"
-NetworksUtils = "~0.1.2"
-PlutoLinks = "~0.1.6"
-PlutoTeachingTools = "~0.2.5"
+NetworksUtils = "~0.1.1"
+PlutoTest = "~0.2.2"
 PlutoUI = "~0.7.48"
-Revise = "~3.4.0"
 SimpleWeightedGraphs = "~1.2.1"
-StatsBase = "~0.33.21"
-StructArrays = "~0.6.13"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.8.2"
+julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "060d01c5bb0b3c1c3bbde70f1b385414b200cbec"
+project_hash = "514c57b53f3fe5aaf84a613998fc9835bad33f81"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -1129,7 +1392,7 @@ uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 version = "0.9.3"
 
 [[deps.Cairo_jll]]
-deps = ["Artifacts", "Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
+deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
 git-tree-sha1 = "4b859a208b2397a7a623a03449e4636bdb17bcf2"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.16.1+1"
@@ -1162,12 +1425,6 @@ deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
 git-tree-sha1 = "38f7a08f19d8810338d4f5085211c7dfa5d5bdd8"
 uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
 version = "0.1.4"
-
-[[deps.CodeTracking]]
-deps = ["InteractiveUtils", "UUIDs"]
-git-tree-sha1 = "cc4bd91eba9cdbbb4df4746124c22c0832a460d6"
-uuid = "da1fd8a2-8d9e-5ec2-8556-3022fb5608a2"
-version = "1.1.1"
 
 [[deps.ColorBrewer]]
 deps = ["Colors", "JSON", "Test"]
@@ -1205,11 +1462,6 @@ git-tree-sha1 = "86cce6fd164c26bad346cc51ca736e692c9f553c"
 uuid = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
 version = "0.8.7"
 
-[[deps.CommonSolve]]
-git-tree-sha1 = "9441451ee712d1aec22edad62db1a9af3dc8d852"
-uuid = "38540f10-b2f7-11e9-35d8-d573e4eb0ff2"
-version = "0.2.3"
-
 [[deps.Compat]]
 deps = ["Dates", "LinearAlgebra", "UUIDs"]
 git-tree-sha1 = "aaabba4ce1b7f8a9b34c015053d3b1edf60fa49c"
@@ -1219,13 +1471,7 @@ version = "4.4.0"
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "0.5.2+0"
-
-[[deps.ConstructionBase]]
-deps = ["LinearAlgebra"]
-git-tree-sha1 = "fb21ddd70a051d882a1686a5a550990bbe371a95"
-uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
-version = "1.4.1"
+version = "1.0.1+0"
 
 [[deps.Contour]]
 git-tree-sha1 = "d05d9e7b7aedff4e5b51a029dced05cfb6125781"
@@ -1293,9 +1539,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "a7756d098cbabec6b3ac44f369f74915e8cfd70a"
+git-tree-sha1 = "7fe1eff48e18a91946ff753baf834ff4d5c03744"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.79"
+version = "0.25.78"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -1370,12 +1616,6 @@ git-tree-sha1 = "802bfc139833d2ba893dd9e62ba1767c88d708ae"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
 version = "0.13.5"
 
-[[deps.FinancialNetworks]]
-deps = ["Chain", "Colors", "DataFrames", "DocStringExtensions", "Graphs", "InteractiveUtils", "LinearAlgebra", "Makie", "Markdown", "NetworksUtils", "Roots", "SimpleWeightedGraphs", "Statistics"]
-git-tree-sha1 = "0455d76fca411617d3db16dd8abdb295e643f4af"
-uuid = "c73f5c1d-977f-41e1-b4fe-bd0ab588d05d"
-version = "0.1.5"
-
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
 git-tree-sha1 = "335bfdceacc84c5cdf16aadc768aa5ddfc5383cc"
@@ -1448,9 +1688,9 @@ version = "0.21.0+0"
 
 [[deps.Glib_jll]]
 deps = ["Artifacts", "Gettext_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libiconv_jll", "Libmount_jll", "PCRE2_jll", "Pkg", "Zlib_jll"]
-git-tree-sha1 = "fb83fbe02fe57f2c068013aa94bcdf6760d3a7a7"
+git-tree-sha1 = "d3b3624125c1474292d0d8ed0f65554ac37ddb23"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
-version = "2.74.0+1"
+version = "2.74.0+2"
 
 [[deps.GraphMakie]]
 deps = ["GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "StaticArrays"]
@@ -1628,12 +1868,6 @@ git-tree-sha1 = "b53380851c6e6664204efb2e62cd24fa5c47e4ba"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "2.1.2+0"
 
-[[deps.JuliaInterpreter]]
-deps = ["CodeTracking", "InteractiveUtils", "Random", "UUIDs"]
-git-tree-sha1 = "a79c4cf60cc7ddcdcc70acbb7216a5f9b4f8d188"
-uuid = "aa1ae85d-cabe-5617-a682-6adf51b2e16a"
-version = "0.9.16"
-
 [[deps.KernelDensity]]
 deps = ["Distributions", "DocStringExtensions", "FFTW", "Interpolations", "StatsBase"]
 git-tree-sha1 = "9816b296736292a80b9a3200eb7fbb57aaa3917a"
@@ -1656,12 +1890,6 @@ version = "2.10.1+0"
 git-tree-sha1 = "f2355693d6778a178ade15952b7ac47a4ff97996"
 uuid = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 version = "1.3.0"
-
-[[deps.Latexify]]
-deps = ["Formatting", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Printf", "Requires"]
-git-tree-sha1 = "ab9aa169d2160129beb241cb2750ca499b4e90e9"
-uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-version = "0.15.17"
 
 [[deps.LazyArtifacts]]
 deps = ["Artifacts", "Pkg"]
@@ -1714,9 +1942,9 @@ version = "1.42.0+0"
 
 [[deps.Libiconv_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "42b62845d70a619f063a7da093d995ec8e15e778"
+git-tree-sha1 = "c7cb1f5d892775ba13767a87c7ada0b980ea0a71"
 uuid = "94ce4f54-9a6c-5748-9c1c-f9c7231a4531"
-version = "1.16.1+1"
+version = "1.16.1+2"
 
 [[deps.Libmount_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1742,18 +1970,12 @@ version = "0.5.4"
 
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
-git-tree-sha1 = "946607f84feb96220f480e0422d3484c49c00239"
+git-tree-sha1 = "94d9c52ca447e23eac0c0f074effbcd38830deb5"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "0.3.19"
+version = "0.3.18"
 
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
-
-[[deps.LoweredCodeUtils]]
-deps = ["JuliaInterpreter"]
-git-tree-sha1 = "dedbebe234e06e1ddad435f5c6f4b85cd8ce55f7"
-uuid = "6f1432cf-f94c-5a45-995e-cdbf5db27b0b"
-version = "2.2.2"
 
 [[deps.MIMEs]]
 git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
@@ -1864,9 +2086,9 @@ version = "1.2.0"
 
 [[deps.NetworksUtils]]
 deps = ["GraphMakie", "Graphs", "InteractiveUtils", "Makie", "Markdown", "NetworkLayout", "SimpleWeightedGraphs", "Statistics"]
-git-tree-sha1 = "ffdf14f92843b4a125a7351494f88e3f504a7f1f"
+git-tree-sha1 = "66db9ab87e0c17c25ae59c18ccb2edc43efdf14e"
 uuid = "4943429a-ba68-4c19-ade3-7332adbb3997"
-version = "0.1.2"
+version = "0.1.1"
 
 [[deps.Observables]]
 git-tree-sha1 = "6862738f9796b3edc1c09d0890afce4eca9e7e93"
@@ -1994,23 +2216,11 @@ git-tree-sha1 = "21303256d239f6b484977314674aef4bb1fe4420"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.3.1"
 
-[[deps.PlutoHooks]]
-deps = ["InteractiveUtils", "Markdown", "UUIDs"]
-git-tree-sha1 = "072cdf20c9b0507fdd977d7d246d90030609674b"
-uuid = "0ff47ea0-7a50-410d-8455-4348d5de0774"
-version = "0.0.5"
-
-[[deps.PlutoLinks]]
-deps = ["FileWatching", "InteractiveUtils", "Markdown", "PlutoHooks", "Revise", "UUIDs"]
-git-tree-sha1 = "8f5fa7056e6dcfb23ac5211de38e6c03f6367794"
-uuid = "0ff47ea0-7a50-410d-8455-4348d5de0420"
-version = "0.1.6"
-
-[[deps.PlutoTeachingTools]]
-deps = ["Downloads", "HypertextLiteral", "LaTeXStrings", "Latexify", "Markdown", "PlutoLinks", "PlutoUI", "Random"]
-git-tree-sha1 = "ea3e4ac2e49e3438815f8946fa7673b658e35bdb"
-uuid = "661c6b06-c737-4d37-b85c-46df65de6f69"
-version = "0.2.5"
+[[deps.PlutoTest]]
+deps = ["HypertextLiteral", "InteractiveUtils", "Markdown", "Test"]
+git-tree-sha1 = "17aa9b81106e661cffa1c4c36c17ee1c50a86eda"
+uuid = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
+version = "0.2.2"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
@@ -2106,12 +2316,6 @@ git-tree-sha1 = "838a3a4188e2ded87a4f9f184b4b0d78a1e91cb7"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.3.0"
 
-[[deps.Revise]]
-deps = ["CodeTracking", "Distributed", "FileWatching", "JuliaInterpreter", "LibGit2", "LoweredCodeUtils", "OrderedCollections", "Pkg", "REPL", "Requires", "UUIDs", "Unicode"]
-git-tree-sha1 = "dad726963ecea2d8a81e26286f625aee09a91b7c"
-uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "3.4.0"
-
 [[deps.Rmath]]
 deps = ["Random", "Rmath_jll"]
 git-tree-sha1 = "bf3188feca147ce108c76ad82c2792c57abe7b1f"
@@ -2123,12 +2327,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "68db32dff12bb6127bac73c209881191bf0efbb7"
 uuid = "f50d1b31-88e8-58de-be2c-1cc44531875f"
 version = "0.3.0+0"
-
-[[deps.Roots]]
-deps = ["ChainRulesCore", "CommonSolve", "Printf", "Setfield"]
-git-tree-sha1 = "a3db467ce768343235032a1ca0830fc64158dadf"
-uuid = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
-version = "2.0.8"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
@@ -2153,12 +2351,6 @@ version = "1.1.1"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
-
-[[deps.Setfield]]
-deps = ["ConstructionBase", "Future", "MacroTools", "StaticArraysCore"]
-git-tree-sha1 = "e2cc6d8c88613c05e1defb55170bf5ff211fbeac"
-uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
-version = "1.1.1"
 
 [[deps.SharedArrays]]
 deps = ["Distributed", "Mmap", "Random", "Serialization"]
@@ -2498,113 +2690,150 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╟─f5450eab-0f9f-4b7f-9b80-992d3c553ba9
-# ╟─a2a69f22-35bc-4e7b-8d59-20fb32bf0e3e
-# ╟─7e83f39f-5701-424e-a4c6-0e8e81f9e8c7
-# ╠═72e25b9c-89e3-441b-bf89-c1122535318a
-# ╠═a4dba7da-9d63-4d0d-a736-565d6ccf7d09
-# ╟─9038f512-8201-476c-be2a-846546e4d29b
-# ╟─cdfc35e1-5082-4959-9d30-3abb2dc8a7ac
-# ╟─944b07ed-20e5-4068-ac5e-8a48f866fdd2
-# ╟─1d13564d-7256-4cf1-919f-6d8298cc476b
-# ╟─1d5d8c8a-8d86-426f-bb17-bd2279d91ff1
-# ╟─7b876239-8ddc-4929-ad52-752edb72c0eb
-# ╟─d4eedc29-26b6-48a6-80f1-e94efb81b2cd
-# ╠═e11a99df-d0f2-4838-b325-473d3043be98
-# ╠═073982c7-6333-43f6-866a-91a49f8ba7eb
-# ╠═f51fb0b2-276a-415b-b2b7-aec903b1fe9e
-# ╠═8a2f3e4d-9c61-4a21-a229-58f731964181
-# ╟─73ba4210-d8f6-4a74-bf4d-d7bc0902bb5e
-# ╟─eba94b09-f061-432a-80ce-a68be83e6a99
-# ╟─ffc743af-b97c-4083-a02e-ea5725829f2a
-# ╟─8e6bdcfd-3cb0-4f6b-8dcf-f99f4afe87c2
-# ╟─bafc7db1-ac1d-4314-be83-0b9f6c63b5fc
-# ╟─acfdf348-e8bf-41ee-aa19-fe7ec29087cc
-# ╟─a0ac4092-cd27-4523-85f9-f4a4d81456b3
-# ╟─6fddaaa4-688d-4f40-a1b3-04bf62024955
-# ╟─01eb57fd-a815-41f2-9e25-7730bff7917d
-# ╠═6af1e245-aaf8-4b7d-977a-1d76998f7cf8
-# ╠═5b6f26db-f63f-4db5-ae3e-d41ae476948f
-# ╟─523e177c-f74d-4805-8a2b-9c27a4b0bc63
-# ╠═4ae1b6c2-bb63-4ca8-b8ec-057c8d2a371f
-# ╠═efbc1a42-ecc2-4907-a981-bd1d29ca0803
-# ╟─7f058e4a-9b12-41c9-9fd7-4ad023058a14
-# ╟─96878ebb-fbc0-4d53-998a-210e13a42492
-# ╟─e2041c57-0e3d-4dad-9bab-d70434f18509
-# ╠═aaffd333-3aa1-48ee-b5db-d577bd7da830
-# ╠═a8a8a197-d54d-4c67-b7ce-19bdc8b64401
-# ╠═7970090f-eb3a-488e-b225-ce4198494f1d
-# ╟─da7c558d-a2b5-41a8-9c78-3e39a00dfd31
-# ╟─bf719f30-72c1-488e-ba77-c183effb7c60
-# ╟─a0767d80-0857-47ef-90a1-72bc34064716
-# ╠═c920d82c-cfe9-462a-bacd-436f01c314cf
-# ╠═354cf406-eaf4-46ba-b93b-2ccde89c86b4
-# ╟─72e5f4d3-c3e4-464d-b35c-2cf19fa9d4b5
-# ╟─d6345a8b-6d8f-4fd2-972b-199412cbdc26
-# ╟─c99e52e2-6711-4fb6-bcc0-8e4f378ed479
-# ╟─15f45669-516b-4f3f-9ec1-f9e2c1d2e71a
-# ╟─d7111001-f632-4d0d-a2c7-7bbfd67bf87d
-# ╠═0d18cdf0-441e-4ca9-98e3-50bc3efa837f
-# ╟─51bfc57f-7b06-4e27-af32-51df38af30a1
-# ╠═b817cdf6-dfe6-4607-98da-2299a33d4906
-# ╟─07e9c77f-e05e-452c-8c47-cdd9dfc8e2fc
-# ╠═f5293bee-9413-4507-8568-54836eb6d4a2
-# ╠═49c2fb2d-de6e-4ab2-a558-59fb153cf703
-# ╠═c0c711de-6916-4ab9-ab73-c476654332c4
-# ╟─a95431eb-14a0-4dc3-bbe6-9c409f6cc596
-# ╟─c7b99d3c-5d32-45e6-84fa-8a6513e6beb9
-# ╟─f00d9e1a-b111-4b6a-95f5-b9736329befe
-# ╠═65429eeb-72ba-4a72-9902-28d88ad6d3f5
-# ╟─f8eb242f-a974-48aa-9173-b0bc7ff697d5
-# ╠═c2633df1-2e30-4387-8749-de3280b0602d
-# ╟─253ab06f-6284-4cbf-b2a2-232ff99548c9
-# ╠═1d058f8b-16f5-4744-8425-452876006c47
-# ╟─4e9b785f-ad74-4aa8-ad48-89fa8b236939
-# ╠═1a997e44-f29c-4c55-a953-a9039f096d47
-# ╟─78bedfcc-3671-4852-985b-3e1b5aaade5a
-# ╠═0f03f537-f589-4abd-9587-0bb18835d9b9
-# ╠═847a0b28-af55-48cd-972e-7105853bc7bf
-# ╠═1cbf510c-1a7a-4472-b21e-2233ff3eae9e
-# ╠═ea858bd0-03f9-4e11-8a76-19347779385b
-# ╠═d012e2e0-d467-40c5-a4c9-895cb77dab8e
-# ╠═16be4faa-9439-4e3a-b61f-a62e85171fcf
-# ╠═8a63e901-ea76-432c-9cd9-9a0b99581002
-# ╟─25e84f19-9cd8-43ad-ae6a-d500b8ac74b6
-# ╠═74262581-3c64-4e5b-9328-416c4e1efc91
-# ╠═2b405f2b-3256-4c47-8334-c2d93713d409
-# ╠═103babf9-bbc3-4c77-9185-72f792a09706
-# ╠═bb0e41cf-66fb-4cae-8cd9-6ad771d1acf4
-# ╠═969aa5eb-c56f-4115-83df-bb0ec911b6aa
-# ╠═935da683-a4e2-4ddc-999f-55cb61390f39
-# ╠═b8f2bf85-c986-4dca-8f0e-62c1cc871bd5
-# ╠═2d1da571-0561-4c28-bb63-35ca5f9538d5
-# ╠═7c068d65-f472-44c2-af56-581bf9309bd5
-# ╠═631ce85b-db76-4f3b-bda5-0c51ffb3bc43
-# ╠═fa01788e-7585-4f3f-93b2-a44541065820
-# ╠═6a89953d-310b-49c9-89e1-8d51c8b75be0
-# ╠═50ac0182-32fe-4e21-8c6d-895ffc67ec27
-# ╠═8b75bc15-e07b-43e5-adb3-c5d6481ee9d8
-# ╠═cf61ebba-6800-4bfa-bb7c-cb9a6c846b65
-# ╠═36ac25b9-27e5-4728-bbcf-920f231ff6ab
-# ╠═753a6030-aa2a-403d-9d75-c0116513a103
-# ╠═f5a24d09-e1af-4040-ba6f-90f12778a2ad
-# ╠═3333e85b-22cb-4188-a789-ba8b21347ade
-# ╟─11d6ac4f-e910-4a9f-9ee4-bdd270e9400b
-# ╠═c1b1a22b-8e18-4d19-bb9b-14d2853f0b72
-# ╠═cc1ff1e6-2968-4baf-b513-e963ab2ff1b4
-# ╠═c65323f5-211d-4a95-aed3-d6129bdd083e
-# ╠═5d263432-856b-4e9b-a303-a476222e8963
-# ╟─25a01039-25e9-44b0-afd0-c3df37c7598f
-# ╟─71231141-c2f5-4695-ade0-548a0039f511
-# ╠═c993c1d8-8823-4db4-bf6e-bf2c21ea3d39
-# ╟─f24387ee-c1cf-4ec0-a34e-4b4f33ee9010
-# ╠═954d2dde-8088-4e91-bed3-f8339090b77b
-# ╠═7ed3da36-117e-11ed-3e8c-99389cd174bc
-# ╠═2872c686-8e4f-4230-a07a-5d988aba39b7
-# ╠═3198bb79-f0c7-4b01-8dce-ef7629e8d7e6
-# ╠═e9365f8d-6f58-458c-855d-c0444c6f409f
-# ╟─fbf40f06-f63a-40ca-bbe3-78104d39ee71
-# ╠═f863066f-270f-4972-8046-7f51cb697ac5
-# ╠═d285879a-bdfd-4efa-aa5d-9dacf08a2dc6
-# ╠═70bbb90e-06f1-4b60-a952-275866945c58
+# ╟─8573d925-e4bd-4544-a264-b3a7ba8610a3
+# ╟─2db89e2d-4d89-454d-bd1a-976a1f415623
+# ╟─815648ae-78f2-42f1-a216-81b10c0a7850
+# ╟─c129dec7-eb81-4cab-91d5-2ef7a1c06b24
+# ╟─6060f7ec-52c1-4504-9fc9-dfaaff4c1109
+# ╟─1f9e1561-405d-4d49-a2ee-af2dfeb2d409
+# ╟─4f30bb25-0f69-4c5a-948c-df89d75a0a24
+# ╟─07958953-43c8-441b-b6d6-6bcf0e027603
+# ╟─88580398-8b68-4830-9df9-ec1a1aeaf243
+# ╠═186b1fe4-4462-4c0d-a874-256ee3e3f700
+# ╟─b13cbc28-5658-4f24-879e-bd6c10f7c7f0
+# ╟─f7a60a89-40b2-4656-98a6-a258a4a5741d
+# ╠═70e40546-b5e8-45dc-86a0-bfbef5403e30
+# ╟─0a7829f4-c3a9-488d-aacc-6e8a02c3ef79
+# ╟─496f01ef-6422-412b-9142-c3893476bc0d
+# ╟─1e38675b-3482-4f85-b4fa-f476e84fb520
+# ╟─21dd99b3-ee5b-46e5-adf5-9c9ff9448272
+# ╟─febcd0aa-0a19-405c-b5ed-5c73dab8929c
+# ╟─cee410bb-1470-41f9-8e98-b96591eac7ca
+# ╟─6733025d-20f0-48cd-b6d8-0dfb02bb7482
+# ╠═33bf5bdd-6e13-4375-bf26-bdac273d6738
+# ╟─07fc0a5c-8d9f-46a7-9893-fefa23007878
+# ╠═1f52926c-fc07-4652-97a8-6abbdb3e3b5e
+# ╟─e903ac6c-1b5c-40ea-a925-e7243cbf9b02
+# ╠═751e1643-43c2-4071-87cf-a904560e2bc4
+# ╟─25dae65d-65a6-462f-aba2-afd498bf4d5a
+# ╠═93a79265-110d-4fb9-b2a7-97da4667f8c6
+# ╠═3946c3f6-3044-42e4-b161-09f4394b7147
+# ╟─4712bc8d-4e63-47c9-8367-dc417f1a7649
+# ╟─54722cbe-6a91-4275-a78c-8a50715b86c8
+# ╟─eb1e20e7-9873-45bd-ae30-ed147a70b457
+# ╠═28bbf56b-1bdf-486f-8230-b9a6ee19a955
+# ╟─7f0bad7b-439a-4639-bba4-5f0a52560042
+# ╟─497c6314-6f0f-4d45-9bd2-17d6f6b00ab9
+# ╠═3abaa20d-a24d-4b2f-8d8d-4e01b719ab5e
+# ╟─d41cd681-2434-4525-9c67-9e184fdd1f67
+# ╟─9a8b8946-e083-49f3-8a86-7ba2df4636fe
+# ╠═e7eb6784-e947-4a14-8227-888d4646855e
+# ╠═23bd3f41-7c81-4b15-a07c-720c3a393118
+# ╟─e6f4813b-86bb-45a8-b017-c2d32f3c74b0
+# ╟─207d92a3-b8fa-45e3-88b1-bb95bb7d981c
+# ╠═5a12e196-99b2-4d45-b373-8aec03f6cc0e
+# ╟─be0f68e9-36ad-4500-b941-fe47e1865eba
+# ╟─0a7b61c5-8e11-4025-b6ad-8fcfc2701464
+# ╠═f596a5cc-d291-4358-b568-9b3872bc2dc8
+# ╟─dcdd349e-3edb-413f-b315-994b9395c3bc
+# ╟─c177b994-cf6c-4a90-8d64-a4feef88fd56
+# ╠═71185d5e-ae37-4571-b380-a5b9f2b65205
+# ╟─75b27e3b-f8b3-4345-ac43-2974d624ea72
+# ╟─942580bf-60d3-49fe-be2a-2fab9869322d
+# ╟─0cb23460-2db6-4327-a01c-a013eb471a9e
+# ╟─b542043b-b4ac-4207-b092-18b283c65524
+# ╠═60615cd2-aa70-47e9-b432-b4051e17f628
+# ╠═e454ff61-2769-4095-8d0c-6958f79338ee
+# ╠═b09eb768-f645-441d-a943-8c2fe373fd08
+# ╠═b309cc56-598f-4bd4-a523-edbbb850db58
+# ╠═141e0dd3-a9bb-4ea6-8686-e18a2628d926
+# ╟─e3ae420b-1d40-4d2d-99f3-728cfb8ca167
+# ╟─7d55098d-2665-44ec-a959-91e591ccc70e
+# ╠═5e3fb6e9-eacb-4e4b-9a62-83632263be37
+# ╟─8f0dc26b-45c3-44ac-a0db-73e42b09f46b
+# ╟─f1555793-db56-4b4c-909d-c8f3bf6cd857
+# ╠═d14e0faa-4509-46aa-bfe1-0ba89d04c8c7
+# ╠═99b10989-c757-43e7-8fd2-65f8a5377023
+# ╠═d385bc7e-d9e9-4f61-a455-9973262bd37a
+# ╟─9a771f35-8f15-4abc-a093-4b5cb84b909a
+# ╠═1a7df5c9-3036-44a7-9eba-42ef4851d9ae
+# ╠═7c7ba04a-fc84-4ca2-a903-faf1fae0a839
+# ╠═4d4cf195-0eef-4873-b8f8-b82c48ee6f26
+# ╟─3968e7cf-b56b-4e36-a89c-aea6840986d2
+# ╟─3052a997-5084-4005-8985-7be98a08d659
+# ╠═ec82cd1e-6d3f-11ec-18d7-8dd51f5446de
+# ╟─c4ccc5ad-618d-4635-9d52-13be0df55198
+# ╠═37acf7b5-f93e-4ec9-9807-b247544713ed
+# ╟─8377503b-4556-4dc0-9d15-330bdd4100e6
+# ╟─83817687-0e03-4be0-a66b-e74dcd300b15
+# ╟─f8271303-ab1f-486a-aa34-8f1dc6b33cd2
+# ╟─f3e015f2-33e1-4b2f-b34a-ee6a5751d96b
+# ╟─27039532-1c2b-4aee-858e-f9f0a135e62f
+# ╠═2ed68cbb-7e5b-4d17-9cb3-4f9404b63365
+# ╠═6e3907db-9c66-4805-853b-11877c23a1d6
+# ╠═d07fa3a9-6687-4279-8fe7-e348152b18f4
+# ╟─78a45e6a-a772-4fa7-bd9c-d728d5ea79e8
+# ╠═e9e6c131-c334-4674-9384-273cd40929dc
+# ╠═3726a99d-8024-4fec-a047-43d370f795d9
+# ╟─d649a654-e515-40b4-a45b-e095f1d12da7
+# ╟─76f41f57-2971-4020-ab2f-87fad4a92489
+# ╟─2b7c65fe-8bf8-47f2-96b1-6dfe8888d494
+# ╟─0d4d9a5b-5e4f-4126-85ec-d31327cbf960
+# ╠═045c54d2-c76c-49f1-b849-d607e50b182b
+# ╟─f5938462-ae9d-44c0-a0b1-17d61e8ac0eb
+# ╟─45430bb9-8914-4839-b936-79bcbc453822
+# ╠═dafe2f99-d3b5-4450-bbab-c8ffe1ac11ea
+# ╠═a99f36fe-298f-45fb-b5f5-c42d21d73e55
+# ╠═d8ddea58-b8d3-41a9-a3a4-8c53754bda32
+# ╠═44728e3a-3e88-4808-96d1-be17b58fde70
+# ╟─3a2f6c6d-432f-4f1e-a2c8-2dc11ca86aab
+# ╠═a8e00a42-c018-4067-8e5b-a4d5c8f74108
+# ╠═f950f7a5-4277-43bc-8700-21f6cd0d9c9f
+# ╠═602e44bc-4d5b-4f7f-9a75-bf9b1576ac11
+# ╠═db5a2982-8986-48e3-85f5-75892afdb12a
+# ╟─dd257094-78c5-403b-942a-f0b29064e29e
+# ╠═335ec769-9a1c-413a-8130-033669343030
+# ╠═d5808058-cc75-4091-8fd0-c5f163ba3cb9
+# ╠═09debe63-1ccc-45fa-8f73-e8f05b794726
+# ╠═dd3f555f-c7e3-4a01-b3b0-06e01dd7a075
+# ╟─d7139b58-1b84-4c61-9060-c3e8e27083a9
+# ╠═ceaebe3d-a6b8-48d4-98fd-0fd3055b2943
+# ╠═f61a2b9a-d36c-4f03-95b4-226f31e7acba
+# ╠═707555ea-48d2-4ae6-9417-b47a972deb9d
+# ╠═4984ca28-1de2-4e5f-9d27-8c13decff996
+# ╠═53660817-3947-4c30-bf61-3a36d6614a13
+# ╠═d05680b7-4bf2-4d9e-99b9-fde6254a4b4c
+# ╠═9630dabc-87b1-4bb9-82cc-7fbb59a45c34
+# ╟─f746a247-feb7-4291-b9bd-dba29eec7143
+# ╠═31dca57c-b5fe-49c2-87e0-31b2999a6f65
+# ╠═2a964fbe-80b5-4501-ad52-97686dae67bb
+# ╠═55e97c59-79f0-4f81-b23b-079d03da6ecd
+# ╠═4fbd40d2-0589-4ebf-adfb-ae686b25dd5c
+# ╠═9484ba9a-6d4b-4417-81c7-cea34e194515
+# ╠═8c3cf1ef-187a-4f32-96b5-926d93519a30
+# ╠═a7834a3a-ed74-48ab-99ba-581f7a790bf9
+# ╠═46745175-c7bf-45b5-8e1a-d8ab9e9ca703
+# ╠═3e7f87ae-da71-42c4-8ebb-6dc2aef7ce03
+# ╠═00cabaf0-e341-4fd5-9f3f-b513591087f1
+# ╠═c054bded-ad5a-4c19-9758-5e81ece988ba
+# ╠═0ba6d675-477f-493d-a621-2431d32ad9a8
+# ╟─e6c8244a-6dca-4599-b3a5-02491bb99dfb
+# ╠═9898ed0c-3510-4d05-8056-4112d3ca72c7
+# ╠═8db75083-b0d6-409b-8efb-fe74a9f238b2
+# ╟─a50aba4a-9aba-4a90-965a-5e354969b606
+# ╠═c8440043-3e63-4607-ba70-bd1ee016c5b4
+# ╠═3069c53d-9a1d-48e1-b0c6-ec4fae392bd7
+# ╠═64248193-552e-47a0-8da5-0c58a6099b80
+# ╠═41d5e579-418b-4988-9a6f-f75afeffe821
+# ╠═fd3dc6bf-f1e5-46de-b0b0-94adbc845d81
+# ╟─2d1f7620-de37-4e9f-8044-9459abda92ac
+# ╠═6270dbc8-5002-4328-88a4-f1c7f060f571
+# ╠═7f0ad695-ea05-483b-86c4-a63df55689e9
+# ╠═76bc41d8-c97f-4120-9b13-679997411ca6
+# ╠═b72dedc8-bd5a-457e-ba67-13f26a0148dd
+# ╠═a3874185-b0ec-49da-a9d7-7875416b3b4f
+# ╠═3945c5e7-8d0c-4196-8eb1-2931cd85cd30
+# ╠═0694c61f-bcd7-435e-8bfa-77e81bb580e7
+# ╠═fe70e69a-1c07-4e50-b29e-6ca028bb1a3d
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
