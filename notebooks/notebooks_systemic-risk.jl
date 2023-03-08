@@ -780,9 +780,6 @@ using PlutoLinks
 # ╔═╡ 36ac25b9-27e5-4728-bbcf-920f231ff6ab
 using Revise
 
-# ╔═╡ f5a24d09-e1af-4040-ba6f-90f12778a2ad
-
-
 # ╔═╡ 11d6ac4f-e910-4a9f-9ee4-bdd270e9400b
 md"""
 ## HTML Helpers
@@ -987,6 +984,9 @@ function visualize_bank_firm_network(IM, bank_df; figure = figure(), add_legend=
 	fig # |> as_svg
 end
 
+# ╔═╡ fc01674e-73de-4cbf-9c80-fa1ea47fcb21
+using Colors: @colorant_str
+
 # ╔═╡ 222665dc-397b-4e58-b3ee-935b115cf13d
 function visualize_bank_firm_network!(ax, IM, bank_df; r = 1.4, start = Makie.automatic, layout=Makie.automatic, show_firms=true, kwargs...)
 
@@ -1073,9 +1073,6 @@ end
 md"""
 ## Visualize bank balance sheet
 """
-
-# ╔═╡ 3db76a38-a506-4abf-803f-2b5ba6ce1393
-fonts = (; regular = Makie.MathTeXEngine.texfont(), bold = Makie.MathTeXEngine.texfont())
 
 # ╔═╡ ebf41ae2-3985-439b-b193-eabfab701d16
 function visualize_simple_balance_sheet(args...; figure=(;), legend=(;), kwargs...)
@@ -1425,9 +1422,6 @@ using GraphMakie
 # ╔═╡ 12968f5e-6e75-4429-bff8-0d1c644330a7
 using NamedTupleTools
 
-# ╔═╡ 50112e6e-80ed-4650-be09-46157e5ae65d
-#using Colors
-
 # ╔═╡ 2c22e86e-1139-4f66-8992-093d38f4c6cb
 md"""
 ## Plotting helpers
@@ -1446,11 +1440,8 @@ minimal(; extend_limits=0.05, hidespines=true, kwargs...) = (;
 	kwargs...
 )
 
-# ╔═╡ fd3a25df-beba-4c3f-9d7c-1255cfe373ef
-
-
 # ╔═╡ ce563ab5-6324-4a86-be61-7a107ff0e3b3
-figure(xscale=1, yscale=xscale) = (; fonts = (regular = "CMU", bold = "CMU"), resolution = (xscale * 300, yscale * 300))
+figure(xscale=1, yscale=xscale) = (; resolution = (xscale * 300, yscale * 300))
 
 # ╔═╡ 4ccb52c2-a177-4b13-8ce5-2af6f286c737
 md"""
@@ -1552,9 +1543,6 @@ function text_bbox(textstring::AbstractString, fontsize::Union{AbstractVector, N
     return Rect2f(Makie.boundingbox(glyph_collection, Point3f(0), Makie.to_rotation(rotation)))
 end
 
-# ╔═╡ 07a16680-8cc4-4065-bc8d-8978de679f0d
-
-
 # ╔═╡ 3496c181-c4c3-4b1b-a5e5-83df27182c99
 md"""
 ## `LaTeXStrings` as `bar_labels`
@@ -1563,12 +1551,16 @@ md"""
 # ╔═╡ 8f15ccf5-860a-47ca-b5c2-842c4e6f861a
 using CairoMakie: @key_str, @lift, @L_str
 
+# ╔═╡ 3758f272-297c-4325-9a7c-042b4f41d615
+using CairoMakie, AlgebraOfGraphics, Colors
+
+# ╔═╡ a349099a-64aa-4e86-9bf2-b6157feff394
+using LaTeXStrings
+
 # ╔═╡ c4032c7a-73f4-4342-a5a7-19fd14017402
 begin
-
-using CairoMakie, AlgebraOfGraphics, Colors
-set_theme!(fonts = (regular = "CMU", bold = "CMU"))
-using Makie.LaTeXStrings
+fonts = (; regular = CairoMakie.Makie.MathTeXEngine.texfont(), bold = CairoMakie.Makie.MathTeXEngine.texfont())
+set_theme!(; fonts)
 	
 using Makie: automatic, compute_x_and_width, barplot_labels, bar_rectangle, generate_tex_elements, TeXChar, FreeTypeAbstraction, GlyphExtent, height_insensitive_boundingbox_with_advance, origin, GlyphCollection, stack_grouped_from_to, ATTRIBUTES, theme, bar_label_formatter
 	
@@ -1832,6 +1824,7 @@ GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
@@ -1861,6 +1854,7 @@ GeometryBasics = "~0.4.5"
 GraphMakie = "~0.5.3"
 Graphs = "~1.8.0"
 HypertextLiteral = "~0.9.4"
+LaTeXStrings = "~1.3.0"
 Makie = "~0.19.2"
 MarkdownLiteral = "~0.1.1"
 NamedTupleTools = "~0.14.3"
@@ -1882,7 +1876,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "ccb86ee47409defeb17975e3604aceb730036967"
+project_hash = "a79ce4a828f0c4da7303c24e89efd794fde31c5e"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -3520,7 +3514,6 @@ version = "3.5.0+0"
 # ╠═8b75bc15-e07b-43e5-adb3-c5d6481ee9d8
 # ╠═cf61ebba-6800-4bfa-bb7c-cb9a6c846b65
 # ╠═36ac25b9-27e5-4728-bbcf-920f231ff6ab
-# ╠═f5a24d09-e1af-4040-ba6f-90f12778a2ad
 # ╟─11d6ac4f-e910-4a9f-9ee4-bdd270e9400b
 # ╠═c1b1a22b-8e18-4d19-bb9b-14d2853f0b72
 # ╠═cc1ff1e6-2968-4baf-b513-e963ab2ff1b4
@@ -3546,10 +3539,10 @@ version = "3.5.0+0"
 # ╠═7871b479-2aaf-42c1-ad84-42ac17cfc6e1
 # ╟─7c026a42-1c05-4968-b068-c8561ca5a2db
 # ╠═7b70a862-faf4-4c42-917c-238718c43708
+# ╠═fc01674e-73de-4cbf-9c80-fa1ea47fcb21
 # ╠═222665dc-397b-4e58-b3ee-935b115cf13d
 # ╠═3998e822-d7e0-40f2-a866-71a3d81c4ca3
 # ╟─0d207cbe-5b97-4bd7-accf-fc49ce4522e9
-# ╠═3db76a38-a506-4abf-803f-2b5ba6ce1393
 # ╠═ebf41ae2-3985-439b-b193-eabfab701d16
 # ╠═b7d74679-904c-44c4-bedd-89f1b68a5e42
 # ╠═1b9c8f2b-8011-46f1-b46d-479031eb9ac3
@@ -3582,18 +3575,17 @@ version = "3.5.0+0"
 # ╟─69698f6a-110d-49ea-bd57-16af0de90844
 # ╠═7d2d3618-7810-444d-90c0-0d592f8eba8c
 # ╠═12968f5e-6e75-4429-bff8-0d1c644330a7
-# ╠═50112e6e-80ed-4650-be09-46157e5ae65d
 # ╟─2c22e86e-1139-4f66-8992-093d38f4c6cb
 # ╠═60293fac-4d20-409b-bfd2-d5283f189320
 # ╠═bef59a5b-6952-42aa-b700-4ad81d848fe4
-# ╠═fd3a25df-beba-4c3f-9d7c-1255cfe373ef
 # ╠═ce563ab5-6324-4a86-be61-7a107ff0e3b3
 # ╟─4ccb52c2-a177-4b13-8ce5-2af6f286c737
 # ╠═1f23193e-0bca-4bee-82b1-453100721ab6
 # ╠═4a1fd4a3-71a0-4947-8b75-cc2100fb636b
-# ╠═07a16680-8cc4-4065-bc8d-8978de679f0d
 # ╟─3496c181-c4c3-4b1b-a5e5-83df27182c99
 # ╠═8f15ccf5-860a-47ca-b5c2-842c4e6f861a
+# ╠═3758f272-297c-4325-9a7c-042b4f41d615
+# ╠═a349099a-64aa-4e86-9bf2-b6157feff394
 # ╠═c4032c7a-73f4-4342-a5a7-19fd14017402
 # ╠═e8d198fa-11db-43b2-846e-311abe9f59aa
 # ╠═2711b045-b879-4225-afae-13328a4e14b3
