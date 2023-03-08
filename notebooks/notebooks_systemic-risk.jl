@@ -32,7 +32,7 @@ end
 
 # ╔═╡ 52052d98-0c41-45ec-95bf-d936b1c43e81
 md"""
-`systemic-risk.jl` | **Version 2.0** | *last updated: March 7, 2023*
+`systemic-risk.jl` | **Version 2.1** | *last updated: March 8, 2023*
 """
 
 # ╔═╡ 72e25b9c-89e3-441b-bf89-c1122535318a
