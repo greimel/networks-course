@@ -92,9 +92,6 @@ fig = let
 	visualize_bank_firm_network(promises, bank_df; figure=figure(), start = 1/6, show_firms=false)
 end;
 
-# ╔═╡ f51fb0b2-276a-415b-b2b7-aec903b1fe9e
-initial_analysis
-
 # ╔═╡ 8a2f3e4d-9c61-4a21-a229-58f731964181
 initial_analysis = let
 	n_banks = 6
@@ -414,11 +411,11 @@ let
 	IM = _IM
 	n_banks = nv(IM)
 
-	ν = 2.0
+	ν = 3.0
 	c = 0.0
 	ζ = 0.1
 	A = 3.5
-	a = 2.0
+	a = 3.0
 	ε = _ε4
 	
 	shares = I(n_banks)
@@ -1263,15 +1260,18 @@ md"""
 # ╔═╡ 00a4054a-dd10-4c5c-ae20-c0dc176e8e18
 using Statistics: mean
 
+# ╔═╡ d5c128e0-6371-4ad2-8bfc-c17faadc520b
+weighted_adjacency_matrix(graph) = Graphs.weights(graph) .* (adjacency_matrix(graph) .> 0)
+
 # ╔═╡ 38a1f960-7178-4968-89e4-6b659b64baa2
 function payments_received((; promises, pc_served))
-	Y = Graphs.weights(promises) .* adjacency_matrix(promises)
-	Y * pc_served	
+	Y = weighted_adjacency_matrix(promises)
+	vec(pc_served' * Y)
 end
 
 # ╔═╡ f689810f-8f43-4368-a822-0ee4f3015271
 function payments_promised((; promises))
-	Y = Graphs.weights(promises) .* adjacency_matrix(promises)
+	Y = weighted_adjacency_matrix(promises)
 	dropdims(sum(Y, dims=2), dims=2)
 end
 
@@ -3414,7 +3414,6 @@ version = "3.5.0+0"
 # ╠═e11a99df-d0f2-4838-b325-473d3043be98
 # ╠═144cfaf2-b78c-4f87-8b35-559914abf532
 # ╠═073982c7-6333-43f6-866a-91a49f8ba7eb
-# ╠═f51fb0b2-276a-415b-b2b7-aec903b1fe9e
 # ╠═8a2f3e4d-9c61-4a21-a229-58f731964181
 # ╟─73ba4210-d8f6-4a74-bf4d-d7bc0902bb5e
 # ╟─eba94b09-f061-432a-80ce-a68be83e6a99
@@ -3435,10 +3434,10 @@ version = "3.5.0+0"
 # ╠═0e4a53b5-1751-4723-a05d-a5504e427e3c
 # ╟─523e177c-f74d-4805-8a2b-9c27a4b0bc63
 # ╠═4ae1b6c2-bb63-4ca8-b8ec-057c8d2a371f
-# ╠═efbc1a42-ecc2-4907-a981-bd1d29ca0803
+# ╟─efbc1a42-ecc2-4907-a981-bd1d29ca0803
 # ╟─7f058e4a-9b12-41c9-9fd7-4ad023058a14
 # ╟─96878ebb-fbc0-4d53-998a-210e13a42492
-# ╠═e2041c57-0e3d-4dad-9bab-d70434f18509
+# ╟─e2041c57-0e3d-4dad-9bab-d70434f18509
 # ╠═9446b4db-4d93-4153-84e2-73d01fb31254
 # ╠═aaffd333-3aa1-48ee-b5db-d577bd7da830
 # ╠═a8a8a197-d54d-4c67-b7ce-19bdc8b64401
@@ -3554,6 +3553,7 @@ version = "3.5.0+0"
 # ╟─ffe50130-a9cb-4ba9-a861-c247bf688873
 # ╟─d3e5b8f2-51b1-4ba4-97b4-2be156a74643
 # ╠═00a4054a-dd10-4c5c-ae20-c0dc176e8e18
+# ╠═d5c128e0-6371-4ad2-8bfc-c17faadc520b
 # ╠═38a1f960-7178-4968-89e4-6b659b64baa2
 # ╠═f689810f-8f43-4368-a822-0ee4f3015271
 # ╠═5bde1113-5297-4e93-b052-7a0f93f4ea84
