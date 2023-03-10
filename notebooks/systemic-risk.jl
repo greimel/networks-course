@@ -103,7 +103,7 @@ using PlutoTest: @test
 
 # ╔═╡ 52052d98-0c41-45ec-95bf-d936b1c43e81
 md"""
-`systemic-risk.jl` | **Version 2.1** | *last updated: March 8, 2023*
+`systemic-risk.jl` | **Version 2.2** | *last updated: March 10, 2023*
 """
 
 # ╔═╡ 72e25b9c-89e3-441b-bf89-c1122535318a
@@ -310,21 +310,21 @@ Each bank owns a project that pays $z_i = a - \varepsilon_i$ in the intermediate
 
 # ╔═╡ f8eb242f-a974-48aa-9173-b0bc7ff697d5
 md"""
-👉 (2.2 | 3 points) What is $\tilde p$? Explain which banks would have to be hit to wipe out the whole system.
+👉 (2.1 | 2 points) What is $\tilde p$? Explain which banks would have to be hit to wipe out the whole system.
 """
 
 # ╔═╡ c2633df1-2e30-4387-8749-de3280b0602d
-answer22 = md"""
+answer21 = md"""
 Your answer goes here ... You can type math like this: ``p = 17``, ``\varepsilon = 1.1``
 """
 
 # ╔═╡ 253ab06f-6284-4cbf-b2a2-232ff99548c9
 md"""
-👉 (2.3 | 5 points) Let $\delta > 0$ be very small and shock size $\varepsilon' \in (\tilde \varepsilon - \delta, \tilde \varepsilon)$. Conditional on $p' = 1$ and $\varepsilon'$, which network is more resilient and which network is more stable? Explain.
+👉 (2.2 | 2 points) Let $\delta > 0$ be very small and shock size $\varepsilon' \in (\tilde \varepsilon - \delta, \tilde \varepsilon)$. Conditional on $p' = 1$ and $\varepsilon'$, which network is more resilient and which network is more stable? Explain.
 """
 
 # ╔═╡ 1d058f8b-16f5-4744-8425-452876006c47
-answer23 = md"""
+answer22 = md"""
 Your answer goes here ... You can type math like this: ``p = 17``, ``\varepsilon = 1.1``
 """
 
@@ -1486,7 +1486,7 @@ begin
 end
 
 # ╔═╡ c99e52e2-6711-4fb6-bcc0-8e4f378ed479
-out = let
+out_T1 = let
 	#n = 6
 	#m = 3
 	ȳ = 2.1
@@ -1514,24 +1514,24 @@ out = let
 	namedgraphplot!(ax2, IM2, graphplot_attr = (; layout))
 
 	(; IM1, IM2, fig, n, ȳ)
-end; out.fig |> as_svg
+end; out_T1.fig |> as_svg
 
 # ╔═╡ 15f45669-516b-4f3f-9ec1-f9e2c1d2e71a
 @markdown("""
-Consider the interbank networks ``y`` and ``\\tilde y`` of $(out.n) banks as depicted above. For all non-isolated banks the sum of interbank liabilities equal the sum of interbank claims (``y = $(out.ȳ)``).
+Consider the interbank networks ``y`` and ``\\tilde y`` of $(out_T1.n) banks as depicted above. For all non-isolated banks the sum of interbank liabilities equal the sum of interbank claims (``y = $(out_T1.ȳ)``).
 """)
 
 # ╔═╡ d7111001-f632-4d0d-a2c7-7bbfd67bf87d
 md"""
 For this exercise you can use the tool below, to simulate the payment equilibrium for a given interbank market, shock size, and the bank that is hit by the shock.
 
-* Which bank is hit? ``i`` $(@bind i_bank Slider(1:out.n, default = 1, show_value = true))
-* Size of the shock ``\varepsilon``  $(@bind _ε4 Slider(0.0:0.1:3.0, show_value = true, default = 1.0))
-* Select ``y`` or ``\tilde y`` $(@bind _IM Select([out.IM1 => "y", out.IM2 => "ỹ"]))
+* Which bank is hit? ``i`` $(@bind i_T1 Slider(1:out_T1.n, default = 1, show_value = true))
+* Size of the shock ``\varepsilon``  $(@bind ε_T1 Slider(0.0:0.1:3.0, show_value = true, default = 1.0))
+* Select ``y`` or ``\tilde y`` $(@bind IM_T1 Select([out_T1.IM1 => "y", out_T1.IM2 => "ỹ"]))
 """
 
 # ╔═╡ c7b99d3c-5d32-45e6-84fa-8a6513e6beb9
-let
+out_T2 = let
 	ȳ = 2.1
 	IM1 = IslandNetwork([3, 2], ȳ; γ=0.0)
 	IM2 = IslandNetwork([3, 2], ȳ; γ=1.0)
@@ -1546,14 +1546,23 @@ let
 	layout = Shell()
 
 	fig = Figure(; figure(2, 1)...)
-	ax1 = Axis(fig[1,1]; minimal(hidespines=false, title = L"interbank market $y$")...)
-	ax2 = Axis(fig[1,2]; minimal(hidespines=false, title = L"interbank market $\tilde{y}$")...)
+	ax1 = Axis(fig[1,1]; minimal(hidespines=false, title = L"interbank market $\tilde{y}$")...)
+	ax2 = Axis(fig[1,2]; minimal(hidespines=false, title = L"interbank market $\hat{y}$")...)
 
 	namedgraphplot!(ax1, IM1; graphplot_attr=(; layout))
 	namedgraphplot!(ax2, IM2; graphplot_attr=(; layout))
 
-	fig |> as_svg
-end
+	(; IM1, IM2, fig, n)# |> as_svg
+end; out_T2.fig |> as_svg
+
+# ╔═╡ 0fb4d187-f03a-435b-b9fc-188925e058f1
+md"""
+If you have understood the mechanics of the model, you should be able to solve these tasks without simulations. You can use the given tool to verify your answer.
+
+* Which bank is hit? ``i`` $(@bind i_bank_T2 Slider(1:out_T2.n, default = 1, show_value = true))
+* Size of the shock ``\varepsilon``  $(@bind ε_T2 Slider(0.0:0.1:3.0, show_value = true, default = 1.0))
+* Select ``y`` or ``\tilde y`` $(@bind IM_T2 Select([out_T2.IM1 => "ỹ", out_T2.IM2 => "ŷ"]))
+"""
 
 # ╔═╡ 2fe4c931-d4b2-4b4d-8634-73573125cfb5
 let
@@ -1710,9 +1719,10 @@ end
 
 # ╔═╡ 0d18cdf0-441e-4ca9-98e3-50bc3efa837f
 let
-	i = i_bank
-	#_ε4 = 0.4
-	IM = _IM
+	i = i_T1
+	IM = IM_T1
+	ε = ε_T1
+	
 	n_banks = nv(IM)
 
 	ν = 3.0
@@ -1720,7 +1730,7 @@ let
 	ζ = 0.1
 	A = 3.5
 	a = 3.0
-	ε = _ε4
+
 	
 	shares = I(n_banks)
 	
@@ -1728,13 +1738,42 @@ let
 
 	firm = (; ζ, a, A)
 	εs = zeros(n_banks)
-	εs[i_bank] = min(ε, a)
+	εs[i] = min(ε, a)
 	
 	(; bank_df) = equilibrium(banks, IM, firm, εs)
 
 	layout = (_) -> componentwise_circle([1:6, 6 .+ (1:5)])
 	
 	visualize_bank_firm_network(IM, bank_df; figure=figure(1.25, 1.0), hidespines=false, start = 1/6, layout, add_legend=true, show_firms=false) |> as_svg
+end
+
+# ╔═╡ a9d27019-72b7-4257-b72a-12952b516db9
+let
+	i = i_bank_T2
+	#_ε4 = 0.4
+	IM = IM_T2
+	n_banks = nv(IM)
+
+	ν = 3.0
+	c = 0.0
+	ζ = 0.0
+	A = 0.0
+	a = 3.5
+	ε = ε_T2
+	
+	shares = I(n_banks)
+	
+	banks = [(; ν, c) for i ∈ 1:n_banks]
+
+	firm = (; ζ, a, A)
+	εs = zeros(n_banks)
+	εs[i] = min(ε, a)
+	
+	(; bank_df) = equilibrium(banks, IM, firm, εs)
+
+	layout = Shell()
+	
+	visualize_bank_firm_network(IM, bank_df; figure=figure(1.0, 1.0), hidespines=false, start = 1/6, layout, add_legend=true, show_firms=false) |> aside_figure
 end
 
 # ╔═╡ b54dc329-7764-41e6-8716-ef20bef0b29b
@@ -3461,6 +3500,8 @@ version = "3.5.0+0"
 # ╠═c2633df1-2e30-4387-8749-de3280b0602d
 # ╟─253ab06f-6284-4cbf-b2a2-232ff99548c9
 # ╠═1d058f8b-16f5-4744-8425-452876006c47
+# ╟─a9d27019-72b7-4257-b72a-12952b516db9
+# ╟─0fb4d187-f03a-435b-b9fc-188925e058f1
 # ╟─27fadf93-0b17-446e-8001-d8394b7befaa
 # ╠═aed99485-cec3-4bf3-b05d-4d20572ec907
 # ╠═db841316-9106-40bb-9ca3-ae6f8b975404
