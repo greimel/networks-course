@@ -142,12 +142,6 @@
                 "preview_image_url": ""
             },
             {
-                "name": "Production networks for TI",
-                "notebook_path": "notebooks/production-new.jl",
-                "video_id": "",
-                "preview_image_url": ""
-            },
-            {
                 "name": "Simulating Long & Plosser",
                 "notebook_path": "notebooks/long-plosser.jl",
                 "video_id": "",
