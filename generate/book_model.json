@@ -122,14 +122,7 @@
                 "notebook_path": "notebooks/systemic-risk.jl",
                 "video_id": "",
                 "preview_image_url": ""
-            },
-            {
-                "name": "Systemic risk (old)",
-                "notebook_path": "notebooks/systemic-risk-old.jl",
-                "video_id": "",
-                "preview_image_url": ""
             }
-
         ]
     },
     {
