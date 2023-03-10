@@ -32,7 +32,7 @@ end
 
 # ╔═╡ 52052d98-0c41-45ec-95bf-d936b1c43e81
 md"""
-`systemic-risk.jl` | **Version 2.1** | *last updated: March 8, 2023*
+`systemic-risk.jl` | **Version 2.0** | *last updated: March 7, 2023*
 """
 
 # ╔═╡ 72e25b9c-89e3-441b-bf89-c1122535318a
@@ -486,8 +486,8 @@ let
 	layout = Shell()
 
 	fig = Figure(; figure(2, 1)...)
-	ax1 = Axis(fig[1,1]; minimal(hidespines=false, title = L"interbank market $y$")...)
-	ax2 = Axis(fig[1,2]; minimal(hidespines=false, title = L"interbank market $\tilde{y}$")...)
+	ax1 = Axis(fig[1,1]; minimal(hidespines=false, title = L"interbank market $\tilde{y}$")...)
+	ax2 = Axis(fig[1,2]; minimal(hidespines=false, title = L"interbank market $\hat{y}$")...)
 
 	namedgraphplot!(ax1, IM1; graphplot_attr=(; layout))
 	namedgraphplot!(ax2, IM2; graphplot_attr=(; layout))
@@ -502,21 +502,21 @@ Each bank owns a project that pays $z_i = a - \varepsilon_i$ in the intermediate
 
 # ╔═╡ f8eb242f-a974-48aa-9173-b0bc7ff697d5
 md"""
-👉 (2.2 | 3 points) What is $\tilde p$? Explain which banks would have to be hit to wipe out the whole system.
+👉 (2.1 | 2 points) What is $\tilde p$? Explain which banks would have to be hit to wipe out the whole system.
 """
 
 # ╔═╡ c2633df1-2e30-4387-8749-de3280b0602d
-answer22 = md"""
+answer21 = md"""
 Your answer goes here ... You can type math like this: ``p = 17``, ``\varepsilon = 1.1``
 """
 
 # ╔═╡ 253ab06f-6284-4cbf-b2a2-232ff99548c9
 md"""
-👉 (2.3 | 5 points) Let $\delta > 0$ be very small and shock size $\varepsilon' \in (\tilde \varepsilon - \delta, \tilde \varepsilon)$. Conditional on $p' = 1$ and $\varepsilon'$, which network is more resilient and which network is more stable? Explain.
+👉 (2.2 | 2 points) Let $\delta > 0$ be very small and shock size $\varepsilon' \in (\tilde \varepsilon - \delta, \tilde \varepsilon)$. Conditional on $p' = 1$ and $\varepsilon'$, which network is more resilient and which network is more stable? Explain.
 """
 
 # ╔═╡ 1d058f8b-16f5-4744-8425-452876006c47
-answer23 = md"""
+answer22 = md"""
 Your answer goes here ... You can type math like this: ``p = 17``, ``\varepsilon = 1.1``
 """
 
