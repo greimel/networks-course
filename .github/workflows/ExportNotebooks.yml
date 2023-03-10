@@ -40,8 +40,8 @@ jobs:
                 cd(dir1)
                 run(`cp generate.jl generate2.jl`)
                 import Pkg
-                Pkg.Registry.add(Pkg.RegistrySpec(url="https://gitlab.com/greimel/GreimelRegistry"))
-                Pkg.Registry.add("General")
+                # Pkg.Registry.add(Pkg.RegistrySpec(url="https://gitlab.com/greimel/GreimelRegistry"))
+                # Pkg.Registry.add("General")
                 Pkg.add(Pkg.PackageSpec(name="Pluto", version="0.18.0"))
                 import Pluto
                 Pluto.activate_notebook_environment(joinpath(dir1, "generate2.jl"))
