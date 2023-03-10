@@ -268,32 +268,32 @@ md"""
 
 # ╔═╡ 51bfc57f-7b06-4e27-af32-51df38af30a1
 md"""
-👉 (1.1 | 2 points) Consider financial network ``y``. What is the minimal number of shocks ``p`` that have to occur to wipe out the whole financial system. Which banks have to be hit? How big would the shocks ``\varepsilon`` have to be?
+👉 (1.1 | 2 points) Consider financial network ``\tilde y``. What is the minimal number of shocks ``\tilde p`` that have to occur to wipe out the whole financial system. Which banks have to be hit? How big would the shocks ``\tilde \varepsilon`` have to be?
 """
 
 # ╔═╡ b817cdf6-dfe6-4607-98da-2299a33d4906
 answer11 = md"""
-Your answer goes here ... You can type math like this: ``p = 17``, ``\varepsilon = 1.1``
+Your answer goes here ... You can type math like this: ``\tilde p = 17``, ``\tilde \varepsilon = 1.1``
 """
 
 # ╔═╡ 07e9c77f-e05e-452c-8c47-cdd9dfc8e2fc
 md"""
-👉 (1.2 | 2 points) Consider financial network ``\tilde y``. What is the minimal number of shocks ``\tilde p`` that have to occur to wipe out the whole financial system. Which banks have to be hit? How big would the shocks ``\tilde \varepsilon`` have to be?
+👉 (1.2 | 2 points) Consider financial network ``\hat y``. What is the minimal number of shocks ``\hat p`` that have to occur to wipe out the whole financial system. Which banks have to be hit? How big would the shocks ``\hat \varepsilon`` have to be?
 """
 
 # ╔═╡ f5293bee-9413-4507-8568-54836eb6d4a2
 answer12 = md"""
-Your answer goes here ... You can type math like this: ``\tilde p = 17``, ``\tilde \varepsilon = 1.1``
+Your answer goes here ... You can type math like this: ``\hat p = 17``, ``\hat \varepsilon = 1.1``
 """
 
 # ╔═╡ 49c2fb2d-de6e-4ab2-a558-59fb153cf703
 md"""
-👉 (1.3 | 2 points) Now consider ``\hat \varepsilon > \max\{\varepsilon, \tilde \varepsilon \}`` and ``\hat p = 1``. Which network is more stable? Which network is more resilient?
+👉 (1.3 | 2 points) Now consider ``\varepsilon > \max\{\tilde \varepsilon, \hat \varepsilon \}`` and ``p = 1``. Which network is more stable? Which network is more resilient?
 """
 
 # ╔═╡ c0c711de-6916-4ab9-ab73-c476654332c4
 answer13 = md"""
-Your answer goes here ... You can type math like this: ``\hat p = 17``, ``\hat \varepsilon = 1.1``
+Your answer goes here ... You can type math like this: ``\hat p = 17``, ``\tilde \varepsilon = 1.1``
 """
 
 # ╔═╡ a95431eb-14a0-4dc3-bbe6-9c409f6cc596
@@ -1487,38 +1487,28 @@ end
 
 # ╔═╡ c99e52e2-6711-4fb6-bcc0-8e4f378ed479
 out_T1 = let
-	#n = 6
-	#m = 3
-	ȳ = 2.1
-	#IM1 = CompleteNetwork(n, ȳ)
-	#IM2 = IslandNetwork(n ÷ m, m, ȳ)
-	IM1 = IslandNetwork([3, 3, 5], ȳ)
-	IM2 = IslandNetwork([6, 2, 1, 1, 1], ȳ)
+	y = 2.1
+	ỹ = IslandNetwork([3, 3, 5], y)
+	ŷ = IslandNetwork([6, 2, 1, 1, 1], y)
 
-	n1 = nv(IM1)
-	n2 = nv(IM2)
-	if n1 == n2
-		n = n1
-	else
-		n = (n1, n2)
-	end
-
+	@assert nv(ỹ) == nv(ŷ)
+	n = nv(ỹ)
 
 	layout = (_) -> componentwise_circle([1:6, 6 .+ (1:5)])
 
 	fig = Figure(; figure(2.5, 1.0)...)
-	ax1 = Axis(fig[1,1]; minimal(hidespines=false, title = L"interbank market $y$")...)
-	ax2 = Axis(fig[1,2]; minimal(hidespines=false, title = L"interbank market $\tilde{y}$")...)
+	ax1 = Axis(fig[1,1]; minimal(hidespines=false, title = L"interbank market $\tilde{y}$")...)
+	ax2 = Axis(fig[1,2]; minimal(hidespines=false, title = L"interbank market $\hat{y}$")...)
 
-	namedgraphplot!(ax1, IM1, graphplot_attr = (; layout))
-	namedgraphplot!(ax2, IM2, graphplot_attr = (; layout))
+	namedgraphplot!(ax1, ỹ, graphplot_attr = (; layout))
+	namedgraphplot!(ax2, ŷ, graphplot_attr = (; layout))
 
-	(; IM1, IM2, fig, n, ȳ)
+	(; ỹ, ŷ, fig, n, y)
 end; out_T1.fig |> as_svg
 
 # ╔═╡ 15f45669-516b-4f3f-9ec1-f9e2c1d2e71a
 @markdown("""
-Consider the interbank networks ``y`` and ``\\tilde y`` of $(out_T1.n) banks as depicted above. For all non-isolated banks the sum of interbank liabilities equal the sum of interbank claims (``y = $(out_T1.ȳ)``).
+Consider the interbank networks ``\\tilde y`` and ``\\hat y`` of $(out_T1.n) banks as depicted above. For all non-isolated banks the sum of interbank liabilities equal the sum of interbank claims (``y = $(out_T1.y)``).
 """)
 
 # ╔═╡ d7111001-f632-4d0d-a2c7-7bbfd67bf87d
@@ -1527,7 +1517,7 @@ For this exercise you can use the tool below, to simulate the payment equilibriu
 
 * Which bank is hit? ``i`` $(@bind i_T1 Slider(1:out_T1.n, default = 1, show_value = true))
 * Size of the shock ``\varepsilon``  $(@bind ε_T1 Slider(0.0:0.1:3.0, show_value = true, default = 1.0))
-* Select ``y`` or ``\tilde y`` $(@bind IM_T1 Select([out_T1.IM1 => "y", out_T1.IM2 => "ỹ"]))
+* Select ``\tilde y`` or ``\hat y`` $(@bind IM_T1 Select([out_T1.ỹ => "ỹ", out_T1.ŷ => "ŷ"]))
 """
 
 # ╔═╡ c7b99d3c-5d32-45e6-84fa-8a6513e6beb9
