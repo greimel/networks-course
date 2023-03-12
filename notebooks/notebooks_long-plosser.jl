@@ -19,7 +19,7 @@ end
 
 # ╔═╡ 35721b85-c06a-4c57-99d1-2a7bd4bff22f
 md"""
-`long-plosser.jl` | **Version 1.1** | *last updated: Mar 11, 2023*
+`long-plosser.jl` | **Version 1.1** | *last updated: Mar 12, 2023*
 """
 
 # ╔═╡ 866ae0b6-426e-41f1-b498-e2e7f38100fe
@@ -527,7 +527,7 @@ minimal(; extend_limits=0.05, hidespines=false, kwargs...) = (;
 )
 
 # ╔═╡ f930f23c-c88b-49dc-9daf-28ba952ab616
-fonts = (regular = "CMU", bold = "CMU")
+fonts = (; regular = Makie.MathTeXEngine.texfont(), bold = Makie.MathTeXEngine.texfont())
 
 # ╔═╡ 30fc4301-e637-4b1d-a117-a7c4e7bb657f
 figure(scale=1) = (; fonts, resolution = (scale * 300, scale * 300))
@@ -2127,7 +2127,7 @@ version = "3.5.0+0"
 # ╟─9732589c-bcc0-4e83-8eaa-7628ac002b7f
 # ╟─a9946e17-0c08-4626-ad28-41261d40b3b1
 # ╟─9d28410e-3dbc-43db-b403-a8094af890f9
-# ╠═f30b0af4-112f-419f-a635-b2271640a620
+# ╟─f30b0af4-112f-419f-a635-b2271640a620
 # ╠═6427f772-fa31-446c-b8dc-25dd857fc684
 # ╠═e241cbfb-bcdc-48f1-b516-a46359aad5be
 # ╠═f8dc59d7-cef7-48bb-acf5-4896abb0f7e9

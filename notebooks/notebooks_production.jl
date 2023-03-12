@@ -62,7 +62,7 @@ This plot shows how a shock to single sector propagates to other sectors.
 """
 
 # ╔═╡ 94375d0e-77aa-11eb-3934-edb020ab0fd7
-fig
+fig |> as_svg
 
 # ╔═╡ cb75f8ac-77aa-11eb-041c-4b3fe85ec22b
 md"""
@@ -2532,7 +2532,7 @@ version = "3.5.0+0"
 # ╟─38f5d048-7747-11eb-30f7-89bade5ed0a3
 # ╟─f1749b26-774b-11eb-2b42-43ffcb5cd7ee
 # ╟─a771e504-77aa-11eb-199c-8778965769b6
-# ╠═94375d0e-77aa-11eb-3934-edb020ab0fd7
+# ╟─94375d0e-77aa-11eb-3934-edb020ab0fd7
 # ╟─cb75f8ac-77aa-11eb-041c-4b3fe85ec22b
 # ╠═76e6f44e-77aa-11eb-1f12-438937941606
 # ╟─9b47991e-7c3d-11eb-1558-b5824ab10dc0
