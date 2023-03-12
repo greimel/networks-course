@@ -556,7 +556,7 @@ If you have understood the mechanics of the model, you should be able to solve t
 
 * Which bank is hit? ``i`` $(@bind i_bank_T2 Slider(1:out_T2.n, default = 1, show_value = true))
 * Size of the shock ``\varepsilon``  $(@bind ε_T2 Slider(0.0:0.1:3.0, show_value = true, default = 1.0))
-* Select ``y`` or ``\tilde y`` $(@bind IM_T2 Select([out_T2.IM1 => "ỹ", out_T2.IM2 => "ŷ"]))
+* Select ``\tilde y`` or ``\hat y`` $(@bind IM_T2 Select([out_T2.IM1 => "ỹ", out_T2.IM2 => "ŷ"]))
 """
 
 # ╔═╡ 27fadf93-0b17-446e-8001-d8394b7befaa
