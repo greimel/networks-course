@@ -753,6 +753,9 @@ end
 # ╔═╡ 5c2ef34e-776f-11eb-2a6f-ff99b5d24997
 unweighted_network = SimpleDiGraph(wgts .> 0.01)
 
+# ╔═╡ 10ffcab3-cfa6-4362-a4a5-cb95a10a683b
+graphplot(unweighted_network)
+
 # ╔═╡ d6a23266-7757-11eb-346c-534caaf657fb
 begin
 	df_all = outerjoin(df_in, df_out, on = [:code, :name])
@@ -2554,6 +2557,7 @@ version = "3.5.0+0"
 # ╠═b43f6b02-776c-11eb-2685-655705eb1681
 # ╠═ffdbb91c-776c-11eb-3b28-51314d40f7a2
 # ╠═5c2ef34e-776f-11eb-2a6f-ff99b5d24997
+# ╠═10ffcab3-cfa6-4362-a4a5-cb95a10a683b
 # ╟─5aff086a-7751-11eb-039e-fd1b769b6fea
 # ╠═2e7630ee-7770-11eb-32ae-112b4b282eaf
 # ╠═4341e8cc-7770-11eb-04d5-c5d33d9a9e52
