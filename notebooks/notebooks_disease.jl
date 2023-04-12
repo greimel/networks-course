@@ -94,19 +94,6 @@ end
 # ╔═╡ f48fa122-649a-11eb-2041-bbf0d0c4670c
 const States = Union{subtypes(State)...}
 
-# ╔═╡ b3eebd0f-fb4c-420e-b2ca-e0b836e191c6
-function noise(x::S)
-	"I am fine!"
-end
-
-# ╔═╡ ea87e96c-1a3d-4b4e-a59d-6a6f64a754df
-function noise(x::I)
-	"I scream!"
-end
-
-# ╔═╡ 8cd0fdd3-b281-4846-9d30-56b7967b6b91
-noise(I())
-
 # ╔═╡ 10dd6814-f796-42ea-8d40-287ed7c9d239
 md"
 ## Define the transitions
@@ -322,13 +309,9 @@ vacc = let
 	graph, node_positions = spatial_graph(N)
 	node_df = DataFrame(node_id = 1:nv(graph), ρ = ρ0, δ = δ0)
 	
-	@transform!(node_df, :degree = @bycol degree(graph))
-	sort!(node_df, :degree, rev=true)
-	
 	vaccinated = [
 		"none"   => [],
 		"random" => pseudo_random(N, N_vacc, 3),	
-		"degree" => node_df.node_id[1:N_vacc],
 		# place for your suggestions
 		]
 	
@@ -2667,9 +2650,6 @@ version = "3.5.0+0"
 # ╟─2f9f008a-64aa-11eb-0d9a-0fdfc41d4657
 # ╠═b8d874b6-648d-11eb-251c-636c5ebc1f42
 # ╠═f48fa122-649a-11eb-2041-bbf0d0c4670c
-# ╠═b3eebd0f-fb4c-420e-b2ca-e0b836e191c6
-# ╠═ea87e96c-1a3d-4b4e-a59d-6a6f64a754df
-# ╠═8cd0fdd3-b281-4846-9d30-56b7967b6b91
 # ╟─10dd6814-f796-42ea-8d40-287ed7c9d239
 # ╠═8ddb6f1e-649e-11eb-3982-83d2d319b31f
 # ╠═61a36e78-57f8-4ef0-83b4-90e5952c116f
