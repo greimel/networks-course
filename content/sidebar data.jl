@@ -2,8 +2,8 @@ Dict(
     :main => [
         "welcome" => collections["welcome"].pages,
         "Preliminaries" => collections["julia-basics"].pages,
-        #"Module 2: Social Science & Data Science" => collections["module2"].pages,
-        #"Module 3: Climate Science" => collections["module3"].pages,
+        "Networks Basics" => collections["networks-basics"].pages,
+        "Diffusion on Networks" => collections["diffusion"].pages,
 
     ],
     :about => Dict(

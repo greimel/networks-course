@@ -1,241 +1,365 @@
 ### A Pluto.jl notebook ###
 # v0.19.22
 
+#> [frontmatter]
+#> chapter = 3
+#> section = 1
+#> order = 1
+#> title = "Spread of Information and the DeGroot model"
+#> layout = "layout.jlhtml"
+#> description = ""
+#> tags = ["diffusion"]
+
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ bfe3ffc5-6347-4455-89e9-058f57caadfa
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
+# ╔═╡ a788d559-842f-44ac-9c51-1d3765274a2b
+using PlutoUI
+
+# ╔═╡ e4194d80-8a3d-476c-a5bc-6ae4d11afc4c
 using Graphs
 
-# ╔═╡ f2dd81c0-a197-4727-bb16-2510546da3d5
-using SimpleWeightedGraphs
+# ╔═╡ 7f631fb1-85ab-4195-923e-b8916c3ab7f7
+using GraphMakie: graphplot, graphplot!
 
-# ╔═╡ f84e0f50-8213-43ab-9f0f-e3c2bad9fd27
-using GraphMakie # graphplot
+# ╔═╡ 3dcf6694-f107-4f79-88d0-66730b515cbf
+using CairoMakie
 
-# ╔═╡ 4cdad415-809f-46e9-b392-1840c9150ad1
-using CairoMakie # hist, lines, scatter
+# ╔═╡ e56e08a6-6a6e-486d-8de4-99a60af6afb7
+using LinearAlgebra
 
-# ╔═╡ a53cf870-42ad-43eb-93f5-c647cdd9a3cf
-using NetworkLayout # layout algorithms
+# ╔═╡ cdb61f78-71e6-4d73-986b-270e6ab11981
+using LaTeXStrings: latexstring, @L_str
 
-# ╔═╡ 20d6e00e-6e39-41f2-a21c-a052a1762733
-using SNAPDatasets: loadsnap  # cool datasets of *big* networks
+# ╔═╡ 2f0007e9-f63f-4a0c-976b-9c4bca5ed399
+using Latexify: latexify
 
-# ╔═╡ 4105db41-d9fa-4160-bd35-1d06231d8563
-using PlutoUI: TableOfContents
+# ╔═╡ 8af00d16-a795-4916-8699-e7b47d6a843e
+using SimpleWeightedGraphs: SimpleWeightedDiGraph, weight
 
-# ╔═╡ c236c3fd-cfbd-4044-8229-e4bccc593336
-using Statistics: mean, std
+# ╔═╡ 50d7de9b-b2b7-4b2c-baa8-c09e82ced9a1
+using DataFrames: DataFrame, stack, Not
 
-# ╔═╡ add960c4-12c3-442d-899b-faab9e5fff27
-using FreqTables: freqtable
+# ╔═╡ fbf3a3ca-4130-49b6-baaa-e42388204003
+using AlgebraOfGraphics: data, mapping, visual, draw
 
-# ╔═╡ 35d41eba-71cb-40f5-afec-8b2a1f282432
-using StatsBase: ecdf
+# ╔═╡ 3e9756ae-8a55-4d0d-8ae6-e8aa8bcd71fb
+using DataFrameMacros: @transform!
 
-# ╔═╡ eb6a3510-6477-11eb-0e4e-33557d794e45
+# ╔═╡ 4763df34-59da-4230-8589-793fad7b7376
+using GraphMakie: automatic
+
+# ╔═╡ 0b79fb30-66d3-11eb-052b-89cfca69b3a6
 md"""
-`stylized-facts.jl` | **Version 1.0** | *last updated: Feb 2, 2023*
+`DeGroot.jl` | **Version 1.2** | *last updated: Feb 21, 2023*
 """
 
-# ╔═╡ ce5a4af6-5930-4ba6-a6dc-ececf1efda6b
+# ╔═╡ 7c18cc0e-66d3-11eb-3e8e-09d869dd5731
 md"""
-# Typical properties of social networks
+# Exercises on the DeGroot model
 """
 
-# ╔═╡ 9fed5efe-6784-11eb-1046-5f2604a03be9
-md"
-## 1. Low average degree (``\bar d \ll n``)
-
-Let us first compute the degree for each node.
-"
-
-# ╔═╡ ccaf2a49-e713-4a66-84e5-4d1c3a345ce1
+# ╔═╡ 80d61c7e-db08-40f4-b2da-a2e68364c9b0
 md"""
-Then we can compute the mean degree and compare it to the number of nodes.
+Below there are some some adjacency matrices.
 """
 
-# ╔═╡ 313359ed-a84c-4eb8-86da-3da41cf475d4
-md"""
-We can have a look at the full degree distribution by plotting a histogram.
-"""
-
-# ╔═╡ ee5a3a9e-6784-11eb-0372-3db4c16f6fd2
-md"
-## 2. High clustering ($Cl \gg 1/n$)
-"
-
-# ╔═╡ cef6ebc4-6785-11eb-3c05-cd94b6d547ec
-md"""
-## 3. There is a giant component
-"""
-
-# ╔═╡ 9cfc186a-6785-11eb-2d57-c360f55c50f8
-md"
-## 4. Short average distance
-"
-
-# ╔═╡ 6009f070-5ef8-11eb-340a-d9780be085ad
-md"""
-## 5. The degree distribution follows a Power law
-"""
-
-# ╔═╡ 2045bd16-6786-11eb-3b0a-c18569a7f770
-md"
-(in large $k$ tail)
-"
-
-# ╔═╡ 399213b5-3da6-420b-bf6f-f6230cf9b913
-md"""
-# Building networks from real-world data
-
-There are plenty of network datasets out there. You can check out the *Stanford Large Network Dataset Collection* [[link]](https://snap.stanford.edu/data/index.html). A very small subset of these datasets can be downloaded directly from Julia using the package *SNAPDatasets.jl* [[link]](https://github.com/JuliaGraphs/SNAPDatasets.jl).
-
-Let us have a look at the Facebook dataset, with 4039 nodes and 88234 edges. [[link to description]](https://snap.stanford.edu/data/ego-Facebook.html)
-"""
-
-# ╔═╡ c28b2d55-63dc-4794-bfcd-a03172cb7f25
-big_network = loadsnap(:facebook_combined)
-#big_network = loadsnap(:ego_twitter_u)
-#big_network = loadsnap(:soc_slashdot0902_u)
-
-# ╔═╡ 97d36935-3d2d-4079-a141-1bd030196328
-degrees = degree(big_network)
-
-# ╔═╡ 156cacdb-cbae-4ff4-a721-120fb528348c
-md"""
-Indeed, the mean degree ($(round(mean(degrees), digits=2))) is much lower then the number of nodes.
-"""
-
-# ╔═╡ b0ab1ac5-8433-4818-8579-f2c36d0dee30
-std(degrees)
-
-# ╔═╡ a1fe05e9-b3e3-4055-831c-ca6289086fbe
-hist(degrees)
-
-# ╔═╡ ef85efd2-da5c-4197-831e-110aebe5a1d7
-let
-	f(x) = log(1 - ecdf(degrees)(x))
-	x_vec = exp.(range(0, 6, length=200))
-#	x_vec = range(1, 400, length=200)
-	lines(x_vec, f.(x_vec))
+# ╔═╡ 7ad5e8e9-2032-456e-a76e-a3b35b8db673
+begin
+	T1 = [1/2 1/2 0 0 0; 1/2 0 1/2 0 0;	1/2 0 0 1/2 0; 0 0 0 0 1; 0 0 1/2 1/2 0]
+	T2 = [1/2 1/2 0 0 0; 1 0 0 0 0; 1/2 0 0 1/2 0; 0 0 0 0 1; 0 0 1/2 1/2 0]
+	T3 = [1/2 1/2 0 0 0; 1 0 0 0 0; 1/2 0 0 1/2 0; 0 0 0 0 1; 0 0 0 1/2 1/2]
+	T4 = [1/2 1/2 0 0 0; 1 0 0 0 0; 1/2 0 0 1/2 0; 0 0 0 0 1; 0 0 0 1 0]
+	Ts = [T1, T2, T3, T4]
+	latexify.(Ts)
 end
 
-# ╔═╡ a5a085cf-b4dd-48c0-a3c2-967abc1445c2
-mean(degrees), nv(big_network) # nv == number of vertices
+# ╔═╡ 86d107d0-70a4-11eb-0e56-81a5a95b92bf
+md"
+### Exercise 1
 
-# ╔═╡ 7ba0f472-f8a3-497d-8093-6f9275365841
-global_clustering_coefficient(big_network), 1/size(big_network)[1]
-
-# ╔═╡ 2e02bf8a-b9f2-4aaf-8e58-e5d17e3d193c
-is_connected(big_network)
-
-# ╔═╡ 9f083058-6a12-41cc-bb65-ad81e5d79aea
-diameter(big_network)
-
-# ╔═╡ dabeabef-bbd1-4fef-82e2-997490cbece6
-md"Even though the dataset is rather small compared to others from this collection, we already run into problems when we want to visualize the network. 
-
-The time it takes to plot a big network is mainly driven by the layout algorithm. That's why I choose the *boring* Shell algorithm, where all nodes are placed on a circle. This is very fast.
-
-If you want, you can try to plot this with the default layout algorithm. (On my recent MacBook Pro, this took more than two minutes -- then I interrupted the execution of the cell.)
+Simulate the DeGroot model for the networks ``T_1, \ldots, T_4`` shown below. Plot the beliefs of agent (node) ``1, \ldots, 5`` as a function of time, and check whether there is **convergence**, and if so, **consensus**. Explain what you observe in terms of the SCCs in the network and the links between them.
 "
 
-# ╔═╡ 061a32fc-5f07-4512-9dd2-d1618e145a4c
-graphplot(big_network,
-	layout = Shell(),
-	node_size = 2,
-	edge_width = 1,
-	node_color = :blue,
-	edge_color = (:orange, 0.01)
-)
+# ╔═╡ d40534d4-70a6-11eb-1328-ab8035477d42
+b0 = [0.2, 0.4, 0.6, 0.8, 1.0]
 
-# ╔═╡ 5d7adf23-4fef-4597-a3ac-18adbef08d8e
-md"""
-## Components, path length and diameter
+# ╔═╡ 4fc6519d-cffc-41a6-80ba-0be59425391a
+T_selector = @bind T Select(Ts .=> string.("T_", 1:4))
 
-"""
+# ╔═╡ ee95d1c0-70a4-11eb-1e80-e14803784028
+graph = SimpleWeightedDiGraph(T)
 
-# ╔═╡ a22c9ec0-647b-11eb-2141-974fa4223428
-md"""
-To get the length of shortest path from node `i` to node `j` use `gdistances(graph, i)[j]`.
-"""
+# ╔═╡ a219b85a-70a6-11eb-383e-7fabc0c25676
+(T^50 * b0)
 
-# ╔═╡ 9c3d3a6a-4ad5-4c45-bb07-8e75b4380290
-function giant_component(graph)
-	components = connected_components(graph)
-	
-	# compute the size (# of nodes) of each component
-	size_of_components = length.(components)
-	# find the component with maximal number of nodes
-	(n_nodes, ind) = findmax(size_of_components)
-	
-	# return the giant_component
-	giant_component = components[ind]
+# ╔═╡ 7fa6510c-70a9-11eb-0982-15947053cc29
+function b_series(T, b0, N)
+	k = 0
+	b = b0
+	b_ts = b0'
+	while k < N
+		b = T*b
+		b_ts = [b_ts; b']
+		k += 1
+	end
+	return b_ts
 end
 
-# ╔═╡ dbe88874-6785-11eb-1dc8-bb3c704d9562
-size(giant_component(big_network)), nv(big_network)
+# ╔═╡ 852bd999-ae17-4de3-9c6a-4885acd7b3f1
+function b_df(T, b₀, N)
+	n_nodes = size(T, 1)
+	b_ts = b_series(T, b₀, N)
 
-# ╔═╡ 1250300d-8bd5-41c3-a36f-b59064e8fbfd
+	df = DataFrame(b_ts, ["node $i" for i ∈ 1:n_nodes])
+	df = @transform!(df, :t = @bycol 0:N)
+end
+
+# ╔═╡ 142f9afe-d279-4ebf-b33b-0243979e6e3e
+function b_stacked(T, b₀, N)
+	df = b_df(T, b₀, N)
+	stack(df, Not(:t), value_name = "opinion", variable_name = "node")
+end
+
+# ╔═╡ 10ef06bc-70ab-11eb-027d-fb5b67cccd8b
+data(b_stacked(T,b0,50)) * mapping(:t => L"time $t$", :opinion, color=:node) * visual(Lines) |> draw
+
+# ╔═╡ cded1e0c-70ad-11eb-0b7c-b9b5ddcbdbf0
+md"
+### Exercise 2
+
+Examine the structure of high powers of $T_i$. For the cases without convergence also inspect consecutive high powers, such as $10000$ and $10001$. Relate the obtained matrices to the simulation results of Exercise 1. 
+"
+
+# ╔═╡ a60eaa0b-8aea-4dbb-87c6-3f002c588691
+T_selector
+
+# ╔═╡ 8ed6464e-70ad-11eb-22d1-53ae9a60fa65
+T^10_000
+
+# ╔═╡ 5d438de1-9ea6-4f4b-9c28-64ecb0075c1c
+# ╠═╡ disabled = true
+#=╠═╡
+T4^10_001
+  ╠═╡ =#
+
+# ╔═╡ 0ec5eee0-70ae-11eb-2d6f-ebc6c9621c72
+md"
+### Exercise 3
+
+Calculate the eigenvalues of $T_1', \ldots, T_4'$. Determine the social influence vector(s) by inspecting the eigenvectors (normalised such that the elements add up to $1$) that correspond to the eigenvalues that are $1$. Interpret your results.
+"
+
+# ╔═╡ cb386335-d482-41e7-aa5b-e426c396d61a
+T_selector
+
+# ╔═╡ 0c36064b-3c67-4641-aa75-726f65367524
+unit_eigvals = findall(≈(1), eigvals(T'))
+
+# ╔═╡ 8a55a6c3-2432-49c1-87f4-839beabe87f1
+unit_eigvecs = eigvecs(T')[:,unit_eigvals]
+
+# ╔═╡ 80eae80c-9762-42ae-8e85-f61d37d029ee
+real_if_real(x) = isreal(x) ? real(x) : x
+
+# ╔═╡ 5f653efe-138d-4841-b5a5-229bca236f81
+normalized_eigvecs = unit_eigvecs ./ sum(unit_eigvecs, dims=1) |> real_if_real
+
+# ╔═╡ cfc9f604-6604-11eb-23bc-699617b17d7d
 md"""
 # Appendix
 """
 
-# ╔═╡ c5cf8e17-9dcc-4f37-ace2-dbc3d92a83d4
+# ╔═╡ a77dc094-8f4d-4eaf-b395-121f4412e086
 TableOfContents()
 
-# ╔═╡ 00a1ebe8-7d6d-47ac-bb22-d0a5b35379b1
+# ╔═╡ 9c43a3db-d669-473a-a16d-7ad5e1102997
+md"""
+## Plotting helpers
+"""
+
+# ╔═╡ 31153893-9bc0-4ab6-ba6a-df93b1ab73b9
+fixed_layout(_) = Point2{Float64}[(2,1), (1,2), (1, 1), (0,1), (1,0)]
+
+# ╔═╡ a0e827fa-0d0e-4595-beb2-da38c79b47f2
+attr(; args...) = (; layout = fixed_layout, arrow_size = 20, elabels_distance = 15, nlabels_distance = 10, args...)
+
+# ╔═╡ 6566756b-3ae7-40d3-ad7f-c22508154155
+minimal(; args...) = (; 
+	xgridvisible=false, xticksvisible=false, xticklabelsvisible=false,
+	ygridvisible=false, yticksvisible=false, yticklabelsvisible=false, args...
+)
+
+# ╔═╡ 6783eac7-4c3a-4ebf-83d2-33b3378f5c8b
 md"""
 ## Packages
 """
 
-# ╔═╡ 389d7396-4d8e-4b4f-b431-d152e69168b9
+# ╔═╡ f1cdcf84-96d5-4da4-acb6-3cb11b77c35b
 md"""
-#### Graphs
+## Named GraphPlot
 """
 
-# ╔═╡ d6af737c-1b85-4b7b-9885-77b8ea39e051
-md"""
-#### Plotting
-"""
+# ╔═╡ 7e7b4610-f904-45fc-8a28-982a90b32ba5
+function text_bbox(textstring::AbstractString, fontsize::Union{AbstractVector, Number}, font, align, rotation, justification, lineheight)
+    glyph_collection = Makie.layout_text(
+            textstring, fontsize,
+            font, nothing, align, rotation, justification, lineheight,
+            RGBAf(0,0,0,0), RGBAf(0,0,0,0), 0f0, 100
+        )
 
-# ╔═╡ 4723fae2-4bc5-4720-a4d9-040fb601765a
-md"""
-#### Other
-"""
+    return Rect2f(Makie.boundingbox(glyph_collection, Point3f(0), Makie.to_rotation(rotation)))
+end
 
-# ╔═╡ 7c4e745f-0626-4520-8fdc-d04927625e18
-md"""
-#### Basic statistics
-"""
+# ╔═╡ f1d2ed15-b90b-4bb0-a773-e130d7554ec9
+begin
+	@recipe(NamedGraphPlot, graph) do scene
+	    scatter_theme = default_theme(scene, Scatter)
+	    lineseg_theme = default_theme(scene, LineSegments)
+	    labels_theme = default_theme(scene, Makie.Text)
+	    Attributes(
+			graphplot_attr = Attributes(),
+	        # node attributes (Scatter)
+	        node_color = :orange, #lightgray,
+			node_strokewidth = 0.5,
+	        node_size = automatic,
+	        node_marker = :circle,
+			node_aspect = :regular, # need for a better name
+			node_labels = automatic,
+			node_font=labels_theme.fonts.regular,
+			node_fontsize=labels_theme.fontsize
+	    )
+	end
+	
+	function Makie.plot!(ngp::NamedGraphPlot)
+		# Extract attributes from plot object
+		(; graph, graphplot_attr,
+		   node_color, node_strokewidth, node_size, node_aspect,
+		   node_marker, node_labels, node_font, node_fontsize) = ngp
 
+		# Compute marker sizes
+		out = lift(
+				 node_labels, graph, node_size, node_fontsize, node_font, node_aspect
+			) do node_labels, graph, node_size, node_fontsize, node_font, node_aspect
+			
+			if node_labels === automatic
+				node_labels = string.(1:nv(graph))
+			end
+				
+			# Extract text sizes and layout accordingly
+		    label_sizes = [widths(text_bbox(
+				string(label), 
+				node_fontsize,
+				node_font,
+				(:center, :center),
+				0f0, 0, 0
+			)) for label in node_labels]
+		
+			# if regular: use circle/square, otherwise elipse/rectangle
+			if node_aspect === :regular
+				label_sizes = [max(pt...) for pt in label_sizes]
+			end
+				
+			# We can specify markersize as a Vec2f, which is the eltype of label_sizes.
+		    # Thus, we can explicitly cause the node drawing to be large enough
+			# to accomodate the marker size.
+			if node_size === automatic
+				node_size = map(x -> 1.7x .+ 0node_fontsize, label_sizes)
+			end
+	
+			(; node_labels, label_sizes, node_size)
+		end
+	
+		@lift (; node_labels, label_sizes, node_size) = $out
+		
+		node_attr = (; 
+	        marker = node_marker,
+			color = node_color,
+	        strokewidth = node_strokewidth,
+			markersize = node_size, 
+	        markerspace = :pixel,
+	    )
+	
+		if hasproperty(graphplot_attr, :node_attr)
+			@warn "Ignoring :node_attr"
+			delete!(graphplot_attr, :node_attr)
+		end
+	
+		gp = graphplot!(ngp, graph; graphplot_attr..., node_attr)
+	
+		positions = @lift($(gp[:layout])($graph))
+		
+		text!(ngp, positions; text=node_labels, font=node_font, fontsize=node_fontsize, align = (:center, :center))
+		
+	    return ngp
+	end
+end
+
+# ╔═╡ ddc5227d-fa44-4b43-aca4-143a1c667d08
+let
+	fig = Figure()
+	graphs = SimpleWeightedDiGraph.(Ts)
+
+	graphplot_attr = attr()
+	namedgraphplot(fig[1,1], graphs[1]; graphplot_attr, axis=minimal(title = L"T_1"))
+	namedgraphplot(fig[1,2], graphs[2]; graphplot_attr, axis=minimal(title = L"T_2"))
+	namedgraphplot(fig[2,1], graphs[3]; graphplot_attr, axis=minimal(title = L"T_3"))
+	namedgraphplot(fig[2,2], graphs[4]; graphplot_attr, axis=minimal(title = L"T_4"))
+
+	fig |> as_svg
+end
+
+# ╔═╡ 0768c5b2-70a6-11eb-0f12-8d88a86c926b
+namedgraphplot(graph;
+	graphplot_attr = attr(elabels=string.(weight.(edges(graph)))),
+	axis=minimal()
+) |> as_svg
+
+# ╔═╡ 484cadde-b23e-46ed-a990-47603908b3d6
+namedgraphplot(graph;
+	graphplot_attr = attr(
+		elabels = string.(weight.(edges(graph))),
+		nlabels = string.("eigvec: ", round.(vec(sum(normalized_eigvecs, dims=2)), digits=2))
+	),
+	axis=minimal()
+) |> as_svg
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-FreqTables = "da1fdf0e-e0ff-5433-a45f-9bb5ff651cb1"
+DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
-NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-SNAPDatasets = "fc66bc1b-447b-53fc-8f09-bc9cfb0b0c10"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
+AlgebraOfGraphics = "~0.6.14"
 CairoMakie = "~0.10.2"
-FreqTables = "~0.4.5"
-GraphMakie = "~0.5.2"
-Graphs = "~1.7.4"
-NetworkLayout = "~0.4.4"
-PlutoUI = "~0.7.49"
-SNAPDatasets = "~0.2.0"
-SimpleWeightedGraphs = "~1.2.2"
-StatsBase = "~0.33.21"
+DataFrameMacros = "~0.4.0"
+DataFrames = "~1.5.0"
+GraphMakie = "~0.5.3"
+Graphs = "~1.8.0"
+LaTeXStrings = "~1.3.0"
+Latexify = "~0.15.18"
+PlutoUI = "~0.7.50"
+SimpleWeightedGraphs = "~1.3.0"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -244,7 +368,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "f0c01f6682e7d357a977860b2ac919a83be3971d"
+project_hash = "be54a3c33aaacb1bd93f1aaa070a6a299cad7529"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -268,6 +392,12 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "0310e08cb19f5da31d08341c6120c047598f5b9c"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 version = "3.5.0"
+
+[[deps.AlgebraOfGraphics]]
+deps = ["Colors", "Dates", "Dictionaries", "FileIO", "GLM", "GeoInterface", "GeometryBasics", "GridLayoutBase", "KernelDensity", "Loess", "Makie", "PlotUtils", "PooledArrays", "RelocatableFolders", "SnoopPrecompile", "StatsBase", "StructArrays", "Tables"]
+git-tree-sha1 = "43c2ef89ca0cdaf77373401a989abae4410c7b8a"
+uuid = "cbdf2221-f076-402e-a563-3d30da359d67"
+version = "0.6.14"
 
 [[deps.Animations]]
 deps = ["Colors"]
@@ -347,12 +477,6 @@ git-tree-sha1 = "f641eb0a4f00c343bbc32346e1217b86f3ce9dad"
 uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
 version = "0.5.1"
 
-[[deps.CategoricalArrays]]
-deps = ["DataAPI", "Future", "Missings", "Printf", "Requires", "Statistics", "Unicode"]
-git-tree-sha1 = "5084cc1a28976dd1642c9f337b28a3cb03e0f7d2"
-uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
-version = "0.10.7"
-
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "c6d890a52d2c4d55d326439580c3b8d0875a77d9"
@@ -361,9 +485,9 @@ version = "1.15.7"
 
 [[deps.ChangesOfVariables]]
 deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
-git-tree-sha1 = "844b061c104c408b24537482469400af6075aae4"
+git-tree-sha1 = "485193efd2176b88e6622a39a246f8c5b600e74e"
 uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
-version = "0.1.5"
+version = "0.1.6"
 
 [[deps.ColorBrewer]]
 deps = ["Colors", "JSON", "Test"]
@@ -395,11 +519,6 @@ git-tree-sha1 = "fc08e5930ee9a4e03f84bfb5211cb54e7769758a"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.10"
 
-[[deps.Combinatorics]]
-git-tree-sha1 = "08c8b6831dc00bfea825826be0bc8336fc369860"
-uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
-version = "1.0.2"
-
 [[deps.Compat]]
 deps = ["Dates", "LinearAlgebra", "UUIDs"]
 git-tree-sha1 = "61fdd77467a5c3ad071ef8277ac6bd6af7dd4c04"
@@ -422,10 +541,27 @@ git-tree-sha1 = "d05d9e7b7aedff4e5b51a029dced05cfb6125781"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.6.2"
 
+[[deps.Crayons]]
+git-tree-sha1 = "249fe38abf76d48563e2f4556bebd215aa317e15"
+uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
+version = "4.1.1"
+
 [[deps.DataAPI]]
 git-tree-sha1 = "e8119c1a33d267e16108be441a287a6981ba1630"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.14.0"
+
+[[deps.DataFrameMacros]]
+deps = ["DataFrames", "MacroTools"]
+git-tree-sha1 = "92ae44e8d08667be722ca197c97e60bcff1db968"
+uuid = "75880514-38bc-4a95-a458-c2aea5a3a702"
+version = "0.4.0"
+
+[[deps.DataFrames]]
+deps = ["Compat", "DataAPI", "Future", "InlineStrings", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Random", "Reexport", "SentinelArrays", "SnoopPrecompile", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
+git-tree-sha1 = "aa51303df86f8626a962fccb878430cdb0a97eee"
+uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+version = "1.5.0"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -442,15 +578,23 @@ version = "1.0.0"
 deps = ["Printf"]
 uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 
-[[deps.DelimitedFiles]]
-deps = ["Mmap"]
-uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
-
 [[deps.DensityInterface]]
 deps = ["InverseFunctions", "Test"]
 git-tree-sha1 = "80c3e8639e3353e5d2912fb3a1916b8455e2494b"
 uuid = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 version = "0.4.0"
+
+[[deps.Dictionaries]]
+deps = ["Indexing", "Random", "Serialization"]
+git-tree-sha1 = "e82c3c97b5b4ec111f3c1b55228cebc7510525a2"
+uuid = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
+version = "0.3.25"
+
+[[deps.Distances]]
+deps = ["LinearAlgebra", "SparseArrays", "Statistics", "StatsAPI"]
+git-tree-sha1 = "3258d0659f812acde79e8a74b11f17ac06d0ca04"
+uuid = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
+version = "0.10.7"
 
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
@@ -571,12 +715,6 @@ git-tree-sha1 = "38a92e40157100e796690421e34a11c107205c86"
 uuid = "663a7486-cb36-511b-a19d-713bb74d65c9"
 version = "0.10.0"
 
-[[deps.FreqTables]]
-deps = ["CategoricalArrays", "Missings", "NamedArrays", "Tables"]
-git-tree-sha1 = "488ad2dab30fd2727ee65451f790c81ed454666d"
-uuid = "da1fdf0e-e0ff-5433-a45f-9bb5ff651cb1"
-version = "0.4.5"
-
 [[deps.FriBidi_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "aa31987c2ba8704e23c6c8ba8a4f769d5d7e4f91"
@@ -587,11 +725,17 @@ version = "1.0.10+0"
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
+[[deps.GLM]]
+deps = ["Distributions", "LinearAlgebra", "Printf", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns", "StatsModels"]
+git-tree-sha1 = "884477b9886a52a84378275737e2823a5c98e349"
+uuid = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+version = "1.8.1"
+
 [[deps.GPUArraysCore]]
 deps = ["Adapt"]
-git-tree-sha1 = "57f7cde02d7a53c9d1d28443b9f11ac5fbe7ebc9"
+git-tree-sha1 = "1cd7f0af1aa58abc02ea1d872953a97359cb87fa"
 uuid = "46192b85-c4d5-4398-a991-12ede77f4527"
-version = "0.1.3"
+version = "0.1.4"
 
 [[deps.GeoInterface]]
 deps = ["Extents"]
@@ -618,10 +762,10 @@ uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.74.0+2"
 
 [[deps.GraphMakie]]
-deps = ["GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "StaticArrays"]
-git-tree-sha1 = "e43489eaa1512c8b1165a10b522bf20ebcb5f04c"
+deps = ["GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "PolynomialRoots", "StaticArrays"]
+git-tree-sha1 = "72882a1584f367cfecc83e3e8a232c7720c262cd"
 uuid = "1ecd5474-83a3-4783-bb4f-06765db800d2"
-version = "0.5.2"
+version = "0.5.3"
 
 [[deps.Graphics]]
 deps = ["Colors", "LinearAlgebra", "NaNMath"]
@@ -637,9 +781,9 @@ version = "1.3.14+0"
 
 [[deps.Graphs]]
 deps = ["ArnoldiMethod", "Compat", "DataStructures", "Distributed", "Inflate", "LinearAlgebra", "Random", "SharedArrays", "SimpleTraits", "SparseArrays", "Statistics"]
-git-tree-sha1 = "ba2d094a88b6b287bd25cfa86f301e7693ffae2f"
+git-tree-sha1 = "1cf1d7dcb4bc32d7b4a5add4232db3750c27ecb4"
 uuid = "86223c79-3864-5bf0-83f7-82e725a168b6"
-version = "1.7.4"
+version = "1.8.0"
 
 [[deps.GridLayoutBase]]
 deps = ["GeometryBasics", "InteractiveUtils", "Observables"]
@@ -718,6 +862,11 @@ git-tree-sha1 = "87f7662e03a649cffa2e05bf19c303e168732d3e"
 uuid = "905a6f67-0a94-5f89-b386-d35d92009cd1"
 version = "3.1.2+0"
 
+[[deps.Indexing]]
+git-tree-sha1 = "ce1566720fd6b19ff3411404d4b977acd4814f9f"
+uuid = "313cdc1a-70c2-5d6a-ae34-0150d3930a38"
+version = "1.1.1"
+
 [[deps.IndirectArrays]]
 git-tree-sha1 = "012e604e1c7458645cb8b436f8fba789a51b257f"
 uuid = "9b13fd28-a010-5f03-acff-a1bbcff69959"
@@ -727,6 +876,12 @@ version = "1.0.0"
 git-tree-sha1 = "5cd07aab533df5170988219191dfad0519391428"
 uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.3"
+
+[[deps.InlineStrings]]
+deps = ["Parsers"]
+git-tree-sha1 = "9cc2baf75c6d09f9da536ddf58eb2f29dedaf461"
+uuid = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
+version = "1.4.0"
 
 [[deps.IntelOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -796,15 +951,15 @@ version = "0.21.3"
 
 [[deps.JpegTurbo]]
 deps = ["CEnum", "FileIO", "ImageCore", "JpegTurbo_jll", "TOML"]
-git-tree-sha1 = "a77b273f1ddec645d1b7c4fd5fb98c8f90ad10a5"
+git-tree-sha1 = "106b6aa272f294ba47e96bd3acbabdc0407b5c60"
 uuid = "b835a17e-a41a-41e7-81f0-2f016b05efe0"
-version = "0.1.1"
+version = "0.1.2"
 
 [[deps.JpegTurbo_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "b53380851c6e6664204efb2e62cd24fa5c47e4ba"
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "6f2675ef130a300a112286de91973805fcc5ffbc"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
-version = "2.1.2+0"
+version = "2.1.91+0"
 
 [[deps.KernelDensity]]
 deps = ["Distributions", "DocStringExtensions", "FFTW", "Interpolations", "StatsBase"]
@@ -828,6 +983,12 @@ version = "2.10.1+0"
 git-tree-sha1 = "f2355693d6778a178ade15952b7ac47a4ff97996"
 uuid = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 version = "1.3.0"
+
+[[deps.Latexify]]
+deps = ["Formatting", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Printf", "Requires"]
+git-tree-sha1 = "2422f47b34d4b127720a18f86fa7b1aa2e141f29"
+uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
+version = "0.15.18"
 
 [[deps.LazyArtifacts]]
 deps = ["Artifacts", "Pkg"]
@@ -900,11 +1061,17 @@ version = "2.36.0+0"
 deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
+[[deps.Loess]]
+deps = ["Distances", "LinearAlgebra", "Statistics"]
+git-tree-sha1 = "46efcea75c890e5d820e670516dc156689851722"
+uuid = "4345ca2d-374a-55d4-8d30-97f9976e7612"
+version = "0.5.4"
+
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
-git-tree-sha1 = "45b288af6956e67e621c5cbb2d75a261ab58300b"
+git-tree-sha1 = "071602a0be5af779066df0d7ef4e14945a010818"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "0.3.20"
+version = "0.3.22"
 
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -990,15 +1157,9 @@ version = "2022.2.1"
 
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
-git-tree-sha1 = "a7c3d1da1189a1c2fe843a3bfa04d18d20eb3211"
+git-tree-sha1 = "0877504529a3e5c3343c6f8b4c0381e57e4387e4"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
-version = "1.0.1"
-
-[[deps.NamedArrays]]
-deps = ["Combinatorics", "DataStructures", "DelimitedFiles", "InvertedIndices", "LinearAlgebra", "Random", "Requires", "SparseArrays", "Statistics"]
-git-tree-sha1 = "2fd5787125d1a93fbe30961bd841707b8a80d75b"
-uuid = "86f7a689-2022-50b4-a561-43c23ac3c673"
-version = "0.9.6"
+version = "1.0.2"
 
 [[deps.Netpbm]]
 deps = ["FileIO", "ImageCore", "ImageMetadata"]
@@ -1057,9 +1218,9 @@ version = "0.8.1+0"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "f6e9dba33f9f2c44e08a020b0caf6903be540004"
+git-tree-sha1 = "9ff31d101d987eb9d66bd8b176ac7c277beccd09"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
-version = "1.1.19+0"
+version = "1.1.20+0"
 
 [[deps.OpenSpecFun_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
@@ -1115,9 +1276,9 @@ version = "1.50.9+0"
 
 [[deps.Parsers]]
 deps = ["Dates", "SnoopPrecompile"]
-git-tree-sha1 = "151d91d63d8d6c1a5789ecb7de51547e00480f1b"
+git-tree-sha1 = "6f4fbcd1ad45905a5dee3f4256fabb49aa2110c6"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.5.4"
+version = "2.5.7"
 
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1144,20 +1305,37 @@ version = "1.3.4"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "eadad7b14cf046de6eb41f13c9275e5aa2711ab6"
+git-tree-sha1 = "5bb5129fdd62a2bbbe17c2756932259acf467386"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.49"
+version = "0.7.50"
 
 [[deps.PolygonOps]]
 git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
 uuid = "647866c9-e3ac-4575-94e7-e3d426903924"
 version = "0.1.2"
 
+[[deps.PolynomialRoots]]
+git-tree-sha1 = "5f807b5345093487f733e520a1b7395ee9324825"
+uuid = "3a141323-8675-5d76-9d11-e1df1406c778"
+version = "1.0.0"
+
+[[deps.PooledArrays]]
+deps = ["DataAPI", "Future"]
+git-tree-sha1 = "a6062fe4063cdafe78f4a0a81cfffb89721b30e7"
+uuid = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
+version = "1.4.2"
+
 [[deps.Preferences]]
 deps = ["TOML"]
 git-tree-sha1 = "47e5f437cc0e7ef2ce8406ce1e7e24d44915f88d"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.3.0"
+
+[[deps.PrettyTables]]
+deps = ["Crayons", "Formatting", "LaTeXStrings", "Markdown", "Reexport", "StringManipulation", "Tables"]
+git-tree-sha1 = "96f6db03ab535bdb901300f88335257b0018689d"
+uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
+version = "2.2.2"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -1189,9 +1367,9 @@ version = "8.0.1001+0"
 
 [[deps.QuadGK]]
 deps = ["DataStructures", "LinearAlgebra"]
-git-tree-sha1 = "de191bc385072cc6c7ed3ffdc1caeed3f22c74d4"
+git-tree-sha1 = "786efa36b7eff813723c4849c90456609cf06661"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-version = "2.7.0"
+version = "2.8.1"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -1251,12 +1429,6 @@ git-tree-sha1 = "8b20084a97b004588125caebf418d8cab9e393d1"
 uuid = "fdea26ae-647d-5447-a871-4b548cad5224"
 version = "3.4.4"
 
-[[deps.SNAPDatasets]]
-deps = ["Graphs"]
-git-tree-sha1 = "6c163282a557ac00ce86a37f605b7b8b8fa3124d"
-uuid = "fc66bc1b-447b-53fc-8f09-bc9cfb0b0c10"
-version = "0.2.0"
-
 [[deps.ScanByte]]
 deps = ["Libdl", "SIMD"]
 git-tree-sha1 = "2436b15f376005e8790e318329560dcc67188e84"
@@ -1268,6 +1440,12 @@ deps = ["Dates"]
 git-tree-sha1 = "f94f779c94e58bf9ea243e77a37e16d9de9126bd"
 uuid = "6c6a2e73-6563-6170-7368-637461726353"
 version = "1.1.1"
+
+[[deps.SentinelArrays]]
+deps = ["Dates", "Random"]
+git-tree-sha1 = "c02bd3c9c3fc8463d3591a62a378f90d2d8ab0f3"
+uuid = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
+version = "1.3.17"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -1281,6 +1459,11 @@ version = "1.1.1"
 [[deps.SharedArrays]]
 deps = ["Distributed", "Mmap", "Random", "Serialization"]
 uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
+
+[[deps.ShiftedArrays]]
+git-tree-sha1 = "503688b59397b3307443af35cd953a13e8005c16"
+uuid = "1277b4bf-5013-50f5-be3d-901d8477a67a"
+version = "2.0.0"
 
 [[deps.Showoff]]
 deps = ["Dates", "Grisu"]
@@ -1302,9 +1485,9 @@ version = "0.9.4"
 
 [[deps.SimpleWeightedGraphs]]
 deps = ["Graphs", "LinearAlgebra", "Markdown", "SparseArrays", "Test"]
-git-tree-sha1 = "a8d28ad975506694d59ac2f351e29243065c5c52"
+git-tree-sha1 = "7d0b07df35fccf9b866a94bcab98822a87a3cb6f"
 uuid = "47aef6b3-ad0c-573a-a1e2-d07658019622"
-version = "1.2.2"
+version = "1.3.0"
 
 [[deps.Sixel]]
 deps = ["Dates", "FileIO", "ImageCore", "IndirectArrays", "OffsetArrays", "REPL", "libsixel_jll"]
@@ -1351,9 +1534,9 @@ version = "0.1.1"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
-git-tree-sha1 = "6954a456979f23d05085727adb17c4551c19ecd1"
+git-tree-sha1 = "67d3e75e8af8089ea34ce96974d5468d4a008ca6"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.5.12"
+version = "1.5.15"
 
 [[deps.StaticArraysCore]]
 git-tree-sha1 = "6b7ba252635a5eff6a0b0664a41ee140a1c9e72a"
@@ -1381,6 +1564,17 @@ deps = ["ChainRulesCore", "HypergeometricFunctions", "InverseFunctions", "Irrati
 git-tree-sha1 = "ab6083f09b3e617e34a956b43e9d51b824206932"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "1.1.1"
+
+[[deps.StatsModels]]
+deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Printf", "REPL", "ShiftedArrays", "SparseArrays", "StatsBase", "StatsFuns", "Tables"]
+git-tree-sha1 = "a5e15f27abd2692ccb61a99e0854dfb7d48017db"
+uuid = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
+version = "0.6.33"
+
+[[deps.StringManipulation]]
+git-tree-sha1 = "46da2434b41f41ac3594ee9816ce5541c6096123"
+uuid = "892a3eda-7b42-436c-8928-eab12a02cf0e"
+version = "0.3.0"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "GPUArraysCore", "StaticArraysCore", "Tables"]
@@ -1452,9 +1646,9 @@ uuid = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
 version = "1.3.0"
 
 [[deps.URIs]]
-git-tree-sha1 = "ac00576f90d8a259f2c9d823e91d1de3fd44d348"
+git-tree-sha1 = "074f993b0ca030848b897beff716d93aca60f06a"
 uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
-version = "1.4.1"
+version = "1.4.2"
 
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
@@ -1611,49 +1805,53 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─eb6a3510-6477-11eb-0e4e-33557d794e45
-# ╟─ce5a4af6-5930-4ba6-a6dc-ececf1efda6b
-# ╟─9fed5efe-6784-11eb-1046-5f2604a03be9
-# ╠═97d36935-3d2d-4079-a141-1bd030196328
-# ╟─ccaf2a49-e713-4a66-84e5-4d1c3a345ce1
-# ╠═a5a085cf-b4dd-48c0-a3c2-967abc1445c2
-# ╟─156cacdb-cbae-4ff4-a721-120fb528348c
-# ╠═b0ab1ac5-8433-4818-8579-f2c36d0dee30
-# ╟─313359ed-a84c-4eb8-86da-3da41cf475d4
-# ╠═a1fe05e9-b3e3-4055-831c-ca6289086fbe
-# ╟─ee5a3a9e-6784-11eb-0372-3db4c16f6fd2
-# ╠═7ba0f472-f8a3-497d-8093-6f9275365841
-# ╟─cef6ebc4-6785-11eb-3c05-cd94b6d547ec
-# ╠═dbe88874-6785-11eb-1dc8-bb3c704d9562
-# ╠═2e02bf8a-b9f2-4aaf-8e58-e5d17e3d193c
-# ╟─9cfc186a-6785-11eb-2d57-c360f55c50f8
-# ╠═9f083058-6a12-41cc-bb65-ad81e5d79aea
-# ╟─6009f070-5ef8-11eb-340a-d9780be085ad
-# ╟─2045bd16-6786-11eb-3b0a-c18569a7f770
-# ╠═ef85efd2-da5c-4197-831e-110aebe5a1d7
-# ╟─399213b5-3da6-420b-bf6f-f6230cf9b913
-# ╠═c28b2d55-63dc-4794-bfcd-a03172cb7f25
-# ╟─dabeabef-bbd1-4fef-82e2-997490cbece6
-# ╠═061a32fc-5f07-4512-9dd2-d1618e145a4c
-# ╟─5d7adf23-4fef-4597-a3ac-18adbef08d8e
-# ╟─a22c9ec0-647b-11eb-2141-974fa4223428
-# ╠═9c3d3a6a-4ad5-4c45-bb07-8e75b4380290
-# ╟─1250300d-8bd5-41c3-a36f-b59064e8fbfd
-# ╠═c5cf8e17-9dcc-4f37-ace2-dbc3d92a83d4
-# ╟─00a1ebe8-7d6d-47ac-bb22-d0a5b35379b1
-# ╟─389d7396-4d8e-4b4f-b431-d152e69168b9
-# ╠═bfe3ffc5-6347-4455-89e9-058f57caadfa
-# ╠═f2dd81c0-a197-4727-bb16-2510546da3d5
-# ╟─d6af737c-1b85-4b7b-9885-77b8ea39e051
-# ╠═f84e0f50-8213-43ab-9f0f-e3c2bad9fd27
-# ╠═4cdad415-809f-46e9-b392-1840c9150ad1
-# ╠═a53cf870-42ad-43eb-93f5-c647cdd9a3cf
-# ╠═20d6e00e-6e39-41f2-a21c-a052a1762733
-# ╟─4723fae2-4bc5-4720-a4d9-040fb601765a
-# ╠═4105db41-d9fa-4160-bd35-1d06231d8563
-# ╟─7c4e745f-0626-4520-8fdc-d04927625e18
-# ╠═c236c3fd-cfbd-4044-8229-e4bccc593336
-# ╠═add960c4-12c3-442d-899b-faab9e5fff27
-# ╠═35d41eba-71cb-40f5-afec-8b2a1f282432
+# ╟─0b79fb30-66d3-11eb-052b-89cfca69b3a6
+# ╟─7c18cc0e-66d3-11eb-3e8e-09d869dd5731
+# ╟─80d61c7e-db08-40f4-b2da-a2e68364c9b0
+# ╠═7ad5e8e9-2032-456e-a76e-a3b35b8db673
+# ╟─86d107d0-70a4-11eb-0e56-81a5a95b92bf
+# ╟─ddc5227d-fa44-4b43-aca4-143a1c667d08
+# ╠═d40534d4-70a6-11eb-1328-ab8035477d42
+# ╠═ee95d1c0-70a4-11eb-1e80-e14803784028
+# ╟─0768c5b2-70a6-11eb-0f12-8d88a86c926b
+# ╠═a219b85a-70a6-11eb-383e-7fabc0c25676
+# ╟─4fc6519d-cffc-41a6-80ba-0be59425391a
+# ╟─10ef06bc-70ab-11eb-027d-fb5b67cccd8b
+# ╠═7fa6510c-70a9-11eb-0982-15947053cc29
+# ╠═852bd999-ae17-4de3-9c6a-4885acd7b3f1
+# ╠═142f9afe-d279-4ebf-b33b-0243979e6e3e
+# ╟─cded1e0c-70ad-11eb-0b7c-b9b5ddcbdbf0
+# ╟─a60eaa0b-8aea-4dbb-87c6-3f002c588691
+# ╠═8ed6464e-70ad-11eb-22d1-53ae9a60fa65
+# ╠═5d438de1-9ea6-4f4b-9c28-64ecb0075c1c
+# ╟─0ec5eee0-70ae-11eb-2d6f-ebc6c9621c72
+# ╟─cb386335-d482-41e7-aa5b-e426c396d61a
+# ╠═0c36064b-3c67-4641-aa75-726f65367524
+# ╠═8a55a6c3-2432-49c1-87f4-839beabe87f1
+# ╠═80eae80c-9762-42ae-8e85-f61d37d029ee
+# ╠═5f653efe-138d-4841-b5a5-229bca236f81
+# ╠═484cadde-b23e-46ed-a990-47603908b3d6
+# ╟─cfc9f604-6604-11eb-23bc-699617b17d7d
+# ╠═a77dc094-8f4d-4eaf-b395-121f4412e086
+# ╟─9c43a3db-d669-473a-a16d-7ad5e1102997
+# ╠═31153893-9bc0-4ab6-ba6a-df93b1ab73b9
+# ╠═a0e827fa-0d0e-4595-beb2-da38c79b47f2
+# ╠═6566756b-3ae7-40d3-ad7f-c22508154155
+# ╟─6783eac7-4c3a-4ebf-83d2-33b3378f5c8b
+# ╠═a788d559-842f-44ac-9c51-1d3765274a2b
+# ╠═e4194d80-8a3d-476c-a5bc-6ae4d11afc4c
+# ╠═7f631fb1-85ab-4195-923e-b8916c3ab7f7
+# ╠═3dcf6694-f107-4f79-88d0-66730b515cbf
+# ╠═e56e08a6-6a6e-486d-8de4-99a60af6afb7
+# ╠═cdb61f78-71e6-4d73-986b-270e6ab11981
+# ╠═2f0007e9-f63f-4a0c-976b-9c4bca5ed399
+# ╠═8af00d16-a795-4916-8699-e7b47d6a843e
+# ╠═50d7de9b-b2b7-4b2c-baa8-c09e82ced9a1
+# ╠═fbf3a3ca-4130-49b6-baaa-e42388204003
+# ╠═3e9756ae-8a55-4d0d-8ae6-e8aa8bcd71fb
+# ╟─f1cdcf84-96d5-4da4-acb6-3cb11b77c35b
+# ╠═4763df34-59da-4230-8589-793fad7b7376
+# ╠═f1d2ed15-b90b-4bb0-a773-e130d7554ec9
+# ╠═7e7b4610-f904-45fc-8a28-982a90b32ba5
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

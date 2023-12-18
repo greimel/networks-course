@@ -1,194 +1,582 @@
 ### A Pluto.jl notebook ###
 # v0.19.22
 
+#> [frontmatter]
+#> chapter = 2
+#> section = 1
+#> order = 1
+#> title = "First networks"
+#> layout = "layout.jlhtml"
+#> description = ""
+#> tags = ["networks-basics"]
+
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ b62ac876-40ba-4521-b0e9-7d14ecd781a8
-using Graphs
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
 
-# ╔═╡ f3c74bcc-1888-432c-8b83-2030471adb53
-using GraphDataFrameBridge
+# ╔═╡ 915ca82e-f358-4515-889a-5a226539223d
+using Colors: @colorant_str
 
-# ╔═╡ b20dc3cc-5adb-4853-b409-7b2957de2e57
-using GraphMakie
+# ╔═╡ de6c3f24-618b-44a1-a9ef-b56bd35b4b87
+using Graphs # for analyzing networks
 
-# ╔═╡ 18be8ca6-5a5e-48d8-91bb-58f02a193fcb
-using CairoMakie
+# ╔═╡ 48442831-b63d-454f-8129-cff796aba54b
+using SimpleWeightedGraphs # for handling weighted graphs
 
-# ╔═╡ 98cb4882-68d4-49be-b48b-72fc3e5dfb8a
-using NetworkLayout
+# ╔═╡ da797bdb-b027-4139-8446-91df190cb509
+using MetaGraphs
 
-# ╔═╡ 53498173-5b3a-401c-adb8-f0813bb85c97
-using DataFrames
+# ╔═╡ 2ff77ccf-9f74-42a4-af0e-188c00dd9852
+using SNAPDatasets # cool datasets of *big* networks
 
-# ╔═╡ 4e95c941-331f-41f4-9b4c-8711ebb2c142
-using CSV: CSV
+# ╔═╡ 48a5a2db-637a-4f8e-9994-ae6c1850ed70
+using GraphMakie # for plotting networks
 
-# ╔═╡ ec8969b5-4e53-4482-9772-7280e45332fa
-using PlutoUI: TableOfContents, FilePicker
+# ╔═╡ 7f248ca3-825f-4698-8ead-f7bd30e0d5c5
+using NetworkLayout# layout algorithms
 
-# ╔═╡ 0b79fb30-66d3-11eb-052b-89cfca69b3a6
+# ╔═╡ 30fa9b9e-8e78-43b8-8405-1e70087b7c63
+using CairoMakie# hist
+
+# ╔═╡ 6998ffab-2cf1-410f-b09c-5e70f2da0438
+using Statistics: mean, std
+
+# ╔═╡ 40358272-eca0-4a98-be8a-66fb23573d32
+using FreqTables
+
+# ╔═╡ 431229ad-a4f5-415c-8946-9888dc335857
+using StatsBase: ecdf
+
+# ╔═╡ 2ecf4ffd-d41d-494c-9fec-d681a176a8ba
+using PlutoUI: TableOfContents, Slider
+
+# ╔═╡ b4cec279-9bd4-46c5-8dc3-13003730916f
+using PlutoUI
+
+# ╔═╡ eb6a3510-6477-11eb-0e4e-33557d794e45
 md"""
-`view_ti_network.jl` | **Version 1.3** | *last updated: Feb 7, 2022*
+`first-networks.jl` | **Version 1.5** | *last updated: Feb 6 2023*
 """
 
-# ╔═╡ 7c18cc0e-66d3-11eb-3e8e-09d869dd5731
+# ╔═╡ 6009f070-5ef8-11eb-340a-d9780be085ad
 md"""
-# The Co-Authorship Network of the Tinbergen Institute
+# First networks in Julia
+
+In this section we show you how to create networks in Julia and how to visualize them.
+
+1. special named graphs
+2. do it yourself
+3. from a dataset
 """
 
-# ╔═╡ 3367b97a-c0d8-4086-a454-2b6f5d8062e8
+# ╔═╡ df4d9fab-13da-4df7-b51e-0689112f65fe
 md"""
-We next analyze the network of co-authorship relations between economists at the Tinbergen Institute.
+## Networks with names
 
-The next cells read the data (collection of links between co-authors) and constructs the co-author network from it.
+Let us plot our first networks. Below you see *star network* (can you imagine why it is called that way?). You can specify it by
 """
 
-# ╔═╡ cfc9f604-6604-11eb-23bc-699617b17d7d
+# ╔═╡ bdd75f9a-17e1-4b80-aa88-8a1477032441
+n_nodes = 10
+
+# ╔═╡ 6b1af27c-5d0a-43a2-b3a5-b02770aeb841
+simple_network = StarGraph(n_nodes)
+
+# ╔═╡ 165ba943-b546-42d0-84b2-00391572ff8e
+graphplot(simple_network, node_size=20, node_color="orange")
+
+# ╔═╡ 0f0dc575-7660-4b32-b158-95a9a0ab31e8
+md"
+Play around with this code. You can change the number of nodes and see you the plot will update automatically. 
+
+You can also look at different *special* graphs
+
+* wheel network (`WheelGraph`)
+* circle network (`CycleGraph`)
+* complete network (`CompleteGraph`)
+* path network (`PathGraph`)
+
+Try it and visualize a few graphs!
+"
+
+# ╔═╡ b01cef89-6258-4050-9d35-7628eaf54010
+begin
+	my_network = SimpleDiGraph(7)
+	add_edge!(my_network, 3, 4)
+	add_edge!(my_network, 2, 3)
+end
+
+# ╔═╡ 5f1e3589-48fe-418a-958b-74b5dc0d7eff
+md"""
+## Building a network from scratch
+
+Below you find a template of building a network from scratch. Play with it make it your own! (you can set the number of nodes (currently $(nv(my_network))) and add a few edges (there are currently $(ne(my_network))).
+
+(Can you rebuild one of the named networks from above?)
+"""
+
+# ╔═╡ 67a2e792-647a-11eb-208e-4df018d00425
+md"""
+Note, that you can build directed graphs using `SimpleDiGraph`. Replace `SimpleDiGraph` by `SimpleGraph` to get an undirected graph.
+"""
+
+# ╔═╡ d3feb786-2c69-416f-8fda-e2b4da0c0c1c
+graphplot(my_network, layout=Shell(), node_size=20, arrow_size=20, node_color="orange", nlabels = string.(1:nv(my_network)) )
+
+# ╔═╡ 7057b8a6-91a9-495f-ac29-669d5652c8d0
+md"""
+## Building networks from real-world data
+
+There are plenty of network datasets out there. You can check out the *Stanford Large Network Dataset Collection* [[link]](https://snap.stanford.edu/data/index.html). A very small subset of these datasets can be downloaded directly from Julia using the package *SNAPDatasets.jl* [[link]](https://github.com/JuliaGraphs/SNAPDatasets.jl).
+
+Let us have a look at the Facebook dataset, with 4039 nodes and 88234 edges. [[link to description]](https://snap.stanford.edu/data/ego-Facebook.html)
+"""
+
+# ╔═╡ c28b2d55-63dc-4794-bfcd-a03172cb7f25
+big_network = loadsnap(:facebook_combined)
+
+# ╔═╡ c3946663-eddf-4bc1-bb52-9c82c8f7258c
+md"Even though the dataset is rather small compared to others from this collection, we already run into problems when we want to visualize the network. 
+
+The time it takes to plot a big network is mainly driven by the layout algorithm. That's why I choose the *boring* Shell algorithm, where all nodes are placed on a circle. This is very fast.
+
+If you want, you can try to plot this with the default layout algorithm. (On my recent MacBook Pro, this took more than two minutes -- then I interrupted the execution of the cell.)
+"
+
+# ╔═╡ 07f7ed69-3e9a-4a6b-a10f-de8d09aa0db5
+graphplot(big_network,
+	layout = Shell(),
+#	layout=SquareGrid(),
+	node_size = 2,
+	edge_width = 1,
+	node_color = :blue,
+	edge_color = (:orange, 0.01)
+)
+
+# ╔═╡ 3956c45f-23a9-4ec2-846f-d33706373d72
+md"""
+# Language for network analysis
+
+We will discuss some useful concepts for analyzing networks. We will divide them into four groups.
+
+**NOTE** The concepts of this section are introduced in the first lectures of the course. Have a look if you're curious. But it is rather meant as a references for your assignments.
+
+If you cannot find what you need in this notebook, check out the excellent [documentation of Graphs.jl](https://juliagraphs.org/Graphs.jl/dev/).
+
+#### Counting friends
+* neighborhood
+* degree (in/out)
+* degree distribution, average degree
+
+#### Are my friends friends themselves?
+* clustering (average, total)
+
+#### Friends of friends of friends ...
+* walk
+* path
+* connected pair
+* distance
+* diameter
+* connected network
+* components
+
+#### Cool kids
+
+* centralities
+"""
+
+# ╔═╡ d25c59f6-8f99-4a83-8750-10518a13f6ae
+network = big_network[∪(([k; neighbors(big_network, k)] for k ∈ [5, 50, 101, 500])...)]
+
+# ╔═╡ 63fff52b-d485-4fb3-be2c-80039e6ebc2a
+nodes = rand(1:nv(big_network), 10) |> unique
+
+# ╔═╡ edbb8f3b-f133-481b-8972-fdcd87b5acef
+md"""
+## Neighborhood and degree of a node _(Counting friends)_
+
+The **neighborhood of a node ``i``** is the set of friends of (_nodes that are connected to_) ``i``.
+
+Let ``i = ``$(@bind i Slider(1:nv(network), default = 1, show_value=true)), then the neighborhood of ``i`` is shown below.
+
+The **degree of a node ``i``** is number of friends (_connected nodes_) of ``i``. (Show degree $(@bind show_degree CheckBox(default = false)))
+"""
+
+# ╔═╡ 75194951-3f88-4855-98d4-a987430f5b00
+md"""
+The **degree distribution** is the distribution of the number of friends. We can  compute statistics of the distribution (e.g. the **average degree**: $(round(mean(degree(network)), digits=2))). Or we can visualize the full distribution in a histogram.
+"""
+
+# ╔═╡ 4b0dc2b4-a56d-45e3-8d58-a53978c4ff7f
+hist(degree(network), bins=1:25, normalization=:probability, axis=(title = "The degree distribution (The distribution of the number of friends)", ylabel = "relative frequency", xlabel="degree (number of friends)"))
+
+# ╔═╡ 609dfa37-2208-40b7-bc47-60d0c9ec54c8
+md"""
+## Clustering _(Are my friends friends themselves?)_
+
+This time we look at node ``j = ``$(@bind j Slider(1:nv(network), default = 12, show_value=true)).
+"""
+
+# ╔═╡ ac1291c8-e560-4457-ad58-47c70ade7dca
+degree_of_j = degree(network, j)
+
+# ╔═╡ 228237f5-4884-4575-9dc4-a5c33b9afdae
+actual_links, possible_links = local_clustering(network, j)
+
+# ╔═╡ 0cd4e0a0-fa38-4b05-8688-6396093d2652
+md"""
+We see that the node has $degree_of_j friends. These $degree_of_j friends can form at most $degree_of_j ⋅ $(degree_of_j - 1) / 2 = $possible_links friendships. We see that there are $actual_links friendships _(red edges)_. The clustering coefficient of node $i is ``\frac{\text{actual}}{\text{possible}} =`` $(round(local_clustering_coefficient(network, j), digits=2)). (Show clustering coefficient $(@bind show_clustering CheckBox(default = false)))
+"""
+
+# ╔═╡ 7c9f2f26-329e-46f8-8be9-c95cd680d51d
+local_clustering_coefficient(network, j)
+
+# ╔═╡ 7ba0f472-f8a3-497d-8093-6f9275365841
+global_clustering_coefficient(network)
+
+# ╔═╡ f2a97e1c-f9d9-45eb-a197-6325da142845
+𝒩 = neighbors(network, j)
+
+# ╔═╡ 3d32cc06-db5f-49a1-9510-c129fb064440
+md"""
+## Distance between nodes _(Friends of friends of friends ...)_
+"""
+
+# ╔═╡ 49627e46-c654-49b6-80ee-b664b61a68ac
+md"""
+* walk
+* path
+* connected pair
+* distance
+* diameter
+* connected network
+* components
+"""
+
+# ╔═╡ 2a07742e-4413-4a20-b417-b7dda8cb7c49
+from = 13
+
+# ╔═╡ 7b8a732f-a834-488b-9cdf-37d4f0b31eab
+to = 23
+
+# ╔═╡ 32dd4b65-15a4-4247-afe7-15a4daec2294
+path = a_star(network, from, to)
+
+# ╔═╡ aa91eb44-8cf9-4df4-a926-23dc6cc92cda
+length(path)
+
+# ╔═╡ 26fbde25-c520-4ca3-8bfd-22753d9a7a94
+function color_nodes(graph, sets_of_nodes)
+	default_color = colorant"lightgray"
+	colors = [Makie.wong_colors()[1:length(sets_of_nodes)]; default_color]
+	
+	extended_sets = [sets_of_nodes..., 1:nv(graph)]
+	groups = map(1:nv(graph)) do i
+		findfirst(set -> i ∈ set, extended_sets)
+	end
+	colors[groups]
+end
+
+# ╔═╡ f26e4c88-fc29-41fe-b932-c136047dabb6
+graphplot(network,
+	node_size = 15,
+	edge_width = 1,
+	nlabels =
+		!show_clustering ? 
+			string.(1:nv(network)) :
+			string.(1:nv(network)) .* " (cl: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
+		#string.(1:nv(network)) .* " (clust.: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
+	
+	node_color = color_nodes(network, [[from, to]]),
+	edge_color = [e ∈ path || reverse(e) ∈ path ? :red : :gray
+	 for e ∈ edges(network)]
+)
+
+# ╔═╡ 4a5319ed-14f6-4635-8f58-a387de0cd8ad
+function highlight_neighbors(graph, i)
+	color_nodes(graph, [[i], neighbors(graph, i)])
+end
+
+# ╔═╡ 77cc233a-d916-4959-a73c-7138cfdd03af
+graphplot(network,
+	node_size = 15,
+	edge_width = 1,
+	nlabels =
+		!show_degree ? 
+			string.(1:nv(network)) :
+			string.(1:nv(network)) .* " (degree: " .* string.(degree(network)) .* ")",
+		#string.(1:nv(network)) .* " (clust.: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
+	
+	node_color = highlight_neighbors(network, i),
+	edge_color = (:black, 0.5)
+)
+
+# ╔═╡ 9b3ede7b-6e55-4d98-8f8f-6b18382fcb43
+graphplot(network,
+	node_size = 15,
+	edge_width = 1,
+	nlabels =
+		!show_clustering ? 
+			string.(1:nv(network)) :
+			string.(1:nv(network)) .* " (cl: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
+		#string.(1:nv(network)) .* " (clust.: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
+	
+	node_color = highlight_neighbors(network, j),
+	edge_color = [src(e) ∈ 𝒩 && dst(e) ∈ 𝒩 ? :red : :gray
+	 for e ∈ edges(network)]
+)
+
+# ╔═╡ 5d7adf23-4fef-4597-a3ac-18adbef08d8e
+md"""
+## Components, path length and diameter
+
+"""
+
+# ╔═╡ 383c5cca-2301-4f9e-9610-9e5b7fdb13b5
+components = connected_components(network)
+
+# ╔═╡ 56ffb909-1dce-49c4-90a5-b45ede78e624
+subnetwork = network[components[1]]
+
+# ╔═╡ 7784fe91-ceb0-4756-8571-65efa217a065
+diameter(subnetwork)
+
+# ╔═╡ 9f083058-6a12-41cc-bb65-ad81e5d79aea
+diameter(network)
+
+# ╔═╡ a22c9ec0-647b-11eb-2141-974fa4223428
+md"""
+To get the length of shortest path from node `i` to node `j` use `gdistances(graph, i)[j]`.
+"""
+
+# ╔═╡ 257c32c8-647b-11eb-1244-e1d2baa5c58d
+distances_from_1 = gdistances(network, 1)
+
+# ╔═╡ d9428a14-647b-11eb-336d-778226dd13e1
+dist_from_1_to_5 = distances_from_1[5]
+
+# ╔═╡ 9c3d3a6a-4ad5-4c45-bb07-8e75b4380290
+function giant_component(graph)
+	components = connected_components(graph)
+	
+	# compute the size (# of nodes) of each component
+	size_of_components = length.(components)
+	# find the component with maximal number of nodes
+	(n_nodes, ind) = findmax(size_of_components)
+	
+	# return the giant_component
+	giant_component = components[ind]
+end
+
+# ╔═╡ 2ec96593-85fa-4f45-aceb-f3869717884e
+giant_component(my_network)
+
+# ╔═╡ 7f457cac-c153-44a8-a13c-af03ffd6eef1
+subgraph, node_list = induced_subgraph(network, giant_component(network))
+
+# ╔═╡ ba4ddf01-d02e-4d9f-beb7-15467a03b08a
+graphplot(subgraph, node_size=20, arrow_size=20, node_color="orange")
+
+# ╔═╡ ef85efd2-da5c-4197-831e-110aebe5a1d7
+let
+	f(x) = log(1 - ecdf(degree(network))(x))
+	x_vec = exp.(0:0.01:6)
+
+	lines(x_vec, f.(x_vec))
+end
+
+# ╔═╡ 62063f20-4041-454d-964b-e2e89a8634f0
+diameter(big_network)
+
+# ╔═╡ 2e02bf8a-b9f2-4aaf-8e58-e5d17e3d193c
+is_connected(big_network)
+
+# ╔═╡ 0f3c851f-78ea-4d0f-bfcf-7a6f1df9c152
+# Todo: check if this needs to be transposed
+function distance_matrix(graph)
+	n = nv(graph) # number of vertices
+	
+	distance_matrix = zeros(Int, n, n)
+	
+	for (i, node) in enumerate(vertices(graph))
+		distance_matrix[i, :] .= gdistances(graph, node)
+	end
+	
+	distance_matrix
+end
+
+# ╔═╡ 7c308142-d5b5-47c0-be74-083709e43ac5
+distance_matrix(simple_network)
+
+# ╔═╡ f609d59f-25ce-4075-a824-c96bc4e9bbe3
+md"
+## Centralities
+"
+
+# ╔═╡ 12cfd4cd-3448-405a-b8bb-ad1d73c23150
+katz_centrality(big_network)
+# katz_centrality(big_network, 0.3)
+
+# ╔═╡ ec57d7c7-0a96-40a4-942f-73723460a5fe
+betweenness_centrality(simple_network)
+
+# ╔═╡ 0d659ab1-88ce-48ce-8ee0-83185fd865aa
+eigenvector_centrality(simple_network)
+
+# ╔═╡ 7883f729-f34d-4a1c-a684-6d78700d2a45
+closeness_centrality(simple_network)
+
+# ╔═╡ 1df2ac74-6478-11eb-1266-7381e24cab9d
+md"""
+# Weighted graphs
+
+You can work with weighted networks using the package `SimpleWeightedGraphs`.
+
+It offers the types `SimpleWeightedGraph` and `SimpleWeightedDiGraph`.
+
+Let's construct a weighted directed network.
+"""
+
+# ╔═╡ 89ce79c8-6478-11eb-18ae-ff6ec414e65b
+begin
+	weighted_network = SimpleWeightedDiGraph(3)
+	add_edge!(weighted_network, 1, 2, 0.5)
+	add_edge!(weighted_network, 2, 3, 0.8)
+	add_edge!(weighted_network, 1, 3, 2.0)
+end
+
+# ╔═╡ 9c51f3fe-6478-11eb-2e87-69a72bb28e6d
+adjacency_matrix(weighted_network)
+
+# ╔═╡ 3cc59dcc-6479-11eb-1722-11883fbbd5a7
+edge_weights = (e.weight for e in edges(weighted_network))
+
+# ╔═╡ b6c85692-6478-11eb-310a-3ddc517ccdb0
+graphplot(
+	weighted_network,
+	elabels = string.(edge_weights),
+	nlabels = string.(1:3),
+	node_size=20,
+	node_color="orange"
+)
+
+# ╔═╡ 99fb9532-6479-11eb-1c7b-1d385d3a5441
+indegree(weighted_network)
+
+# ╔═╡ b0beccf8-6479-11eb-0ca8-e125c7183758
+outdegree(weighted_network)
+
+# ╔═╡ c706e9dc-6479-11eb-16ef-dbddc09a2612
+degree(weighted_network)
+
+# ╔═╡ 56f44286-647c-11eb-11ca-23a5342611b4
+md"""
+## Issue with weighted graphs (advanced)
+
+There is a second way of constructing weighted graphs.
+"""
+
+# ╔═╡ 6e4afa92-647c-11eb-2165-73b6b8494c70
+begin
+	meta_graph = MetaDiGraph(3)
+	add_edge!(meta_graph, 1, 2)
+	add_edge!(meta_graph, 2, 3)
+	add_edge!(meta_graph, 1, 3)
+	set_prop!(meta_graph, 1, 2, :weight, 0.5)
+	set_prop!(meta_graph, 2, 3, :weight, 0.8)
+	set_prop!(meta_graph, 1, 3, :weight, 2.0)
+	
+	meta_graph
+end
+
+# ╔═╡ 4a6c6e48-647d-11eb-16e2-d3fa799ebe1f
+md"""
+`MetaGraph`s are convenient to work with because they can store names of nodes and other meta data. However, they behave slightly differently than `SimpleWeightedGraphs`. The `adjacency_matrix` is a matrix of 0 and 1 (not showing the weights).
+"""
+
+# ╔═╡ 58cc500f-8bb2-4c2f-bdaf-0cb8a42bf7da
+adjacency_matrix(meta_graph) .* weights(meta_graph)
+
+# ╔═╡ 97c76ed6-647d-11eb-3b73-b9fe79d52b4c
+md"""
+In order to get the matrix representation of the weighted graph use
+"""
+
+# ╔═╡ a0a0cc5a-647d-11eb-380a-bb5c0da3d2bd
+md"""
+This inconsistency will likely be fixed in the future. See [this issue on github](https://github.com/JuliaGraphs/LightGraphs.jl/issues/1519).
+"""
+
+# ╔═╡ 1250300d-8bd5-41c3-a36f-b59064e8fbfd
 md"""
 # Appendix
 """
 
-# ╔═╡ dc423846-4556-4c43-a85b-25bb8305fcf8
-md"""
-## Download data
-"""
+# ╔═╡ c5cf8e17-9dcc-4f37-ace2-dbc3d92a83d4
+TableOfContents()
 
-# ╔═╡ 438b124e-287b-4c74-bc2b-d2ee11f3f3ab
-url_ti = "https://greimel.github.io/networks-course/assets/datasets/ti_netwk0711.csv"
-
-# ╔═╡ fc91f3b6-6839-4fb5-8de3-2238622c6325
-begin
-	using DataDeps
-	ENV["DATADEPS_ALWAYS_ACCEPT"] = true
-
-	register(DataDep(
-   		"TI-network",
-		"""
-		The co-authorship network of the Tinbergen Institute 2007-2011.
-
-		Made available with the permission of Marco van der Leij.
-		""",
-		url_ti,
-		"dbb2a1d8ce1120ed274898ce76f84f7ef08f9938ad7f25f74d3b9f202dbc2137"
-	))
-end
-
-# ╔═╡ cfee2a3d-d790-4f03-9cc6-da9ae7b9b106
-edge_df = CSV.File(joinpath(datadep"TI-network", "ti_netwk0711.csv")) |> DataFrame
-
-# ╔═╡ 24dd4376-5e8f-11eb-02e7-f34f7c169726
-g = MetaGraph(edge_df, :from, :to)
-
-# ╔═╡ a06b7ad2-6603-11eb-1588-195115c5f351
-graphplot(g,
-	layout = Spring(),
-	edge_color = "gray",
-	edge_width = 0.5,
-	node_size = 10,
-	node_color = "orange",
-	node_attr = (strokewidth = 1, strokecolor = :black),
-)
-
-# ╔═╡ a58a3582-64a3-11eb-01e1-11f707525149
-# list of components (contains a list of nodes for each component)
-components = connected_components(g)
-
-# ╔═╡ aac6e282-6603-11eb-18bd-95a57f187167
-# nodes in first (largest) component
-core = components[1]
-
-# ╔═╡ bcc6ca3a-5e95-11eb-3f13-877d22fe2ff2
-ti_plot = graphplot(g[core], 
-	layout = Spring(),
-	edge_color = "gray",
-	edge_width = 0.5,
-	node_size = 10,
-	node_color = "orange",
-	node_attr = (strokewidth = 1, strokecolor = :black),
-)
-
-# ╔═╡ a2539aee-6605-11eb-0788-157d9b7c1060
-# maximal subgraph with vertices of degree 3 or more
-g1 = k_core(g, 3)
-
-# ╔═╡ c96871cc-6605-11eb-161b-41af51664d50
-graphplot(g[g1],
-	layout = Spring(),
-	edge_color = "gray",
-	edge_width = 0.5,
-	node_size = 10,
-	node_color = "orange",
-	node_attr = (strokewidth = 1, strokecolor = :black)
-)
-
-# ╔═╡ 295dcee0-6608-11eb-04d7-a9232f4a727a
-core3 = g[g1]
-
-# ╔═╡ 66cedb40-660b-11eb-07cb-8107b36a0251
-local_clustering_coefficient(core3)
-
-# ╔═╡ b72d7a58-6607-11eb-11f0-d98ad7953ac0
-degree_centrality(core3)
-
-# ╔═╡ 52534b4e-6607-11eb-0478-390a8dbfc17b
-eigenvector_centrality(core3)
-
-# ╔═╡ d60da13e-6607-11eb-3069-ef521f73c7a9
-katz_centrality(core3, 0.3)
-
-# ╔═╡ b76f0abb-01b0-4acc-8554-02c826cc9e6a
+# ╔═╡ 1ff1315e-154d-4eaa-92ce-4ed1c32bb01f
 md"""
 ## Packages
 """
 
-# ╔═╡ 610e52d3-8dba-4cf9-aada-a7ce908ed51f
+# ╔═╡ cf21a82b-ff81-4165-afd1-a96475d8b547
 md"""
 #### Graphs
 """
 
-# ╔═╡ f22e2419-fbc6-45a9-8998-fd310d08ddeb
+# ╔═╡ 83fdf8aa-18d5-47b2-8dd9-feb713bc423a
 md"""
 #### Plotting
 """
 
-# ╔═╡ e81a87ec-8568-4f8a-8205-1a2e67885314
+# ╔═╡ 4de43ab8-4187-49ea-9c96-779a6d39c757
 md"""
-#### Data
+#### Statistics
 """
 
-# ╔═╡ 47f89fd4-4dc1-4612-b54c-a4bd9f113044
+# ╔═╡ f45dfb17-aef7-4540-a790-9148fa921d25
 md"""
 #### Other
 """
 
-# ╔═╡ 196c014a-8e14-4cf8-9e33-8be55b246edf
-TableOfContents()
-
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
-DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-GraphDataFrameBridge = "3c71623a-a715-5176-9801-629b201a4880"
+Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
+FreqTables = "da1fdf0e-e0ff-5433-a45f-9bb5ff651cb1"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+SNAPDatasets = "fc66bc1b-447b-53fc-8f09-bc9cfb0b0c10"
+SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
-CSV = "~0.10.9"
 CairoMakie = "~0.10.2"
-DataDeps = "~0.7.10"
-DataFrames = "~1.4.4"
-GraphDataFrameBridge = "~0.3.0"
+Colors = "~0.12.10"
+FreqTables = "~0.4.5"
 GraphMakie = "~0.5.2"
 Graphs = "~1.7.4"
+MetaGraphs = "~0.7.2"
 NetworkLayout = "~0.4.4"
 PlutoUI = "~0.7.49"
+SNAPDatasets = "~0.2.0"
+SimpleWeightedGraphs = "~1.2.2"
+StatsBase = "~0.33.21"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -197,7 +585,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "2916a18f48be2d6def53a31baf9cca25ceba0fdd"
+project_hash = "7ba0ef23908b79e4d47a2c0a7c297de0f013e687"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -262,11 +650,6 @@ version = "0.4.6"
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
-[[deps.BitFlags]]
-git-tree-sha1 = "43b1a4a8f797c1cddadf60499a8a077d4af2cd2d"
-uuid = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
-version = "0.1.7"
-
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "19a35467a82e236ff51bc17a3a44b69ef35185a2"
@@ -280,12 +663,6 @@ version = "0.4.2"
 
 [[deps.CRC32c]]
 uuid = "8bf52ea8-c179-5cab-976a-9e18b702a9bc"
-
-[[deps.CSV]]
-deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mmap", "Parsers", "PooledArrays", "SentinelArrays", "SnoopPrecompile", "Tables", "Unicode", "WeakRefStrings", "WorkerUtilities"]
-git-tree-sha1 = "c700cce799b51c9045473de751e9319bdd1c6e94"
-uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-version = "0.10.9"
 
 [[deps.Cairo]]
 deps = ["Cairo_jll", "Colors", "Glib_jll", "Graphics", "Libdl", "Pango_jll"]
@@ -311,6 +688,12 @@ git-tree-sha1 = "f641eb0a4f00c343bbc32346e1217b86f3ce9dad"
 uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
 version = "0.5.1"
 
+[[deps.CategoricalArrays]]
+deps = ["DataAPI", "Future", "Missings", "Printf", "Requires", "Statistics", "Unicode"]
+git-tree-sha1 = "5084cc1a28976dd1642c9f337b28a3cb03e0f7d2"
+uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
+version = "0.10.7"
+
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "c6d890a52d2c4d55d326439580c3b8d0875a77d9"
@@ -322,12 +705,6 @@ deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
 git-tree-sha1 = "844b061c104c408b24537482469400af6075aae4"
 uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
 version = "0.1.5"
-
-[[deps.CodecZlib]]
-deps = ["TranscodingStreams", "Zlib_jll"]
-git-tree-sha1 = "9c209fb7536406834aa938fb149964b985de6c83"
-uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
-version = "0.7.1"
 
 [[deps.ColorBrewer]]
 deps = ["Colors", "JSON", "Test"]
@@ -359,6 +736,11 @@ git-tree-sha1 = "fc08e5930ee9a4e03f84bfb5211cb54e7769758a"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.10"
 
+[[deps.Combinatorics]]
+git-tree-sha1 = "08c8b6831dc00bfea825826be0bc8336fc369860"
+uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
+version = "1.0.2"
+
 [[deps.Compat]]
 deps = ["Dates", "LinearAlgebra", "UUIDs"]
 git-tree-sha1 = "61fdd77467a5c3ad071ef8277ac6bd6af7dd4c04"
@@ -381,27 +763,10 @@ git-tree-sha1 = "d05d9e7b7aedff4e5b51a029dced05cfb6125781"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.6.2"
 
-[[deps.Crayons]]
-git-tree-sha1 = "249fe38abf76d48563e2f4556bebd215aa317e15"
-uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
-version = "4.1.1"
-
 [[deps.DataAPI]]
 git-tree-sha1 = "e8119c1a33d267e16108be441a287a6981ba1630"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.14.0"
-
-[[deps.DataDeps]]
-deps = ["HTTP", "Libdl", "Reexport", "SHA", "p7zip_jll"]
-git-tree-sha1 = "bc0a264d3e7b3eeb0b6fc9f6481f970697f29805"
-uuid = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
-version = "0.7.10"
-
-[[deps.DataFrames]]
-deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Random", "Reexport", "SnoopPrecompile", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
-git-tree-sha1 = "d4f69885afa5e6149d0cab3818491565cf41446d"
-uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "1.4.4"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -417,6 +782,10 @@ version = "1.0.0"
 [[deps.Dates]]
 deps = ["Printf"]
 uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
+
+[[deps.DelimitedFiles]]
+deps = ["Mmap"]
+uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 
 [[deps.DensityInterface]]
 deps = ["InverseFunctions", "Test"]
@@ -498,12 +867,6 @@ git-tree-sha1 = "7be5f99f7d15578798f338f5433b6c432ea8037b"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 version = "1.16.0"
 
-[[deps.FilePathsBase]]
-deps = ["Compat", "Dates", "Mmap", "Printf", "Test", "UUIDs"]
-git-tree-sha1 = "e27c4ebe80e8699540f2d6c805cc12203b614f12"
-uuid = "48062228-2e41-5def-b9a4-89aafe57970f"
-version = "0.9.20"
-
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
@@ -549,6 +912,12 @@ git-tree-sha1 = "38a92e40157100e796690421e34a11c107205c86"
 uuid = "663a7486-cb36-511b-a19d-713bb74d65c9"
 version = "0.10.0"
 
+[[deps.FreqTables]]
+deps = ["CategoricalArrays", "Missings", "NamedArrays", "Tables"]
+git-tree-sha1 = "488ad2dab30fd2727ee65451f790c81ed454666d"
+uuid = "da1fdf0e-e0ff-5433-a45f-9bb5ff651cb1"
+version = "0.4.5"
+
 [[deps.FriBidi_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "aa31987c2ba8704e23c6c8ba8a4f769d5d7e4f91"
@@ -589,12 +958,6 @@ git-tree-sha1 = "d3b3624125c1474292d0d8ed0f65554ac37ddb23"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.74.0+2"
 
-[[deps.GraphDataFrameBridge]]
-deps = ["DataFrames", "Graphs", "MetaGraphs"]
-git-tree-sha1 = "b18c7d73c0e98ef99a85e13a0501f270eec67cdc"
-uuid = "3c71623a-a715-5176-9801-629b201a4880"
-version = "0.3.0"
-
 [[deps.GraphMakie]]
 deps = ["GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "StaticArrays"]
 git-tree-sha1 = "e43489eaa1512c8b1165a10b522bf20ebcb5f04c"
@@ -629,12 +992,6 @@ version = "0.9.1"
 git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
 uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
 version = "1.0.2"
-
-[[deps.HTTP]]
-deps = ["Base64", "CodecZlib", "Dates", "IniFile", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
-git-tree-sha1 = "37e4657cd56b11abe3d10cd4a1ec5fbdb4180263"
-uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "1.7.4"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg"]
@@ -711,17 +1068,6 @@ version = "1.0.0"
 git-tree-sha1 = "5cd07aab533df5170988219191dfad0519391428"
 uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.3"
-
-[[deps.IniFile]]
-git-tree-sha1 = "f550e6e32074c939295eb5ea6de31849ac2c9625"
-uuid = "83e8ac13-25f8-5344-8a64-a9f2b223428f"
-version = "0.5.1"
-
-[[deps.InlineStrings]]
-deps = ["Parsers"]
-git-tree-sha1 = "9cc2baf75c6d09f9da536ddf58eb2f29dedaf461"
-uuid = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
-version = "1.4.0"
 
 [[deps.IntelOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -910,12 +1256,6 @@ version = "0.3.20"
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
-[[deps.LoggingExtras]]
-deps = ["Dates", "Logging"]
-git-tree-sha1 = "cedb76b37bc5a6c702ade66be44f831fa23c681e"
-uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
-version = "1.0.0"
-
 [[deps.MIMEs]]
 git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
 uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
@@ -965,12 +1305,6 @@ git-tree-sha1 = "f04120d9adf4f49be242db0b905bea0be32198d1"
 uuid = "0a4f8689-d25c-4efe-a92b-7142dfc1aa53"
 version = "0.5.4"
 
-[[deps.MbedTLS]]
-deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "Random", "Sockets"]
-git-tree-sha1 = "03a9b9718f5682ecb107ac9f7308991db4ce395b"
-uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
-version = "1.1.7"
-
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
@@ -1012,6 +1346,12 @@ deps = ["OpenLibm_jll"]
 git-tree-sha1 = "a7c3d1da1189a1c2fe843a3bfa04d18d20eb3211"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "1.0.1"
+
+[[deps.NamedArrays]]
+deps = ["Combinatorics", "DataStructures", "DelimitedFiles", "InvertedIndices", "LinearAlgebra", "Random", "Requires", "SparseArrays", "Statistics"]
+git-tree-sha1 = "2fd5787125d1a93fbe30961bd841707b8a80d75b"
+uuid = "86f7a689-2022-50b4-a561-43c23ac3c673"
+version = "0.9.6"
 
 [[deps.Netpbm]]
 deps = ["FileIO", "ImageCore", "ImageMetadata"]
@@ -1067,12 +1407,6 @@ version = "3.1.1+0"
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
 version = "0.8.1+0"
-
-[[deps.OpenSSL]]
-deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
-git-tree-sha1 = "6503b77492fd7fcb9379bf73cd31035670e3c509"
-uuid = "4d8831e6-92b7-49fb-bdf8-b643e874388c"
-version = "1.3.3"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1172,23 +1506,11 @@ git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
 uuid = "647866c9-e3ac-4575-94e7-e3d426903924"
 version = "0.1.2"
 
-[[deps.PooledArrays]]
-deps = ["DataAPI", "Future"]
-git-tree-sha1 = "a6062fe4063cdafe78f4a0a81cfffb89721b30e7"
-uuid = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
-version = "1.4.2"
-
 [[deps.Preferences]]
 deps = ["TOML"]
 git-tree-sha1 = "47e5f437cc0e7ef2ce8406ce1e7e24d44915f88d"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.3.0"
-
-[[deps.PrettyTables]]
-deps = ["Crayons", "Formatting", "LaTeXStrings", "Markdown", "Reexport", "StringManipulation", "Tables"]
-git-tree-sha1 = "96f6db03ab535bdb901300f88335257b0018689d"
-uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
-version = "2.2.2"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -1282,6 +1604,12 @@ git-tree-sha1 = "8b20084a97b004588125caebf418d8cab9e393d1"
 uuid = "fdea26ae-647d-5447-a871-4b548cad5224"
 version = "3.4.4"
 
+[[deps.SNAPDatasets]]
+deps = ["Graphs"]
+git-tree-sha1 = "6c163282a557ac00ce86a37f605b7b8b8fa3124d"
+uuid = "fc66bc1b-447b-53fc-8f09-bc9cfb0b0c10"
+version = "0.2.0"
+
 [[deps.ScanByte]]
 deps = ["Libdl", "SIMD"]
 git-tree-sha1 = "2436b15f376005e8790e318329560dcc67188e84"
@@ -1293,12 +1621,6 @@ deps = ["Dates"]
 git-tree-sha1 = "f94f779c94e58bf9ea243e77a37e16d9de9126bd"
 uuid = "6c6a2e73-6563-6170-7368-637461726353"
 version = "1.1.1"
-
-[[deps.SentinelArrays]]
-deps = ["Dates", "Random"]
-git-tree-sha1 = "c02bd3c9c3fc8463d3591a62a378f90d2d8ab0f3"
-uuid = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
-version = "1.3.17"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
@@ -1325,16 +1647,17 @@ git-tree-sha1 = "d263a08ec505853a5ff1c1ebde2070419e3f28e9"
 uuid = "73760f76-fbc4-59ce-8f25-708e95d2df96"
 version = "0.4.0"
 
-[[deps.SimpleBufferStream]]
-git-tree-sha1 = "874e8867b33a00e784c8a7e4b60afe9e037b74e1"
-uuid = "777ac1f9-54b0-4bf8-805c-2214025038e7"
-version = "1.1.0"
-
 [[deps.SimpleTraits]]
 deps = ["InteractiveUtils", "MacroTools"]
 git-tree-sha1 = "5d7e3f4e11935503d3ecaf7186eac40602e7d231"
 uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 version = "0.9.4"
+
+[[deps.SimpleWeightedGraphs]]
+deps = ["Graphs", "LinearAlgebra", "Markdown", "SparseArrays", "Test"]
+git-tree-sha1 = "a8d28ad975506694d59ac2f351e29243065c5c52"
+uuid = "47aef6b3-ad0c-573a-a1e2-d07658019622"
+version = "1.2.2"
 
 [[deps.Sixel]]
 deps = ["Dates", "FileIO", "ImageCore", "IndirectArrays", "OffsetArrays", "REPL", "libsixel_jll"]
@@ -1411,11 +1734,6 @@ deps = ["ChainRulesCore", "HypergeometricFunctions", "InverseFunctions", "Irrati
 git-tree-sha1 = "ab6083f09b3e617e34a956b43e9d51b824206932"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "1.1.1"
-
-[[deps.StringManipulation]]
-git-tree-sha1 = "46da2434b41f41ac3594ee9816ce5541c6096123"
-uuid = "892a3eda-7b42-436c-8928-eab12a02cf0e"
-version = "0.3.0"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "GPUArraysCore", "StaticArraysCore", "Tables"]
@@ -1504,22 +1822,11 @@ git-tree-sha1 = "53915e50200959667e78a92a418594b428dffddf"
 uuid = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 version = "0.4.1"
 
-[[deps.WeakRefStrings]]
-deps = ["DataAPI", "InlineStrings", "Parsers"]
-git-tree-sha1 = "b1be2855ed9ed8eac54e5caff2afcdb442d52c23"
-uuid = "ea10d353-3f73-51f8-a26c-33c1cb351aa5"
-version = "1.4.2"
-
 [[deps.WoodburyMatrices]]
 deps = ["LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "de67fa59e33ad156a590055375a30b23c40299d3"
 uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
 version = "0.5.5"
-
-[[deps.WorkerUtilities]]
-git-tree-sha1 = "cd1659ba0d57b71a464a29e64dbc67cfe83d54e7"
-uuid = "76eceee3-57b5-4d4a-8e66-0e911cebbf60"
-version = "1.6.1"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "Zlib_jll"]
@@ -1657,39 +1964,100 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─0b79fb30-66d3-11eb-052b-89cfca69b3a6
-# ╟─7c18cc0e-66d3-11eb-3e8e-09d869dd5731
-# ╟─3367b97a-c0d8-4086-a454-2b6f5d8062e8
-# ╠═24dd4376-5e8f-11eb-02e7-f34f7c169726
-# ╠═a06b7ad2-6603-11eb-1588-195115c5f351
-# ╠═a58a3582-64a3-11eb-01e1-11f707525149
-# ╠═aac6e282-6603-11eb-18bd-95a57f187167
-# ╠═bcc6ca3a-5e95-11eb-3f13-877d22fe2ff2
-# ╠═a2539aee-6605-11eb-0788-157d9b7c1060
-# ╠═c96871cc-6605-11eb-161b-41af51664d50
-# ╠═295dcee0-6608-11eb-04d7-a9232f4a727a
-# ╠═66cedb40-660b-11eb-07cb-8107b36a0251
-# ╠═b72d7a58-6607-11eb-11f0-d98ad7953ac0
-# ╠═52534b4e-6607-11eb-0478-390a8dbfc17b
-# ╠═d60da13e-6607-11eb-3069-ef521f73c7a9
-# ╟─cfc9f604-6604-11eb-23bc-699617b17d7d
-# ╟─dc423846-4556-4c43-a85b-25bb8305fcf8
-# ╠═438b124e-287b-4c74-bc2b-d2ee11f3f3ab
-# ╠═fc91f3b6-6839-4fb5-8de3-2238622c6325
-# ╠═cfee2a3d-d790-4f03-9cc6-da9ae7b9b106
-# ╟─b76f0abb-01b0-4acc-8554-02c826cc9e6a
-# ╟─610e52d3-8dba-4cf9-aada-a7ce908ed51f
-# ╠═b62ac876-40ba-4521-b0e9-7d14ecd781a8
-# ╠═f3c74bcc-1888-432c-8b83-2030471adb53
-# ╟─f22e2419-fbc6-45a9-8998-fd310d08ddeb
-# ╠═b20dc3cc-5adb-4853-b409-7b2957de2e57
-# ╠═18be8ca6-5a5e-48d8-91bb-58f02a193fcb
-# ╠═98cb4882-68d4-49be-b48b-72fc3e5dfb8a
-# ╟─e81a87ec-8568-4f8a-8205-1a2e67885314
-# ╠═53498173-5b3a-401c-adb8-f0813bb85c97
-# ╠═4e95c941-331f-41f4-9b4c-8711ebb2c142
-# ╟─47f89fd4-4dc1-4612-b54c-a4bd9f113044
-# ╠═ec8969b5-4e53-4482-9772-7280e45332fa
-# ╠═196c014a-8e14-4cf8-9e33-8be55b246edf
+# ╟─eb6a3510-6477-11eb-0e4e-33557d794e45
+# ╟─6009f070-5ef8-11eb-340a-d9780be085ad
+# ╟─df4d9fab-13da-4df7-b51e-0689112f65fe
+# ╠═bdd75f9a-17e1-4b80-aa88-8a1477032441
+# ╠═6b1af27c-5d0a-43a2-b3a5-b02770aeb841
+# ╠═165ba943-b546-42d0-84b2-00391572ff8e
+# ╟─0f0dc575-7660-4b32-b158-95a9a0ab31e8
+# ╟─5f1e3589-48fe-418a-958b-74b5dc0d7eff
+# ╠═b01cef89-6258-4050-9d35-7628eaf54010
+# ╟─67a2e792-647a-11eb-208e-4df018d00425
+# ╠═d3feb786-2c69-416f-8fda-e2b4da0c0c1c
+# ╟─7057b8a6-91a9-495f-ac29-669d5652c8d0
+# ╠═c28b2d55-63dc-4794-bfcd-a03172cb7f25
+# ╟─c3946663-eddf-4bc1-bb52-9c82c8f7258c
+# ╠═07f7ed69-3e9a-4a6b-a10f-de8d09aa0db5
+# ╟─3956c45f-23a9-4ec2-846f-d33706373d72
+# ╠═d25c59f6-8f99-4a83-8750-10518a13f6ae
+# ╠═63fff52b-d485-4fb3-be2c-80039e6ebc2a
+# ╟─edbb8f3b-f133-481b-8972-fdcd87b5acef
+# ╟─77cc233a-d916-4959-a73c-7138cfdd03af
+# ╟─75194951-3f88-4855-98d4-a987430f5b00
+# ╟─4b0dc2b4-a56d-45e3-8d58-a53978c4ff7f
+# ╟─609dfa37-2208-40b7-bc47-60d0c9ec54c8
+# ╟─0cd4e0a0-fa38-4b05-8688-6396093d2652
+# ╟─9b3ede7b-6e55-4d98-8f8f-6b18382fcb43
+# ╠═ac1291c8-e560-4457-ad58-47c70ade7dca
+# ╠═228237f5-4884-4575-9dc4-a5c33b9afdae
+# ╠═7c9f2f26-329e-46f8-8be9-c95cd680d51d
+# ╠═7ba0f472-f8a3-497d-8093-6f9275365841
+# ╠═f2a97e1c-f9d9-45eb-a197-6325da142845
+# ╟─3d32cc06-db5f-49a1-9510-c129fb064440
+# ╟─49627e46-c654-49b6-80ee-b664b61a68ac
+# ╠═2a07742e-4413-4a20-b417-b7dda8cb7c49
+# ╠═7b8a732f-a834-488b-9cdf-37d4f0b31eab
+# ╟─f26e4c88-fc29-41fe-b932-c136047dabb6
+# ╠═32dd4b65-15a4-4247-afe7-15a4daec2294
+# ╠═aa91eb44-8cf9-4df4-a926-23dc6cc92cda
+# ╠═4a5319ed-14f6-4635-8f58-a387de0cd8ad
+# ╠═915ca82e-f358-4515-889a-5a226539223d
+# ╠═26fbde25-c520-4ca3-8bfd-22753d9a7a94
+# ╟─5d7adf23-4fef-4597-a3ac-18adbef08d8e
+# ╠═383c5cca-2301-4f9e-9610-9e5b7fdb13b5
+# ╠═56ffb909-1dce-49c4-90a5-b45ede78e624
+# ╠═7784fe91-ceb0-4756-8571-65efa217a065
+# ╠═9f083058-6a12-41cc-bb65-ad81e5d79aea
+# ╟─a22c9ec0-647b-11eb-2141-974fa4223428
+# ╠═257c32c8-647b-11eb-1244-e1d2baa5c58d
+# ╠═d9428a14-647b-11eb-336d-778226dd13e1
+# ╠═9c3d3a6a-4ad5-4c45-bb07-8e75b4380290
+# ╠═2ec96593-85fa-4f45-aceb-f3869717884e
+# ╠═7f457cac-c153-44a8-a13c-af03ffd6eef1
+# ╠═ba4ddf01-d02e-4d9f-beb7-15467a03b08a
+# ╠═ef85efd2-da5c-4197-831e-110aebe5a1d7
+# ╠═62063f20-4041-454d-964b-e2e89a8634f0
+# ╠═2e02bf8a-b9f2-4aaf-8e58-e5d17e3d193c
+# ╠═0f3c851f-78ea-4d0f-bfcf-7a6f1df9c152
+# ╠═7c308142-d5b5-47c0-be74-083709e43ac5
+# ╟─f609d59f-25ce-4075-a824-c96bc4e9bbe3
+# ╠═12cfd4cd-3448-405a-b8bb-ad1d73c23150
+# ╠═ec57d7c7-0a96-40a4-942f-73723460a5fe
+# ╠═0d659ab1-88ce-48ce-8ee0-83185fd865aa
+# ╠═7883f729-f34d-4a1c-a684-6d78700d2a45
+# ╟─1df2ac74-6478-11eb-1266-7381e24cab9d
+# ╠═89ce79c8-6478-11eb-18ae-ff6ec414e65b
+# ╠═9c51f3fe-6478-11eb-2e87-69a72bb28e6d
+# ╠═b6c85692-6478-11eb-310a-3ddc517ccdb0
+# ╠═3cc59dcc-6479-11eb-1722-11883fbbd5a7
+# ╠═99fb9532-6479-11eb-1c7b-1d385d3a5441
+# ╠═b0beccf8-6479-11eb-0ca8-e125c7183758
+# ╠═c706e9dc-6479-11eb-16ef-dbddc09a2612
+# ╟─56f44286-647c-11eb-11ca-23a5342611b4
+# ╠═6e4afa92-647c-11eb-2165-73b6b8494c70
+# ╟─4a6c6e48-647d-11eb-16e2-d3fa799ebe1f
+# ╠═58cc500f-8bb2-4c2f-bdaf-0cb8a42bf7da
+# ╟─97c76ed6-647d-11eb-3b73-b9fe79d52b4c
+# ╟─a0a0cc5a-647d-11eb-380a-bb5c0da3d2bd
+# ╟─1250300d-8bd5-41c3-a36f-b59064e8fbfd
+# ╠═c5cf8e17-9dcc-4f37-ace2-dbc3d92a83d4
+# ╟─1ff1315e-154d-4eaa-92ce-4ed1c32bb01f
+# ╟─cf21a82b-ff81-4165-afd1-a96475d8b547
+# ╠═de6c3f24-618b-44a1-a9ef-b56bd35b4b87
+# ╠═48442831-b63d-454f-8129-cff796aba54b
+# ╠═da797bdb-b027-4139-8446-91df190cb509
+# ╠═2ff77ccf-9f74-42a4-af0e-188c00dd9852
+# ╟─83fdf8aa-18d5-47b2-8dd9-feb713bc423a
+# ╠═48a5a2db-637a-4f8e-9994-ae6c1850ed70
+# ╠═7f248ca3-825f-4698-8ead-f7bd30e0d5c5
+# ╠═30fa9b9e-8e78-43b8-8405-1e70087b7c63
+# ╟─4de43ab8-4187-49ea-9c96-779a6d39c757
+# ╠═6998ffab-2cf1-410f-b09c-5e70f2da0438
+# ╠═40358272-eca0-4a98-be8a-66fb23573d32
+# ╠═431229ad-a4f5-415c-8946-9888dc335857
+# ╟─f45dfb17-aef7-4540-a790-9148fa921d25
+# ╠═2ecf4ffd-d41d-494c-9fec-d681a176a8ba
+# ╠═b4cec279-9bd4-46c5-8dc3-13003730916f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

@@ -1,390 +1,914 @@
 ### A Pluto.jl notebook ###
 # v0.19.22
 
+#> [frontmatter]
+#> chapter = 3
+#> section = 1
+#> order = 3
+#> title = "Old assignment"
+#> layout = "layout.jlhtml"
+#> description = ""
+#> tags = ["diffusion"]
+
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 91f4f3a7-2226-48a1-8880-25306adf95b9
-using MetaGraphs
-
-# ╔═╡ 923d97aa-1843-40a9-b3b0-1f33e94c07a4
-using Graphs
-
-# ╔═╡ c704150e-3a59-4ea7-8e3a-809d52cc8794
-using GraphDataFrameBridge
-
-# ╔═╡ 4d6a9177-36a0-4492-a1c1-6d50e51207be
-using AlgebraOfGraphics
-
-# ╔═╡ 428fefad-901d-4aac-83d1-4972188ae2ff
-using CairoMakie
-
-# ╔═╡ e5a49f36-d5ba-4a59-af93-5a9633308f40
-using GraphMakie
-
-# ╔═╡ 4aae7c84-a853-42a1-9c4f-4d6e22093638
+# ╔═╡ 71cf8b81-f7d2-43cb-97e8-b5e7928c4120
 using NetworkLayout
 
-# ╔═╡ 947b6053-8739-4402-9d52-d02c03622826
-using DataFrames
+# ╔═╡ bff18f1e-9ec9-4f52-b800-7ecd631f39fa
+using Graphs, SimpleWeightedGraphs
 
-# ╔═╡ 860a6151-ac4b-4364-a78f-1d81fcc3b472
-using CSV: CSV
+# ╔═╡ af67ffba-216c-480e-8523-b7236bf1fe83
+using SparseArrays
 
-# ╔═╡ 49a082f3-6f27-4996-9094-8f6a17029440
-using DataFrameMacros, Chain
+# ╔═╡ 2e2e455b-9ba2-4c22-b7db-a014b9384935
+using Colors: @colorant_str
 
-# ╔═╡ 6c9646f7-3c33-4c87-9fa4-dabbfe896b3a
+# ╔═╡ 1f8b5ffc-cc22-41f1-bf87-9a58e16ea2b5
+using DataFrames, DataFrameMacros
+
+# ╔═╡ ff3f0580-0b8f-40c0-9e8d-ddf556745354
+using Chain: @chain
+
+# ╔═╡ 64031dfe-3f01-4ec1-aff7-5646cfde96f0
+using GraphMakie, AlgebraOfGraphics, CairoMakie
+
+# ╔═╡ 84a3ad96-4854-4ab8-be5c-b4859d1a2e39
+using MarkdownLiteral: @markdown
+
+# ╔═╡ c5b3e888-3b6f-449b-8f72-455fe86743d2
+using CategoricalArrays
+
+# ╔═╡ e35ed6b2-3e18-40b5-b9fd-c6bb216ed2a0
+using Random
+
+# ╔═╡ 0c511a66-b69d-4146-9927-885eeb24d240
+using PlutoTest: @test
+
+# ╔═╡ f5e85900-1ea7-4dd3-8999-2e121efa9447
 using PlutoUI
 
-# ╔═╡ 38ee92bb-714f-4cc6-a945-21ff017edc10
-using Statistics: mean, std
-
-# ╔═╡ 9009f6a9-f46f-46c9-acee-ebe02b47fea5
-using StatsBase
-
-# ╔═╡ c4bc21f1-899d-48e8-9c4c-883f7608f753
+# ╔═╡ 13313236-502d-46ca-bf24-a4defd6d792f
 md"""
-`exercises_week_1.jl` | **Version 1.2** | *last updated: Feb 3, 2023*
+`school-closures.jl` | **Version 1.3** | *last updated: Feb 20, 2023*
 """
 
-# ╔═╡ 839922f0-97b2-4bc9-9aa9-e3e93336b7e4
+# ╔═╡ 44c1c228-d864-49ab-a8bf-bd7d6bd260cd
 md"""
-# Exercises for week 1
+# Assignment from Last Year: School Closures in the Covid-19 Pandemic
 """
 
-# ╔═╡ b52a8fc1-551d-49a8-8c39-93ee0e600fb2
+# ╔═╡ f45eb218-92d8-4bfe-87f6-e128c17db7c2
 md"""
-## Part 1: Theory exercises
+In this assignment we want to understand the effect of school closures on the dynamics of the pandemic. Children have a much lower probability of getting hospitalized. **Would it still make sense to close schools to keep hospitalizations low?**
 
-The first few exercises will deal with the following simple graph.
+We construct a network of adults and children, where children are linked via schools, adults in their jobs and parents are linked to children.
 """
 
-# ╔═╡ 46c487fa-6732-11eb-229c-f31402dcbbe2
+# ╔═╡ edbf2ae4-237d-4755-9419-b98b8ef52fc2
+md"""
+We assume that `child`ren and `adult`s differ by their transition probabilities. Children do not get hospitalized (``\chi = 0``), and they have a higher recovery rate ``\rho``. (All these parameters are made up.)
+"""
+
+# ╔═╡ aba35d11-a5da-4e48-ace5-d7f317198b3e
+	transitions_df = DataFrame([
+		(member_type = "child", χ = 0.0, ρ = 0.4),
+ 		(member_type = "adult", χ = 0.4, ρ = 0.3)
+	])
+
+# ╔═╡ bd986adf-2688-470f-8d62-9b66ed3f3d0f
+md"""
+We also make assumptions about the transmission probabilities within families, workplaces and schools.
+"""
+
+# ╔═╡ 0aa33258-a8c2-403f-b466-95dbaee2cc75
+transmission_df = DataFrame([
+		(linktype = :family, p = 0.3),
+ 		(linktype = :school, p = 0.3),
+ 		(linktype = :work,   p = 0.3)
+	])
+
+# ╔═╡ a35ae69d-6c82-4ac0-bbd9-0f443747b3e6
+md"""
+### Task 1: Introduce *hospitalized* into the model (3 points)
+
+👉 Add a new state `H`ospitalized.
+"""
+
+# ╔═╡ f1664b58-75c1-4a79-9540-85303ed3a42f
+begin
+	abstract type State end
+	struct S <: State end # susceptible
+	struct I <: State end # infected
+#	struct H <: State end # hospitalized
+	struct R <: State end # recovered
+end
+
+# ╔═╡ e73f7e86-eaac-493c-b34d-8f08ba5d3c6a
+md"""
+👉 Add a transition rule for `H`. You may assume that recovery rates are the same for those in and outside of hospital.
+"""
+
+# ╔═╡ 5bfce3c7-5fe4-43e8-9987-3a7764be243c
+#function transition(::H, node, args...; kwargs...)
+#	(; ρ) = node
+#
+#	x = rand()
+#	if ... 
+#		...
+#	else
+#		...	
+#	end
+#end
+
+# ╔═╡ edb73532-2868-452c-afe2-e1fce60abb77
+md"""
+👉 Go to section [**Define the transitions**](#ade7f9b5-cf6e-4278-95e0-651691baa892) and adjust the transition rules for the other states if necessary.
+"""
+
+# ╔═╡ 2e2f0ad7-d3c7-4a91-abe7-817f399783c3
+md"""
+Great! You can now have a look how the simulations from the lecture have automatically updated.
+"""
+
+# ╔═╡ 5fe6969a-2453-4ac9-bf15-c2d9310115f1
+md"""
+### Task 2: Flatten the curve of `H`ospitalized (4 points)
+
+We consider a scenario from the start of a new wave with a small numer of infections at time zero. Without taking any measures the model predicts that the total number of people who will be hospitalized will exceed the maximum capacity. In order to prevent this from happening, your options are to announce a lockdown of either schools or workplaces on a pre-specified set of future days from day 0. Lockdown days of schools are economically more costly than lockdown days of workplaces. Therefore, it is important to obtain insights on how effective school lockdowns are in terms of preventing the spreading of Covid-19. In this assignment you will use simulation of the spreading of Covid-19 under various scenarios to extract those insights, and subsequently formulate a motivated lockdown policy based on these insights.
+"""
+
+# ╔═╡ fd9cdd83-d12c-49d6-9521-02b15f692f70
+T = 30
+
+# ╔═╡ 9fadd61c-2532-4ad5-9c60-f17c18821624
+md"""
+
+Now it's your turn.
+
+👉 Decide when you want to lockdown schools and adjust the cell below. Make sure you close schools no longer than **5** days in total.
+"""
+
+# ╔═╡ 80350d9e-ace6-4970-8861-0e767030f3d6
+begin
+	lockdown = fill(Symbol[], T)
+	for t in (1:5) .+ 2
+#		lockdown[t] = [:school]
+	end
+
+	lockdown
+end
+
+# ╔═╡ 14991792-4dee-472a-a331-23be55edc92c
+@assert all(lockdown .⊆ Ref([:school, :work, :family]))
+
+# ╔═╡ 6dda8f0a-64d4-47e2-aae7-65d2d48deac7
+md"""
+
+👉 Next include the possibility to lock down workplaces as well. Can the number of school lockdown days be reduced or even avoided at all?
+"""
+
+# ╔═╡ 3945ab48-4d4a-41d1-80bb-75038aab4f7e
+md"""
+👉 Now write a short report describing your choice.
+
++ Describe how you selected the lockdown period.
+
++ Why are hospitalizations decreasing even though children never get hospitalized?
+
++ Be accurate but concise. Aim at no more than 500 words.
+"""
+
+# ╔═╡ c3537e04-800f-4fa8-9320-a64db4391287
+answer2 = md"""
+Your answer
+
+goes here ...
+"""
+
+# ╔═╡ c140b224-c10d-437b-85c0-2755c8d72970
+md"""
+### Task 3: Main insights and reflection on the model and method used (3 points)
+
+👉 Finally write a short essay describing the main findings based on the model
+
++ Describe what insights you obtained from the model.
+
++ Explain the limitations of the model and the simulation setup. 
+
++ Be accurate but concise. Aim at no more than 500 words.
+"""
+
+# ╔═╡ 5b53a9c1-d176-4740-95e8-98283ad57cf9
+answer3 = md"""
+Your answer
+
+goes here ...
+"""
+
+# ╔═╡ 064bfd13-944a-4d3b-8075-cf5d92018878
+md"""
+### Before you submit ...
+
+👉 Make sure you have added your names and your group number [in the cells below](#d73b9db2-742d-4c75-9ff0-2cdce26a8ec8).
+
+👉 Make sure that that **all group members proofread** your submission (especially your little essay).
+
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
+"""
+
+# ╔═╡ d73b9db2-742d-4c75-9ff0-2cdce26a8ec8
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]);
+
+# ╔═╡ 5c85f4fb-4431-4196-9663-c5ddbc719a0a
+group_number = 99
+
+# ╔═╡ d7ab1943-d456-400d-b4c3-dda9f6c1fe26
+if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
+	md"""
+!!! danger "Note!"
+    **Before you submit**, please replace the randomly generated names above by the names of your group and put the right group number in [this cell](#d73b9db2-742d-4c75-9ff0-2cdce26a8ec8).
+	"""
+end
+
+# ╔═╡ 8c133759-f2ca-4c0c-a5e5-19f5ff188436
+md"""
+# Setting up the SIR model
+"""
+
+# ╔═╡ d1b16bec-ae19-4740-80fe-a711fd145089
+const States = Union{subtypes(State)...}
+
+# ╔═╡ ade7f9b5-cf6e-4278-95e0-651691baa892
 md"
-### Exercise 1
-
-👉 Calculate (by hand) the betweenness centrality of node 5 in the simple network above.
+### Define the transitions
 "
 
-# ╔═╡ c93b4722-6a43-49e8-bf15-89cdd5906098
+# ╔═╡ ca1610dc-653a-4df9-bfc7-0366576ded08
+function transition(::I, node, args...; kwargs...)
+	(; ρ, χ) = node
+	x = rand()
+	if x < ρ # recover
+		R()
+# 	elseif ...
+# 		...
+	else # infected
+		I()
+	end
+end
+
+# ╔═╡ 5cb8fa66-9a1e-4d27-a1c6-f26c1b7f3532
+transition(::R, args...; kwargs...) = R()
+
+# ╔═╡ b636cf26-de30-4d0d-8f59-f5872440b1d1
 md"""
-Your answer goes here ...
+### Helper functions
 """
 
-# ╔═╡ 69083a09-9741-459e-a298-523f2b176527
+# ╔═╡ 993546ec-5dbe-4c08-9c11-072bc343390a
+function get_edge(i, j, edge_df_sorted)
+	i, j = minmax(i, j)
+	@subset(edge_df_sorted, :src == i, :dst == j)
+end
+
+# ╔═╡ 56ca0088-97e0-493b-95fb-88bc35610d6d
+function get_edge_fast(i, j, edge_df_sorted)
+	src, dst = minmax(i, j)
+
+	i_src_from = findfirst(==(src), edge_df_sorted.src)
+
+	if isnothing(i_src_from)
+		@info i, j
+	end
+	i_src_to = findfirst(>(src), edge_df_sorted.src[i_src_from:end])
+
+	src_rows = edge_df_sorted[i_src_from:end,:]
+	if !isnothing(i_src_to)
+		src_rows = src_rows[1:i_src_to - 1,:]
+	end
+
+	i_row = findfirst(==(dst), src_rows.dst)
+
+	if isnothing(i_row)
+		@info i, j
+	end
+
+	src_rows[i_row, :]
+end
+
+# ╔═╡ baad47a0-398e-4f9f-9af6-7686acdc25e4
+function transition(::S, node, adjacency_matrix, is_infected, edge_df_sorted::DataFrame, lockdown)
+	(; node_id) = node
+	inv_prob = 1.0
+	for i in is_infected
+		if adjacency_matrix[node_id, i] == 0
+			p = 0
+		else
+			(; p, linktype) = get_edge_fast(node_id, i, edge_df_sorted)
+			if linktype ∈ lockdown
+				p = 0
+			end
+		end
+	 	inv_prob *= 1 - p
+	end
+	
+	#inv_prob = prod(1 - par.p * adjacency_matrix[i, node] for i in is_infected, init = 1.0)
+	
+	π =	1.0 - inv_prob
+	
+	rand() < π ? I() : S()
+end
+
+# ╔═╡ d600e317-61a8-4b7e-a5ab-706b175f5765
+function iterate!(states_new, states, adjacency_matrix, edge_df_sorted,  node_df1, lockdown)
+
+	is_infected = findall(isa.(states, I))
+	
+	for i in 1:size(adjacency_matrix, 1)
+		node_row = node_df1[i,:]
+		@assert node_row.node_id == i
+		states_new[i] = transition(states[i], node_row, adjacency_matrix, is_infected, edge_df_sorted, lockdown)
+	end
+	
+	states_new
+end
+
+# ╔═╡ 396f4c50-1b1e-449e-bf39-557018f2dd78
+function iterate(states, adjacency_matrix, par, lockdown)
+	states_new = Vector{States}(undef, N)
+	iterate!(states_new, states, adjacency_matrix, par, lockdown)
+	
+	states_new
+end
+
+# ╔═╡ 891e5c60-468a-44c7-9b5a-609dcdb02cc2
+let
+	#edge_df_sorted_xx = sort(edge_df, [:src, :dst])
+	
+	#i, j = 478, 479 #1, 161
+	#t1 = @elapsed get_edge(i, j, edge_df_sorted_xx)
+	#t2 = @elapsed get_edge_fast(i, j, edge_df_sorted_xx)
+
+	#t2 / t1 - 1
+end
+
+# ╔═╡ 08abc77a-814a-11ec-3d54-439126a38a85
 md"""
-Check your answer by _activating_ the cell below.
+# Behind the Scenes: Constructing the Network
 """
 
-# ╔═╡ d6557f8a-6734-11eb-0fd4-0b7b5f602bab
-# ╠═╡ disabled = true
-#=╠═╡
-betweenness_centrality(simple_graph)[5]
-  ╠═╡ =#
-
-# ╔═╡ 11e98628-6734-11eb-1b66-83663e790a78
-md"
-### Exercise 2
-
-Below you can calculate the eigenvector centrality and Katz-Bonacich centrality ``\alpha=0.2`` and exogenous factors ``e_i = 1`` for all nodes ``i``.
-
-👉 First, guess which nodes have the highest eigenvector centrality.
-"
-
-# ╔═╡ b28b095f-4829-40ef-8929-1d8b76b26d04
+# ╔═╡ e4bf4d41-9568-42a1-b01b-e22fc5c39ec1
 md"""
-Your guess goes here ...
+## Nodes
 """
 
-# ╔═╡ 6ecd8032-2ad6-4879-9cf8-5638dd47a724
+# ╔═╡ 3d85c3c6-9303-47e6-9fa6-5fc975cf750a
+setup = (; N_locations = 10, N_hh = 200, N_employers = 40)
+
+# ╔═╡ cd6c5481-ccc7-47d8-acda-4e90fc98b10e
+@markdown("""
+<details> <summary> Click on arrow for details </summary>
+
+* `N = $(setup.N_hh)` households in `N_locations = $(setup.N_locations)` different locations
+* **households** (families) are modeled as *complete networks*, variable family size (with and without children, sometimes single-parents)
+* all children of same location go to same **school** (modeled as a *complete network*)
+*  **adults** are linked through their **job** (there are `N_employers = $(setup.N_employers)` employers, each modeled as a _complete network_)
+
+</details>
+""")
+
+# ╔═╡ 14989685-a257-40c5-8e24-79fff0d1b825
 md"""
-👉 Now check your guess with the following code.
+In the plot below, the red dots are children, and the green dots are adults. The  $(setup.N_locations) clusters of red dots are schools.
 """
 
-# ╔═╡ 541b25de-6670-11eb-2ad1-2babaf714216
-# ╠═╡ disabled = true
-#=╠═╡
-eigenvector_centrality(simple_graph)
-  ╠═╡ =#
+# ╔═╡ 5b944c23-442c-4f02-924c-2bad76b7970d
+function member_type(member_id)
+	if member_id == 1
+		return "adult"
+	elseif member_id == 2
+		if rand() < 2/3
+			return "adult"
+		else # single-parent
+			return "child"
+		end
+	else
+		return "child"
+	end
+end
 
-# ╔═╡ 5b312d16-6670-11eb-2da6-976db9964456
-# ╠═╡ disabled = true
-#=╠═╡
-katz_centrality(simple_graph, 0.2)
-  ╠═╡ =#
+# ╔═╡ 223a560f-fc61-4432-9409-5cb2cb3d9789
+node_df = let
+	Random.seed!(5679)
+	(; N_hh, N_locations, N_employers) = setup
+	household_size = rand(1:4, N_hh)
 
-# ╔═╡ 45c86e74-6670-11eb-1acd-41f288f6de70
-# ╠═╡ disabled = true
-#=╠═╡
-betweenness_centrality(simple_graph)
-  ╠═╡ =#
+	@chain begin
+		DataFrame(:hh_id => 1:N_hh)
+		@transform(:school_district = @bycol rand(1:N_locations, N_hh))
+		@groupby(:hh_id, :school_district)
+		@combine(:member_id = 1:rand(1:4))
+		@transform!(:member_type = member_type(:member_id))
+		@transform!(:node_id = @bycol 1:length(:hh_id))
+		@transform!(:employer = :member_type == "adult" ? N_locations + rand(1:N_employers) : :school_district)
+		@transform!(:node_color = :member_type == "adult" ? colorant"green" : colorant"red")
+	end
+end
 
-# ╔═╡ ff893920-6782-11eb-2728-270f9261597d
-md"
-Note that the betweenness centrality picks out nodes 5 and 6 as being most central, which corresponds to our intuition. The eigenvector centrality and Katz-Bonacich centrality fail to identify these nodes as being central. We try to obtain some insight into this by making a calculation for the Katz-Bonacich centrality.
-
-### Exercise 3
-
-👉 Write out the series representing the Katz-Bonacich centrality for general $0 < \alpha < \lambda_{\rm max}$. Explain why all nodes have the same Katz-Bonacich centrality in this case.
-"
-
-# ╔═╡ 98e5e1c9-45e6-47ab-b43a-768cbc64b6c5
+# ╔═╡ bf5ca480-d913-4b21-a85b-b1b2c0b4c2f9
 md"""
-Your answer goes here ...
+## Edges
 """
 
-# ╔═╡ 714ff2ca-fa02-4e14-b3f0-83c03dfc649b
-md"""
-## Part 2: Computational exercises
+# ╔═╡ 0da25924-c89b-4a1b-b63e-7cb2d17fcbc3
+begin
+	TP = typeof((i = 1, j = 1, linktype = :family))
 
-The next set of exercises will analyze the co-authorship network of the Tinbergen Institute that you've seen already.
+	edge_list = TP[]
+	
+	# families
+	gdf = @chain node_df begin
+		@groupby(:hh_id)
+	end
+
+	for df in gdf
+		for (i,j) ∈ Iterators.product(df.node_id, df.node_id)
+			i ≠ j && push!(edge_list, (; i, j, linktype = :family))
+		end
+	end
+
+	# schools / employers
+	gdf = @chain node_df begin
+		@groupby(:employer)
+	end
+
+	for df in gdf
+		for (i,j) ∈ Iterators.product(df.node_id, df.node_id)
+			if only(unique(df.employer)) ≤ setup.N_locations
+				linktype = :school
+				i ≠ j && push!(edge_list, (; i, j, linktype))
+			else
+				linktype = :work
+				i ≠ j && push!(edge_list, (; i, j, linktype))
+			end
+		end
+	end
+
+	n_v = size(node_df, 1)
+
+	edge_df00 = DataFrame(edge_list)
+	edge_df0 = @chain edge_df00 begin
+		@groupby(:i, :j)
+		combine(first, _)
+	end
+
+	g = SimpleGraph(sparse(edge_df0.i, edge_df0.j, 1, n_v, n_v))
+
+	edge_df = @chain edges(g) begin
+		DataFrame
+		leftjoin!(_, edge_df0, on = [:src => :i, :dst => :j])
+	end
+end
+
+# ╔═╡ dc8b82e1-5e15-4832-a460-a2ce0da2ffc1
+begin
+	positions = Spring()(g)
+	layout = _ -> positions
+end
+
+# ╔═╡ 065c0b3c-d738-4581-b9f8-6446a20d0c0a
+md"""
+## Plotting the network
 """
 
-# ╔═╡ 2efb4dea-2149-4588-83b4-2e2e05e71d62
-md"""
-### Exercise 4: Connected components
+# ╔═╡ 36edee11-497d-415c-b589-8a333573bb8c
+fg = graphplot(g; layout,
+	node_df.node_color, node_size = 7,
+	edge_width = 0.3,# transmission_probability.(edge_df.p, edge_df.linktype, lockdown),
+	edge_color = (:black, 0.5)
+)
 
-👉 Identify the components of this network and extract the core.
-"""
+# ╔═╡ eaf1fd63-5977-4b99-9c11-ec301fba8078
+fg
 
-# ╔═╡ 8c156bfb-dc75-4a32-9178-7f4006345e0d
-md"""
-### Exercise 5: Central researchers
-
-Let us now find the most central researchers of the Tinbergen institute.
-"""
-
-# ╔═╡ bb2b8184-6737-11eb-279e-6fc09622b8ca
-md"
-👉 Calculate the top 10 centralities for the largest component in this co-authorship network in terms of degree, betweenness, eigenvector centrality and Katz-Bonancich centrality with ``\alpha = 0.2``
-"
-
-# ╔═╡ bcafe43f-a38e-4824-9db4-5fec7f675e46
-md"""
-### Exercise 6: Comparing centrality measures
-
-👉 Compare the ranks for different centrality measures.
-"""
-
-# ╔═╡ dc38df66-6782-11eb-2a76-af6fb73608b6
-md"
-Again we see that the ranking of the nodes in terms of the centrality depends strongly on the measure of centrality used. 
-"
-
-# ╔═╡ cfc9f604-6604-11eb-23bc-699617b17d7d
+# ╔═╡ 3cd01849-fabd-4e97-841a-2eea57c93167
 md"""
 # Appendix
 """
 
-# ╔═╡ 135bce4d-ee2d-405c-a3c0-7e881cd64c48
+# ╔═╡ 19c68050-596c-4604-99b2-eb5fc045db10
 md"""
-## Construct simple network
+## Functions for the simulation
 """
 
-# ╔═╡ 1d4c6d8e-666f-11eb-3c3e-bbf2737bd162
-A = [1 2; 1 3; 1 4; 2 3; 2 4; 3 5; 4 5; 5 6; 6 7; 6 8; 7 9; 7 10; 8 9; 8 10; 9 10]
+# ╔═╡ 2ef4585f-7c76-4382-bdc6-455a08448c6f
+function initial_state(N, infected_nodes, recovered_nodes)
+	# fill with "Susceptible"
+	init = States[S() for i in 1:N]
+	
+	init[infected_nodes] .= Ref(I())
+	init[recovered_nodes] .= Ref(R())
+	
+	init
+end
 
-# ╔═╡ ea44b5fc-666e-11eb-371f-3b1af8983ad0
-df = DataFrame(A, :auto)
+# ╔═╡ acaa8906-56e8-4202-8a82-98afb4c2f458
+function initial_state(N, n_infected)
+	
+	# spread out the desired number of infected people
+	infected_nodes = 1:(N÷n_infected):N
+	
+	initial_state(N, infected_nodes, [])
+end
 
-# ╔═╡ b0bf3e34-666f-11eb-3126-ebbbcad4ad12
-simple_graph = MetaGraph(df, :x1, :x2)
+# ╔═╡ 58228108-6500-443b-8350-3d4e10f75988
+function simulate(graph, T, edge_df_sorted, node_df1, init = initial_state(nv(graph), max(nv(graph) ÷ 200, 1)); lockdown = fill(:none, T))
+	mat = adjacency_matrix(graph)
+	N = nv(graph)
+	
+	sim = Matrix{States}(undef, N, T)
+	sim[:,1] .= init
+	
+	for t = 2:T
+		iterate!(view(sim, :, t), view(sim, :, t-1), mat, edge_df_sorted, node_df1, lockdown[t])
+	end
+	sim
+end
 
-# ╔═╡ d158181e-666f-11eb-2f70-9dc4b6e53b16
-graphplot(simple_graph,
-	layout = Spring(),
-	nlabels = string.(vertices(simple_graph)),
-	nlabels_offset = Point2(0.05, 0.05),
-	edge_color = "gray",
-	edge_width = 0.5,
-	node_size = 10,
-	node_color = "orange",
-	node_attr = (strokewidth = 1, strokecolor = :black),
-)
-
-# ╔═╡ 2ca63b10-f091-4197-892d-5120027f6fd5
-graphplot(simple_graph)
-
-# ╔═╡ 3c946356-af84-4d81-aca2-cc29d1a4b60b
+# ╔═╡ 6fb0e547-f592-4765-bf6f-70e441119ea0
 md"""
-## Load TI data
+## Processing the Simulated Data
 """
 
-# ╔═╡ 45ce2bae-b2ad-4665-a8a6-86f78d7dcc2a
-node_names(metagraph) = getindex.(Ref(metagraph), 1:nv(metagraph), :name)
-
-# ╔═╡ 3fee5013-2f1e-4965-90ed-d8f2c084ea79
-url_ti = "https://greimel.github.io/networks-course/assets/datasets/ti_netwk0711.csv"
-
-# ╔═╡ 30bb2d4e-5dcd-4959-a1a6-dc6e1525a267
-begin
-	using DataDeps
-	ENV["DATADEPS_ALWAYS_ACCEPT"] = true
-
-	register(DataDep(
-   		"TI-network",
-		"""
-		The co-authorship network of the Tinbergen Institute 2007-2011.
-
-		Made available with the permission of Marco van der Leij.
-		""",
-		url_ti,
-		"dbb2a1d8ce1120ed274898ce76f84f7ef08f9938ad7f25f74d3b9f202dbc2137"
-	))
+# ╔═╡ a9ed4bc1-f943-456f-b122-484b9455a90a
+function ordered_states(states)
+	levels = unique(states)
+	order  = ["S", "I", "H", "R", "D"]
+	if levels ⊆ order
+		return sorted = order ∩ levels
+	else
+		return levels
+	end
 end
 
-# ╔═╡ ee5e68e5-292d-4c89-8157-b1102a490356
-begin
-	edge_list = CSV.File(joinpath(datadep"TI-network", "ti_netwk0711.csv"))
-	edge_df = DataFrame(edge_list)
+# ╔═╡ b0000ea5-8d36-42f8-9416-8d1a3737c401
+label(x::DataType) = string(Base.typename(x).name)
+
+# ╔═╡ 0a023b5e-d5f3-4a0f-b1f8-b3bf9d715074
+label(x) = label(typeof(x))
+
+# ╔═╡ 02daff76-2eeb-4f87-ba0c-3632180b2e2b
+function tidy_simulation_output(sim)
+	# go from type to symbol (S() => "S")
+	sim1 = label.(sim)
+	
+	# make it a DataFrame with T columns and N rows
+	df0 = DataFrame(sim1, :auto)
+	rename!(df0, string.(1:size(df0,2)))
+	
+	# add a column with node identifier
+	df0.node_id = 1:size(df0, 1)
+	
+	# stack df to
+	# node_id | t | state
+	df = stack(df0, Not(:node_id), variable_name = :t, value_name = :state)
+	# make t numeric
+	@transform!(df, 
+		:t = parse(Int, eval(:t)),
+		:state = @bycol categorical(:state)
+	)	
+	df
 end
 
-# ╔═╡ 24dd4376-5e8f-11eb-02e7-f34f7c169726
-ti_graph = MetaGraph(edge_df, :from, :to)
-
-# ╔═╡ a06b7ad2-6603-11eb-1588-195115c5f351
-graphplot(ti_graph,
-	layout = Spring(),
-	edge_color = "gray",
-	edge_width = 0.5,
-	node_size = 10,
-	node_color = "orange",
-	#nlabels = node_names(ti_graph),
-	node_attr = (strokewidth = 1, strokecolor = :black),
-)
-
-# ╔═╡ a58a3582-64a3-11eb-01e1-11f707525149
-# list of components (contains a list of nodes for each component)
-components = connected_components(ti_graph)
-
-# ╔═╡ aac6e282-6603-11eb-18bd-95a57f187167
-# nodes in first (largest) component
-core = components[1]
-
-# ╔═╡ a860b0c8-6738-11eb-37f5-ebb8ce7b40cb
-gc = ti_graph[core]
-
-# ╔═╡ bcc6ca3a-5e95-11eb-3f13-877d22fe2ff2
-ti_plot = graphplot(gc,
-	layout = Spring(),
-	edge_color = "gray",
-	edge_width = 0.5,
-	node_size = 10,
-	node_color = "orange",
-	node_attr = (strokewidth = 1, strokecolor = :black),
-)
-
-# ╔═╡ 3432e110-673f-11eb-2275-59c3aa7df804
-competerank(eigenvector_centrality(ti_graph))
-
-# ╔═╡ 395fe4f2-42b9-48f8-a5cb-ebea288aff90
-researchers_df = let
-	df = DataFrame(name = node_names(ti_graph), index = 1:nv(ti_graph))
-	sort(df, :index)
+# ╔═╡ 486fc0c3-b4fe-4f3a-b434-fe6dbb7181a3
+function fractions_over_time(sim)
+	tidy_sim = tidy_simulation_output(sim)
+	N, T = size(sim)
+	
+	return @chain tidy_sim begin
+		@groupby(:t, :state)
+		@combine(:fraction = length(:node_id) / N)
+		# put states into nice order
+		@transform(:state = @bycol levels!(:state, ordered_states(:state)))
+	end
 end
 
-# ╔═╡ c4319a9e-b265-4dc8-bcd7-db3afa55e102
-central_researchers = @chain researchers_df begin
-	@transform(
-		:eigenvector_centrality   = @bycol(eigenvector_centrality(ti_graph)),
-		:degree_centrality        = @bycol(degree_centrality(ti_graph)),
-		:bonacich_katz_centrality = @bycol(katz_centrality(ti_graph, 0.2)),
+# ╔═╡ b15bf71d-3062-49d6-a3cc-4ce2f1cb83df
+md"""
+## Constructing the Figures
+"""
+
+# ╔═╡ bde45cf6-a0f7-4ebb-b361-adc8d0e6aad6
+function plot_fractions!(figpos, t, sim, color_dict; legpos = nothing, hline = missing)	
+	df = fractions_over_time(sim)
+			
+	plt = data(df) * visual(Lines) * mapping(
+		:t => AlgebraOfGraphics.L"t", :fraction, color = :state => ""
+	) * visual(Lines)
+	
+	fg = draw!(figpos, plt, palettes = (; color = collect(color_dict)))
+
+	ax = only(fg).axis
+	vlines!(ax, @lift([$t]), color = :gray50, linestyle=(:dash, :loose))
+	if !ismissing(hline)
+		hlines!(ax, hline, color = (:red, 50), linestyle = :dash)
+	end
+	ylims!(ax, -0.05, 1.05)
+
+	# some attributes to make the legend nicer
+	attr = (orientation = :horizontal, titleposition = :left, framevisible = false)
+	
+	if !isnothing(legpos)
+		leg = legend!(legpos, fg; attr...)
+	else
+		leg = nothing
+	end
+ 
+	(; ax=fg, leg)
+end
+
+# ╔═╡ 94d1cfd9-8e2d-42d3-9968-c84b89e1bfc3
+function plot_diffusion!(figpos, graph, sim, t, color_dict; kwargs...)
+	sim_colors = [color_dict[label(s)] for s in sim]
+	state_as_color_t = @lift(sim_colors[:,$t])
+	
+    ax = Axis(figpos)
+
+	hidedecorations!(ax)
+
+	N, T = size(sim)
+	msize = N < 20 ? 10 : N < 100 ? 5 : 3
+
+	graphplot!(ax, graph;
+		node_size  = msize,
+		node_color = state_as_color_t,
+		kwargs...
 	)
-	@transform(
-		:rank_eigenvector   = @bycol(competerank(:eigenvector_centrality, rev=true)),
-		:rank_degree        = @bycol(competerank(:degree_centrality, rev=true)),
-		:rank_bonacich_katz = @bycol(competerank(:bonacich_katz_centrality, rev=true))
-	)
-	select(:name, r"rank", r"centrality", :)
+	
+	ax
 end
 
-# ╔═╡ 7966a3e2-3f7d-49b0-b7be-cefa2a99c38c
-sort(central_researchers, :rank_degree)
+# ╔═╡ dd4e214a-0d9b-446b-be65-ff4c0817e87e
+function sir_plot!(figpos, legpos, sim, graph, t; hline=missing, kwargs...)
+				
+	states = ordered_states(label.(subtypes(State)))
 
-# ╔═╡ 4b9b4e65-c947-4ea6-b166-153cb4db57df
-graphplot(ti_graph,
-	layout = Spring(),
-	edge_color = "gray",
-	edge_width = 0.5,
-	node_size = 10,
-	node_color = "orange",
-	nlabels = ifelse.(
-		central_researchers.rank_degree .≤ 10, # if this condition holds
-		central_researchers.name,              # then provide name as label
-		""                                     # else provide no label ("")
-	),
-	node_attr = (strokewidth = 1, strokecolor = :black),
-)
+	colors = Makie.wong_colors()[[5,2,3,1,6,4,7]]
+	
+	color_dict = Dict(s => colors[i] for (i,s) in enumerate(states))
+	
+	ax_f, leg = plot_fractions!(figpos[1,2], t, sim, color_dict; legpos, hline)
+	ax_d = plot_diffusion!(figpos[1,1], graph, sim, t, color_dict; kwargs...)
 
-# ╔═╡ 4c90a10c-673f-11eb-0c0e-75814d92f251
-data(central_researchers) * mapping(
-	:rank_bonacich_katz,
-	:rank_eigenvector,
-) * visual(Scatter) |> draw
+	(; ax_f, ax_d, leg)
 
-# ╔═╡ 6d4ec768-649f-11eb-1093-054ab8976450
+end
+
+# ╔═╡ a7d3635a-846f-42a1-bb0c-1a132b15aeb0
+function compare_sir(sim1, sim2, graph; kwargs...)
+	t = Observable(1)
+		
+	fig = Figure(padding = (0,0,0,0))
+	legpos = fig[1:2,2]
+	panel1 = fig[1,1]
+	panel2 = fig[2,1]
+	
+	axs1 = sir_plot!(panel1, legpos,  sim1, graph, t; kwargs...)
+	axs2 = sir_plot!(panel2, nothing, sim2, graph, t; kwargs...)
+		
+	axs1.leg.orientation[] = :vertical	
+	
+	@assert axes(sim1, 2) == axes(sim2, 2)
+	
+	(; fig, t, T_range = axes(sim1, 2))
+end
+
+# ╔═╡ 9c3605bb-a0c6-4c7f-ae62-942733c2e3c1
+function sir_plot(sim, graph; kwargs...)
+	t = Observable(1)
+	
+	fig = Figure()
+	main_fig = fig[2,1]
+	leg_pos = fig[1,1]
+
+	sir_plot!(main_fig, leg_pos, sim, graph, t; kwargs...)
+	
+	(; fig, t, T_range = axes(sim, 2))
+	
+end
+
+# ╔═╡ cba2a2cb-c2d5-4cb5-a3d1-a2a5d02bb336
+out_big = let
+
+	hospital_capacity = 0.1
+	
+	node_df1 = leftjoin(node_df, transitions_df, on = :member_type)
+	
+	edge_df_sorted = @chain edge_df begin
+		@sort(:src, :dst)
+		leftjoin!(_, transmission_df, on = :linktype)
+	end
+	
+	Random.seed!(1502)
+	sim = simulate(g, T, edge_df_sorted, node_df1; lockdown)
+
+	attr = (;
+		layout,
+		node_attr  = (; strokewidth = 0.1),
+		edge_width = 0.5,
+		edge_color = (:black, 0.3),
+	)
+	
+	out_big = sir_plot(sim, g; hline = hospital_capacity, attr...)
+end
+
+# ╔═╡ 886ae5b6-f052-4082-bfa1-c8a23f4c880a
+out_big.fig
+
+# ╔═╡ 311110d0-f62e-49e1-bf27-ebf09e1c08a1
 md"""
-## Packages
+## Package environment
 """
 
-# ╔═╡ cb02fb71-3433-4187-84fe-94c055ea5f25
+# ╔═╡ f924060e-d722-4444-bcf2-987c8ee7b83d
 md"""
-#### Graphs
+## Assignment infrastructure
 """
 
-# ╔═╡ 30bc4c58-18d5-4265-ae4e-7cbb004c4c5e
+# ╔═╡ 64536894-ee22-4520-9097-f625c530d7be
+members = let
+	names = map(group_members) do (; firstname, lastname)
+		firstname * " " * lastname
+	end
+	join(names, ", ", " & ")
+end
+
+# ╔═╡ ec2e4346-1246-40cc-83e4-bb8c7e76bdd0
 md"""
-#### Plotting
+*submitted by* **$members** (*group $(group_number)*)
 """
 
-# ╔═╡ 36ff82b5-09c8-49b5-9d10-3c37ba5e3c42
-md"""
-#### Data
-"""
+# ╔═╡ 74e4acbe-89d7-4ce9-a1f7-0cc9b2a7bca7
+function wordcount(text)
+	stripped_text = strip(replace(string(text), r"\s" => " "))
+   	words = split(stripped_text, (' ', '-', '.', ',', ':', '_', '"', ';', '!', '\''))
+   	length(filter(!=(""), words))
+end
 
-# ╔═╡ ac7a38f5-a636-4956-9ca1-218253de72db
-md"""
-#### Other
-"""
+# ╔═╡ d45a3bfd-1187-4c07-84a2-026318b84456
+@test wordcount("  Hello,---it's me.  ") == 4
 
-# ╔═╡ 14a046a8-7f5d-41bd-a5c5-6040c16d019f
+# ╔═╡ b4aeb1f6-b804-4335-a6e2-72c55af5c7a4
+@test wordcount("This;doesn't really matter.") == 5
+
+# ╔═╡ 565eb639-92c8-44db-b2f1-c118c83ae077
+show_words(answer) = md"_approximately $(wordcount(answer)) words_"
+
+# ╔═╡ c49c0fce-0bc7-4665-81bf-24e61707fde7
+begin
+	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
+	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
+	still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
+	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
+	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
+	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
+end
+
+# ╔═╡ d6beb034-5171-46a2-a05a-2133f58e54e9
+if @isdefined H
+	if hasproperty(States.b.b, :b)
+		correct(md"You've successfully defined type `H`.")
+	else
+		almost(md"You've successfully defined `H`. But you need to do it in the right place. Uncomment the line that defines `H`.")
+	end
+else
+	hint(md"Uncomment the line that defines `H`.")
+end
+
+# ╔═╡ 444ecb80-138e-43ef-8feb-4a8b1b40e4eb
+try
+	test0 = transition(H(), (ρ = 0,)) == H()
+	test1 = transition(H(), (ρ = 1,)) == R()
+	
+	if test0 && test1
+		correct(md"You've successfully specified a transition rule for `H`.")
+	else
+		keep_working(md"The transition rule for `H` doesn't seem to work correctly")
+	end
+catch e
+	if e isa MethodError
+		keep_working(md"The transition rule for `H` is not yet defined.")
+	else
+		keep_working(md"The transition rule for `H` doesn't seem to work correctly")
+	end
+end
+
+# ╔═╡ bd828ca7-5737-400e-be9e-6e23b07c02ad
+hint(md"You can look at the section **Define the transitions** for inspiration.")
+
+# ╔═╡ 45c718bb-ecfe-4107-bd84-1244184dc62a
+begin
+	try
+		test1 = transition(I(), (χ = 1, ρ = 0), 0) == H()
+		test2 = transition(I(), (χ = 0, ρ = 1), 0) == R()
+		test3 = transition(I(), (χ = 0, ρ = 0), 0) == I()
+	
+		if test1 && test2 && test3
+			correct(md"It seems that you've adjusted the transition rule for `I`. *(Note: the other rules are not checked)*")
+		else
+			keep_working()
+		end
+	catch
+		keep_working()
+	end
+end
+
+# ╔═╡ 808fa60d-79a2-47e4-95d1-98a74b87ffc7
+if answer2 == md"""
+Your answer
+
+goes here ...
+"""
+	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
+elseif wordcount(answer2) > 1.1 * 500
+	almost(md"Try to shorten your text a bit, to get below 500 words.")
+else
+	correct(md"Great, we are looking forward to reading your answer!")
+end
+
+# ╔═╡ 7fb38ee0-29cf-4b52-9c7c-97ae42ed4ba3
+function show_words_limit(answer, limit)
+	count = wordcount(answer)
+	if count < 1.02 * limit
+		return show_words(answer)
+	else
+		return almost(md"You are at $count words. Please shorten your text a bit, to get **below $limit words**.")
+	end
+end
+
+# ╔═╡ 1bc07c3c-f71e-444a-9c22-b447295d5d99
+show_words_limit(answer2, 500)
+
+# ╔═╡ e61f91d5-80e6-4dc8-814f-c4c038af284f
+show_words_limit(answer3, 500)
+
+# ╔═╡ 337e73e7-5454-4f1f-9d5e-9b01a5c2cd10
 TableOfContents()
+
+# ╔═╡ d4baea2f-3919-49eb-8d31-1bba68b322a7
+md"""
+## Acknowledgement
+"""
+
+# ╔═╡ dcce8f3c-7c26-4cdb-92d6-a98b091a1419
+Markdown.MD(
+	Markdown.Admonition("warning", "The design of this notebook is based on", 
+[md"""
+		
+_**Computational Thinking**, a live online Julia/Pluto textbook._ [(computationalthinking.mit.edu)](https://computationalthinking.mit.edu)
+"""]
+	))
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
-DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
+Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-GraphDataFrameBridge = "3c71623a-a715-5176-9801-629b201a4880"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
-MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
+MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
+PlutoTest = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 AlgebraOfGraphics = "~0.6.14"
-CSV = "~0.10.9"
 CairoMakie = "~0.10.2"
+CategoricalArrays = "~0.10.7"
 Chain = "~0.5.0"
-DataDeps = "~0.7.10"
+Colors = "~0.12.10"
 DataFrameMacros = "~0.4.0"
-DataFrames = "~1.4.4"
-GraphDataFrameBridge = "~0.3.0"
-GraphMakie = "~0.5.2"
-Graphs = "~1.7.4"
-MetaGraphs = "~0.7.2"
+DataFrames = "~1.5.0"
+GraphMakie = "~0.5.3"
+Graphs = "~1.8.0"
+MarkdownLiteral = "~0.1.1"
 NetworkLayout = "~0.4.4"
-PlutoUI = "~0.7.49"
-StatsBase = "~0.33.21"
+PlutoTest = "~0.2.2"
+PlutoUI = "~0.7.50"
+SimpleWeightedGraphs = "~1.3.0"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -393,7 +917,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.5"
 manifest_format = "2.0"
-project_hash = "46cc3296788af4b8259cd600787f5efba359cab8"
+project_hash = "a609eddf0a756a3739860e25324aa8d5a0839ccd"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -464,11 +988,6 @@ version = "0.4.6"
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
-[[deps.BitFlags]]
-git-tree-sha1 = "43b1a4a8f797c1cddadf60499a8a077d4af2cd2d"
-uuid = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
-version = "0.1.7"
-
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "19a35467a82e236ff51bc17a3a44b69ef35185a2"
@@ -482,12 +1001,6 @@ version = "0.4.2"
 
 [[deps.CRC32c]]
 uuid = "8bf52ea8-c179-5cab-976a-9e18b702a9bc"
-
-[[deps.CSV]]
-deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mmap", "Parsers", "PooledArrays", "SentinelArrays", "SnoopPrecompile", "Tables", "Unicode", "WeakRefStrings", "WorkerUtilities"]
-git-tree-sha1 = "c700cce799b51c9045473de751e9319bdd1c6e94"
-uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-version = "0.10.9"
 
 [[deps.Cairo]]
 deps = ["Cairo_jll", "Colors", "Glib_jll", "Graphics", "Libdl", "Pango_jll"]
@@ -513,6 +1026,12 @@ git-tree-sha1 = "f641eb0a4f00c343bbc32346e1217b86f3ce9dad"
 uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
 version = "0.5.1"
 
+[[deps.CategoricalArrays]]
+deps = ["DataAPI", "Future", "Missings", "Printf", "Requires", "Statistics", "Unicode"]
+git-tree-sha1 = "5084cc1a28976dd1642c9f337b28a3cb03e0f7d2"
+uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
+version = "0.10.7"
+
 [[deps.Chain]]
 git-tree-sha1 = "8c4920235f6c561e401dfe569beb8b924adad003"
 uuid = "8be319e6-bccf-4806-a6f7-6fae938471bc"
@@ -526,15 +1045,9 @@ version = "1.15.7"
 
 [[deps.ChangesOfVariables]]
 deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
-git-tree-sha1 = "844b061c104c408b24537482469400af6075aae4"
+git-tree-sha1 = "485193efd2176b88e6622a39a246f8c5b600e74e"
 uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
-version = "0.1.5"
-
-[[deps.CodecZlib]]
-deps = ["TranscodingStreams", "Zlib_jll"]
-git-tree-sha1 = "9c209fb7536406834aa938fb149964b985de6c83"
-uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
-version = "0.7.1"
+version = "0.1.6"
 
 [[deps.ColorBrewer]]
 deps = ["Colors", "JSON", "Test"]
@@ -565,6 +1078,12 @@ deps = ["ColorTypes", "FixedPointNumbers", "Reexport"]
 git-tree-sha1 = "fc08e5930ee9a4e03f84bfb5211cb54e7769758a"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.10"
+
+[[deps.CommonMark]]
+deps = ["Crayons", "JSON", "SnoopPrecompile", "URIs"]
+git-tree-sha1 = "e2f4627b0d3f2c1876360e0b242a7c23923b469d"
+uuid = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
+version = "0.8.10"
 
 [[deps.Compat]]
 deps = ["Dates", "LinearAlgebra", "UUIDs"]
@@ -598,12 +1117,6 @@ git-tree-sha1 = "e8119c1a33d267e16108be441a287a6981ba1630"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.14.0"
 
-[[deps.DataDeps]]
-deps = ["HTTP", "Libdl", "Reexport", "SHA", "p7zip_jll"]
-git-tree-sha1 = "bc0a264d3e7b3eeb0b6fc9f6481f970697f29805"
-uuid = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
-version = "0.7.10"
-
 [[deps.DataFrameMacros]]
 deps = ["DataFrames", "MacroTools"]
 git-tree-sha1 = "92ae44e8d08667be722ca197c97e60bcff1db968"
@@ -611,10 +1124,10 @@ uuid = "75880514-38bc-4a95-a458-c2aea5a3a702"
 version = "0.4.0"
 
 [[deps.DataFrames]]
-deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Random", "Reexport", "SnoopPrecompile", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
-git-tree-sha1 = "d4f69885afa5e6149d0cab3818491565cf41446d"
+deps = ["Compat", "DataAPI", "Future", "InlineStrings", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Random", "Reexport", "SentinelArrays", "SnoopPrecompile", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
+git-tree-sha1 = "aa51303df86f8626a962fccb878430cdb0a97eee"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "1.4.4"
+version = "1.5.0"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -723,12 +1236,6 @@ git-tree-sha1 = "7be5f99f7d15578798f338f5433b6c432ea8037b"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 version = "1.16.0"
 
-[[deps.FilePathsBase]]
-deps = ["Compat", "Dates", "Mmap", "Printf", "Test", "UUIDs"]
-git-tree-sha1 = "e27c4ebe80e8699540f2d6c805cc12203b614f12"
-uuid = "48062228-2e41-5def-b9a4-89aafe57970f"
-version = "0.9.20"
-
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
@@ -792,9 +1299,9 @@ version = "1.8.1"
 
 [[deps.GPUArraysCore]]
 deps = ["Adapt"]
-git-tree-sha1 = "57f7cde02d7a53c9d1d28443b9f11ac5fbe7ebc9"
+git-tree-sha1 = "1cd7f0af1aa58abc02ea1d872953a97359cb87fa"
 uuid = "46192b85-c4d5-4398-a991-12ede77f4527"
-version = "0.1.3"
+version = "0.1.4"
 
 [[deps.GeoInterface]]
 deps = ["Extents"]
@@ -820,17 +1327,11 @@ git-tree-sha1 = "d3b3624125c1474292d0d8ed0f65554ac37ddb23"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.74.0+2"
 
-[[deps.GraphDataFrameBridge]]
-deps = ["DataFrames", "Graphs", "MetaGraphs"]
-git-tree-sha1 = "b18c7d73c0e98ef99a85e13a0501f270eec67cdc"
-uuid = "3c71623a-a715-5176-9801-629b201a4880"
-version = "0.3.0"
-
 [[deps.GraphMakie]]
-deps = ["GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "StaticArrays"]
-git-tree-sha1 = "e43489eaa1512c8b1165a10b522bf20ebcb5f04c"
+deps = ["GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "PolynomialRoots", "StaticArrays"]
+git-tree-sha1 = "72882a1584f367cfecc83e3e8a232c7720c262cd"
 uuid = "1ecd5474-83a3-4783-bb4f-06765db800d2"
-version = "0.5.2"
+version = "0.5.3"
 
 [[deps.Graphics]]
 deps = ["Colors", "LinearAlgebra", "NaNMath"]
@@ -846,9 +1347,9 @@ version = "1.3.14+0"
 
 [[deps.Graphs]]
 deps = ["ArnoldiMethod", "Compat", "DataStructures", "Distributed", "Inflate", "LinearAlgebra", "Random", "SharedArrays", "SimpleTraits", "SparseArrays", "Statistics"]
-git-tree-sha1 = "ba2d094a88b6b287bd25cfa86f301e7693ffae2f"
+git-tree-sha1 = "1cf1d7dcb4bc32d7b4a5add4232db3750c27ecb4"
 uuid = "86223c79-3864-5bf0-83f7-82e725a168b6"
-version = "1.7.4"
+version = "1.8.0"
 
 [[deps.GridLayoutBase]]
 deps = ["GeometryBasics", "InteractiveUtils", "Observables"]
@@ -860,12 +1361,6 @@ version = "0.9.1"
 git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
 uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
 version = "1.0.2"
-
-[[deps.HTTP]]
-deps = ["Base64", "CodecZlib", "Dates", "IniFile", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
-git-tree-sha1 = "37e4657cd56b11abe3d10cd4a1ec5fbdb4180263"
-uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "1.7.4"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg"]
@@ -948,11 +1443,6 @@ git-tree-sha1 = "5cd07aab533df5170988219191dfad0519391428"
 uuid = "d25df0c9-e2be-5dd7-82c8-3ad0b3e990b9"
 version = "0.1.3"
 
-[[deps.IniFile]]
-git-tree-sha1 = "f550e6e32074c939295eb5ea6de31849ac2c9625"
-uuid = "83e8ac13-25f8-5344-8a64-a9f2b223428f"
-version = "0.5.1"
-
 [[deps.InlineStrings]]
 deps = ["Parsers"]
 git-tree-sha1 = "9cc2baf75c6d09f9da536ddf58eb2f29dedaf461"
@@ -1013,12 +1503,6 @@ git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
 version = "1.0.0"
 
-[[deps.JLD2]]
-deps = ["FileIO", "MacroTools", "Mmap", "OrderedCollections", "Pkg", "Printf", "Reexport", "TranscodingStreams", "UUIDs"]
-git-tree-sha1 = "c3244ef42b7d4508c638339df1bdbf4353e144db"
-uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-version = "0.4.30"
-
 [[deps.JLLWrappers]]
 deps = ["Preferences"]
 git-tree-sha1 = "abc9885a7ca2052a736a600f7fa66209f96506e1"
@@ -1033,15 +1517,15 @@ version = "0.21.3"
 
 [[deps.JpegTurbo]]
 deps = ["CEnum", "FileIO", "ImageCore", "JpegTurbo_jll", "TOML"]
-git-tree-sha1 = "a77b273f1ddec645d1b7c4fd5fb98c8f90ad10a5"
+git-tree-sha1 = "106b6aa272f294ba47e96bd3acbabdc0407b5c60"
 uuid = "b835a17e-a41a-41e7-81f0-2f016b05efe0"
-version = "0.1.1"
+version = "0.1.2"
 
 [[deps.JpegTurbo_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "b53380851c6e6664204efb2e62cd24fa5c47e4ba"
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "6f2675ef130a300a112286de91973805fcc5ffbc"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
-version = "2.1.2+0"
+version = "2.1.91+0"
 
 [[deps.KernelDensity]]
 deps = ["Distributions", "DocStringExtensions", "FFTW", "Interpolations", "StatsBase"]
@@ -1145,18 +1629,12 @@ version = "0.5.4"
 
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
-git-tree-sha1 = "45b288af6956e67e621c5cbb2d75a261ab58300b"
+git-tree-sha1 = "071602a0be5af779066df0d7ef4e14945a010818"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "0.3.20"
+version = "0.3.22"
 
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
-
-[[deps.LoggingExtras]]
-deps = ["Dates", "Logging"]
-git-tree-sha1 = "cedb76b37bc5a6c702ade66be44f831fa23c681e"
-uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
-version = "1.0.0"
 
 [[deps.MIMEs]]
 git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
@@ -1196,6 +1674,12 @@ version = "0.4.1"
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
+[[deps.MarkdownLiteral]]
+deps = ["CommonMark", "HypertextLiteral"]
+git-tree-sha1 = "0d3fa2dd374934b62ee16a4721fe68c418b92899"
+uuid = "736d6165-7244-6769-4267-6b50796e6954"
+version = "0.1.1"
+
 [[deps.Match]]
 git-tree-sha1 = "1d9bc5c1a6e7ee24effb93f175c9342f9154d97f"
 uuid = "7eb4fadd-790c-5f42-8a69-bfa0b872bfbf"
@@ -1207,22 +1691,10 @@ git-tree-sha1 = "f04120d9adf4f49be242db0b905bea0be32198d1"
 uuid = "0a4f8689-d25c-4efe-a92b-7142dfc1aa53"
 version = "0.5.4"
 
-[[deps.MbedTLS]]
-deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "Random", "Sockets"]
-git-tree-sha1 = "03a9b9718f5682ecb107ac9f7308991db4ce395b"
-uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
-version = "1.1.7"
-
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.28.0+0"
-
-[[deps.MetaGraphs]]
-deps = ["Graphs", "JLD2", "Random"]
-git-tree-sha1 = "1130dbe1d5276cb656f6e1094ce97466ed700e5a"
-uuid = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
-version = "0.7.2"
 
 [[deps.MiniQhull]]
 deps = ["QhullMiniWrapper_jll"]
@@ -1251,9 +1723,9 @@ version = "2022.2.1"
 
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
-git-tree-sha1 = "a7c3d1da1189a1c2fe843a3bfa04d18d20eb3211"
+git-tree-sha1 = "0877504529a3e5c3343c6f8b4c0381e57e4387e4"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
-version = "1.0.1"
+version = "1.0.2"
 
 [[deps.Netpbm]]
 deps = ["FileIO", "ImageCore", "ImageMetadata"]
@@ -1310,17 +1782,11 @@ deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
 version = "0.8.1+0"
 
-[[deps.OpenSSL]]
-deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
-git-tree-sha1 = "6503b77492fd7fcb9379bf73cd31035670e3c509"
-uuid = "4d8831e6-92b7-49fb-bdf8-b643e874388c"
-version = "1.3.3"
-
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "f6e9dba33f9f2c44e08a020b0caf6903be540004"
+git-tree-sha1 = "9ff31d101d987eb9d66bd8b176ac7c277beccd09"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
-version = "1.1.19+0"
+version = "1.1.20+0"
 
 [[deps.OpenSpecFun_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
@@ -1376,9 +1842,9 @@ version = "1.50.9+0"
 
 [[deps.Parsers]]
 deps = ["Dates", "SnoopPrecompile"]
-git-tree-sha1 = "151d91d63d8d6c1a5789ecb7de51547e00480f1b"
+git-tree-sha1 = "6f4fbcd1ad45905a5dee3f4256fabb49aa2110c6"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.5.4"
+version = "2.5.7"
 
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1403,16 +1869,27 @@ git-tree-sha1 = "c95373e73290cf50a8a22c3375e4625ded5c5280"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.3.4"
 
+[[deps.PlutoTest]]
+deps = ["HypertextLiteral", "InteractiveUtils", "Markdown", "Test"]
+git-tree-sha1 = "17aa9b81106e661cffa1c4c36c17ee1c50a86eda"
+uuid = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
+version = "0.2.2"
+
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "eadad7b14cf046de6eb41f13c9275e5aa2711ab6"
+git-tree-sha1 = "5bb5129fdd62a2bbbe17c2756932259acf467386"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.49"
+version = "0.7.50"
 
 [[deps.PolygonOps]]
 git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
 uuid = "647866c9-e3ac-4575-94e7-e3d426903924"
 version = "0.1.2"
+
+[[deps.PolynomialRoots]]
+git-tree-sha1 = "5f807b5345093487f733e520a1b7395ee9324825"
+uuid = "3a141323-8675-5d76-9d11-e1df1406c778"
+version = "1.0.0"
 
 [[deps.PooledArrays]]
 deps = ["DataAPI", "Future"]
@@ -1462,9 +1939,9 @@ version = "8.0.1001+0"
 
 [[deps.QuadGK]]
 deps = ["DataStructures", "LinearAlgebra"]
-git-tree-sha1 = "de191bc385072cc6c7ed3ffdc1caeed3f22c74d4"
+git-tree-sha1 = "786efa36b7eff813723c4849c90456609cf06661"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-version = "2.7.0"
+version = "2.8.1"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -1572,16 +2049,17 @@ git-tree-sha1 = "d263a08ec505853a5ff1c1ebde2070419e3f28e9"
 uuid = "73760f76-fbc4-59ce-8f25-708e95d2df96"
 version = "0.4.0"
 
-[[deps.SimpleBufferStream]]
-git-tree-sha1 = "874e8867b33a00e784c8a7e4b60afe9e037b74e1"
-uuid = "777ac1f9-54b0-4bf8-805c-2214025038e7"
-version = "1.1.0"
-
 [[deps.SimpleTraits]]
 deps = ["InteractiveUtils", "MacroTools"]
 git-tree-sha1 = "5d7e3f4e11935503d3ecaf7186eac40602e7d231"
 uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 version = "0.9.4"
+
+[[deps.SimpleWeightedGraphs]]
+deps = ["Graphs", "LinearAlgebra", "Markdown", "SparseArrays", "Test"]
+git-tree-sha1 = "7d0b07df35fccf9b866a94bcab98822a87a3cb6f"
+uuid = "47aef6b3-ad0c-573a-a1e2-d07658019622"
+version = "1.3.0"
 
 [[deps.Sixel]]
 deps = ["Dates", "FileIO", "ImageCore", "IndirectArrays", "OffsetArrays", "REPL", "libsixel_jll"]
@@ -1628,9 +2106,9 @@ version = "0.1.1"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
-git-tree-sha1 = "6954a456979f23d05085727adb17c4551c19ecd1"
+git-tree-sha1 = "2d7d9e1ddadc8407ffd460e24218e37ef52dd9a3"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.5.12"
+version = "1.5.16"
 
 [[deps.StaticArraysCore]]
 git-tree-sha1 = "6b7ba252635a5eff6a0b0664a41ee140a1c9e72a"
@@ -1740,9 +2218,9 @@ uuid = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
 version = "1.3.0"
 
 [[deps.URIs]]
-git-tree-sha1 = "ac00576f90d8a259f2c9d823e91d1de3fd44d348"
+git-tree-sha1 = "074f993b0ca030848b897beff716d93aca60f06a"
 uuid = "5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
-version = "1.4.1"
+version = "1.4.2"
 
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
@@ -1757,22 +2235,11 @@ git-tree-sha1 = "53915e50200959667e78a92a418594b428dffddf"
 uuid = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 version = "0.4.1"
 
-[[deps.WeakRefStrings]]
-deps = ["DataAPI", "InlineStrings", "Parsers"]
-git-tree-sha1 = "b1be2855ed9ed8eac54e5caff2afcdb442d52c23"
-uuid = "ea10d353-3f73-51f8-a26c-33c1cb351aa5"
-version = "1.4.2"
-
 [[deps.WoodburyMatrices]]
 deps = ["LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "de67fa59e33ad156a590055375a30b23c40299d3"
 uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
 version = "0.5.5"
-
-[[deps.WorkerUtilities]]
-git-tree-sha1 = "cd1659ba0d57b71a464a29e64dbc67cfe83d54e7"
-uuid = "76eceee3-57b5-4d4a-8e66-0e911cebbf60"
-version = "1.6.1"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "Zlib_jll"]
@@ -1910,69 +2377,108 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─c4bc21f1-899d-48e8-9c4c-883f7608f753
-# ╟─839922f0-97b2-4bc9-9aa9-e3e93336b7e4
-# ╟─b52a8fc1-551d-49a8-8c39-93ee0e600fb2
-# ╟─d158181e-666f-11eb-2f70-9dc4b6e53b16
-# ╟─46c487fa-6732-11eb-229c-f31402dcbbe2
-# ╠═c93b4722-6a43-49e8-bf15-89cdd5906098
-# ╟─69083a09-9741-459e-a298-523f2b176527
-# ╠═d6557f8a-6734-11eb-0fd4-0b7b5f602bab
-# ╟─11e98628-6734-11eb-1b66-83663e790a78
-# ╠═b28b095f-4829-40ef-8929-1d8b76b26d04
-# ╟─6ecd8032-2ad6-4879-9cf8-5638dd47a724
-# ╠═541b25de-6670-11eb-2ad1-2babaf714216
-# ╠═5b312d16-6670-11eb-2da6-976db9964456
-# ╠═45c86e74-6670-11eb-1acd-41f288f6de70
-# ╟─ff893920-6782-11eb-2728-270f9261597d
-# ╠═98e5e1c9-45e6-47ab-b43a-768cbc64b6c5
-# ╟─714ff2ca-fa02-4e14-b3f0-83c03dfc649b
-# ╟─a06b7ad2-6603-11eb-1588-195115c5f351
-# ╟─2efb4dea-2149-4588-83b4-2e2e05e71d62
-# ╠═a58a3582-64a3-11eb-01e1-11f707525149
-# ╠═aac6e282-6603-11eb-18bd-95a57f187167
-# ╠═a860b0c8-6738-11eb-37f5-ebb8ce7b40cb
-# ╠═bcc6ca3a-5e95-11eb-3f13-877d22fe2ff2
-# ╟─8c156bfb-dc75-4a32-9178-7f4006345e0d
-# ╟─bb2b8184-6737-11eb-279e-6fc09622b8ca
-# ╠═3432e110-673f-11eb-2275-59c3aa7df804
-# ╟─c4319a9e-b265-4dc8-bcd7-db3afa55e102
-# ╠═7966a3e2-3f7d-49b0-b7be-cefa2a99c38c
-# ╟─4b9b4e65-c947-4ea6-b166-153cb4db57df
-# ╟─bcafe43f-a38e-4824-9db4-5fec7f675e46
-# ╟─dc38df66-6782-11eb-2a76-af6fb73608b6
-# ╠═4c90a10c-673f-11eb-0c0e-75814d92f251
-# ╟─cfc9f604-6604-11eb-23bc-699617b17d7d
-# ╟─135bce4d-ee2d-405c-a3c0-7e881cd64c48
-# ╠═1d4c6d8e-666f-11eb-3c3e-bbf2737bd162
-# ╠═ea44b5fc-666e-11eb-371f-3b1af8983ad0
-# ╠═b0bf3e34-666f-11eb-3126-ebbbcad4ad12
-# ╠═2ca63b10-f091-4197-892d-5120027f6fd5
-# ╟─3c946356-af84-4d81-aca2-cc29d1a4b60b
-# ╠═24dd4376-5e8f-11eb-02e7-f34f7c169726
-# ╠═395fe4f2-42b9-48f8-a5cb-ebea288aff90
-# ╠═45ce2bae-b2ad-4665-a8a6-86f78d7dcc2a
-# ╠═91f4f3a7-2226-48a1-8880-25306adf95b9
-# ╠═3fee5013-2f1e-4965-90ed-d8f2c084ea79
-# ╠═30bb2d4e-5dcd-4959-a1a6-dc6e1525a267
-# ╠═ee5e68e5-292d-4c89-8157-b1102a490356
-# ╟─6d4ec768-649f-11eb-1093-054ab8976450
-# ╟─cb02fb71-3433-4187-84fe-94c055ea5f25
-# ╠═923d97aa-1843-40a9-b3b0-1f33e94c07a4
-# ╠═c704150e-3a59-4ea7-8e3a-809d52cc8794
-# ╟─30bc4c58-18d5-4265-ae4e-7cbb004c4c5e
-# ╠═4d6a9177-36a0-4492-a1c1-6d50e51207be
-# ╠═428fefad-901d-4aac-83d1-4972188ae2ff
-# ╠═e5a49f36-d5ba-4a59-af93-5a9633308f40
-# ╠═4aae7c84-a853-42a1-9c4f-4d6e22093638
-# ╟─36ff82b5-09c8-49b5-9d10-3c37ba5e3c42
-# ╠═947b6053-8739-4402-9d52-d02c03622826
-# ╠═860a6151-ac4b-4364-a78f-1d81fcc3b472
-# ╠═49a082f3-6f27-4996-9094-8f6a17029440
-# ╟─ac7a38f5-a636-4956-9ca1-218253de72db
-# ╠═6c9646f7-3c33-4c87-9fa4-dabbfe896b3a
-# ╠═38ee92bb-714f-4cc6-a945-21ff017edc10
-# ╠═9009f6a9-f46f-46c9-acee-ebe02b47fea5
-# ╠═14a046a8-7f5d-41bd-a5c5-6040c16d019f
+# ╟─d7ab1943-d456-400d-b4c3-dda9f6c1fe26
+# ╟─13313236-502d-46ca-bf24-a4defd6d792f
+# ╟─44c1c228-d864-49ab-a8bf-bd7d6bd260cd
+# ╟─ec2e4346-1246-40cc-83e4-bb8c7e76bdd0
+# ╟─f45eb218-92d8-4bfe-87f6-e128c17db7c2
+# ╟─cd6c5481-ccc7-47d8-acda-4e90fc98b10e
+# ╟─14989685-a257-40c5-8e24-79fff0d1b825
+# ╟─eaf1fd63-5977-4b99-9c11-ec301fba8078
+# ╟─edbf2ae4-237d-4755-9419-b98b8ef52fc2
+# ╟─aba35d11-a5da-4e48-ace5-d7f317198b3e
+# ╟─bd986adf-2688-470f-8d62-9b66ed3f3d0f
+# ╟─0aa33258-a8c2-403f-b466-95dbaee2cc75
+# ╟─a35ae69d-6c82-4ac0-bbd9-0f443747b3e6
+# ╠═f1664b58-75c1-4a79-9540-85303ed3a42f
+# ╟─d6beb034-5171-46a2-a05a-2133f58e54e9
+# ╟─e73f7e86-eaac-493c-b34d-8f08ba5d3c6a
+# ╠═5bfce3c7-5fe4-43e8-9987-3a7764be243c
+# ╟─444ecb80-138e-43ef-8feb-4a8b1b40e4eb
+# ╟─bd828ca7-5737-400e-be9e-6e23b07c02ad
+# ╟─edb73532-2868-452c-afe2-e1fce60abb77
+# ╟─45c718bb-ecfe-4107-bd84-1244184dc62a
+# ╟─2e2f0ad7-d3c7-4a91-abe7-817f399783c3
+# ╟─5fe6969a-2453-4ac9-bf15-c2d9310115f1
+# ╠═886ae5b6-f052-4082-bfa1-c8a23f4c880a
+# ╠═fd9cdd83-d12c-49d6-9521-02b15f692f70
+# ╠═cba2a2cb-c2d5-4cb5-a3d1-a2a5d02bb336
+# ╟─9fadd61c-2532-4ad5-9c60-f17c18821624
+# ╠═80350d9e-ace6-4970-8861-0e767030f3d6
+# ╠═14991792-4dee-472a-a331-23be55edc92c
+# ╟─6dda8f0a-64d4-47e2-aae7-65d2d48deac7
+# ╟─3945ab48-4d4a-41d1-80bb-75038aab4f7e
+# ╠═c3537e04-800f-4fa8-9320-a64db4391287
+# ╟─1bc07c3c-f71e-444a-9c22-b447295d5d99
+# ╟─808fa60d-79a2-47e4-95d1-98a74b87ffc7
+# ╟─c140b224-c10d-437b-85c0-2755c8d72970
+# ╠═5b53a9c1-d176-4740-95e8-98283ad57cf9
+# ╠═e61f91d5-80e6-4dc8-814f-c4c038af284f
+# ╟─064bfd13-944a-4d3b-8075-cf5d92018878
+# ╠═d73b9db2-742d-4c75-9ff0-2cdce26a8ec8
+# ╠═5c85f4fb-4431-4196-9663-c5ddbc719a0a
+# ╟─8c133759-f2ca-4c0c-a5e5-19f5ff188436
+# ╠═d1b16bec-ae19-4740-80fe-a711fd145089
+# ╟─ade7f9b5-cf6e-4278-95e0-651691baa892
+# ╠═ca1610dc-653a-4df9-bfc7-0366576ded08
+# ╠═5cb8fa66-9a1e-4d27-a1c6-f26c1b7f3532
+# ╠═baad47a0-398e-4f9f-9af6-7686acdc25e4
+# ╠═396f4c50-1b1e-449e-bf39-557018f2dd78
+# ╠═d600e317-61a8-4b7e-a5ab-706b175f5765
+# ╟─b636cf26-de30-4d0d-8f59-f5872440b1d1
+# ╠═993546ec-5dbe-4c08-9c11-072bc343390a
+# ╠═56ca0088-97e0-493b-95fb-88bc35610d6d
+# ╠═891e5c60-468a-44c7-9b5a-609dcdb02cc2
+# ╟─08abc77a-814a-11ec-3d54-439126a38a85
+# ╟─e4bf4d41-9568-42a1-b01b-e22fc5c39ec1
+# ╠═3d85c3c6-9303-47e6-9fa6-5fc975cf750a
+# ╠═5b944c23-442c-4f02-924c-2bad76b7970d
+# ╠═223a560f-fc61-4432-9409-5cb2cb3d9789
+# ╟─bf5ca480-d913-4b21-a85b-b1b2c0b4c2f9
+# ╠═0da25924-c89b-4a1b-b63e-7cb2d17fcbc3
+# ╠═dc8b82e1-5e15-4832-a460-a2ce0da2ffc1
+# ╠═71cf8b81-f7d2-43cb-97e8-b5e7928c4120
+# ╟─065c0b3c-d738-4581-b9f8-6446a20d0c0a
+# ╠═36edee11-497d-415c-b589-8a333573bb8c
+# ╟─3cd01849-fabd-4e97-841a-2eea57c93167
+# ╟─19c68050-596c-4604-99b2-eb5fc045db10
+# ╠═2ef4585f-7c76-4382-bdc6-455a08448c6f
+# ╠═acaa8906-56e8-4202-8a82-98afb4c2f458
+# ╠═58228108-6500-443b-8350-3d4e10f75988
+# ╟─6fb0e547-f592-4765-bf6f-70e441119ea0
+# ╠═a9ed4bc1-f943-456f-b122-484b9455a90a
+# ╠═486fc0c3-b4fe-4f3a-b434-fe6dbb7181a3
+# ╠═02daff76-2eeb-4f87-ba0c-3632180b2e2b
+# ╠═b0000ea5-8d36-42f8-9416-8d1a3737c401
+# ╠═0a023b5e-d5f3-4a0f-b1f8-b3bf9d715074
+# ╟─b15bf71d-3062-49d6-a3cc-4ce2f1cb83df
+# ╠═a7d3635a-846f-42a1-bb0c-1a132b15aeb0
+# ╠═9c3605bb-a0c6-4c7f-ae62-942733c2e3c1
+# ╠═dd4e214a-0d9b-446b-be65-ff4c0817e87e
+# ╠═bde45cf6-a0f7-4ebb-b361-adc8d0e6aad6
+# ╠═94d1cfd9-8e2d-42d3-9968-c84b89e1bfc3
+# ╟─311110d0-f62e-49e1-bf27-ebf09e1c08a1
+# ╠═bff18f1e-9ec9-4f52-b800-7ecd631f39fa
+# ╠═af67ffba-216c-480e-8523-b7236bf1fe83
+# ╠═2e2e455b-9ba2-4c22-b7db-a014b9384935
+# ╠═1f8b5ffc-cc22-41f1-bf87-9a58e16ea2b5
+# ╠═ff3f0580-0b8f-40c0-9e8d-ddf556745354
+# ╠═64031dfe-3f01-4ec1-aff7-5646cfde96f0
+# ╠═84a3ad96-4854-4ab8-be5c-b4859d1a2e39
+# ╠═c5b3e888-3b6f-449b-8f72-455fe86743d2
+# ╠═e35ed6b2-3e18-40b5-b9fd-c6bb216ed2a0
+# ╟─f924060e-d722-4444-bcf2-987c8ee7b83d
+# ╠═64536894-ee22-4520-9097-f625c530d7be
+# ╠═74e4acbe-89d7-4ce9-a1f7-0cc9b2a7bca7
+# ╠═0c511a66-b69d-4146-9927-885eeb24d240
+# ╠═d45a3bfd-1187-4c07-84a2-026318b84456
+# ╠═b4aeb1f6-b804-4335-a6e2-72c55af5c7a4
+# ╠═565eb639-92c8-44db-b2f1-c118c83ae077
+# ╠═7fb38ee0-29cf-4b52-9c7c-97ae42ed4ba3
+# ╠═c49c0fce-0bc7-4665-81bf-24e61707fde7
+# ╠═f5e85900-1ea7-4dd3-8999-2e121efa9447
+# ╠═337e73e7-5454-4f1f-9d5e-9b01a5c2cd10
+# ╟─d4baea2f-3919-49eb-8d31-1bba68b322a7
+# ╟─dcce8f3c-7c26-4cdb-92d6-a98b091a1419
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
