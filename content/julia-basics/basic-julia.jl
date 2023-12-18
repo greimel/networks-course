@@ -1,6 +1,15 @@
 ### A Pluto.jl notebook ###
 # v0.19.22
 
+#> [frontmatter]
+#> chapter = 1
+#> section = 1
+#> order = 1
+#> title = "Basic Julia"
+#> layout = "layout.jlhtml"
+#> description = ""
+#> tags = ["preliminaries"]
+
 using Markdown
 using InteractiveUtils
 
