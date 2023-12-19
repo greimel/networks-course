@@ -130,7 +130,7 @@ Note, that you can build directed graphs using `SimpleDiGraph`. Replace `SimpleD
 """
 
 # ╔═╡ d3feb786-2c69-416f-8fda-e2b4da0c0c1c
-graphplot(my_network, layout=Shell(), node_size=20, arrow_size=20, node_color="orange", nlabels = string.(1:nv(my_network)) )
+graphplot(my_network, layout=Shell(), arrow_size=20, node_color="orange", ilabels = vertices(my_network) )
 
 # ╔═╡ 7057b8a6-91a9-495f-ac29-669d5652c8d0
 md"""
@@ -308,14 +308,14 @@ end
 
 # ╔═╡ 77cc233a-d916-4959-a73c-7138cfdd03af
 graphplot(network,
-	node_size = 15,
+	#node_size = 35,
 	edge_width = 1,
-	nlabels =
-		!show_degree ? 
-			string.(1:nv(network)) :
-			string.(1:nv(network)) .* " (degree: " .* string.(degree(network)) .* ")",
+	ilabels = vertices(network),
+	node_size = 35,
+	#nlabels =
+	#	!show_degree ? 
+	#		"" : "degree: " .* string.(degree(network)),
 		#string.(1:nv(network)) .* " (clust.: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
-	
 	node_color = highlight_neighbors(network, i),
 	edge_color = (:black, 0.5)
 )
@@ -566,14 +566,14 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
-CairoMakie = "~0.10.2"
+CairoMakie = "~0.11.3"
 Colors = "~0.12.10"
-FreqTables = "~0.4.5"
-GraphMakie = "~0.5.2"
+FreqTables = "~0.4.6"
+GraphMakie = "~0.5.9"
 Graphs = "~1.9.0"
 MetaGraphs = "~0.7.2"
-NetworkLayout = "~0.4.4"
-PlutoUI = "~0.7.49"
+NetworkLayout = "~0.4.6"
+PlutoUI = "~0.7.54"
 SNAPDatasets = "~0.2.0"
 SimpleWeightedGraphs = "~1.4.0"
 StatsBase = "~0.34.2"
@@ -585,7 +585,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.4"
 manifest_format = "2.0"
-project_hash = "2ca852dabfd5557f41095f288e01a769ec5dc1cf"
+project_hash = "f82a5368ffa9e2462e838c731d04d009327a7042"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -719,10 +719,10 @@ uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
 version = "1.0.5"
 
 [[deps.CairoMakie]]
-deps = ["Base64", "Cairo", "Colors", "FFTW", "FileIO", "FreeType", "GeometryBasics", "LinearAlgebra", "Makie", "PrecompileTools", "SHA"]
-git-tree-sha1 = "5e21a254d82c64b1a4ed9dbdc7e87c5d9cf4a686"
+deps = ["CRC32c", "Cairo", "Colors", "FFTW", "FileIO", "FreeType", "GeometryBasics", "LinearAlgebra", "Makie", "PrecompileTools"]
+git-tree-sha1 = "966ebbf4dbd45cf0746d35d9ea8bf2c28e45ba41"
 uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-version = "0.10.12"
+version = "0.11.3"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -980,6 +980,18 @@ git-tree-sha1 = "299dc33549f68299137e51e6d49a13b5b1da9673"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 version = "1.16.1"
 
+[[deps.FilePaths]]
+deps = ["FilePathsBase", "MacroTools", "Reexport", "Requires"]
+git-tree-sha1 = "919d9412dbf53a2e6fe74af62a73ceed0bce0629"
+uuid = "8fc22ac5-c921-52a6-82fd-178b2807b824"
+version = "0.8.3"
+
+[[deps.FilePathsBase]]
+deps = ["Compat", "Dates", "Mmap", "Printf", "Test", "UUIDs"]
+git-tree-sha1 = "9f00e42f8d99fdde64d40c8ea5d14269a2e2c1aa"
+uuid = "48062228-2e41-5def-b9a4-89aafe57970f"
+version = "0.9.21"
+
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
@@ -1105,9 +1117,9 @@ version = "2.76.5+0"
 
 [[deps.GraphMakie]]
 deps = ["DataStructures", "GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "PolynomialRoots", "SimpleTraits", "StaticArrays"]
-git-tree-sha1 = "005289c1020e55641af09a38e95e098b7ba0ca18"
+git-tree-sha1 = "2edb7248e503c2a89230e30785cb163c3f7bedfb"
 uuid = "1ecd5474-83a3-4783-bb4f-06765db800d2"
-version = "0.5.6"
+version = "0.5.9"
 
 [[deps.Graphics]]
 deps = ["Colors", "LinearAlgebra", "NaNMath"]
@@ -1129,9 +1141,9 @@ version = "1.9.0"
 
 [[deps.GridLayoutBase]]
 deps = ["GeometryBasics", "InteractiveUtils", "Observables"]
-git-tree-sha1 = "f57a64794b336d4990d90f80b147474b869b1bc4"
+git-tree-sha1 = "af13a277efd8a6e716d79ef635d5342ccb75be61"
 uuid = "3955a311-db13-416c-9275-1d80ed98e5e9"
-version = "0.9.2"
+version = "0.10.0"
 
 [[deps.Grisu]]
 git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
@@ -1285,9 +1297,9 @@ version = "1.0.0"
 
 [[deps.JLD2]]
 deps = ["FileIO", "MacroTools", "Mmap", "OrderedCollections", "Pkg", "PrecompileTools", "Printf", "Reexport", "Requires", "TranscodingStreams", "UUIDs"]
-git-tree-sha1 = "133263d48b027e7b1e3ead5e67e6d99d6846efb4"
+git-tree-sha1 = "c2d0f45afcb5f6209155670bffd100c3b4937ea3"
 uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-version = "0.4.39"
+version = "0.4.40"
 
 [[deps.JLLWrappers]]
 deps = ["Artifacts", "Preferences"]
@@ -1468,16 +1480,16 @@ uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 version = "0.5.11"
 
 [[deps.Makie]]
-deps = ["Animations", "Base64", "CRC32c", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "DelaunayTriangulation", "Distributions", "DocStringExtensions", "Downloads", "FFMPEG_jll", "FileIO", "FixedPointNumbers", "Formatting", "FreeType", "FreeTypeAbstraction", "GeometryBasics", "GridLayoutBase", "ImageIO", "InteractiveUtils", "IntervalSets", "Isoband", "KernelDensity", "LaTeXStrings", "LinearAlgebra", "MacroTools", "MakieCore", "Markdown", "MathTeXEngine", "Observables", "OffsetArrays", "Packing", "PlotUtils", "PolygonOps", "PrecompileTools", "Printf", "REPL", "Random", "RelocatableFolders", "Setfield", "ShaderAbstractions", "Showoff", "SignedDistanceFields", "SparseArrays", "StableHashTraits", "Statistics", "StatsBase", "StatsFuns", "StructArrays", "TriplotBase", "UnicodeFun"]
-git-tree-sha1 = "35fa3c150cd96fd77417a23965b7037b90d6ffc9"
+deps = ["Animations", "Base64", "CRC32c", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "DelaunayTriangulation", "Distributions", "DocStringExtensions", "Downloads", "FFMPEG_jll", "FileIO", "FilePaths", "FixedPointNumbers", "Formatting", "FreeType", "FreeTypeAbstraction", "GeometryBasics", "GridLayoutBase", "ImageIO", "InteractiveUtils", "IntervalSets", "Isoband", "KernelDensity", "LaTeXStrings", "LinearAlgebra", "MacroTools", "MakieCore", "Markdown", "MathTeXEngine", "Observables", "OffsetArrays", "Packing", "PlotUtils", "PolygonOps", "PrecompileTools", "Printf", "REPL", "Random", "RelocatableFolders", "Setfield", "ShaderAbstractions", "Showoff", "SignedDistanceFields", "SparseArrays", "StableHashTraits", "Statistics", "StatsBase", "StatsFuns", "StructArrays", "TriplotBase", "UnicodeFun"]
+git-tree-sha1 = "db14b5ba682d431317435c866734995a89302c3c"
 uuid = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-version = "0.19.12"
+version = "0.20.2"
 
 [[deps.MakieCore]]
 deps = ["Observables", "REPL"]
-git-tree-sha1 = "9b11acd07f21c4d035bd4156e789532e8ee2cc70"
+git-tree-sha1 = "e81e6f1e8a0e96bf2bf267e4bf7f94608bf09b5c"
 uuid = "20f20a25-4f0e-4fdf-b5d1-57303727442b"
-version = "0.6.9"
+version = "0.7.1"
 
 [[deps.MappedArrays]]
 git-tree-sha1 = "2dab0221fe2b0f2cb6754eaa743cc266339f527e"
@@ -2302,7 +2314,7 @@ version = "3.5.0+0"
 # ╠═d25c59f6-8f99-4a83-8750-10518a13f6ae
 # ╠═63fff52b-d485-4fb3-be2c-80039e6ebc2a
 # ╟─edbb8f3b-f133-481b-8972-fdcd87b5acef
-# ╟─77cc233a-d916-4959-a73c-7138cfdd03af
+# ╠═77cc233a-d916-4959-a73c-7138cfdd03af
 # ╟─75194951-3f88-4855-98d4-a987430f5b00
 # ╟─4b0dc2b4-a56d-45e3-8d58-a53978c4ff7f
 # ╟─609dfa37-2208-40b7-bc47-60d0c9ec54c8

@@ -227,7 +227,7 @@ md"""
 node_names(metagraph) = getindex.(Ref(metagraph), 1:nv(metagraph), :name)
 
 # ╔═╡ 3fee5013-2f1e-4965-90ed-d8f2c084ea79
-url_ti = "https://greimel.github.io/networks-course/Fall23/assets/ti_netwk0711.csv"
+url_ti = "https://greimel.github.io/networks-course/assets/datasets/ti_netwk0711.csv"
 
 # ╔═╡ 30bb2d4e-5dcd-4959-a1a6-dc6e1525a267
 begin

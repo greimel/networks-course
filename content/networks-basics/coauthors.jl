@@ -65,7 +65,7 @@ md"""
 """
 
 # ╔═╡ 438b124e-287b-4c74-bc2b-d2ee11f3f3ab
-url_ti = "https://greimel.github.io/networks-course/Fall23/assets/ti_netwk0711.csv"
+url_ti = "https://greimel.github.io/networks-course/assets/datasets/ti_netwk0711.csv"
 
 # ╔═╡ fc91f3b6-6839-4fb5-8de3-2238622c6325
 begin
