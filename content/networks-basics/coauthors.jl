@@ -115,7 +115,7 @@ ti_plot = graphplot(g[core],
 	edge_width = 0.5,
 	node_size = 10,
 	node_color = "orange",
-	node_attr = (strokewidth = 1, strokecolor = :black),
+	node_attr = (strokewidth = 0.5, strokecolor = :black),
 )
 
 # ╔═╡ a2539aee-6605-11eb-0788-157d9b7c1060
@@ -125,11 +125,11 @@ g1 = k_core(g, 3)
 # ╔═╡ c96871cc-6605-11eb-161b-41af51664d50
 graphplot(g[g1],
 	layout = Spring(),
-	edge_color = "gray",
+	edge_color = :gray,
 	edge_width = 0.5,
 	node_size = 10,
-	node_color = "orange",
-	node_attr = (strokewidth = 1, strokecolor = :black)
+	node_color = :orange,
+	node_attr = (strokewidth = 0.5, strokecolor = :black)
 )
 
 # ╔═╡ 295dcee0-6608-11eb-04d7-a9232f4a727a

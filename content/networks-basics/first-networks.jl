@@ -288,14 +288,9 @@ end
 
 # ╔═╡ f26e4c88-fc29-41fe-b932-c136047dabb6
 graphplot(network,
-	node_size = 15,
+	node_size = 19,
 	edge_width = 1,
-	nlabels =
-		!show_clustering ? 
-			string.(1:nv(network)) :
-			string.(1:nv(network)) .* " (cl: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
-		#string.(1:nv(network)) .* " (clust.: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
-	
+	ilabels = vertices(network),	
 	node_color = color_nodes(network, [[from, to]]),
 	edge_color = [e ∈ path || reverse(e) ∈ path ? :red : :gray
 	 for e ∈ edges(network)]
@@ -308,26 +303,27 @@ end
 
 # ╔═╡ 77cc233a-d916-4959-a73c-7138cfdd03af
 graphplot(network,
-	#node_size = 35,
 	edge_width = 1,
 	ilabels = vertices(network),
-	node_size = 35,
-	#nlabels =
-	#	!show_degree ? 
-	#		"" : "degree: " .* string.(degree(network)),
-		#string.(1:nv(network)) .* " (clust.: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
+	node_size = 20,
+	nlabels =
+		!show_degree ? 
+			nothing : 
+			"deg: " .* string.(degree(network)),
+	nlabels_offset = Point2f(0.1, 0.0),
 	node_color = highlight_neighbors(network, i),
 	edge_color = (:black, 0.5)
 )
 
 # ╔═╡ 9b3ede7b-6e55-4d98-8f8f-6b18382fcb43
 graphplot(network,
-	node_size = 15,
+	node_size = 19,
 	edge_width = 1,
+	ilabels = vertices(network),
 	nlabels =
 		!show_clustering ? 
-			string.(1:nv(network)) :
-			string.(1:nv(network)) .* " (cl: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
+			nothing :
+			"cl: " .* string.(round.(local_clustering_coefficient(network), digits=2)),
 		#string.(1:nv(network)) .* " (clust.: " .* string.(round.(local_clustering_coefficient(network), digits=2)) .* ")",
 	
 	node_color = highlight_neighbors(network, j),
@@ -464,9 +460,7 @@ edge_weights = (e.weight for e in edges(weighted_network))
 graphplot(
 	weighted_network,
 	elabels = string.(edge_weights),
-	nlabels = string.(1:3),
-	node_size=20,
-	node_color="orange"
+	ilabels = vertices(weighted_network)
 )
 
 # ╔═╡ 99fb9532-6479-11eb-1c7b-1d385d3a5441
@@ -2314,7 +2308,7 @@ version = "3.5.0+0"
 # ╠═d25c59f6-8f99-4a83-8750-10518a13f6ae
 # ╠═63fff52b-d485-4fb3-be2c-80039e6ebc2a
 # ╟─edbb8f3b-f133-481b-8972-fdcd87b5acef
-# ╠═77cc233a-d916-4959-a73c-7138cfdd03af
+# ╟─77cc233a-d916-4959-a73c-7138cfdd03af
 # ╟─75194951-3f88-4855-98d4-a987430f5b00
 # ╟─4b0dc2b4-a56d-45e3-8d58-a53978c4ff7f
 # ╟─609dfa37-2208-40b7-bc47-60d0c9ec54c8

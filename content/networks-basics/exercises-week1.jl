@@ -320,12 +320,12 @@ graphplot(ti_graph,
 	edge_color = "gray",
 	edge_width = 0.5,
 	node_size = 10,
-	node_color = "orange",
 	nlabels = ifelse.(
 		central_researchers.rank_degree .≤ 10, # if this condition holds
 		central_researchers.name,              # then provide name as label
 		""                                     # else provide no label ("")
 	),
+	node_color = ifelse.(central_researchers.rank_degree .≤ 10, :orange, :gray),
 	node_attr = (strokewidth = 1, strokecolor = :black),
 )
 
