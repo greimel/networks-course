@@ -9,7 +9,7 @@ Dict(
     :about => Dict(
         :authors => [
             (name = "Fabian Greimel", url = "https://www.greimel.eu"),
-            (name = "Simon Trimborn", url = "https://www.simontrimborn.com")
+            (name = "Simon Trimborn", url = "https://www.simontrimborn.de")
         ],
         :title => "Networks in Economics and Finance",
         :subtitle => "Theory, Computation and Data",
