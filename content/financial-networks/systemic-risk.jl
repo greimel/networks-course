@@ -1,6 +1,15 @@
 ### A Pluto.jl notebook ###
 # v0.19.22
 
+#> [frontmatter]
+#> chapter = 5
+#> section = 1
+#> order = 2
+#> title = "Risk sharing in financial networks"
+#> layout = "layout.jlhtml"
+#> description = ""
+#> tags = ["financial-networks"]
+
 using Markdown
 using InteractiveUtils
 
