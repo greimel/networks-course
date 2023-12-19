@@ -2,9 +2,9 @@ Dict(
     :main => [
         "welcome" => collections["welcome"].pages,
         "Preliminaries" => collections["julia-basics"].pages,
-        "Networks Basics" => collections["networks-basics"].pages,
+        "Networks basics" => collections["networks-basics"].pages,
         #"Diffusion on Networks" => collections["diffusion"].pages,
-
+        "Financial networks" => collections["financial-networks"].pages,
     ],
     :about => Dict(
         :authors => [
