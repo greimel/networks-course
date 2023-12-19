@@ -1,9 +1,9 @@
 Dict(
     :main => [
         "welcome" => collections["welcome"].pages,
-        "Preliminaries" => collections["julia-basics"].pages,
+        "Julia basics" => collections["julia-basics"].pages,
         "Networks basics" => collections["networks-basics"].pages,
-        #"Diffusion on Networks" => collections["diffusion"].pages,
+        "Diffusion on Networks" => collections["diffusion"].pages,
         "Financial networks" => collections["financial-networks"].pages,
     ],
     :about => Dict(
@@ -16,7 +16,7 @@ Dict(
         :term => "Spring 2024",
         :institution => "University of Amsterdam",
         :institution_url => "http://www.uva.nl",
-        :institution_logo => "uva-logo.svg",
-        :institution_logo_darkmode => "uva-logo.svg"
+        :institution_logo => "uva_logo.svg",
+        :institution_logo_darkmode => "uva_logo.svg"
     )
 )

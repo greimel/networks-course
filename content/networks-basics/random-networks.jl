@@ -1,6 +1,15 @@
 ### A Pluto.jl notebook ###
 # v0.19.22
 
+#> [frontmatter]
+#> chapter = 2
+#> section = 4
+#> order = 1
+#> title = "Random networks"
+#> layout = "layout.jlhtml"
+#> tags = ["networks-basics"]
+#> description = ""
+
 using Markdown
 using InteractiveUtils
 
