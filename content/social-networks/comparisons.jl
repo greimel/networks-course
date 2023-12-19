@@ -1,6 +1,15 @@
 ### A Pluto.jl notebook ###
 # v0.16.1
 
+#> [frontmatter]
+#> chapter = 4
+#> section = 2
+#> order = 1
+#> title = "Social comparisons"
+#> layout = "layout.jlhtml"
+#> tags = ["social-networks"]
+#> description = ""
+
 using Markdown
 using InteractiveUtils
 

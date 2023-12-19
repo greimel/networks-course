@@ -4,7 +4,9 @@ Dict(
         "Julia basics" => collections["julia-basics"].pages,
         "Networks basics" => collections["networks-basics"].pages,
         "Diffusion on Networks" => collections["diffusion"].pages,
+        "Social networks" => collections["social-networks"].pages,
         "Financial networks" => collections["financial-networks"].pages,
+        "Production networks" => collections["production-networks"].pages,
     ],
     :about => Dict(
         :authors => [
