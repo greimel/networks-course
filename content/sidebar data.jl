@@ -3,7 +3,7 @@ Dict(
         "welcome" => collections["welcome"].pages,
         "Preliminaries" => collections["julia-basics"].pages,
         "Networks Basics" => collections["networks-basics"].pages,
-        "Diffusion on Networks" => collections["diffusion"].pages,
+        #"Diffusion on Networks" => collections["diffusion"].pages,
 
     ],
     :about => Dict(
