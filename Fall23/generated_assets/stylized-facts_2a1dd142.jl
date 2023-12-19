@@ -3,8 +3,8 @@
 
 #> [frontmatter]
 #> chapter = 2
-#> section = 1
-#> order = 3
+#> section = 3
+#> order = 1
 #> title = "Typical properties of social networks"
 #> layout = "layout.jlhtml"
 #> description = ""

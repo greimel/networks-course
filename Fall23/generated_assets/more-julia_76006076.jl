@@ -3,8 +3,8 @@
 
 #> [frontmatter]
 #> chapter = 1
-#> section = 1
-#> order = 2
+#> section = 2
+#> order = 1
 #> title = "More Julia"
 #> layout = "layout.jlhtml"
 #> description = ""

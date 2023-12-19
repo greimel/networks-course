@@ -3,9 +3,9 @@
 
 #> [frontmatter]
 #> chapter = 5
-#> section = 1
-#> order = 2
-#> title = "Risk sharing in financial networks"
+#> section = 2
+#> order = 1
+#> title = "Systemic risk in financial networks"
 #> layout = "layout.jlhtml"
 #> description = ""
 #> tags = ["financial-networks"]
