@@ -62,6 +62,7 @@ jobs:
             - name: 🔀 Combine semesters into single site
               run: |
                 mkdir www
+                mv content/assets_pub www/assets
                 mv PlutoPages/_site www/Fall23
                 mv PlutoPages/extra_outputs/* www
 
