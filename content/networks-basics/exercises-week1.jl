@@ -2,9 +2,9 @@
 # v0.19.36
 
 #> [frontmatter]
-#> chapter = 2
+#> chapter = 5
 #> section = 5
-#> order = 1
+#> order = 5
 #> title = "Exercises"
 #> layout = "layout.jlhtml"
 #> tags = ["networks-basics"]

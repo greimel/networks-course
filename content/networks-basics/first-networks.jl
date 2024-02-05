@@ -2,7 +2,7 @@
 # v0.19.36
 
 #> [frontmatter]
-#> chapter = 2
+#> chapter = 1
 #> section = 1
 #> order = 1
 #> title = "First networks"
