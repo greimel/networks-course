@@ -1,8 +1,27 @@
 ### A Pluto.jl notebook ###
 # v0.19.36
 
+#> [frontmatter]
+#> chapter = 7
+#> section = 7
+#> order = 7
+#> title = "Assignment 1: A GitHub network"
+#> layout = "layout.jlhtml"
+#> tags = ["networks-basics"]
+#> description = ""
+
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
 
 # ╔═╡ 61d837dd-1675-4f8b-ab88-c1e9cce3cd5b
 using Graphs
@@ -22,6 +41,125 @@ using GraphMakie, CairoMakie
 # ╔═╡ 7b06c8bb-0c59-472d-8459-4573c81af95f
 using DataFrames
 
+# ╔═╡ eef87040-4c96-49e4-8297-e90231b438fb
+md"
+`github-data.jl` | **Version 1.0** | *last changed: Feb 5, 2024*"
+
+# ╔═╡ c0220198-9f64-4059-b13f-801233ce1c03
+@bind csv_in FilePicker()
+
+# ╔═╡ d677ab32-2c3f-4906-ad8a-f4aa7e4af6ca
+md"""
+#### Task 1: Analyze the network (5 points)
+👉 Describe the network in terms of the measures that are discussed in lectures 1 and 2. You can look at the notebook **first-networks.jl** and the section *Analyzing the network* for some inspiration.
+
+👉 Interpret all results that you show.
+
+👉 Be accurate but concise. Aim at no more than 500 words.
+
+You can spread your answer over multiple cells. Add code and text cells as it suits you.
+"""
+
+# ╔═╡ 6f7c5b2d-cbfe-4bda-be55-2e22105b6265
+answer1_1 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 29dd5ca2-b531-4c62-92ee-d477140aadd8
+# some
+
+# ╔═╡ 29ffdf2b-0d3e-4aaa-a7bf-25a4a05f9160
+# analysis
+
+# ╔═╡ 319781e4-ac31-412a-aa47-90c08646305a
+# analyze
+
+# ╔═╡ 57b9f288-a885-4904-9222-2237363e52a2
+# more
+
+# ╔═╡ e7d9e7ec-edd5-481a-bac3-5f5a09d5220c
+answer1_3 = md"""
+... write more ... add more cells if you need. If you want to use the word count above, adjust the cell below. 
+
+"""
+
+# ╔═╡ f9780dc1-b507-46a4-a877-d69b145ddae0
+md"""
+**NOTE** the word count is done by the function `wordcount` at the very bottom. It may not be completely accurate :-). It's ok to be below the word limit, but it's not ok to be above!
+"""
+
+# ╔═╡ bfe802e4-1af1-4556-9f25-895989791407
+md"""
+#### Task 2: Adding context (3 points)
+
+Let us now color the nodes (repositories) **according to their programming language** (Julia, R, Python).
+"""
+
+# ╔═╡ b15f2df0-b5ed-4308-a092-0888b8a57e10
+md"""
+👉 Play with the sliders below. These determine how the network is defined. 
+"""
+
+# ╔═╡ 1a2bc4ed-868e-439f-bd29-78716d6e763e
+md"""
+* _Minimal number of joint contributors:_ There need to be **at least** $(@bind min_joint PlutoUI.Slider(1:15, default = 2, show_value = true)) people that have contribted in both repos, so that we consider them as linked.
+
+* _Minimal number of contributions per contributor:_ people with **fewer than** $(@bind min_contrib PlutoUI.Slider(1:15, default = 2, show_value = true))  contributions (in either repo) will not be considered.
+"""
+
+# ╔═╡ bc9def15-5b41-4c94-8c88-3bb6c109fa19
+md"""
+👉 What can you learn about these groups of *R*, *Julia* and *Python* repositories? <250 words. 
+"""
+
+# ╔═╡ 3f2014aa-8318-4ae6-8f0d-c58f0cc61b9d
+answer2 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 2b764133-26fd-4933-a915-1a163be10e85
+md"""
+#### Task 3: Looking under the hood (3 points)
+
+Now look at section **Constructing the network** of this notebook. Make sure you understand what data are available to us and how we created the network from the data. 
+
+👉 We want to read your critical thoughts in <250 words. You might tell us about an idea how to generate a different network from the data. Or what twist you would add to our network to make it more interesting. 
+"""
+
+# ╔═╡ 265ce115-a04c-4320-9289-f7afa34915c4
+answer3 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ c525eca8-e3cc-4a41-92a1-c85f1b308e99
+md"""
+#### Before you submit ...
+
+👉 Make sure you have added your names and your group number [in the cells below](#f021cb3e-6177-11eb-20f6-b5f9c69ed186).
+
+👉 Make sure that that **all group members proofread** your submission (especially your little essay).
+
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
+"""
+
+# ╔═╡ 048a9011-35ee-4228-8a0d-e7b24e262de4
+group_number = 99
+
+# ╔═╡ 1b4dc99f-ca9b-4eba-9649-c1b87f37273d
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]);
+
+# ╔═╡ 41da2593-0528-43b1-be0e-054b820a1ea8
+if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
+	md"""
+!!! danger "Note!"
+    **Before you submit**, please replace the [randomly generated names in this cell](#1b4dc99f-ca9b-4eba-9649-c1b87f37273d) by the names of your group and put the [right group number in the cell above.](#048a9011-35ee-4228-8a0d-e7b24e262de4).
+	"""
+end
+
 # ╔═╡ a4ab528d-bc5b-4ae3-974c-7aa51dfe3d37
 md"""
 ## Selecting Github repositories
@@ -33,7 +171,30 @@ md"""
 """
 
 # ╔═╡ 854fdf93-da34-4c01-bece-6c4cb3bfe121
-df_repos = ["pandas-dev/pandas", "Rdatatable/data.table", "JuliaData/DataFrames.jl"]
+dataframes_packages = ["pandas-dev/pandas", "Rdatatable/data.table", "JuliaData/DataFrames.jl"]
+
+# ╔═╡ e3c0c318-1079-442b-8385-4d52ecdbe109
+networks_packages = ["networkx/networkx", "JuliaGraphs/Graphs.jl", "igraph/rigraph"]
+
+# ╔═╡ 87b3aea6-8a7d-43e1-a1f1-c97c1197632d
+plotting_packages = ["matplotlib/matplotlib", "JuliaPlots/Plots.jl", "tidyverse/ggplot2"]
+
+# ╔═╡ d7ab9443-5e8b-40c8-845c-3ff147b91167
+md"""
+Pick packages to compare (this will take a few minutes to run)
+"""
+
+# ╔═╡ 73ebdc58-0df3-485d-8539-803d5190d147
+@bind df_repos Select([
+	dataframes_packages => "dataframes",
+	networks_packages => "networks",
+	plotting_packages => "plotting"
+])
+
+# ╔═╡ ecd2189b-ad94-4d98-8f42-4e11d8c0b6df
+md"""
+# Constructing the network
+"""
 
 # ╔═╡ 357e427d-7efa-4398-804f-650e3d0af831
 md"""
@@ -55,6 +216,19 @@ md"""
 #### _Step 5:_ Find all contributors of these packages
 """
 
+# ╔═╡ 4183de92-8700-41a0-b367-a05471376a8b
+md"""
+#### _Save dataset_
+"""
+
+# ╔═╡ a6ac9c08-5d58-4bc8-8dbc-0976692c3512
+csv = joinpath(tempdir(), "github-data.csv")
+
+# ╔═╡ 89d96030-18e6-45c3-b2e8-5643a1561f10
+md"""
+$(DownloadButton(read(csv), basename(csv))) (This downloads the current dataset to share with the rest of your group.)
+"""
+
 # ╔═╡ 5d94b49a-995d-44b0-b8b7-93a95486ce62
 md"""
 #### _Step 6:_ Create a list of packages with their contributors
@@ -65,15 +239,8 @@ md"""
 #### _Step 7:_ Build the graph
 """
 
-# ╔═╡ 15a23c90-e769-4411-86a7-e6ed8a406006
-md"""
-#### _Step 8:_ Visualize
-"""
-
-# ╔═╡ 8895f87f-65cb-48ea-b918-d4ff6ec4630f
-md"""
-# First graph (too many nodes)
-"""
+# ╔═╡ 96c6ae89-7f11-4063-a331-e0a6a804f5e7
+language2color = Dict("R" => colorant"blue", "Python" => colorant"orange", "Julia" => colorant"purple")
 
 # ╔═╡ c067ae31-5867-43fe-ae04-1565e0bc119c
 md"""
@@ -82,9 +249,6 @@ md"""
 
 # ╔═╡ 3378ff91-3308-41c6-b6ea-717bcf85ce25
 TableOfContents()
-
-# ╔═╡ 96c6ae89-7f11-4063-a331-e0a6a804f5e7
-language2color = Dict("R" => colorant"blue", "Python" => colorant"orange", "Julia" => colorant"purple")
 
 # ╔═╡ c19b16da-8981-4ee7-8ae7-f78fc3ab1440
 garbled_token = "hitgub__XX_I4Y01nwfEK5qt_YY_mIw7LNvK0bMH73XOJhbIs_ZZ_pa7U6RLB3OXNtP0s1hh"
@@ -131,7 +295,7 @@ repo_list_short_with_contribs = @transform(
 )
 
 # ╔═╡ 7132140b-b19c-44ae-8719-dcd890f2db7c
-repo_constrib_list = @chain repo_list_short_with_contribs begin
+repo_contrib_list0 = @chain repo_list_short_with_contribs begin
 	flatten(:contributors)
 	select(:full_name => :repo, :language, :contributors => AsTable)
 	@transform(:contributor = :contributor.login)
@@ -139,94 +303,187 @@ repo_constrib_list = @chain repo_list_short_with_contribs begin
 	@transform(:share_contributions = @bycol :contributions ./ sum(:contributions))
 end
 
+# ╔═╡ 43d8772b-132e-4470-be6c-f100f5419a64
+core(graph) = argmax(length, connected_components(graph))
+
+# ╔═╡ f2aaa908-6b59-4384-8bc1-f4d840ab1f94
+import CSV
+
+# ╔═╡ d180f3f7-0415-4a66-a417-73afde45b92b
+md"""
+## Assignment infrastructure
+"""
+
+# ╔═╡ f21d41cc-6c5a-4ee5-815a-654f9b0c4b6a
+members = let
+	names = map(group_members) do (; firstname, lastname)
+		firstname * " " * lastname
+	end
+	join(names, ", ", " & ")
+end
+
+# ╔═╡ c9a57e32-2bd6-40b1-a3da-b9c785c21765
+md"""
+# Assignment 1: A GitHub Network
+
+*submitted by* **$members** (*group $(group_number)*)
+
+In this assignment you will analyze a network of **GitHub repositories**. GitHub is a social network where people can **collaborate on code**. Code is organized in **repos** (repositories): each repo corresponds to one project.
+
+Once you have run the notebook, the picture below shows a **network of selected repos**. These **repos are linked if a person has contributed to both repositories**.
+"""
+
+# ╔═╡ 01c0f340-1486-4317-9d5b-95390088ab21
+function wordcount(text)
+	stripped_text = strip(replace(string(text), r"\s" => " "))
+   	words = split(stripped_text, (' ', '-', '.', ',', ':', '_', '"', ';', '!', '\''))
+   	length(filter(!=(""), words))
+end
+
+# ╔═╡ 1cef5c54-741b-4a3f-91d5-291e11c98dda
+show_words(answer) = md"_approximately $(wordcount(answer)) words_"
+
+# ╔═╡ 9cab98b9-c380-4525-8e5c-67f9f6a9ba45
+begin
+	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
+	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
+	still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
+	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
+	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
+	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
+end
+
+# ╔═╡ 6632b6fa-6f8d-4545-92b1-40ac1ef97642
+if answer1_1 == md"Your answer goes here ..."
+	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
+else
+	correct(md"Great, we are looking forward to reading your answer!")
+end
+
+# ╔═╡ fec31d6a-4101-47e3-9197-a16fe2051ae7
+if answer2 == md"Your answer goes here ..."
+	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
+else
+	correct(md"Great, we are looking forward to reading your answer!")
+end
+
+# ╔═╡ aec9c518-c613-42dc-b14c-ef508e1e8889
+if answer3 == md"Your answer goes here ..."
+	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
+else
+	correct(md"Great, we are looking forward to reading your answer!")
+end
+
+# ╔═╡ 2970cdb4-f418-4c4f-badf-afcc52d56920
+function show_words_limit(answer, limit)
+	count = wordcount(answer)
+	if count < 1.02 * limit
+		return show_words(answer)
+	else
+		return almost(md"You are at $count words. Please shorten your text a bit, to get **below $limit words**.")
+	end
+end
+
+# ╔═╡ ae4890bd-337a-4507-8c90-13a21745b47e
+show_words_limit(answer2, 250)
+
+# ╔═╡ 1ad904eb-85fa-4c50-b835-e161ebdeacaf
+show_words_limit(answer3, 250)
+
+# ╔═╡ f563dbec-d4e5-47d6-9911-fcdeaabb02d7
+note(text; title="FYI") = Markdown.MD(Markdown.Admonition("note", title, [text]))
+
+# ╔═╡ 3b4b8127-f219-4f6f-b127-657f15f92442
+if !isnothing(csv_in) 
+	data_source = csv_in["name"]
+	repo_contrib_list = CSV.File(csv_in["data"])
+	note(md"""You are using data from $(csv_in["name"]). Remove the file from the file picker to generate your own dataset.""")
+else
+	data_source = "generated in notebook"
+	repo_contrib_list = repo_contrib_list0
+	note(md"""You are using data that were generated in the notebook. Alternatively you can use a `.csv` file that was generated by a member of your group and upload it using the _File Picker_ above.""")
+end
+
+# ╔═╡ ae7e82db-3b7c-4edc-b8b1-309857117bac
+csv_file = CSV.write(csv, repo_contrib_list)
+
 # ╔═╡ be304942-3d7e-4397-bb81-120b410a66f3
-df = @chain repo_constrib_list begin
-	@subset(:contributions ≥ 2)
+node_df(min_contrib) = @chain repo_contrib_list begin
+	@subset(:contributions ≥ min_contrib)
 	@groupby(:repo)
 	@combine(:contributors = Set(:contributor), :languages = unique(:language))
 	@transform(:color = language2color[:languages])
 end
 
 # ╔═╡ b7e72871-4cb7-4ea0-aeb1-5100bfc4ca9e
-repo_graph = let
-	df = df
+function repo_graph(min_contrib, min_joint)
+	node_list = node_df(min_contrib)
 	
-	nv = size(df, 1)
+	nv = size(node_list, 1)
 	graph = SimpleGraph(nv)
 	
 	for i ∈ 1:nv
 		for j ∈ i+1:nv
-			if length(df[i,:contributors] ∩ df[j, :contributors]) ≥ 2
+			if length(node_list[i,:contributors] ∩ node_list[j, :contributors]) ≥ min_joint
 				add_edge!(graph, i, j)
 			end
 		end
 	end
 
-	graph
+	(; node_list, graph)
 end
 
-# ╔═╡ 20f99321-e070-4815-b341-667f7398775e
-# ╠═╡ disabled = true
-#=╠═╡
-node_df = @chain repo_constrib_list begin
+# ╔═╡ 5ae6ec3e-e06f-4b79-8973-990f7413d699
+(; graph) = repo_graph(1, 15);
 
-	sort(:contributions)
-	@groupby(:repo)
-	combine(x -> first(x, 200))
-	@groupby(:repo)
-	@transform(:share_contributions = @bycol :contributions ./ sum(:contributions))
-	@subset(:contributions > 2)#, :share_contributions > 0.001)
-	@groupby(:contributor)
-	@combine(:repos = Set(:repo), :languages = unique(:language))
-	@transform(:color = language2color[:languages])
+# ╔═╡ 512e9c60-4c18-4ede-9b49-deab80c131d6
+let
+	fig, ax, _ = graphplot(graph, 
+		node_color="orange", edge_width = 0.5,
+		figure = (; size = (400, 300)))
+	hidedecorations!(ax)
+
+	fig
 end
-  ╠═╡ =#
 
-# ╔═╡ 6d728d3e-6d70-4d85-9968-136bf7e252e6
-#=╠═╡
-graph = let
-	nv = size(node_df, 1)
-	graph = SimpleGraph(nv)
-	
-	for i ∈ 1:nv
-		for j ∈ i+1:nv
-			if length(node_df[i,:repos] ∩ node_df[j, :repos]) ≥ 1
-				add_edge!(graph, i, j)
-			end
-		end
-	end
-
-	graph
+# ╔═╡ 0d5d5df4-d097-4abe-8328-29594dea4b01
+# some dummy analysis
+begin
+	n_edges = ne(graph)
+	n_nodes = nv(graph)
 end
-  ╠═╡ =#
 
-# ╔═╡ 84e48618-6952-486f-b6c3-1a47ed8cc741
-#=╠═╡
-selected_nodes = vertices(graph) #core(graph)
-  ╠═╡ =#
+# ╔═╡ 7845e1d8-a008-4dcb-bb45-0a0ac212b902
+answer1_2 = md"""
+... Continue here ... This **network of Github repos** has $n_nodes nodes and $n_edges edges. ...
+"""
 
-# ╔═╡ 4ff2a0eb-447a-474b-90b4-ea4c39446918
-#=╠═╡
-graphplot(graph[selected_nodes], 
-	node_color = tuple.(node_df.color[selected_nodes], 0.3),
-	edge_color = :lightgray, edge_width = 0.5
-)
-  ╠═╡ =#
+# ╔═╡ 821b1a45-9ad0-442f-9047-838a283f821b
+answer1 = [answer1_1, answer1_2, answer1_3];
 
-# ╔═╡ ffb451fd-2f4e-45e6-b227-2d5031af86af
+# ╔═╡ 22fc3325-7909-4416-8763-e3c7981cfcca
+show_words_limit(join(answer1, " "), 500)
 
+# ╔═╡ 7ddd10b5-bfeb-4059-82ec-9c190a4b41c9
+node_list2, graph2 = repo_graph(min_joint, min_contrib);
 
-# ╔═╡ 43d8772b-132e-4470-be6c-f100f5419a64
-core(graph) = argmax(length, connected_components(graph))
+# ╔═╡ 0cdba445-c620-4525-b10c-6dfa4fde2b71
+selected_nodes = vertices(graph2)
+#selected_nodes = argmax(length, connected_components(graph2))
 
 # ╔═╡ 58687117-ffdf-469c-8c6b-115719796d1d
-let
-	selected_nodes = core(repo_graph)
-	fig, ax, plt = graphplot(repo_graph[selected_nodes], 
-		node_color = tuple.(df.color[selected_nodes], 1.0),
-		edge_color = :lightgray, edge_width = 0.5
+let	
+	graph, node_list = graph2, node_list2
+	selected_nodes
+	
+	fig, ax, plt = graphplot(graph[selected_nodes], 
+		node_color = tuple.(node_list.color[selected_nodes], 1.0),
+		edge_color = :lightgray, edge_width = 1.0,
+		figure = (; size = (500, 300))
 	)
 
+	hidedecorations!(ax)
+	
 	lang2col = collect(pairs(language2color))
 	elements = [MarkerElement(; color, marker=:circle) for color ∈ last.(lang2col)]
 	labels = first.(lang2col)
@@ -238,6 +495,7 @@ end
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
 DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
@@ -248,6 +506,7 @@ Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
+CSV = "~0.10.12"
 CairoMakie = "~0.11.8"
 Chain = "~0.5.0"
 DataFrameMacros = "~0.4.1"
@@ -264,7 +523,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.0"
 manifest_format = "2.0"
-project_hash = "18804b8f77f39592e0d524df4914b3ed3f546d59"
+project_hash = "93a14fc4a34716aae9a4a2005665bd8392b8c169"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -401,6 +660,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "e329286945d0cfc04456972ea732551869af1cfc"
 uuid = "4e9b3aee-d8a1-5a3d-ad8b-7d824db253f0"
 version = "1.0.1+0"
+
+[[deps.CSV]]
+deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mmap", "Parsers", "PooledArrays", "PrecompileTools", "SentinelArrays", "Tables", "Unicode", "WeakRefStrings", "WorkerUtilities"]
+git-tree-sha1 = "679e69c611fff422038e9e21e270c4197d49d918"
+uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+version = "0.10.12"
 
 [[deps.Cairo]]
 deps = ["Cairo_jll", "Colors", "Glib_jll", "Graphics", "Libdl", "Pango_jll"]
@@ -1919,11 +2184,22 @@ git-tree-sha1 = "53915e50200959667e78a92a418594b428dffddf"
 uuid = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 version = "0.4.1"
 
+[[deps.WeakRefStrings]]
+deps = ["DataAPI", "InlineStrings", "Parsers"]
+git-tree-sha1 = "b1be2855ed9ed8eac54e5caff2afcdb442d52c23"
+uuid = "ea10d353-3f73-51f8-a26c-33c1cb351aa5"
+version = "1.4.2"
+
 [[deps.WoodburyMatrices]]
 deps = ["LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "c1a7aa6219628fcd757dede0ca95e245c5cd9511"
 uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
 version = "1.0.0"
+
+[[deps.WorkerUtilities]]
+git-tree-sha1 = "cd1659ba0d57b71a464a29e64dbc67cfe83d54e7"
+uuid = "76eceee3-57b5-4d4a-8e66-0e911cebbf60"
+version = "1.6.1"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Zlib_jll"]
@@ -2067,9 +2343,52 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
+# ╟─41da2593-0528-43b1-be0e-054b820a1ea8
+# ╟─eef87040-4c96-49e4-8297-e90231b438fb
+# ╟─c9a57e32-2bd6-40b1-a3da-b9c785c21765
+# ╟─512e9c60-4c18-4ede-9b49-deab80c131d6
+# ╠═5ae6ec3e-e06f-4b79-8973-990f7413d699
+# ╟─c0220198-9f64-4059-b13f-801233ce1c03
+# ╟─3b4b8127-f219-4f6f-b127-657f15f92442
+# ╟─89d96030-18e6-45c3-b2e8-5643a1561f10
+# ╟─d677ab32-2c3f-4906-ad8a-f4aa7e4af6ca
+# ╠═6f7c5b2d-cbfe-4bda-be55-2e22105b6265
+# ╟─6632b6fa-6f8d-4545-92b1-40ac1ef97642
+# ╠═0d5d5df4-d097-4abe-8328-29594dea4b01
+# ╠═29dd5ca2-b531-4c62-92ee-d477140aadd8
+# ╠═29ffdf2b-0d3e-4aaa-a7bf-25a4a05f9160
+# ╠═7845e1d8-a008-4dcb-bb45-0a0ac212b902
+# ╠═319781e4-ac31-412a-aa47-90c08646305a
+# ╠═57b9f288-a885-4904-9222-2237363e52a2
+# ╠═e7d9e7ec-edd5-481a-bac3-5f5a09d5220c
+# ╠═821b1a45-9ad0-442f-9047-838a283f821b
+# ╟─22fc3325-7909-4416-8763-e3c7981cfcca
+# ╟─f9780dc1-b507-46a4-a877-d69b145ddae0
+# ╟─bfe802e4-1af1-4556-9f25-895989791407
+# ╟─58687117-ffdf-469c-8c6b-115719796d1d
+# ╟─b15f2df0-b5ed-4308-a092-0888b8a57e10
+# ╟─1a2bc4ed-868e-439f-bd29-78716d6e763e
+# ╠═0cdba445-c620-4525-b10c-6dfa4fde2b71
+# ╟─bc9def15-5b41-4c94-8c88-3bb6c109fa19
+# ╠═3f2014aa-8318-4ae6-8f0d-c58f0cc61b9d
+# ╟─ae4890bd-337a-4507-8c90-13a21745b47e
+# ╟─fec31d6a-4101-47e3-9197-a16fe2051ae7
+# ╠═7ddd10b5-bfeb-4059-82ec-9c190a4b41c9
+# ╟─2b764133-26fd-4933-a915-1a163be10e85
+# ╠═265ce115-a04c-4320-9289-f7afa34915c4
+# ╟─1ad904eb-85fa-4c50-b835-e161ebdeacaf
+# ╟─aec9c518-c613-42dc-b14c-ef508e1e8889
+# ╟─c525eca8-e3cc-4a41-92a1-c85f1b308e99
+# ╠═048a9011-35ee-4228-8a0d-e7b24e262de4
+# ╠═1b4dc99f-ca9b-4eba-9649-c1b87f37273d
 # ╟─a4ab528d-bc5b-4ae3-974c-7aa51dfe3d37
 # ╟─ece45ccb-8566-4677-93e4-4aae78c81bc4
 # ╠═854fdf93-da34-4c01-bece-6c4cb3bfe121
+# ╠═e3c0c318-1079-442b-8385-4d52ecdbe109
+# ╠═87b3aea6-8a7d-43e1-a1f1-c97c1197632d
+# ╟─d7ab9443-5e8b-40c8-845c-3ff147b91167
+# ╟─73ebdc58-0df3-485d-8539-803d5190d147
+# ╟─ecd2189b-ad94-4d98-8f42-4e11d8c0b6df
 # ╟─357e427d-7efa-4398-804f-650e3d0af831
 # ╠═9daa5f85-9a3e-4315-beee-e6136dcd3782
 # ╠═d06cb138-52d8-43b9-abc4-c93573406a7f
@@ -2081,29 +2400,32 @@ version = "3.5.0+0"
 # ╟─3b32c857-0132-4f5a-83e9-466a7c7edaa9
 # ╠═9a886758-5680-4905-b76a-291ce9ebe8f4
 # ╠═7132140b-b19c-44ae-8719-dcd890f2db7c
+# ╟─4183de92-8700-41a0-b367-a05471376a8b
+# ╠═a6ac9c08-5d58-4bc8-8dbc-0976692c3512
+# ╠═ae7e82db-3b7c-4edc-b8b1-309857117bac
 # ╟─5d94b49a-995d-44b0-b8b7-93a95486ce62
 # ╠═be304942-3d7e-4397-bb81-120b410a66f3
 # ╟─8710aa87-9b2c-4491-9537-c3a15286ed07
 # ╠═b7e72871-4cb7-4ea0-aeb1-5100bfc4ca9e
-# ╟─15a23c90-e769-4411-86a7-e6ed8a406006
-# ╠═58687117-ffdf-469c-8c6b-115719796d1d
-# ╠═8895f87f-65cb-48ea-b918-d4ff6ec4630f
-# ╠═20f99321-e070-4815-b341-667f7398775e
-# ╠═6d728d3e-6d70-4d85-9968-136bf7e252e6
-# ╠═84e48618-6952-486f-b6c3-1a47ed8cc741
-# ╠═4ff2a0eb-447a-474b-90b4-ea4c39446918
+# ╠═96c6ae89-7f11-4063-a331-e0a6a804f5e7
 # ╟─c067ae31-5867-43fe-ae04-1565e0bc119c
 # ╠═3378ff91-3308-41c6-b6ea-717bcf85ce25
-# ╠═96c6ae89-7f11-4063-a331-e0a6a804f5e7
+# ╠═43d8772b-132e-4470-be6c-f100f5419a64
 # ╠═61d837dd-1675-4f8b-ab88-c1e9cce3cd5b
 # ╠═1defacf5-16e3-458e-9679-2aa13f5c9b37
 # ╠═b816d306-c42a-11ee-0450-03a6f623e031
 # ╠═c19b16da-8981-4ee7-8ae7-f78fc3ab1440
 # ╠═8b6af171-9746-4f02-851d-a52c7d406e70
 # ╠═9832aa67-9add-4475-8e81-52355b9f6917
-# ╠═ffb451fd-2f4e-45e6-b227-2d5031af86af
 # ╠═91997733-8567-4f5c-aae3-75b29e6dc174
-# ╠═43d8772b-132e-4470-be6c-f100f5419a64
 # ╠═7b06c8bb-0c59-472d-8459-4573c81af95f
+# ╠═f2aaa908-6b59-4384-8bc1-f4d840ab1f94
+# ╟─d180f3f7-0415-4a66-a417-73afde45b92b
+# ╠═f21d41cc-6c5a-4ee5-815a-654f9b0c4b6a
+# ╠═01c0f340-1486-4317-9d5b-95390088ab21
+# ╠═1cef5c54-741b-4a3f-91d5-291e11c98dda
+# ╠═2970cdb4-f418-4c4f-badf-afcc52d56920
+# ╠═9cab98b9-c380-4525-8e5c-67f9f6a9ba45
+# ╠═f563dbec-d4e5-47d6-9911-fcdeaabb02d7
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
