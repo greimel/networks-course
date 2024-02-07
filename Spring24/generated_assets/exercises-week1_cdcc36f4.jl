@@ -2,7 +2,7 @@
 # v0.19.38
 
 #> [frontmatter]
-#> chapter = 5
+#> chapter = 2
 #> section = 5
 #> order = 5
 #> title = "Exercises"
