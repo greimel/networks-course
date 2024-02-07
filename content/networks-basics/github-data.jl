@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.36
+# v0.19.38
 
 #> [frontmatter]
 #> chapter = 2
@@ -43,7 +43,7 @@ using DataFrames
 
 # ╔═╡ eef87040-4c96-49e4-8297-e90231b438fb
 md"
-`github-data.jl` | **Version 1.0** | *last changed: Feb 5, 2024*"
+`github-data.jl` | **Version 1.0+** | *last changed: Feb 5, 2024*"
 
 # ╔═╡ c0220198-9f64-4059-b13f-801233ce1c03
 @bind csv_in FilePicker()
@@ -1644,9 +1644,9 @@ version = "0.5.5+0"
 
 [[deps.Optim]]
 deps = ["Compat", "FillArrays", "ForwardDiff", "LineSearches", "LinearAlgebra", "MathOptInterface", "NLSolversBase", "NaNMath", "Parameters", "PositiveFactorizations", "Printf", "SparseArrays", "StatsBase"]
-git-tree-sha1 = "47fea72de134f75b105a5d4a1abe5c6aec89d390"
+git-tree-sha1 = "d024bfb56144d947d4fafcd9cb5cafbe3410b133"
 uuid = "429524aa-4258-5aef-a3af-852621145aeb"
-version = "1.9.1"
+version = "1.9.2"
 
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
