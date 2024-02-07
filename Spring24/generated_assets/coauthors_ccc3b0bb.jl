@@ -1,11 +1,11 @@
 ### A Pluto.jl notebook ###
-# v0.19.36
+# v0.19.38
 
 #> [frontmatter]
 #> chapter = 2
-#> section = 7
-#> order = 7
-#> title = "Assignment 1: A GitHub network"
+#> section = 2
+#> order = 2
+#> title = "Co-authorship network"
 #> layout = "layout.jlhtml"
 #> tags = ["networks-basics"]
 #> description = ""
@@ -13,507 +13,190 @@
 using Markdown
 using InteractiveUtils
 
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
-        el
-    end
-end
-
-# ╔═╡ 61d837dd-1675-4f8b-ab88-c1e9cce3cd5b
+# ╔═╡ b62ac876-40ba-4521-b0e9-7d14ecd781a8
 using Graphs
 
-# ╔═╡ 1defacf5-16e3-458e-9679-2aa13f5c9b37
-using PlutoUI
+# ╔═╡ f3c74bcc-1888-432c-8b83-2030471adb53
+using GraphDataFrameBridge
 
-# ╔═╡ b816d306-c42a-11ee-0450-03a6f623e031
-using GitHub
+# ╔═╡ b20dc3cc-5adb-4853-b409-7b2957de2e57
+using GraphMakie
 
-# ╔═╡ 9832aa67-9add-4475-8e81-52355b9f6917
-using Chain, DataFrameMacros
+# ╔═╡ 18be8ca6-5a5e-48d8-91bb-58f02a193fcb
+using CairoMakie
 
-# ╔═╡ 91997733-8567-4f5c-aae3-75b29e6dc174
-using GraphMakie, CairoMakie
+# ╔═╡ 98cb4882-68d4-49be-b48b-72fc3e5dfb8a
+using NetworkLayout
 
-# ╔═╡ 7b06c8bb-0c59-472d-8459-4573c81af95f
+# ╔═╡ 53498173-5b3a-401c-adb8-f0813bb85c97
 using DataFrames
 
-# ╔═╡ eef87040-4c96-49e4-8297-e90231b438fb
-md"
-`github-data.jl` | **Version 1.0** | *last changed: Feb 5, 2024*"
+# ╔═╡ 4e95c941-331f-41f4-9b4c-8711ebb2c142
+using CSV: CSV
 
-# ╔═╡ c0220198-9f64-4059-b13f-801233ce1c03
-@bind csv_in FilePicker()
+# ╔═╡ ec8969b5-4e53-4482-9772-7280e45332fa
+using PlutoUI: TableOfContents, FilePicker
 
-# ╔═╡ d677ab32-2c3f-4906-ad8a-f4aa7e4af6ca
+# ╔═╡ 0b79fb30-66d3-11eb-052b-89cfca69b3a6
 md"""
-#### Task 1: Analyze the network (5 points)
-👉 Describe the network in terms of the measures that are discussed in lectures 1 and 2. You can look at the notebook **first-networks.jl** and the section *Analyzing the network* for some inspiration.
-
-👉 Interpret all results that you show.
-
-👉 Be accurate but concise. Aim at no more than 500 words.
-
-You can spread your answer over multiple cells. Add code and text cells as it suits you.
+`view_ti_network.jl` | **Version 1.3+** | *last updated: Feb 7, 2022*
 """
 
-# ╔═╡ 6f7c5b2d-cbfe-4bda-be55-2e22105b6265
-answer1_1 = md"""
-Your answer goes here ...
-"""
-
-# ╔═╡ 29dd5ca2-b531-4c62-92ee-d477140aadd8
-# some
-
-# ╔═╡ 29ffdf2b-0d3e-4aaa-a7bf-25a4a05f9160
-# analysis
-
-# ╔═╡ 319781e4-ac31-412a-aa47-90c08646305a
-# analyze
-
-# ╔═╡ 57b9f288-a885-4904-9222-2237363e52a2
-# more
-
-# ╔═╡ e7d9e7ec-edd5-481a-bac3-5f5a09d5220c
-answer1_3 = md"""
-... write more ... add more cells if you need. If you want to use the word count above, adjust the cell below. 
-
-"""
-
-# ╔═╡ f9780dc1-b507-46a4-a877-d69b145ddae0
+# ╔═╡ 7c18cc0e-66d3-11eb-3e8e-09d869dd5731
 md"""
-**NOTE** the word count is done by the function `wordcount` at the very bottom. It may not be completely accurate :-). It's ok to be below the word limit, but it's not ok to be above!
+# The Co-Authorship Network of the Tinbergen Institute
 """
 
-# ╔═╡ bfe802e4-1af1-4556-9f25-895989791407
+# ╔═╡ 3367b97a-c0d8-4086-a454-2b6f5d8062e8
 md"""
-#### Task 2: Adding context (3 points)
+We next analyze the network of co-authorship relations between economists at the Tinbergen Institute.
 
-Let us now color the nodes (repositories) **according to their programming language** (Julia, R, Python).
+The next cells read the data (collection of links between co-authors) and constructs the co-author network from it.
 """
 
-# ╔═╡ b15f2df0-b5ed-4308-a092-0888b8a57e10
-md"""
-👉 Play with the sliders below. These determine how the network is defined. 
-"""
-
-# ╔═╡ 1a2bc4ed-868e-439f-bd29-78716d6e763e
-md"""
-* _Minimal number of joint contributors:_ There need to be **at least** $(@bind min_joint PlutoUI.Slider(1:15, default = 2, show_value = true)) people that have contribted in both repos, so that we consider them as linked.
-
-* _Minimal number of contributions per contributor:_ people with **fewer than** $(@bind min_contrib PlutoUI.Slider(1:15, default = 2, show_value = true))  contributions (in either repo) will not be considered.
-"""
-
-# ╔═╡ bc9def15-5b41-4c94-8c88-3bb6c109fa19
-md"""
-👉 What can you learn about these groups of *R*, *Julia* and *Python* repositories? <250 words. 
-"""
-
-# ╔═╡ 3f2014aa-8318-4ae6-8f0d-c58f0cc61b9d
-answer2 = md"""
-Your answer goes here ...
-"""
-
-# ╔═╡ 2b764133-26fd-4933-a915-1a163be10e85
-md"""
-#### Task 3: Looking under the hood (3 points)
-
-Now look at section **Constructing the network** of this notebook. Make sure you understand what data are available to us and how we created the network from the data. 
-
-👉 We want to read your critical thoughts in <250 words. You might tell us about an idea how to generate a different network from the data. Or what twist you would add to our network to make it more interesting. 
-"""
-
-# ╔═╡ 265ce115-a04c-4320-9289-f7afa34915c4
-answer3 = md"""
-Your answer goes here ...
-"""
-
-# ╔═╡ c525eca8-e3cc-4a41-92a1-c85f1b308e99
-md"""
-#### Before you submit ...
-
-👉 Make sure you have added your names and your group number [in the cells below](#f021cb3e-6177-11eb-20f6-b5f9c69ed186).
-
-👉 Make sure that that **all group members proofread** your submission (especially your little essay).
-
-👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
-"""
-
-# ╔═╡ 048a9011-35ee-4228-8a0d-e7b24e262de4
-group_number = 99
-
-# ╔═╡ 1b4dc99f-ca9b-4eba-9649-c1b87f37273d
-group_members = ([
-	(firstname = "Ella-Louise", lastname = "Flores"),
-	(firstname = "Padraig", 	lastname = "Cope"),
-	(firstname = "Christy",  	lastname = "Denton")
-	]);
-
-# ╔═╡ 41da2593-0528-43b1-be0e-054b820a1ea8
-if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
-	md"""
-!!! danger "Note!"
-    **Before you submit**, please replace the [randomly generated names in this cell](#1b4dc99f-ca9b-4eba-9649-c1b87f37273d) by the names of your group and put the [right group number in the cell above.](#048a9011-35ee-4228-8a0d-e7b24e262de4).
-	"""
-end
-
-# ╔═╡ a4ab528d-bc5b-4ae3-974c-7aa51dfe3d37
-md"""
-## Selecting Github repositories
-"""
-
-# ╔═╡ ece45ccb-8566-4677-93e4-4aae78c81bc4
-md"""
-#### _Step 1:_ Specify a number of Github repositories
-"""
-
-# ╔═╡ 854fdf93-da34-4c01-bece-6c4cb3bfe121
-dataframes_packages = ["pandas-dev/pandas", "Rdatatable/data.table", "JuliaData/DataFrames.jl"]
-
-# ╔═╡ e3c0c318-1079-442b-8385-4d52ecdbe109
-networks_packages = ["networkx/networkx", "JuliaGraphs/Graphs.jl", "igraph/rigraph"]
-
-# ╔═╡ 87b3aea6-8a7d-43e1-a1f1-c97c1197632d
-plotting_packages = ["matplotlib/matplotlib", "JuliaPlots/Plots.jl", "tidyverse/ggplot2"]
-
-# ╔═╡ d7ab9443-5e8b-40c8-845c-3ff147b91167
-md"""
-Pick packages to compare (this will take a few minutes to run)
-"""
-
-# ╔═╡ 73ebdc58-0df3-485d-8539-803d5190d147
-@bind df_repos Select([
-	dataframes_packages => "dataframes",
-	networks_packages => "networks",
-	plotting_packages => "plotting"
-])
-
-# ╔═╡ ecd2189b-ad94-4d98-8f42-4e11d8c0b6df
-md"""
-# Constructing the network
-"""
-
-# ╔═╡ 357e427d-7efa-4398-804f-650e3d0af831
-md"""
-#### _Step 2:_ Get the main contributors of these repositories
-"""
-
-# ╔═╡ d9b1f681-97d7-40ce-be35-b869df51573f
-md"""
-#### _Step 3:_ Get the starred repositories of these contributors
-"""
-
-# ╔═╡ 534bdb50-eb50-46c8-bb63-2c3e704a9131
-md"""
-#### _Step 4:_ Select the most popular of these packages
-"""
-
-# ╔═╡ 3b32c857-0132-4f5a-83e9-466a7c7edaa9
-md"""
-#### _Step 5:_ Find all contributors of these packages
-"""
-
-# ╔═╡ 4183de92-8700-41a0-b367-a05471376a8b
-md"""
-#### _Save dataset_
-"""
-
-# ╔═╡ 5d94b49a-995d-44b0-b8b7-93a95486ce62
-md"""
-#### _Step 6:_ Create a list of packages with their contributors
-"""
-
-# ╔═╡ 8710aa87-9b2c-4491-9537-c3a15286ed07
-md"""
-#### _Step 7:_ Build the graph
-"""
-
-# ╔═╡ 96c6ae89-7f11-4063-a331-e0a6a804f5e7
-language2color = Dict("R" => colorant"blue", "Python" => colorant"orange", "Julia" => colorant"purple")
-
-# ╔═╡ c067ae31-5867-43fe-ae04-1565e0bc119c
+# ╔═╡ cfc9f604-6604-11eb-23bc-699617b17d7d
 md"""
 # Appendix
 """
 
-# ╔═╡ 3378ff91-3308-41c6-b6ea-717bcf85ce25
+# ╔═╡ dc423846-4556-4c43-a85b-25bb8305fcf8
+md"""
+## Download data
+"""
+
+# ╔═╡ 438b124e-287b-4c74-bc2b-d2ee11f3f3ab
+url_ti = "https://greimel.github.io/networks-course/assets/datasets/ti_netwk0711.csv"
+
+# ╔═╡ fc91f3b6-6839-4fb5-8de3-2238622c6325
+begin
+	using DataDeps
+	ENV["DATADEPS_ALWAYS_ACCEPT"] = true
+
+	register(DataDep(
+   		"TI-network",
+		"""
+		The co-authorship network of the Tinbergen Institute 2007-2011.
+
+		Made available with the permission of Marco van der Leij.
+		""",
+		url_ti,
+		"dbb2a1d8ce1120ed274898ce76f84f7ef08f9938ad7f25f74d3b9f202dbc2137"
+	))
+end
+
+# ╔═╡ cfee2a3d-d790-4f03-9cc6-da9ae7b9b106
+edge_df = CSV.File(joinpath(datadep"TI-network", "ti_netwk0711.csv")) |> DataFrame
+
+# ╔═╡ 24dd4376-5e8f-11eb-02e7-f34f7c169726
+g = MetaGraph(edge_df, :from, :to)
+
+# ╔═╡ a06b7ad2-6603-11eb-1588-195115c5f351
+graphplot(g,
+	layout = Spring(),
+	edge_color = "gray",
+	edge_width = 0.5,
+	node_size = 10,
+	node_color = "orange",
+	node_attr = (strokewidth = 1, strokecolor = :black),
+)
+
+# ╔═╡ a58a3582-64a3-11eb-01e1-11f707525149
+# list of components (contains a list of nodes for each component)
+components = connected_components(g)
+
+# ╔═╡ aac6e282-6603-11eb-18bd-95a57f187167
+# nodes in first (largest) component
+core = components[1]
+
+# ╔═╡ bcc6ca3a-5e95-11eb-3f13-877d22fe2ff2
+ti_plot = graphplot(g[core], 
+	layout = Spring(),
+	edge_color = "gray",
+	edge_width = 0.5,
+	node_size = 10,
+	node_color = "orange",
+	node_attr = (strokewidth = 0.5, strokecolor = :black),
+)
+
+# ╔═╡ a2539aee-6605-11eb-0788-157d9b7c1060
+# maximal subgraph with vertices of degree 3 or more
+g1 = k_core(g, 3)
+
+# ╔═╡ c96871cc-6605-11eb-161b-41af51664d50
+graphplot(g[g1],
+	layout = Spring(),
+	edge_color = :gray,
+	edge_width = 0.5,
+	node_size = 10,
+	node_color = :orange,
+	node_attr = (strokewidth = 0.5, strokecolor = :black)
+)
+
+# ╔═╡ 295dcee0-6608-11eb-04d7-a9232f4a727a
+core3 = g[g1]
+
+# ╔═╡ 66cedb40-660b-11eb-07cb-8107b36a0251
+local_clustering_coefficient(core3)
+
+# ╔═╡ b72d7a58-6607-11eb-11f0-d98ad7953ac0
+degree_centrality(core3)
+
+# ╔═╡ 52534b4e-6607-11eb-0478-390a8dbfc17b
+eigenvector_centrality(core3)
+
+# ╔═╡ d60da13e-6607-11eb-3069-ef521f73c7a9
+katz_centrality(core3, 0.3)
+
+# ╔═╡ b76f0abb-01b0-4acc-8554-02c826cc9e6a
+md"""
+## Packages
+"""
+
+# ╔═╡ 610e52d3-8dba-4cf9-aada-a7ce908ed51f
+md"""
+#### Graphs
+"""
+
+# ╔═╡ f22e2419-fbc6-45a9-8998-fd310d08ddeb
+md"""
+#### Plotting
+"""
+
+# ╔═╡ e81a87ec-8568-4f8a-8205-1a2e67885314
+md"""
+#### Data
+"""
+
+# ╔═╡ 47f89fd4-4dc1-4612-b54c-a4bd9f113044
+md"""
+#### Other
+"""
+
+# ╔═╡ 196c014a-8e14-4cf8-9e33-8be55b246edf
 TableOfContents()
-
-# ╔═╡ 43d8772b-132e-4470-be6c-f100f5419a64
-core(graph) = argmax(length, connected_components(graph))
-
-# ╔═╡ c19b16da-8981-4ee7-8ae7-f78fc3ab1440
-garbled_token = "hitgub__XX_I4Y01nwfEK5qt_YY_mIw7LNvK0bMH73XOJhbIs_ZZ_pa7U6RLB3OXNtP0s1hh"
-
-# ╔═╡ 8b6af171-9746-4f02-851d-a52c7d406e70
-auth = GitHub.authenticate(
-	replace(garbled_token, 
-	   "_XX_" => "pat_11ABP5",
-	   "_YY_" => "Kim_vi7P8PDAX",
-	   "_ZZ_" => "jjGSnnwU6I",
-	   "hitgub" => "github"
-	)
-)
-
-# ╔═╡ d06cb138-52d8-43b9-abc4-c93573406a7f
-df_repos_contribs0 = DataFrame.(first.(contributors.(df_repos; auth)))
-
-# ╔═╡ 9daa5f85-9a3e-4315-beee-e6136dcd3782
-df_repos_contribs = vcat(first.(df_repos_contribs0, 5)..., source = :package => df_repos)
-
-# ╔═╡ 460f2009-e10c-4861-8bc0-77c22f8f8f7a
-strrd = starred.(unique(df_repos_contribs.contributor); auth)
-
-# ╔═╡ 523d6720-1220-4db2-9666-25c92f26c6ac
-repo_list_long = DataFrame(vcat(first.(strrd)...))
-
-# ╔═╡ c9e1f87d-9b5f-44d0-ba50-e466fad61f7e
-repo_list_short = @chain repo_list_long begin
-	@select(:name, :full_name, :language, :stargazers_count)
-	@subset(:language ∈ ["Julia", "R", "Python"])
-	@subset(:full_name ∉ df_repos)
-	sort(:stargazers_count, rev=true)
-	unique
-	@groupby(:language)
-	combine(x -> first(x, 15))
-	#
-	#unique
-end
-
-# ╔═╡ 9a886758-5680-4905-b76a-291ce9ebe8f4
-repo_list_short_with_contribs = @transform(
-	repo_list_short,
-	:contributors = first(contributors(:full_name; auth))
-)
-
-# ╔═╡ 7132140b-b19c-44ae-8719-dcd890f2db7c
-repo_contrib_list0 = @chain repo_list_short_with_contribs begin
-	flatten(:contributors)
-	select(:full_name => :repo, :language, :contributors => AsTable)
-	@transform(:contributor = :contributor.login)
-	@groupby(:repo)
-	@transform(:share_contributions = @bycol :contributions ./ sum(:contributions))
-end
-
-# ╔═╡ f2aaa908-6b59-4384-8bc1-f4d840ab1f94
-import CSV
-
-# ╔═╡ d180f3f7-0415-4a66-a417-73afde45b92b
-md"""
-## Assignment infrastructure
-"""
-
-# ╔═╡ f21d41cc-6c5a-4ee5-815a-654f9b0c4b6a
-members = let
-	names = map(group_members) do (; firstname, lastname)
-		firstname * " " * lastname
-	end
-	join(names, ", ", " & ")
-end
-
-# ╔═╡ c9a57e32-2bd6-40b1-a3da-b9c785c21765
-md"""
-# Assignment 1: A GitHub Network
-
-*submitted by* **$members** (*group $(group_number)*)
-
-In this assignment you will analyze a network of **GitHub repositories**. GitHub is a social network where people can **collaborate on code**. Code is organized in **repos** (repositories): each repo corresponds to one project.
-
-Once you have run the notebook, the picture below shows a **network of selected repos**. These **repos are linked if a person has contributed to both repositories**.
-"""
-
-# ╔═╡ 01c0f340-1486-4317-9d5b-95390088ab21
-function wordcount(text)
-	stripped_text = strip(replace(string(text), r"\s" => " "))
-   	words = split(stripped_text, (' ', '-', '.', ',', ':', '_', '"', ';', '!', '\''))
-   	length(filter(!=(""), words))
-end
-
-# ╔═╡ 1cef5c54-741b-4a3f-91d5-291e11c98dda
-show_words(answer) = md"_approximately $(wordcount(answer)) words_"
-
-# ╔═╡ 9cab98b9-c380-4525-8e5c-67f9f6a9ba45
-begin
-	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
-	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
-	still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
-	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
-	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
-	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
-end
-
-# ╔═╡ 6632b6fa-6f8d-4545-92b1-40ac1ef97642
-if answer1_1 == md"Your answer goes here ..."
-	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
-else
-	correct(md"Great, we are looking forward to reading your answer!")
-end
-
-# ╔═╡ fec31d6a-4101-47e3-9197-a16fe2051ae7
-if answer2 == md"Your answer goes here ..."
-	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
-else
-	correct(md"Great, we are looking forward to reading your answer!")
-end
-
-# ╔═╡ aec9c518-c613-42dc-b14c-ef508e1e8889
-if answer3 == md"Your answer goes here ..."
-	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
-else
-	correct(md"Great, we are looking forward to reading your answer!")
-end
-
-# ╔═╡ 2970cdb4-f418-4c4f-badf-afcc52d56920
-function show_words_limit(answer, limit)
-	count = wordcount(answer)
-	if count < 1.02 * limit
-		return show_words(answer)
-	else
-		return almost(md"You are at $count words. Please shorten your text a bit, to get **below $limit words**.")
-	end
-end
-
-# ╔═╡ ae4890bd-337a-4507-8c90-13a21745b47e
-show_words_limit(answer2, 250)
-
-# ╔═╡ 1ad904eb-85fa-4c50-b835-e161ebdeacaf
-show_words_limit(answer3, 250)
-
-# ╔═╡ f563dbec-d4e5-47d6-9911-fcdeaabb02d7
-note(text; title="FYI") = Markdown.MD(Markdown.Admonition("note", title, [text]))
-
-# ╔═╡ 3b4b8127-f219-4f6f-b127-657f15f92442
-if !isnothing(csv_in) 
-	data_source = csv_in["name"]
-	repo_contrib_list = CSV.File(csv_in["data"])
-	note(md"""You are using data from $(csv_in["name"]). Remove the file from the file picker to generate your own dataset.""")
-else
-	data_source = "generated in notebook"
-	repo_contrib_list = repo_contrib_list0
-	note(md"""You are using data that were generated in the notebook. Alternatively you can use a `.csv` file that was generated by a member of your group and upload it using the _File Picker_ above.""")
-end
-
-# ╔═╡ a6ac9c08-5d58-4bc8-8dbc-0976692c3512
-begin
-	csv = joinpath(tempdir(), "github-data.csv")
-	csv_file = CSV.write(csv, repo_contrib_list)
-end
-
-# ╔═╡ 89d96030-18e6-45c3-b2e8-5643a1561f10
-md"""
-$(DownloadButton(read(csv), basename(csv))) (This downloads the current dataset to share with the rest of your group.)
-"""
-
-# ╔═╡ be304942-3d7e-4397-bb81-120b410a66f3
-node_df(min_contrib) = @chain repo_contrib_list begin
-	@subset(:contributions ≥ min_contrib)
-	@groupby(:repo)
-	@combine(:contributors = Set(:contributor), :languages = unique(:language))
-	@transform(:color = language2color[:languages])
-end
-
-# ╔═╡ b7e72871-4cb7-4ea0-aeb1-5100bfc4ca9e
-function repo_graph(min_contrib, min_joint)
-	node_list = node_df(min_contrib)
-	
-	nv = size(node_list, 1)
-	graph = SimpleGraph(nv)
-	
-	for i ∈ 1:nv
-		for j ∈ i+1:nv
-			if length(node_list[i,:contributors] ∩ node_list[j, :contributors]) ≥ min_joint
-				add_edge!(graph, i, j)
-			end
-		end
-	end
-
-	(; node_list, graph)
-end
-
-# ╔═╡ 5ae6ec3e-e06f-4b79-8973-990f7413d699
-(; graph) = repo_graph(1, 15);
-
-# ╔═╡ 512e9c60-4c18-4ede-9b49-deab80c131d6
-let
-	fig, ax, _ = graphplot(graph, 
-		node_color="orange", edge_width = 0.5,
-		figure = (; size = (400, 300)))
-	hidedecorations!(ax)
-
-	fig
-end
-
-# ╔═╡ 0d5d5df4-d097-4abe-8328-29594dea4b01
-# some dummy analysis
-begin
-	n_edges = ne(graph)
-	n_nodes = nv(graph)
-end
-
-# ╔═╡ 7845e1d8-a008-4dcb-bb45-0a0ac212b902
-answer1_2 = md"""
-... Continue here ... This **network of Github repos** has $n_nodes nodes and $n_edges edges. ...
-"""
-
-# ╔═╡ 821b1a45-9ad0-442f-9047-838a283f821b
-answer1 = [answer1_1, answer1_2, answer1_3];
-
-# ╔═╡ 22fc3325-7909-4416-8763-e3c7981cfcca
-show_words_limit(join(answer1, " "), 500)
-
-# ╔═╡ 7ddd10b5-bfeb-4059-82ec-9c190a4b41c9
-node_list2, graph2 = repo_graph(min_joint, min_contrib);
-
-# ╔═╡ 0cdba445-c620-4525-b10c-6dfa4fde2b71
-selected_nodes = vertices(graph2)
-#selected_nodes = argmax(length, connected_components(graph2))
-
-# ╔═╡ 58687117-ffdf-469c-8c6b-115719796d1d
-let	
-	graph, node_list = graph2, node_list2
-	selected_nodes
-	
-	fig, ax, plt = graphplot(graph[selected_nodes], 
-		node_color = tuple.(node_list.color[selected_nodes], 1.0),
-		edge_color = :lightgray, edge_width = 1.0,
-		figure = (; size = (500, 300))
-	)
-
-	hidedecorations!(ax)
-	
-	lang2col = collect(pairs(language2color))
-	elements = [MarkerElement(; color, marker=:circle) for color ∈ last.(lang2col)]
-	labels = first.(lang2col)
-	Legend(fig[1,2], elements, labels)
-	
-	fig
-end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
-DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
+DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-GitHub = "bc5e4493-9b4d-5f90-b8aa-2b2bcaad7a26"
+GraphDataFrameBridge = "3c71623a-a715-5176-9801-629b201a4880"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 CSV = "~0.10.12"
 CairoMakie = "~0.11.8"
-Chain = "~0.5.0"
-DataFrameMacros = "~0.4.1"
+DataDeps = "~0.7.12"
 DataFrames = "~1.6.1"
-GitHub = "~5.9.0"
+GraphDataFrameBridge = "~0.3.2"
 GraphMakie = "~0.5.9"
 Graphs = "~1.9.0"
+NetworkLayout = "~0.4.6"
 PlutoUI = "~0.7.55"
 """
 
@@ -523,7 +206,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.0"
 manifest_format = "2.0"
-project_hash = "93a14fc4a34716aae9a4a2005665bd8392b8c169"
+project_hash = "35d37a676974bbb10ce9c0b810419e009aec9dec"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -691,11 +374,6 @@ git-tree-sha1 = "f641eb0a4f00c343bbc32346e1217b86f3ce9dad"
 uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
 version = "0.5.1"
 
-[[deps.Chain]]
-git-tree-sha1 = "8c4920235f6c561e401dfe569beb8b924adad003"
-uuid = "8be319e6-bccf-4806-a6f7-6fae938471bc"
-version = "0.5.0"
-
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra"]
 git-tree-sha1 = "1287e3872d646eed95198457873249bd9f0caed2"
@@ -810,11 +488,11 @@ git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.16.0"
 
-[[deps.DataFrameMacros]]
-deps = ["DataFrames", "MacroTools"]
-git-tree-sha1 = "5275530d05af21f7778e3ef8f167fb493999eea1"
-uuid = "75880514-38bc-4a95-a458-c2aea5a3a702"
-version = "0.4.1"
+[[deps.DataDeps]]
+deps = ["HTTP", "Libdl", "Reexport", "SHA", "Scratch", "p7zip_jll"]
+git-tree-sha1 = "d481f6419c262edcb7294179bd63249d123eb081"
+uuid = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
+version = "0.7.12"
 
 [[deps.DataFrames]]
 deps = ["Compat", "DataAPI", "DataStructures", "Future", "InlineStrings", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrecompileTools", "PrettyTables", "Printf", "REPL", "Random", "Reexport", "SentinelArrays", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
@@ -1073,17 +751,17 @@ git-tree-sha1 = "9b02998aba7bf074d14de89f9d37ca24a1a0b046"
 uuid = "78b55507-aeef-58d4-861c-77aaff3498b1"
 version = "0.21.0+0"
 
-[[deps.GitHub]]
-deps = ["Base64", "Dates", "HTTP", "JSON", "MbedTLS", "Sockets", "SodiumSeal", "URIs"]
-git-tree-sha1 = "7ee730a8484d673a8ce21d8536acfe6494475994"
-uuid = "bc5e4493-9b4d-5f90-b8aa-2b2bcaad7a26"
-version = "5.9.0"
-
 [[deps.Glib_jll]]
 deps = ["Artifacts", "Gettext_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libiconv_jll", "Libmount_jll", "PCRE2_jll", "Zlib_jll"]
 git-tree-sha1 = "e94c92c7bf4819685eb80186d51c43e71d4afa17"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.76.5+0"
+
+[[deps.GraphDataFrameBridge]]
+deps = ["DataFrames", "Graphs", "MetaGraphs"]
+git-tree-sha1 = "a30c641b706ff6843a1909f92106e02b9dae0985"
+uuid = "3c71623a-a715-5176-9801-629b201a4880"
+version = "0.3.2"
 
 [[deps.GraphMakie]]
 deps = ["DataStructures", "GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "PolynomialRoots", "SimpleTraits", "StaticArrays"]
@@ -1281,6 +959,12 @@ version = "1.10.0"
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
 version = "1.0.0"
+
+[[deps.JLD2]]
+deps = ["FileIO", "MacroTools", "Mmap", "OrderedCollections", "Pkg", "PrecompileTools", "Printf", "Reexport", "Requires", "TranscodingStreams", "UUIDs"]
+git-tree-sha1 = "7c0008f0b7622c6c0ee5c65cbc667b69f8a65672"
+uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+version = "0.4.45"
 
 [[deps.JLLWrappers]]
 deps = ["Artifacts", "Preferences"]
@@ -1515,6 +1199,12 @@ deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.28.2+1"
 
+[[deps.MetaGraphs]]
+deps = ["Graphs", "JLD2", "Random"]
+git-tree-sha1 = "1130dbe1d5276cb656f6e1094ce97466ed700e5a"
+uuid = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
+version = "0.7.2"
+
 [[deps.Missings]]
 deps = ["DataAPI"]
 git-tree-sha1 = "f66bdc5de519e8f8ae43bdc598782d35a25b1272"
@@ -1644,9 +1334,9 @@ version = "0.5.5+0"
 
 [[deps.Optim]]
 deps = ["Compat", "FillArrays", "ForwardDiff", "LineSearches", "LinearAlgebra", "MathOptInterface", "NLSolversBase", "NaNMath", "Parameters", "PositiveFactorizations", "Printf", "SparseArrays", "StatsBase"]
-git-tree-sha1 = "47fea72de134f75b105a5d4a1abe5c6aec89d390"
+git-tree-sha1 = "d024bfb56144d947d4fafcd9cb5cafbe3410b133"
 uuid = "429524aa-4258-5aef-a3af-852621145aeb"
-version = "1.9.1"
+version = "1.9.2"
 
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1992,12 +1682,6 @@ version = "0.1.3"
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
-[[deps.SodiumSeal]]
-deps = ["Base64", "Libdl", "libsodium_jll"]
-git-tree-sha1 = "80cef67d2953e33935b41c6ab0a178b9987b1c99"
-uuid = "2133526b-2bfb-4018-ac12-889fb3908a75"
-version = "0.1.1"
-
 [[deps.SortingAlgorithms]]
 deps = ["DataStructures"]
 git-tree-sha1 = "66e0a8e672a0bdfca2c3f5937efb8538b9ddc085"
@@ -2307,12 +1991,6 @@ git-tree-sha1 = "d4f63314c8aa1e48cd22aa0c17ed76cd1ae48c3c"
 uuid = "075b6546-f08a-558a-be8f-8157d0f608a5"
 version = "1.10.3+0"
 
-[[deps.libsodium_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "848ab3d00fe39d6fbc2a8641048f8f272af1c51e"
-uuid = "a9144af2-ca23-56d9-984f-0d03f7b5ccf8"
-version = "1.0.20+0"
-
 [[deps.libvorbis_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Ogg_jll", "Pkg"]
 git-tree-sha1 = "b910cb81ef3fe6e78bf6acee440bda86fd6ae00c"
@@ -2343,88 +2021,39 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─41da2593-0528-43b1-be0e-054b820a1ea8
-# ╟─eef87040-4c96-49e4-8297-e90231b438fb
-# ╟─c9a57e32-2bd6-40b1-a3da-b9c785c21765
-# ╟─512e9c60-4c18-4ede-9b49-deab80c131d6
-# ╠═5ae6ec3e-e06f-4b79-8973-990f7413d699
-# ╟─c0220198-9f64-4059-b13f-801233ce1c03
-# ╟─3b4b8127-f219-4f6f-b127-657f15f92442
-# ╟─89d96030-18e6-45c3-b2e8-5643a1561f10
-# ╟─d677ab32-2c3f-4906-ad8a-f4aa7e4af6ca
-# ╠═6f7c5b2d-cbfe-4bda-be55-2e22105b6265
-# ╟─6632b6fa-6f8d-4545-92b1-40ac1ef97642
-# ╠═0d5d5df4-d097-4abe-8328-29594dea4b01
-# ╠═29dd5ca2-b531-4c62-92ee-d477140aadd8
-# ╠═29ffdf2b-0d3e-4aaa-a7bf-25a4a05f9160
-# ╠═7845e1d8-a008-4dcb-bb45-0a0ac212b902
-# ╠═319781e4-ac31-412a-aa47-90c08646305a
-# ╠═57b9f288-a885-4904-9222-2237363e52a2
-# ╠═e7d9e7ec-edd5-481a-bac3-5f5a09d5220c
-# ╠═821b1a45-9ad0-442f-9047-838a283f821b
-# ╟─22fc3325-7909-4416-8763-e3c7981cfcca
-# ╟─f9780dc1-b507-46a4-a877-d69b145ddae0
-# ╟─bfe802e4-1af1-4556-9f25-895989791407
-# ╟─58687117-ffdf-469c-8c6b-115719796d1d
-# ╟─b15f2df0-b5ed-4308-a092-0888b8a57e10
-# ╟─1a2bc4ed-868e-439f-bd29-78716d6e763e
-# ╠═0cdba445-c620-4525-b10c-6dfa4fde2b71
-# ╟─bc9def15-5b41-4c94-8c88-3bb6c109fa19
-# ╠═3f2014aa-8318-4ae6-8f0d-c58f0cc61b9d
-# ╟─ae4890bd-337a-4507-8c90-13a21745b47e
-# ╟─fec31d6a-4101-47e3-9197-a16fe2051ae7
-# ╠═7ddd10b5-bfeb-4059-82ec-9c190a4b41c9
-# ╟─2b764133-26fd-4933-a915-1a163be10e85
-# ╠═265ce115-a04c-4320-9289-f7afa34915c4
-# ╟─1ad904eb-85fa-4c50-b835-e161ebdeacaf
-# ╟─aec9c518-c613-42dc-b14c-ef508e1e8889
-# ╟─c525eca8-e3cc-4a41-92a1-c85f1b308e99
-# ╠═048a9011-35ee-4228-8a0d-e7b24e262de4
-# ╠═1b4dc99f-ca9b-4eba-9649-c1b87f37273d
-# ╟─a4ab528d-bc5b-4ae3-974c-7aa51dfe3d37
-# ╟─ece45ccb-8566-4677-93e4-4aae78c81bc4
-# ╠═854fdf93-da34-4c01-bece-6c4cb3bfe121
-# ╠═e3c0c318-1079-442b-8385-4d52ecdbe109
-# ╠═87b3aea6-8a7d-43e1-a1f1-c97c1197632d
-# ╟─d7ab9443-5e8b-40c8-845c-3ff147b91167
-# ╟─73ebdc58-0df3-485d-8539-803d5190d147
-# ╟─ecd2189b-ad94-4d98-8f42-4e11d8c0b6df
-# ╟─357e427d-7efa-4398-804f-650e3d0af831
-# ╠═9daa5f85-9a3e-4315-beee-e6136dcd3782
-# ╠═d06cb138-52d8-43b9-abc4-c93573406a7f
-# ╟─d9b1f681-97d7-40ce-be35-b869df51573f
-# ╠═460f2009-e10c-4861-8bc0-77c22f8f8f7a
-# ╠═523d6720-1220-4db2-9666-25c92f26c6ac
-# ╟─534bdb50-eb50-46c8-bb63-2c3e704a9131
-# ╠═c9e1f87d-9b5f-44d0-ba50-e466fad61f7e
-# ╟─3b32c857-0132-4f5a-83e9-466a7c7edaa9
-# ╠═9a886758-5680-4905-b76a-291ce9ebe8f4
-# ╠═7132140b-b19c-44ae-8719-dcd890f2db7c
-# ╟─4183de92-8700-41a0-b367-a05471376a8b
-# ╠═a6ac9c08-5d58-4bc8-8dbc-0976692c3512
-# ╟─5d94b49a-995d-44b0-b8b7-93a95486ce62
-# ╠═be304942-3d7e-4397-bb81-120b410a66f3
-# ╟─8710aa87-9b2c-4491-9537-c3a15286ed07
-# ╠═b7e72871-4cb7-4ea0-aeb1-5100bfc4ca9e
-# ╠═96c6ae89-7f11-4063-a331-e0a6a804f5e7
-# ╟─c067ae31-5867-43fe-ae04-1565e0bc119c
-# ╠═3378ff91-3308-41c6-b6ea-717bcf85ce25
-# ╠═43d8772b-132e-4470-be6c-f100f5419a64
-# ╠═61d837dd-1675-4f8b-ab88-c1e9cce3cd5b
-# ╠═1defacf5-16e3-458e-9679-2aa13f5c9b37
-# ╠═b816d306-c42a-11ee-0450-03a6f623e031
-# ╠═c19b16da-8981-4ee7-8ae7-f78fc3ab1440
-# ╠═8b6af171-9746-4f02-851d-a52c7d406e70
-# ╠═9832aa67-9add-4475-8e81-52355b9f6917
-# ╠═91997733-8567-4f5c-aae3-75b29e6dc174
-# ╠═7b06c8bb-0c59-472d-8459-4573c81af95f
-# ╠═f2aaa908-6b59-4384-8bc1-f4d840ab1f94
-# ╟─d180f3f7-0415-4a66-a417-73afde45b92b
-# ╠═f21d41cc-6c5a-4ee5-815a-654f9b0c4b6a
-# ╠═01c0f340-1486-4317-9d5b-95390088ab21
-# ╠═1cef5c54-741b-4a3f-91d5-291e11c98dda
-# ╠═2970cdb4-f418-4c4f-badf-afcc52d56920
-# ╠═9cab98b9-c380-4525-8e5c-67f9f6a9ba45
-# ╠═f563dbec-d4e5-47d6-9911-fcdeaabb02d7
+# ╟─0b79fb30-66d3-11eb-052b-89cfca69b3a6
+# ╟─7c18cc0e-66d3-11eb-3e8e-09d869dd5731
+# ╟─3367b97a-c0d8-4086-a454-2b6f5d8062e8
+# ╠═24dd4376-5e8f-11eb-02e7-f34f7c169726
+# ╠═a06b7ad2-6603-11eb-1588-195115c5f351
+# ╠═a58a3582-64a3-11eb-01e1-11f707525149
+# ╠═aac6e282-6603-11eb-18bd-95a57f187167
+# ╠═bcc6ca3a-5e95-11eb-3f13-877d22fe2ff2
+# ╠═a2539aee-6605-11eb-0788-157d9b7c1060
+# ╠═c96871cc-6605-11eb-161b-41af51664d50
+# ╠═295dcee0-6608-11eb-04d7-a9232f4a727a
+# ╠═66cedb40-660b-11eb-07cb-8107b36a0251
+# ╠═b72d7a58-6607-11eb-11f0-d98ad7953ac0
+# ╠═52534b4e-6607-11eb-0478-390a8dbfc17b
+# ╠═d60da13e-6607-11eb-3069-ef521f73c7a9
+# ╟─cfc9f604-6604-11eb-23bc-699617b17d7d
+# ╟─dc423846-4556-4c43-a85b-25bb8305fcf8
+# ╠═438b124e-287b-4c74-bc2b-d2ee11f3f3ab
+# ╠═fc91f3b6-6839-4fb5-8de3-2238622c6325
+# ╠═cfee2a3d-d790-4f03-9cc6-da9ae7b9b106
+# ╟─b76f0abb-01b0-4acc-8554-02c826cc9e6a
+# ╟─610e52d3-8dba-4cf9-aada-a7ce908ed51f
+# ╠═b62ac876-40ba-4521-b0e9-7d14ecd781a8
+# ╠═f3c74bcc-1888-432c-8b83-2030471adb53
+# ╟─f22e2419-fbc6-45a9-8998-fd310d08ddeb
+# ╠═b20dc3cc-5adb-4853-b409-7b2957de2e57
+# ╠═18be8ca6-5a5e-48d8-91bb-58f02a193fcb
+# ╠═98cb4882-68d4-49be-b48b-72fc3e5dfb8a
+# ╟─e81a87ec-8568-4f8a-8205-1a2e67885314
+# ╠═53498173-5b3a-401c-adb8-f0813bb85c97
+# ╠═4e95c941-331f-41f4-9b4c-8711ebb2c142
+# ╟─47f89fd4-4dc1-4612-b54c-a4bd9f113044
+# ╠═ec8969b5-4e53-4482-9772-7280e45332fa
+# ╠═196c014a-8e14-4cf8-9e33-8be55b246edf
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
