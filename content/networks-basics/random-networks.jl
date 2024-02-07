@@ -4,7 +4,7 @@
 #> [frontmatter]
 #> chapter = 2
 #> section = 4
-#> order = 1
+#> order = 4
 #> title = "Random networks"
 #> layout = "layout.jlhtml"
 #> tags = ["networks-basics"]

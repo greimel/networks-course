@@ -3,8 +3,8 @@
 
 #> [frontmatter]
 #> chapter = 2
-#> section = 7
-#> order = 7
+#> section = 6
+#> order = 6
 #> title = "Assignment 1: A GitHub network"
 #> layout = "layout.jlhtml"
 #> tags = ["networks-basics"]

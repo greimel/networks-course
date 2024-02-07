@@ -4,7 +4,7 @@
 #> [frontmatter]
 #> chapter = 2
 #> section = 3
-#> order = 1
+#> order = 3
 #> title = "Typical properties of social networks"
 #> layout = "layout.jlhtml"
 #> tags = ["networks-basics"]
