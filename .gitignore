@@ -10,3 +10,8 @@ build/
 website/config.md
 
 generate/*.toml
+
+PlutoPages/_site/
+PlutoPages/_cache/
+
+generation_report.html
