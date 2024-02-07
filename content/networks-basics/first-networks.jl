@@ -234,7 +234,7 @@ actual_links, possible_links = local_clustering(network, j)
 
 # ╔═╡ 0cd4e0a0-fa38-4b05-8688-6396093d2652
 md"""
-We see that the node has $degree_of_j friends. These $degree_of_j friends can form at most $degree_of_j ⋅ $(degree_of_j - 1) / 2 = $possible_links friendships. We see that there are $actual_links friendships _(red edges)_. The clustering coefficient of node $i is ``\frac{\text{actual}}{\text{possible}} =`` $(round(local_clustering_coefficient(network, j), digits=2)). (Show clustering coefficient $(@bind show_clustering CheckBox(default = false)))
+We see that the node has $degree_of_j friends. These $degree_of_j friends can form at most $degree_of_j ⋅ $(degree_of_j - 1) / 2 = $possible_links friendships. We see that there are $actual_links friendships _(red edges)_. The clustering coefficient of node $j is ``\frac{\text{actual}}{\text{possible}} =`` $(round(local_clustering_coefficient(network, j), digits=2)). (Show clustering coefficient $(@bind show_clustering CheckBox(default = false)))
 """
 
 # ╔═╡ 7c9f2f26-329e-46f8-8be9-c95cd680d51d
