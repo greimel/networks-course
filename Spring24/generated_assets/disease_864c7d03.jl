@@ -75,16 +75,19 @@ using Distributions: Distributions, LogNormal
 # ╔═╡ 54db603a-2751-425d-8e76-b9d0048869bf
 using PlutoTest: @test
 
+# ╔═╡ 12bd918a-282d-43da-aa75-7ad6219a926a
+using HypertextLiteral
+
 # ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
 md"""
-`disease.jl` | **Version 1.6+** | *last updated: Feb 7, 2024*
+`disease.jl` | **Version 1.7** | *last updated: Feb 19, 2024*
 """
 
 # ╔═╡ f4266196-64aa-11eb-3fc1-2bf0e099d19c
 md"""
 # Diffusion on Networks: Modeling Transmission of Disease
 
-This notebook will be the basis for part of **Lecture 3C** and **Assignment 3**. Here is what we will cover.
+This notebook will be the basis for part of **Lecture 2A** and **Assignment 2**. Here is what we will cover.
 
 1. We will model the diffusion of disease on a network. We will analyze how the parameters of the model change the outcomes.
 """
@@ -219,7 +222,7 @@ md"""
 
 # ╔═╡ 37972f08-db05-4e84-9528-fe16cd86efbf
 md"""
-* ``\rho``: $(@bind ρ0 Slider(0.1:0.1:0.9, default = 0.1, show_value =true)) (recovery probability)
+* ``\rho``: $(@bind ρ0 Slider(0.0:0.1:0.9, default = 0.1, show_value =true)) (recovery probability)
 * ``\delta``: $(@bind δ0 Slider(0.0:0.02:0.2, default = 0.04, show_value =true)) (death rate)
 * ``p``: $(@bind p0 Slider(0.1:0.1:0.9, default = 0.3, show_value =true)) (infection probability)
 """
@@ -272,7 +275,7 @@ It's really hard to see the difference, so let's use an alternative visualizatio
 
 # ╔═╡ 79f3c8b7-dea6-473c-87e5-772e391a51f4
 md"""
-# Assignment 3: Whom to vaccinate?
+# Assignment 2: Whom to vaccinate?
 
 > If you have 100 doses at your disposal, whom would you vaccinate?
 """
@@ -335,13 +338,8 @@ md"""
 We randomly assign each node into an age bin. This is visualized below.
 """
 
-# ╔═╡ 6b93d1ab-ead5-4d3b-9d19-0d287611fbb6
-md"""
-We want to adjust the code so that it can handle node-specific $\delta$. The way we are going to do it is to pass a vector $\vec \delta = (\delta_1, \ldots, \delta_N)$ that holds the death probability for each node.
-
-👉 Go the the definition of `transition(::I, ...)`, make sure you understand the code snippet in the comment and uncomment the lines.
-
-"""
+# ╔═╡ 90c268d5-e860-43a5-b47e-415936a3b468
+Markdown.MD(Markdown.Admonition("warning", "Note", [md"There's is nothing to do here. You'll get the 2 points for free."]))
 
 # ╔═╡ 1978febe-657c-11eb-04ac-e19b2d0e5a85
 md"""
@@ -531,11 +529,6 @@ function fractions_over_time(sim)
 		@transform(:state = @bycol levels!(:state, ordered_states(:state)))
 	end
 end
-
-# ╔═╡ 47ac6d3c-6556-11eb-209d-f7a8219512ee
-md"""
-## Constructing the Figures
-"""
 
 # ╔═╡ 5c3a80d2-6db3-4b3b-bc06-55a64e0cac6e
 md"""
@@ -969,14 +962,14 @@ vacc_age = let
 		label => sim
 	end
 	
-	(; graph, node_positions, sims=sims)
+	(; graph, node_positions, sims)
 end;
 
 # ╔═╡ da82d3ea-69f6-11eb-343f-a30cdc36228a
 fig_vacc_age = let
 	state = @isdefined(D) ? "D" : "I"
 
-	fig = Figure(; figure..., size = (350, 300))
+	fig = Figure(; figure..., size = (450, 300))
 	ax = Axis(fig[1,1], 
 		title = "#$(state) when vaccinating different groups",
 		titlefont = :italic
@@ -991,7 +984,7 @@ fig_vacc_age = let
 		lines!(df0.t, df0.fraction, label = lab)
 	end
 	
-	axislegend(ax)
+	Legend(fig[1,2], ax)
 
 	fig
 end
@@ -1127,6 +1120,17 @@ md"""
 *submitted by* **$members** (*group $(group_number)*)
 """
 
+# ╔═╡ bda301a9-3b63-41b4-a016-f34745c83a24
+strike(str) = @htl("<s>$str</s>")
+
+# ╔═╡ 6b93d1ab-ead5-4d3b-9d19-0d287611fbb6
+md"""
+We want to adjust the code so that it can handle node-specific $\delta$. The way we are going to do it is to pass a vector $\vec \delta = (\delta_1, \ldots, \delta_N)$ that holds the death probability for each node.
+
+$(strike(md"👉 Go the the definition of `transition(::I, ...)`, make sure you understand the code snippet in the comment and uncomment the lines."))
+
+"""
+
 # ╔═╡ 96f5a53b-72ab-44db-b8f3-37ceb802bf1a
 md"""
 ## Acknowledgement
@@ -1155,6 +1159,7 @@ Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 NearestNeighbors = "b8a86587-4115-5ab1-83bc-aa920d37bbce"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
@@ -1174,6 +1179,7 @@ Distributions = "~0.25.107"
 GeometryBasics = "~0.4.10"
 GraphMakie = "~0.5.9"
 Graphs = "~1.9.0"
+HypertextLiteral = "~0.9.5"
 Makie = "~0.20.7"
 NearestNeighbors = "~0.4.16"
 NetworkLayout = "~0.4.6"
@@ -3083,8 +3089,9 @@ version = "3.5.0+0"
 # ╟─fac414f6-6961-11eb-03bb-4f58826b0e61
 # ╟─57a72310-69ef-11eb-251b-c5b8ab2c6082
 # ╟─b92329ed-668d-46b0-9d21-65b04294cf83
-# ╠═97b92593-b859-4553-b8d0-a8f3f1445df3
+# ╟─97b92593-b859-4553-b8d0-a8f3f1445df3
 # ╟─6b93d1ab-ead5-4d3b-9d19-0d287611fbb6
+# ╟─90c268d5-e860-43a5-b47e-415936a3b468
 # ╟─29036938-69f4-11eb-09c1-63a7a75de61d
 # ╟─1978febe-657c-11eb-04ac-e19b2d0e5a85
 # ╠═18e84a22-69ff-11eb-3909-7fd30fcf3040
@@ -3114,8 +3121,7 @@ version = "3.5.0+0"
 # ╠═11ea4b84-649c-11eb-00a4-d93af0bd31c8
 # ╠═b0d34450-6497-11eb-01e3-27582a9f1dcc
 # ╠═63b2882e-649b-11eb-28de-bd418b43a35f
-# ╟─47ac6d3c-6556-11eb-209d-f7a8219512ee
-# ╠═5c3a80d2-6db3-4b3b-bc06-55a64e0cac6e
+# ╟─5c3a80d2-6db3-4b3b-bc06-55a64e0cac6e
 # ╠═db7eec4a-11b6-42b7-9070-e92500496d74
 # ╠═b4707854-88fb-4285-b6b8-6360edd2ccf7
 # ╠═28202f93-8f14-4a54-8389-40093c1fe9cf
@@ -3158,6 +3164,8 @@ version = "3.5.0+0"
 # ╠═259a640c-73cf-4694-8bd2-da3f4dbdb2ce
 # ╠═989dd65c-c598-4dfc-9099-6f986847aa52
 # ╠═7740e8e6-2063-4d9d-9c07-b7c164cf3310
+# ╠═12bd918a-282d-43da-aa75-7ad6219a926a
+# ╠═bda301a9-3b63-41b4-a016-f34745c83a24
 # ╟─96f5a53b-72ab-44db-b8f3-37ceb802bf1a
 # ╟─7e754b5f-0078-43e7-b0ca-eaef2fcf3e53
 # ╟─00000000-0000-0000-0000-000000000001

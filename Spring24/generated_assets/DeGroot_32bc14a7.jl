@@ -195,7 +195,7 @@ data(b_stacked(T,b0,50)) * mapping(:t => L"time $t$", :opinion, color=:node => "
 fixed_layout(_) = Point2{Float64}[(2,1), (1,2), (1, 1), (0,1), (1,0)]
 
 # ╔═╡ 7f7f97da-9367-45ce-a9e9-04958676554a
-figure = (; size = (350, 300), fonts)
+figure = (; size = (300, 250), fonts)
 
 # ╔═╡ a0e827fa-0d0e-4595-beb2-da38c79b47f2
 attr(graph; args...) = (; ilabels = vertices(graph), layout = fixed_layout, arrow_size = 20, elabels_distance = 15, nlabels_distance = 10, node_color = :orange, args...)
