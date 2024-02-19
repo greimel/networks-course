@@ -13,6 +13,9 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ 0c42d965-decc-42c5-9064-286aa2ea1a9a
+using AoGExtensions
+
 # ╔═╡ 11fb9a53-01a3-4646-9498-3d3b6624e82c
 using GADM
 
@@ -96,7 +99,7 @@ end
 
 # ╔═╡ 47594b98-6c72-11eb-264f-e5416a8faa32
 md"""
-`facebook.jl` | **Version 1.5+** | *last updated: Feb 7, 2024*
+`facebook.jl` | **Version 1.6** | *last updated: Feb 19, 2024*
 """
 
 # ╔═╡ 7f8a57f0-6c72-11eb-27dd-2dae50f00232
@@ -164,32 +167,6 @@ add0_infty(from, to, dist) = from == to ? 0.0 : ismissing(dist) ? Inf : dist
 # ╔═╡ 6f0b7a68-e830-4d37-a2bb-353205adb65f
 distance = 150
 
-# ╔═╡ c20c6133-73a3-4742-bf22-35a479a99a9b
-#=╠═╡
-concentration_df = let
-	df = innerjoin(county_shapes_df, concentration_df0, on=:fips => :user_loc)
-	
-	n = 40
-	q = quantile(df.concentration, weights(df.population), 0:1/n:1)
-	
-	df.conc_grp = cut(df.concentration, q, extend = true, labels = format)
-	df
-end;
-  ╠═╡ =#
-
-# ╔═╡ f7b9f84e-5b98-4b3c-a491-c14461bbcee8
-#=╠═╡
-centrality_df = let
-	df = innerjoin(county_shapes_df, county_centrality_df, on = :fips)
-	
-	n = 40
-	q = quantile(df.eigv_c, weights(df.population), 0:1/n:1)
-	
-	df.conc_grp = cut(df.eigv_c, q, extend = true, labels = format)
-	df
-end;
-  ╠═╡ =#
-
 # ╔═╡ cbed5f29-b55a-47a8-8986-0e98d4aed34b
 format(a, b, i; kwargs...) = "$i"
 
@@ -218,20 +195,14 @@ let
 end
   ╠═╡ =#
 
-# ╔═╡ 147cfa50-9a8b-432e-881c-5b16a6711d5c
-#=╠═╡
-let	
-	aog = data(concentration_df) * visual(Poly) * mapping(:shape, color = :concentration)
-
-	# Set plot attributes
-	axis = (; title = "Network Concentration (% of friends closer than $distance mi)")
-	draw(aog; axis)
-end
-  ╠═╡ =#
-
 # ╔═╡ f3b6d9be-712e-11eb-2f2d-af92e85304b5
 md"""
 # US Presidential Elections 2020
+"""
+
+# ╔═╡ 1f1f37a9-4c42-414f-8cb3-d9bfe57ddb3e
+md"""
+## Network concentration and election outcomes
 """
 
 # ╔═╡ a3c5e85b-7bf1-4456-a3a3-02816f530239
@@ -243,7 +214,7 @@ md"""
 
 # ╔═╡ 1600f95e-8b98-47fe-be7d-b1983c6a07b0
 md"""
-# Assignment 4: The Social Connectedness Index
+# Assignment 3: The Social Connectedness Index
 """
 
 # ╔═╡ 96e4482c-6f9a-11eb-0e47-c568006368b6
@@ -892,8 +863,8 @@ end
 	data(_) * mapping(
 		:rep_exp => "approximate share of Republican friends",
 		:per_gop => "Republican vote share 2020"
-	) * visual(Scatter)
-	draw
+	) * visual(Scatter, color = (:black, 0.3), markersize=5)
+	draw(; figure = (; size = (300, 250)))
 end
 
 # ╔═╡ 2759d19a-a5bf-4c8a-ba95-f91c36c9a167
@@ -916,13 +887,9 @@ function get_county_shapes_info_df()
 end
 
 # ╔═╡ 3e01f0b2-0d1a-4fff-94c2-b3eb959fd08a
-# ╠═╡ disabled = true
-#=╠═╡
 county_shapes_df = get_county_shapes_info_df()
-  ╠═╡ =#
 
 # ╔═╡ 57368fa0-8f46-4711-9e76-bd7cc088efcb
-#=╠═╡
 fips, _df_ = let
 	_df_ = @subset(county_shapes_df, contains(county_name)(:county))
 	
@@ -938,10 +905,8 @@ fips, _df_ = let
 	end
 	fips, _df_
 end
-  ╠═╡ =#
 
 # ╔═╡ c7bddeb3-943a-458e-83d0-8d6371b59529
-#=╠═╡
 let
 	df = @chain county_df begin
 		@subset(:user_loc == fips)
@@ -955,7 +920,56 @@ let
 	
 	draw(aog; axis)
 end
-  ╠═╡ =#
+
+# ╔═╡ c20c6133-73a3-4742-bf22-35a479a99a9b
+concentration_df = let
+	df = innerjoin(county_shapes_df, concentration_df0, on=:fips => :user_loc)
+	
+	n = 40
+	q = quantile(df.concentration, weights(df.population), 0:1/n:1)
+	
+	df.conc_grp = cut(df.concentration, q, extend = true, labels = format)
+	df
+end;
+
+# ╔═╡ 147cfa50-9a8b-432e-881c-5b16a6711d5c
+let	
+	aog = data(concentration_df) * visual(Poly) * mapping(:shape, color = :concentration)
+
+	# Set plot attributes
+	axis = (; title = "Network Concentration (% of friends closer than $distance mi)")
+	draw(aog; axis)
+end
+
+# ╔═╡ d1afd7c6-16ba-4961-8184-a05490d4ccac
+df_conc_elect = innerjoin(
+	select(concentration_df, :fips, :concentration),
+	select(df_elect, :county_fips, :per_gop, :total_votes),
+	on = :fips => :county_fips
+)
+
+# ╔═╡ be92efd8-7154-4663-bd88-fad7df34c7dc
+@chain df_conc_elect begin
+	data(_) * mapping(
+			:concentration => "concentration",
+			:per_gop => "Republican vote share", weights=:total_votes
+		) * (
+		#visual(Scatter, color = (:blue, 0.1)) +
+		binscatter()
+	)
+	draw(; figure = (; size = (300, 250)))
+end
+
+# ╔═╡ f7b9f84e-5b98-4b3c-a491-c14461bbcee8
+centrality_df = let
+	df = innerjoin(county_shapes_df, county_centrality_df, on = :fips)
+	
+	n = 40
+	q = quantile(df.eigv_c, weights(df.population), 0:1/n:1)
+	
+	df.conc_grp = cut(df.eigv_c, q, extend = true, labels = format)
+	df
+end;
 
 # ╔═╡ 86d4b686-f0d0-4999-91d3-e7bf040df013
 import Shapefile
@@ -1211,6 +1225,7 @@ TableOfContents()
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
+AoGExtensions = "7df18d33-496e-4cfd-8564-72cba2c0b329"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
@@ -1234,6 +1249,7 @@ ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [compat]
 AlgebraOfGraphics = "~0.6.18"
+AoGExtensions = "~0.1.12"
 CSV = "~0.10.12"
 CairoMakie = "~0.11.8"
 CategoricalArrays = "~0.10.8"
@@ -1309,6 +1325,12 @@ deps = ["Colors"]
 git-tree-sha1 = "e81c509d2c8e49592413bfb0bb3b08150056c79d"
 uuid = "27a7e980-b3e6-11e9-2bcd-0b925532e340"
 version = "0.4.1"
+
+[[deps.AoGExtensions]]
+deps = ["AlgebraOfGraphics", "CategoricalArrays", "Chain", "DataFrameMacros", "DataFrames", "InteractiveUtils", "Markdown", "NamedDims", "Statistics", "StatsBase"]
+git-tree-sha1 = "cd5770c09e0537d34b8519bceb1d91e1f8b23f71"
+uuid = "7df18d33-496e-4cfd-8564-72cba2c0b329"
+version = "0.1.12"
 
 [[deps.ArchGDAL]]
 deps = ["CEnum", "ColorTypes", "Dates", "DiskArrays", "Extents", "GDAL", "GeoFormatTypes", "GeoInterface", "GeoInterfaceRecipes", "ImageCore", "Tables"]
@@ -1577,6 +1599,12 @@ weakdeps = ["IntervalSets", "StaticArrays"]
 git-tree-sha1 = "d05d9e7b7aedff4e5b51a029dced05cfb6125781"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.6.2"
+
+[[deps.CovarianceEstimation]]
+deps = ["LinearAlgebra", "Statistics", "StatsBase"]
+git-tree-sha1 = "9a44ddc9e60ee398934b73a5168f5806989e6792"
+uuid = "587fd27a-f159-11e8-2dae-1979310e6154"
+version = "0.2.11"
 
 [[deps.Crayons]]
 git-tree-sha1 = "249fe38abf76d48563e2f4556bebd215aa317e15"
@@ -2513,6 +2541,12 @@ git-tree-sha1 = "0877504529a3e5c3343c6f8b4c0381e57e4387e4"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "1.0.2"
 
+[[deps.NamedDims]]
+deps = ["AbstractFFTs", "ChainRulesCore", "CovarianceEstimation", "LinearAlgebra", "Pkg", "Requires", "Statistics"]
+git-tree-sha1 = "dc9144f80a79b302b48c282ad29b1dc2f10a9792"
+uuid = "356022a1-0364-5f58-8944-0da4b18d706f"
+version = "1.2.1"
+
 [[deps.NetCDF_jll]]
 deps = ["Artifacts", "Blosc_jll", "Bzip2_jll", "HDF5_jll", "JLLWrappers", "LibCURL_jll", "Libdl", "OpenMPI_jll", "XML2_jll", "Zlib_jll", "Zstd_jll", "libzip_jll"]
 git-tree-sha1 = "a8af1798e4eb9ff768ce7fdefc0e957097793f15"
@@ -3433,6 +3467,9 @@ version = "3.5.0+0"
 # ╟─f3b6d9be-712e-11eb-2f2d-af92e85304b5
 # ╠═1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
 # ╠═281198fa-712f-11eb-02ae-99a2d48099eb
+# ╟─1f1f37a9-4c42-414f-8cb3-d9bfe57ddb3e
+# ╠═be92efd8-7154-4663-bd88-fad7df34c7dc
+# ╟─d1afd7c6-16ba-4961-8184-a05490d4ccac
 # ╟─a3c5e85b-7bf1-4456-a3a3-02816f530239
 # ╟─1600f95e-8b98-47fe-be7d-b1983c6a07b0
 # ╟─50e332de-6f9a-11eb-3888-d15d986aca8e
@@ -3475,6 +3512,7 @@ version = "3.5.0+0"
 # ╠═b281826c-5092-4de5-8f6e-5cf95273e1cf
 # ╠═2bbeebe4-cf24-42b3-8696-3f3b70633b5b
 # ╟─3062715a-6c75-11eb-30ef-2953bc64adb8
+# ╠═0c42d965-decc-42c5-9064-286aa2ea1a9a
 # ╟─0e556b16-5909-4853-9f78-76a071916f8d
 # ╠═ea4d4bba-5f8b-48ee-a171-7e7b90c2b062
 # ╠═0a47261d-1061-4c3d-bda8-7e0106c4a1df
