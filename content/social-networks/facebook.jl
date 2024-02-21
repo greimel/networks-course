@@ -99,7 +99,7 @@ end
 
 # ╔═╡ 47594b98-6c72-11eb-264f-e5416a8faa32
 md"""
-`facebook.jl` | **Version 1.6** | *last updated: Feb 19, 2024*
+`facebook.jl` | **Version 1.7** | *last updated: Feb 21, 2024*
 """
 
 # ╔═╡ 7f8a57f0-6c72-11eb-27dd-2dae50f00232
@@ -169,31 +169,6 @@ distance = 150
 
 # ╔═╡ cbed5f29-b55a-47a8-8986-0e98d4aed34b
 format(a, b, i; kwargs...) = "$i"
-
-# ╔═╡ c4c63797-1946-4a10-a03f-4c578ec5ae13
-#=╠═╡
-let
-	fig = Figure(resolution = (900, 330))
-	ax_1 = Axis(fig[1,1], title = "Scatter plot", ylabel = "log(population)")
-	ax_2 = Axis(fig[1,2], title = "Binned scatter plot", yticksvisible=false, yticklabelsvisible=false)
-	linkaxes!(ax_1, ax_2)
-	# common xlabel
-	Label(fig[1,1:2,Bottom()], "network concentration", padding = (0, 0, 0, 30))
-
-	df_co = concentration_df
-		
-	scatter!(ax_1, df_co.concentration, log.(df_co.population), color = (:black, 0.1), strokewidth = 0, label = "scatter")
-	
-	var = [:population, :concentration]
-	df = combine(
-		groupby(df_co, :conc_grp), 
-		([v, :population] => ((x,p) -> mean(x, weights(p))) => v for v in var)...
-	)
-	scatter!(ax_2, df.concentration, log.(df.population), color = :deepskyblue, label = "binscatter")
-		
-	fig
-end
-  ╠═╡ =#
 
 # ╔═╡ f3b6d9be-712e-11eb-2f2d-af92e85304b5
 md"""
@@ -925,12 +900,37 @@ end
 concentration_df = let
 	df = innerjoin(county_shapes_df, concentration_df0, on=:fips => :user_loc)
 	
-	n = 40
+	n = 20
 	q = quantile(df.concentration, weights(df.population), 0:1/n:1)
 	
 	df.conc_grp = cut(df.concentration, q, extend = true, labels = format)
 	df
 end;
+
+# ╔═╡ c4c63797-1946-4a10-a03f-4c578ec5ae13
+let
+	@chain concentration_df begin
+		@groupby(:conc_grp)
+		@combine(
+			:population    = mean(:population,    weights(:population)),
+			:concentration = mean(:concentration, weights(:population))
+		)
+		#@aside @info scatter(_.concentration, log.(_.population), figure = (; size = (350, 250)))
+	end
+	
+	@chain concentration_df begin
+		@transform(:log_pop = log(:population))
+		data(_) * mapping(
+			:concentration, 
+			:log_pop => "log(population)",
+			weights=:population
+		) * (
+			#visual(Scatter, color = (:blue, 0.1)) +
+			binscatter()
+		)
+		draw(; figure = (; size = (350, 250), figure_padding = 3))
+	end
+end
 
 # ╔═╡ 147cfa50-9a8b-432e-881c-5b16a6711d5c
 let	
@@ -3430,7 +3430,7 @@ version = "3.5.0+0"
 # ╟─7f8a57f0-6c72-11eb-27dd-2dae50f00232
 # ╟─547d93f4-6c74-11eb-28fe-c5be4dc7aaa6
 # ╠═710d5dfe-6cb2-11eb-2de6-3593e0bd4aba
-# ╠═6d30c04a-6cb2-11eb-220b-998e7d5cc469
+# ╟─6d30c04a-6cb2-11eb-220b-998e7d5cc469
 # ╠═4f14a79c-6cb3-11eb-3335-2bbb61da25d9
 # ╠═aa423d14-6cb3-11eb-0f1c-65ebbf99d539
 # ╟─8bee74ea-7140-11eb-3441-330ab08a9f38
@@ -3461,7 +3461,7 @@ version = "3.5.0+0"
 # ╠═c20c6133-73a3-4742-bf22-35a479a99a9b
 # ╠═f7b9f84e-5b98-4b3c-a491-c14461bbcee8
 # ╠═cbed5f29-b55a-47a8-8986-0e98d4aed34b
-# ╟─c4c63797-1946-4a10-a03f-4c578ec5ae13
+# ╠═c4c63797-1946-4a10-a03f-4c578ec5ae13
 # ╠═d47df7ce-4be0-41b9-8f7f-28a4abd54518
 # ╠═147cfa50-9a8b-432e-881c-5b16a6711d5c
 # ╟─f3b6d9be-712e-11eb-2f2d-af92e85304b5
