@@ -79,7 +79,7 @@ begin
 	using SimpleWeightedGraphs: SimpleWeightedGraph
 	const LG = Graphs
 	
-	weighted_adjacency_matrix(graph::Graphs.AbstractGraph) = LG.weights(graph) .* adjacency_matrix(graph)
+	weighted_adjacency_matrix(graph::AbstractGraph) = LG.weights(graph) .* adjacency_matrix(graph)
 	
 	LG.adjacency_matrix(graph::SimpleWeightedGraph) = LG.weights(graph) .> 0
 	
@@ -98,11 +98,19 @@ begin
 	
 		centrality = abs.(vec(eigenvector))
 	end
+
+	LG.outdegree(G::AbstractGraph) = vec(
+		sum(weighted_adjacency_matrix(G), dims=2)
+	)
+
+	LG.indegree(G::AbstractGraph) = vec(
+		sum(weighted_adjacency_matrix(G), dims=1)
+	)	
 end
 
 # ╔═╡ 47594b98-6c72-11eb-264f-e5416a8faa32
 md"""
-`facebook.jl` | **Version 1.8** | *last updated: Feb 22, 2024*
+`facebook.jl` | **Version 1.9** | *last updated: Feb 22, 2024*
 """
 
 # ╔═╡ 7f8a57f0-6c72-11eb-27dd-2dae50f00232
