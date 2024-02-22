@@ -816,11 +816,11 @@ exposure_df = @chain sci_with_distance begin
 			# @subset(:user_loc ≠ :fr_loc)
 			# @subset(:distance > threshold)
 			innerjoin(_, df_elect, on = :fr_loc => :county_fips)
-			@aside sci_pop = dot(_.scaled_sci, _.population)
+			@aside wgts = _.scaled_sci .* _.population
 			(; 
-				rep_exp = dot(_.scaled_sci, _.population .* _.per_gop) / sci_pop,
-				dem_exp = dot(_.scaled_sci, _.population .* _.per_dem) / sci_pop,
-				vot_exp = dot(_.scaled_sci, _.total_votes) / sci_pop
+				rep_exp = mean(_.per_gop, weights(wgts)),
+				dem_exp = mean(_.per_dem, weights(wgts)),
+				vot_exp = dot(_.scaled_sci, _.total_votes) / sum(wgts)
 			)
 		end
 	end
