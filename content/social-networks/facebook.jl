@@ -35,6 +35,9 @@ using Makie:
 # ╔═╡ d9dc06a2-74b6-4c3a-adc0-b80f883456e4
 using Makie: Label, Bottom, linkaxes!
 
+# ╔═╡ 651fdd27-f145-48b3-b637-85bd0a031f9d
+using Makie: @L_str, colgap!
+
 # ╔═╡ 13f8193c-57a7-495f-b52b-511adf792903
 using Colors: RGBA
 
@@ -99,7 +102,7 @@ end
 
 # ╔═╡ 47594b98-6c72-11eb-264f-e5416a8faa32
 md"""
-`facebook.jl` | **Version 1.7** | *last updated: Feb 21, 2024*
+`facebook.jl` | **Version 1.8** | *last updated: Feb 22, 2024*
 """
 
 # ╔═╡ 7f8a57f0-6c72-11eb-27dd-2dae50f00232
@@ -352,6 +355,9 @@ md"""
 md"""
 # Appendix
 """
+
+# ╔═╡ 59047492-3f1d-48de-9f8c-e1dd8a90c89c
+minimalaxis(; args...) = (; xticksvisible = false, yticksvisible = false, topspinevisible=false, bottomspinevisible=false, leftspinevisible=false, rightspinevisible=false, xgridvisible=false, ygridvisible=false, xticklabelsvisible=false, yticklabelsvisible=false, args...)
 
 # ╔═╡ 0e556b16-5909-4853-9f78-76a071916f8d
 md"""
@@ -757,7 +763,6 @@ begin
 	labels
 end
 
-
 # ╔═╡ 05dcc1a2-6c83-11eb-3b62-2339a8e8863e
 all(in(iso2c_to_fips.iso2c), node_names)
 
@@ -888,12 +893,17 @@ let
 		@select!(:fips = :fr_loc, :scaled_sci)
 		innerjoin(county_shapes_df, _, on=:fips)
 	end
+
+	plt = data(df) * visual(Poly) * mapping(:shape, color = :scaled_sci => log)
+
+	# define plot attributes
+	figure = (; figure_padding = 3, size = (450, 300))
+	axis = minimalaxis(
+		title = "Social Connectedness with $county_name",
+		aspect = 1.5, titlefont=:regular
+	)
 	
-	axis = (; title = "Social Connectedness with $county_name")
-	
-	aog = data(df) * visual(Poly) * mapping(:shape, color = :scaled_sci => log)
-	
-	draw(aog; axis)
+	draw(plt; axis, figure)
 end
 
 # ╔═╡ c20c6133-73a3-4742-bf22-35a479a99a9b
@@ -902,8 +912,12 @@ concentration_df = let
 	
 	n = 20
 	q = quantile(df.concentration, weights(df.population), 0:1/n:1)
-	
-	df.conc_grp = cut(df.concentration, q, extend = true, labels = format)
+
+	@chain df begin
+		@transform!(:conc_grp = @bycol cut(:concentration, q, extend = true, labels = format))
+		@transform!(:conc_grp_alt = parse(Int, string(:conc_grp)) % 2)
+	end
+
 	df
 end;
 
@@ -925,20 +939,22 @@ let
 			:log_pop => "log(population)",
 			weights=:population
 		) * (
-			#visual(Scatter, color = (:blue, 0.1)) +
-			binscatter()
+			visual(Scatter, markersize = 4) * mapping(color=:conc_grp_alt) +
+			binscatter() * visual(color = :red)
 		)
-		draw(; figure = (; size = (350, 250), figure_padding = 3))
+		draw(; figure = (; size = (600, 250), figure_padding = 3))
 	end
 end
 
 # ╔═╡ 147cfa50-9a8b-432e-881c-5b16a6711d5c
 let	
-	aog = data(concentration_df) * visual(Poly) * mapping(:shape, color = :concentration)
+	plt = data(concentration_df) * visual(Poly) * mapping(:shape, color = :concentration)
 
 	# Set plot attributes
-	axis = (; title = "Network Concentration (% of friends closer than $distance mi)")
-	draw(aog; axis)
+	figure = (; figure_padding = 3, size = (450, 300))
+	axis = minimalaxis(title = L"Network Concentration (% of friends $≤ %$distance \text{mi}$)", aspect = 1.5)
+	
+	draw(plt; axis, figure)
 end
 
 # ╔═╡ d1afd7c6-16ba-4961-8184-a05490d4ccac
@@ -959,17 +975,6 @@ df_conc_elect = innerjoin(
 	)
 	draw(; figure = (; size = (300, 250)))
 end
-
-# ╔═╡ f7b9f84e-5b98-4b3c-a491-c14461bbcee8
-centrality_df = let
-	df = innerjoin(county_shapes_df, county_centrality_df, on = :fips)
-	
-	n = 40
-	q = quantile(df.eigv_c, weights(df.population), 0:1/n:1)
-	
-	df.conc_grp = cut(df.eigv_c, q, extend = true, labels = format)
-	df
-end;
 
 # ╔═╡ 86d4b686-f0d0-4999-91d3-e7bf040df013
 import Shapefile
@@ -1016,8 +1021,8 @@ end;
 
 # ╔═╡ f25cf8be-6cb3-11eb-0c9c-f9ed04ded513
 let
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Social Connectedness Between Countries of the World", xgridvisible = false, ygridvisible = false)
+	fig = Figure(size = (350, 350), figure_padding=3)
+	ax = Axis(fig[1,1], title = "Social Connectedness Between Countries", xgridvisible = false, ygridvisible = false, aspect = 1)
 	
 	vlines!(ax, labels.start, color = :gray80)
 	hlines!(ax, labels.start, color = :gray80)
@@ -1025,7 +1030,7 @@ let
 	ax.xticks = (labels.mid, labels.continent)
 	ax.yticks = (labels.mid, labels.continent)
 	
-	image!(ax, RGBA.(0,0,0, min.(1.0, wgts[df_nodes.id, df_nodes.id] .* 100)))
+	image!(ax, RGBA.(0,0,0, min.(1.0, wgts[df_nodes.id, df_nodes.id] .* 100)), interpolate=false)
 	
 	fig
 end
@@ -1074,14 +1079,14 @@ sci_country_fig
 
 # ╔═╡ d38c51d4-6cbb-11eb-09dc-a92080dea6c7
 let
-	fig = Figure()
-	ax = Axis(fig[1,1], title = "Centrality According to Facebook")
+	fig = Figure(figure_padding = 3, size=(450, 400))
+	ax = Axis(fig[1,1], title = "Centrality According to Facebook", aspect=1)
 	hidedecorations!(ax)
 	hidespines!(ax)
 	
 	color_variable = log.(df_nodes1.eigv_c)
 	
-	attr = (tellwidth = true, width = 30)
+	attr = (tellwidth = true, width = 15)
 	
 	# Plot the countries for which there is no SCI data
 	poly!(ax, no_data.shape, color = :gray95)
@@ -1090,6 +1095,7 @@ let
 	
 	cb = Colorbar(fig[1,2], limits = extrema(color_variable); attr..., label="log(centrality)")
 
+	colgap!(fig.layout, 2)
 	fig
 	
 end
@@ -3434,7 +3440,7 @@ version = "3.5.0+0"
 # ╠═4f14a79c-6cb3-11eb-3335-2bbb61da25d9
 # ╠═aa423d14-6cb3-11eb-0f1c-65ebbf99d539
 # ╟─8bee74ea-7140-11eb-3441-330ab08a9f38
-# ╠═f25cf8be-6cb3-11eb-0c9c-f9ed04ded513
+# ╟─f25cf8be-6cb3-11eb-0c9c-f9ed04ded513
 # ╠═ce3486cf-8b42-4a7f-8cb5-04a27ad013d1
 # ╠═baecfe58-6cb6-11eb-3a4e-31bbb8da02ae
 # ╠═cd3fd39a-6cb7-11eb-1d7f-459f25a393e4
@@ -3448,10 +3454,10 @@ version = "3.5.0+0"
 # ╠═e1c5a635-c008-4ead-b170-6f2353693e20
 # ╠═759dd2da-f043-468f-891c-4fd17d701045
 # ╟─575ea397-6ce1-4424-aa49-fca631c89570
-# ╠═edf0f1e5-29eb-4bc9-88ca-2c1e0fbae7aa
 # ╠═3e01f0b2-0d1a-4fff-94c2-b3eb959fd08a
 # ╠═57368fa0-8f46-4711-9e76-bd7cc088efcb
-# ╠═c7bddeb3-943a-458e-83d0-8d6371b59529
+# ╠═edf0f1e5-29eb-4bc9-88ca-2c1e0fbae7aa
+# ╟─c7bddeb3-943a-458e-83d0-8d6371b59529
 # ╟─e0d17116-710d-11eb-1719-e18f188a6229
 # ╠═aab55326-7127-11eb-2f03-e9d3f30d1947
 # ╠═30350a46-712a-11eb-1d4b-81de61879835
@@ -3459,16 +3465,15 @@ version = "3.5.0+0"
 # ╠═6f0b7a68-e830-4d37-a2bb-353205adb65f
 # ╠═afef1939-e7e8-4432-85c9-734d5c5c64ba
 # ╠═c20c6133-73a3-4742-bf22-35a479a99a9b
-# ╠═f7b9f84e-5b98-4b3c-a491-c14461bbcee8
 # ╠═cbed5f29-b55a-47a8-8986-0e98d4aed34b
-# ╠═c4c63797-1946-4a10-a03f-4c578ec5ae13
+# ╟─c4c63797-1946-4a10-a03f-4c578ec5ae13
 # ╠═d47df7ce-4be0-41b9-8f7f-28a4abd54518
-# ╠═147cfa50-9a8b-432e-881c-5b16a6711d5c
+# ╟─147cfa50-9a8b-432e-881c-5b16a6711d5c
 # ╟─f3b6d9be-712e-11eb-2f2d-af92e85304b5
 # ╠═1d8c5db6-712f-11eb-07dd-f1a3cf9a5208
 # ╠═281198fa-712f-11eb-02ae-99a2d48099eb
 # ╟─1f1f37a9-4c42-414f-8cb3-d9bfe57ddb3e
-# ╠═be92efd8-7154-4663-bd88-fad7df34c7dc
+# ╟─be92efd8-7154-4663-bd88-fad7df34c7dc
 # ╟─d1afd7c6-16ba-4961-8184-a05490d4ccac
 # ╟─a3c5e85b-7bf1-4456-a3a3-02816f530239
 # ╟─1600f95e-8b98-47fe-be7d-b1983c6a07b0
@@ -3512,6 +3517,7 @@ version = "3.5.0+0"
 # ╠═b281826c-5092-4de5-8f6e-5cf95273e1cf
 # ╠═2bbeebe4-cf24-42b3-8696-3f3b70633b5b
 # ╟─3062715a-6c75-11eb-30ef-2953bc64adb8
+# ╠═59047492-3f1d-48de-9f8c-e1dd8a90c89c
 # ╠═0c42d965-decc-42c5-9064-286aa2ea1a9a
 # ╟─0e556b16-5909-4853-9f78-76a071916f8d
 # ╠═ea4d4bba-5f8b-48ee-a171-7e7b90c2b062
@@ -3566,6 +3572,7 @@ version = "3.5.0+0"
 # ╠═0baf1637-46b7-446c-8737-9ef25436ec83
 # ╠═d5139528-6dae-4e76-9b3a-c378219ea965
 # ╠═d9dc06a2-74b6-4c3a-adc0-b80f883456e4
+# ╠═651fdd27-f145-48b3-b637-85bd0a031f9d
 # ╠═13f8193c-57a7-495f-b52b-511adf792903
 # ╟─156b04d4-4e34-4128-a9b0-4e7b72c44623
 # ╠═bbf69c13-4757-4829-8690-16b1f201c24f
