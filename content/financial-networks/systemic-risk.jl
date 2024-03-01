@@ -23,17 +23,14 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 36ac25b9-27e5-4728-bbcf-920f231ff6ab
-using Revise
+# ╔═╡ 8ada8545-243e-4922-a306-ffff866a6135
+using SparseArrays
 
-# ╔═╡ 4878d013-053d-4490-b7c6-db0de4bf0a82
-using PlutoUI: NumberField
+# ╔═╡ 5f8c9ead-7598-452f-84b0-9189866aa200
+using Makie: LinePattern, Pattern
 
 # ╔═╡ 74262581-3c64-4e5b-9328-416c4e1efc91
-using MarkdownLiteral: @markdown
-
-# ╔═╡ 2b405f2b-3256-4c47-8334-c2d93713d409
-using PlutoUI: Select
+using MarkdownLiteral: @markdown, @mdx
 
 # ╔═╡ 103babf9-bbc3-4c77-9185-72f792a09706
 using LinearAlgebra: dot
@@ -41,14 +38,12 @@ using LinearAlgebra: dot
 # ╔═╡ bb0e41cf-66fb-4cae-8cd9-6ad771d1acf4
 using HypertextLiteral
 
-# ╔═╡ 969aa5eb-c56f-4115-83df-bb0ec911b6aa
-using MarkdownLiteral: @mdx
-
 # ╔═╡ 935da683-a4e2-4ddc-999f-55cb61390f39
 using StructArrays
 
 # ╔═╡ 2d1da571-0561-4c28-bb63-35ca5f9538d5
-using PlutoUI: PlutoUI, TableOfContents, Slider, CheckBox, as_svg
+using PlutoUI: PlutoUI, TableOfContents, details,
+	Slider, CheckBox, Select, NumberField
 
 # ╔═╡ 7c068d65-f472-44c2-af56-581bf9309bd5
 using StatsBase: weights
@@ -67,9 +62,6 @@ using NetworkLayout
 
 # ╔═╡ 8b75bc15-e07b-43e5-adb3-c5d6481ee9d8
 using LinearAlgebra: I
-
-# ╔═╡ cf61ebba-6800-4bfa-bb7c-cb9a6c846b65
-using PlutoLinks
 
 # ╔═╡ 954d2dde-8088-4e91-bed3-f8339090b77b
 using PlutoTeachingTools
@@ -107,6 +99,109 @@ using CairoMakie, AlgebraOfGraphics, Colors
 # ╔═╡ a349099a-64aa-4e86-9bf2-b6157feff394
 using LaTeXStrings
 
+# ╔═╡ c4032c7a-73f4-4342-a5a7-19fd14017402
+begin
+fonts = (; regular = CairoMakie.Makie.MathTeXEngine.texfont(), bold = CairoMakie.Makie.MathTeXEngine.texfont())
+set_theme!(; fonts)
+
+using Makie
+	
+#using Makie.LaTeXStrings
+	
+using Makie: automatic, compute_x_and_width, barplot_labels, bar_rectangle, generate_tex_elements, TeXChar, FreeTypeAbstraction, GlyphExtent, height_insensitive_boundingbox_with_advance, origin, GlyphCollection, stack_grouped_from_to, ATTRIBUTES, theme, bar_label_formatter, bar_default_fillto
+	
+function Makie.plot!(p::BarPlot)
+
+    labels = Observable(Tuple{Union{String,LaTeXStrings.LaTeXString}, Point2f}[])
+    label_aligns = Observable(Vec2f[])
+    label_offsets = Observable(Vec2f[])
+    label_colors = Observable(RGBAf[])
+	
+    function calculate_bars(xy, fillto, offset, transformation, width, dodge, n_dodge, gap, dodge_gap, stack,
+                            dir, bar_labels, flip_labels_at, label_color, color_over_background,
+                            color_over_bar, label_formatter, label_offset, label_rotation, label_align)
+
+        in_y_direction = get((y=true, x=false), dir) do
+            error("Invalid direction $dir. Options are :x and :y.")
+        end
+
+        x = first.(xy)
+        y = last.(xy)
+
+        # by default, `width` is `minimum(diff(sort(unique(x)))`
+        if width === automatic
+            x_unique = unique(filter(isfinite, x))
+            x_diffs = diff(sort(x_unique))
+            width = isempty(x_diffs) ? 1.0 : minimum(x_diffs)
+        end
+
+        # compute width of bars and x̂ (horizontal position after dodging)
+        x̂, barwidth = compute_x_and_width(x, width, gap, dodge, n_dodge, dodge_gap)
+
+        # --------------------------------
+        # ----------- Stacking -----------
+        # --------------------------------
+
+        if stack === automatic
+            if fillto === automatic
+                y, fillto = bar_default_fillto(transformation, y, offset, in_y_direction)
+            end
+        elseif eltype(stack) <: Integer
+            fillto === automatic || @warn "Ignore keyword fillto when keyword stack is provided"
+            if !iszero(offset)
+                @warn "Ignore keyword offset when keyword stack is provided"
+                offset = 0.0
+            end
+            i_stack = stack
+
+            from, to = stack_grouped_from_to(i_stack, y, (x = x̂,))
+            y, fillto = to, from
+        else
+            ArgumentError("The keyword argument `stack` currently supports only `AbstractVector{<: Integer}`") |> throw
+        end
+
+        # --------------------------------
+        # ----------- Labels -------------
+        # --------------------------------
+
+        if !isnothing(bar_labels)
+            oback = color_over_background === automatic ? label_color : color_over_background
+            obar = color_over_bar === automatic ? label_color : color_over_bar
+            label_args = barplot_labels(x̂, y, bar_labels, in_y_direction,
+                                        flip_labels_at, to_color(oback), to_color(obar),
+                                        label_formatter, label_offset, label_rotation, label_align)
+            labels[], label_aligns[], label_offsets[], label_colors[] = label_args
+        end
+
+        return bar_rectangle.(x̂, y .+ offset, barwidth, fillto, in_y_direction)
+    end
+
+	bars = lift(calculate_bars, p, p[1], p.fillto, p.offset, p.transformation.transform_func, p.width, p.dodge, p.n_dodge, p.gap,
+                p.dodge_gap, p.stack, p.direction, p.bar_labels, p.flip_labels_at,
+                p.label_color, p.color_over_background, p.color_over_bar, p.label_formatter, p.label_offset, p.label_rotation, p.label_align; priority = 1)
+
+	kwargs_df = DataFrame(; 
+		color=p.color[], #colormap = p.colormap[], colorrange = p.colorrange[],
+        strokewidth = p.strokewidth[], strokecolor = p.strokecolor[],
+		#visible = p.visible[],
+        #inspectable = p.inspectable[], transparency = p.transparency[],
+        #highclip = p.highclip[], lowclip = p.lowclip[], nan_color = p.nan_color[]
+		alpha = p.alpha
+	)
+	#for (bar, kwargs) ∈ zip(bars[], eachrow(kwargs_df))	
+	map(zip(bars[], eachrow(kwargs_df))) do (bar, kwargs)
+		poly!(p, bar; kwargs...)
+	end
+
+    if !isnothing(p.bar_labels[])
+		#@info p.label_size[]
+        text!(p, labels; align=label_aligns, offset=label_offsets, color=label_colors, font=p.label_font, fontsize=p.label_size,
+		rotation=p.label_rotation)
+    end
+end
+
+end
+
 # ╔═╡ c9775558-94f2-4c8c-9d0e-ab948fa5ead4
 using PlutoTest: @test
 
@@ -115,11 +210,16 @@ md"""
 `systemic-risk.jl` | **Version 2.3** | *last updated: March 10, 2023*
 """
 
-# ╔═╡ 72e25b9c-89e3-441b-bf89-c1122535318a
-present_button()
+# ╔═╡ ab239918-1cde-4d6b-ac7f-716aaba5f39b
+ChooseDisplayMode()
 
-# ╔═╡ a4dba7da-9d63-4d0d-a736-565d6ccf7d09
-space = 0
+# ╔═╡ 248909ee-2312-4e28-928a-ec65c0eec8a2
+md"""
+need space? $(@bind need_space CheckBox(default=false))
+"""
+
+# ╔═╡ 94e1ac76-3099-4e33-b987-e7f0cf365399
+space = need_space * 10;
 
 # ╔═╡ cdfc35e1-5082-4959-9d30-3abb2dc8a7ac
 md"""
@@ -131,20 +231,31 @@ based on _[Acemoglu, Ozdaglar & Tahbaz-Salehi, 2015](https://www.aeaweb.org/arti
 # ╔═╡ 944b07ed-20e5-4068-ac5e-8a48f866fdd2
 md"""
 ## Overview: Contagion on Financial Networks
-
-> _Financial network_:  banks linked by interbank lending
 """
 
-# ╔═╡ 144cfaf2-b78c-4f87-8b35-559914abf532
-aside_figure(fig) = aside(md"$fig")
+# ╔═╡ 1d5d8c8a-8d86-426f-bb17-bd2279d91ff1
+md_fig = @htl("""
+$(md"
+> _Financial network_:  banks linked by interbank lending
+
+1. _How do shocks propagate_ on a financial network?
+2. _How should a network look_ so that shocks don't spread?
+")
+
+$(md"
+* ring vs complete ``(γ)``: $(@bind _γ_ Slider(0:0.1:1.0, show_value = true, default = 0.5))
+* shock to bank ``1`` ``(ε)``: $(@bind _ε_ Slider(0.0:0.05:1, show_value = true, default = 0.0))
+*  $(blur(nisl_str)) $(@bind n_islands Slider(1:3, show_value = true, default = 1))
+")
+""")
+
+# ╔═╡ 8347ab1d-f45e-4434-a8b7-60fa3918c97c
+nisl_str = "number of islands:"
 
 # ╔═╡ eba94b09-f061-432a-80ce-a68be83e6a99
 md"""
 # I. Model Setup
-"""
 
-# ╔═╡ ffc743af-b97c-4083-a02e-ea5725829f2a
-md"""
 ## Model I: Banks
 """
 
@@ -178,58 +289,17 @@ md"""
 # II. Payment equilibrium
 """
 
-# ╔═╡ 01eb57fd-a815-41f2-9e25-7730bff7917d
-md"""
-### Banks' choice
-
-1. payables > receivables: repay all debt (**_solvent_**)
-2. not enough? liquidate (part) of the firm ``ℓ > 0`` (**_insolvent_**)
-3. still not enough? (partially) default on interbank debt (**_bankrupt_**)
-4. still not enough? (partially) default on external liabilities ``ν``
-"""
-
-# ╔═╡ 6af1e245-aaf8-4b7d-977a-1d76998f7cf8
-
-
-# ╔═╡ 5b6f26db-f63f-4db5-ae3e-d41ae476948f
-
-
-# ╔═╡ 0e4a53b5-1751-4723-a05d-a5504e427e3c
-
-
 # ╔═╡ 523e177c-f74d-4805-8a2b-9c27a4b0bc63
 md"""
 * size of shock $(@bind ε_cash Slider(0.0:0.05:1.0, show_value = true, default = 0.0))
 * show illiquid firm value ``A`` $(@bind show_illiquid CheckBox(default = false))
 * recovery rate ``ζ`` $(@bind recovery_rate Slider(0:0.1:0.5, show_value = true, default = 0.0))
-""" |> aside
+"""
 
 # ╔═╡ 7f058e4a-9b12-41c9-9fd7-4ad023058a14
 md"""
 # III. Financial Contagion
-
-* default on interbank market 
-* ``\implies`` lower interbank receivables for other banks
-* ``\implies`` reduces distance to default
 """
-
-# ╔═╡ 96878ebb-fbc0-4d53-998a-210e13a42492
-md"""
-| variable            | value                                                        |
-|:------------------- | :----------------------------------------------------------- |
-| ring vs complete ``γ`` | $(@bind γ2 Slider(0:0.01:1, default=0.5, show_value=true))|
-| dividend ``a``      | $(@bind a Slider(0:0.01:1, default=0.7, show_value=true))    |
-| recovery rate ``ζ`` | $(@bind ζ Slider(0:0.01:1, default=0.3, show_value=true))    |
-| **external**        | |
-| cash ``c``          | $(@bind c Slider(0:0.1:2, default=1.2, show_value=true))     |
-| shock ``ε``         | $(@bind ε Slider(0:0.1:2, default=0.0, show_value=true))     |
-| deposits ``ν``      | $(@bind ν Slider(0.0:0.1:2, default=1.8, show_value=true))   |
-| **internal**        | |
-| interbank ``y``     | $(@bind y Slider(0:0.1:2, default=1.0, show_value=true))     |
-""" |> aside
-
-# ╔═╡ 9446b4db-4d93-4153-84e2-73d01fb31254
-
 
 # ╔═╡ da7c558d-a2b5-41a8-9c78-3e39a00dfd31
 md"""
@@ -274,6 +344,11 @@ md"""
 md"""
 ## Task 1 (6 Points)
 """
+
+# ╔═╡ 15f45669-516b-4f3f-9ec1-f9e2c1d2e71a
+@markdown("""
+Consider the interbank networks ``\\tilde y`` and ``\\hat y`` of $(out_T1.n) banks as depicted above. For all non-isolated banks the sum of interbank liabilities equal the sum of interbank claims (``y = $(out_T1.y)``).
+""")
 
 # ╔═╡ 51bfc57f-7b06-4e27-af32-51df38af30a1
 md"""
@@ -512,6 +587,9 @@ md"""
 ## Packages
 """
 
+# ╔═╡ 6172ebbe-8a27-4c1c-bf5c-5a6e7357447a
+PlutoUI.details
+
 # ╔═╡ 11d6ac4f-e910-4a9f-9ee4-bdd270e9400b
 md"""
 ## HTML Helpers
@@ -538,32 +616,8 @@ md"""
 # ╔═╡ cc1ff1e6-2968-4baf-b513-e963ab2ff1b4
 blur(text) = @htl("""<span class="blurry-text">$text</span>""")
 
-# ╔═╡ 1d5d8c8a-8d86-426f-bb17-bd2279d91ff1
-md"""
-* ring vs complete ``(γ)``: $(@bind _γ_ Slider(0:0.1:1.0, show_value = true, default = 0.5))
-* shock to bank ``1`` ``(ε)``: $(@bind _ε_ Slider(0.0:0.05:1, show_value = true, default = 0.0))
-*  $(blur("number of islands:")) $(@bind n_islands Slider(1:3, show_value = true, default = 1))
-"""
-
 # ╔═╡ c65323f5-211d-4a95-aed3-d6129bdd083e
 strike(text) = @htl("<s>$text</s>")
-
-# ╔═╡ bafc7db1-ac1d-4314-be83-0b9f6c63b5fc
-md"""
-### Bank
-
-* external debt (deposits) ``ν``
-* external assets (cash) ``c``
-* borrowing and lending on _**financial network**_ (see below)
-* investment in $(strike("loan to")) _**firm**_ (see below)
-
-### Financial network
-
-* ``n`` banks
-* ``y_{ij} > 0 ⟺`` bank ``i`` has debt with bank ``j``
-* the network is **_regular_** \
-  ``\forall i \sum_{j} y_{ij} = \sum_{j} y_{ji} = \bar y``
-"""
 
 # ╔═╡ 5d263432-856b-4e9b-a303-a476222e8963
 vertical_space(space=space) = @htl("""
@@ -584,6 +638,51 @@ vertical_space()
 
 # ╔═╡ aaffd333-3aa1-48ee-b5db-d577bd7da830
 vertical_space()
+
+# ╔═╡ 73c87a80-8bd9-4040-8a09-519f1a73f7c0
+function TwoColumns(a, b, α=50, β=100-α)
+	PlutoUI.ExperimentalLayout.Div([
+		PlutoUI.ExperimentalLayout.Div([a]; style=Dict("flex" => "0 0 $α%"))
+		PlutoUI.ExperimentalLayout.Div([b]; style=Dict("flex" => "0 0 $β%"))
+	]; style=Dict("display" => "flex", "flex-direction" => "row"))
+end
+
+# ╔═╡ 44ee4809-64ba-40dc-89ec-ae4f852535a8
+TwoColumns(
+	md"""
+* default on interbank market 
+* ``\implies`` lower interbank receivables for other banks
+* ``\implies`` reduces distance to default
+
+	""",
+	md"""
+$(details("Parameters (I)", md"
+| variable            | value                                                        |
+|:------------------- | :----------------------------------------------------------- |
+| ring vs complete ``γ`` | $(@bind γ2 Slider(0:0.01:1, default=0.5, show_value=true))|
+| dividend ``a``      | $(@bind a Slider(0:0.01:1, default=0.7, show_value=true))    |
+| recovery rate ``ζ`` | $(@bind ζ Slider(0:0.01:1, default=0.3, show_value=true))    |
+"))
+	
+$(details("Parameters (II)", md"
+| variable            | value                                                        |
+|:------------------- | :----------------------------------------------------------- |
+| **external**        | |
+| cash ``c``          | $(@bind c Slider(0:0.1:2, default=1.2, show_value=true))     |
+| shock ``ε``         | $(@bind ε Slider(0:0.1:2, default=0.0, show_value=true))     |
+| deposits ``ν``      | $(@bind ν Slider(0.0:0.1:2, default=1.8, show_value=true))   |
+| **internal**        | |
+| interbank ``y``     | $(@bind y Slider(0:0.1:2, default=1.0, show_value=true))     |
+"))
+""",
+45)
+
+# ╔═╡ 76482e5e-418a-4102-8a62-cae3c0cb88d4
+function OneColumn(a, α=60)
+	PlutoUI.ExperimentalLayout.Div([
+		PlutoUI.ExperimentalLayout.Div([a]; style=Dict("flex" => "0 0 $α%"))
+	]; style=Dict("display" => "flex", "flex-direction" => "row"))
+end
 
 # ╔═╡ 25a01039-25e9-44b0-afd0-c3df37c7598f
 md"""
@@ -712,11 +811,14 @@ md"""
 ## Visualize bank balance sheet
 """
 
+# ╔═╡ 3033ae5a-bada-4041-858d-a61c62bdc8b8
+#balance_sheet_palette()
+
 # ╔═╡ 5104f0a5-a551-4f4c-8f89-2b8f834b3587
 function balance_sheet_palette()
 	palette_df = DataFrame(
 		label = ["external", "interbank", "firm", "liquidated", "shortfall"],
-		color = [Makie.wong_colors()[[5, 2, 4, 3, ]]..., Pattern("/")]
+		color = [Makie.wong_colors()[[5, 2, 4, 3, ]]..., Makie.Pattern("/")]
 	)
 	
 	palette_df.label .=> palette_df.color
@@ -815,14 +917,67 @@ function visualize_simple_balance_sheet(args...; figure=(;), legend=(;), kwargs.
 		legend = (; position = :top, titleposition=:left, framevisible=false)
 	end
 	
-	draw(
+	fg = draw(
 		plt;
 		axis = (limits = (nothing, nothing, 0, 1.05 * bs_max),),
 		figure,
 		palettes = (; color=balance_sheet_palette()),
 		legend,
 	)
+
+	rowgap!(fg.figure.layout, 1)
+
+	fg
 end
+
+# ╔═╡ efbc1a42-ecc2-4907-a981-bd1d29ca0803
+balance_sheet = let
+	c = 0.7
+	ν = 1.2
+	x = 1.0
+	a = 0.7
+	y = 1.0
+	A = 1.0
+	ζ = recovery_rate
+	shortfall = max(y + ν - (c - ε_cash + x + a), 0)
+
+	figure = (; size = 0.8 .* (400, 350), fontsize=15, figure_padding=3)
+
+	firm = (; a, A, ζ)
+	visualize_simple_balance_sheet((; c, ν, ε=ε_cash), firm, (; x, y); figure, show_illiquid)
+end	
+
+# ╔═╡ bafc7db1-ac1d-4314-be83-0b9f6c63b5fc
+TwoColumns(md"""
+### Bank
+
+* external debt (deposits) ``ν``
+* external assets (cash) ``c``
+* borrowing and lending on _**financial network**_ (see below)
+* investment in $(strike("loan to")) _**firm**_ (see below)
+
+### Financial network
+
+* ``n`` banks
+* ``y_{ij} > 0 ⟺`` bank ``i`` has debt with bank ``j``
+* the network is **_regular_** \
+  ``\forall i \sum_{j} y_{ij} = \sum_{j} y_{ji} = \bar y``
+""",
+balance_sheet, 62)
+
+# ╔═╡ 01eb57fd-a815-41f2-9e25-7730bff7917d
+TwoColumns(
+	@mdx("""
+<br>
+	
+### Banks' choice
+
+1. payables > receivables: repay all debt (**_solvent_**)
+2. not enough? liquidate (part) of the firm ``ℓ > 0`` (**_insolvent_**)
+3. still not enough? (partially) default on interbank debt (**_bankrupt_**)
+4. still not enough? (partially) default on external liabilities ``ν`` (**_bankrupt_**)
+"""),
+	balance_sheet, 65)
 
 # ╔═╡ b7d74679-904c-44c4-bedd-89f1b68a5e42
 function visualize_simple_balance_sheet!(figpos, legpos, args...; legend=(;), kwargs...)
@@ -856,7 +1011,7 @@ function balance_sheet_df((; ν, c), (; a, A, ζ), (; ℓ, y_pc, ν_pc, x, y, di
 end
 
 # ╔═╡ 0ff81eb8-d843-49a4-af93-ec2414797e87
-function visualize_balance_sheets!(figpos, bank_df, banks, firm)
+function visualize_balance_sheets!(figpos, bank_df, banks, firm; use_palettes=true)
 	
 	bank_dfs = [
 		balance_sheet_df(banks[i], firm, bank_df[i,:]) for i ∈ 1:length(banks)
@@ -875,13 +1030,14 @@ function visualize_balance_sheets!(figpos, bank_df, banks, firm)
 			:side => sorter("receivable", "payable") => "",
 			:val => "",
 			color = :color => "", stack = :color,
-			layout = :bank
+			col = :bank
 		) * visual(BarPlot, strokewidth=0.5)
 	end
 
-	fg = draw!(figpos[2,1], plt, 
+	palettes = use_palettes ? (; color=balance_sheet_palette()) : (;)
+	fg = draw!(figpos[2,1], plt; 
 		axis = (limits = (nothing, nothing, 0, 1.05 * bs_max),),
-		palettes=(color=balance_sheet_palette(),)
+		palettes
 	)
 	legend!(figpos[1,1], fg, orientation=:horizontal, titleposition=:left, framevisible=false)
 
@@ -1074,7 +1230,7 @@ end;
 # ╔═╡ a8a8a197-d54d-4c67-b7ce-19bdc8b64401
 transmission_analysis = let
 	n_islands = 1
-	n_banks = 4
+	n_banks = 3
 	
 	banks = [(; ν, c = max(c - (i==1)*ε, 0)) for i ∈ 1:n_banks]
 
@@ -1159,7 +1315,7 @@ function visualize_bank_firm_network!(ax, IM, bank_df; r = 1.4, start = Makie.au
 	
 	g = big_A |> SimpleWeightedDiGraph
 
-	n_banks = size(A, 1)
+	n_banks = Base.size(A, 1)
 
 	edge_attr_df = map(edges(g)) do (; src, dst, weight)
 		if src ≤ n_banks && dst ≤ n_banks
@@ -1218,7 +1374,7 @@ md"""
 attr(; kwargs...) = (; arrow_size = 10, elabels_distance = 15, edge_width=1, nlabels_distance = 10, kwargs...)
 
 # ╔═╡ bef59a5b-6952-42aa-b700-4ad81d848fe4
-minimal(; extend_limits=0.05, hidespines=true, kwargs...) = (; 
+minimal(; extend_limits=0.1, hidespines=true, kwargs...) = (; 
 	xgridvisible=false, xticksvisible=false, xticklabelsvisible=false,
 	ygridvisible=false, yticksvisible=false, yticklabelsvisible=false, 
 	leftspinevisible=!hidespines, rightspinevisible=!hidespines, topspinevisible=!hidespines, bottomspinevisible=!hidespines,
@@ -1231,17 +1387,19 @@ minimal(; extend_limits=0.05, hidespines=true, kwargs...) = (;
 let
 	(; IM, firm, banks, bank_df) = transmission_analysis
 
-	fig = Figure(resolution = (800, 400))
+	fig = Figure(size = (600, 180), figure_padding=3)
 		
-	visualize_bank_firm_network!(Axis(fig[1,1]; minimal(extend_limits=0.1)...), IM, bank_df; start = 1/8, show_firms=false)
+	visualize_bank_firm_network!(Axis(fig[1,1]; minimal(extend_limits=0.1)...), IM, bank_df; start = 1/8, show_firms=false, node_size = 22)
 
-	visualize_balance_sheets!(fig[1,2:3], bank_df, banks, firm)
+	visualize_balance_sheets!(fig[1,2:4], bank_df, banks, firm)
 
-	fig |> as_svg
+	rowgap!(content(fig[1,2:4]), 0)
+#	rowgap!(fig[1,2:4[.layout, 0)
+	fig
 end
 
 # ╔═╡ ce563ab5-6324-4a86-be61-7a107ff0e3b3
-fig_attr(xscale=1, yscale=xscale) = (; figure_padding=3, size = (xscale * 300, yscale * 300))
+fig_attr(xscale=1, yscale=xscale) = (; figure_padding=3, size = (xscale * 200, yscale * 200))
 
 # ╔═╡ c99e52e2-6711-4fb6-bcc0-8e4f378ed479
 out_T1 = let
@@ -1262,12 +1420,7 @@ out_T1 = let
 	graphplot!(ax2, ŷ; layout, ilabels=vertices(ŷ))
 
 	(; ỹ, ŷ, fig, n, y)
-end; out_T1.fig |> as_svg
-
-# ╔═╡ 15f45669-516b-4f3f-9ec1-f9e2c1d2e71a
-@markdown("""
-Consider the interbank networks ``\\tilde y`` and ``\\hat y`` of $(out_T1.n) banks as depicted above. For all non-isolated banks the sum of interbank liabilities equal the sum of interbank claims (``y = $(out_T1.y)``).
-""")
+end; out_T1.fig
 
 # ╔═╡ d7111001-f632-4d0d-a2c7-7bbfd67bf87d
 md"""
@@ -1294,8 +1447,8 @@ out_T2 = let
 	layout = Shell()
 
 	fig = Figure(; fig_attr(2, 1)...)
-	ax1 = Axis(fig[1,1]; minimal(hidespines=false, title = L"interbank market $\tilde{y}$")...)
-	ax2 = Axis(fig[1,2]; minimal(hidespines=false, title = L"interbank market $\hat{y}$")...)
+	ax1 = Axis(fig[1,1]; minimal(hidespines=false, title = L"interbank market $\tilde{y}$", extend_limits=0.1)...)
+	ax2 = Axis(fig[1,2]; minimal(hidespines=false, title = L"interbank market $\hat{y}$", extend_limits=0.1)...)
 
 	graphplot!(ax1, IM1; ilabels=vertices(IM1), layout)
 	graphplot!(ax2, IM2; ilabels=vertices(IM2), layout)
@@ -1320,9 +1473,10 @@ let
 		ilabels = vertices(g),
 		node_color = exX.color,
 		layout = Shell(),
-		figure = fig_attr(),
+		figure = fig_attr(1.3, 1.1),
 		axis = minimal(title = L"interbank network in state $ S_%$i_state $", extend_limits=0.1)
 	)
+
 
 	(; node_styles) = exX
 	if !ismissing(node_styles)
@@ -1330,6 +1484,8 @@ let
 		node_legend(fig[end+1,1], df, title)
 	end
 
+	rowgap!(fig.layout, 1)
+	
 	fig
 end
 
@@ -1349,18 +1505,15 @@ end
 fig = let
 	(; promises, bank_df) = initial_analysis
 	
-	visualize_bank_firm_network(promises, bank_df; figure=fig_attr(), start = 1/6, show_firms=false)
+	visualize_bank_firm_network(promises, bank_df; figure=fig_attr(), start = 1/6, show_firms=false, node_size = 22)
 end;
 
-# ╔═╡ 1d13564d-7256-4cf1-919f-6d8298cc476b
-md"""
-1. _How do shocks propagate_ on a financial network?
-2. _How should a network look_ so that shocks don't spread? $(fig |> aside_figure)
-"""
+# ╔═╡ 82f1b9c3-306d-416a-bb2f-7171c93693dc
+TwoColumns(md_fig, fig, 62)
 
 # ╔═╡ 73ba4210-d8f6-4a74-bf4d-d7bc0902bb5e
 md"""
-$(aside_figure(fig))
+$(aside(fig))
 
 ## Plan for the lecture
 
@@ -1381,7 +1534,7 @@ $(aside_figure(fig))
 firm_bank_aside = let
 	(; IM, firm, banks, bank_df) = transmission_analysis
 		
-	visualize_bank_firm_network(IM, bank_df; show_firms=false, start = 1/8) |> as_svg |> x -> md"$(x)" |> aside
+	visualize_bank_firm_network(IM, bank_df; show_firms=false, start = 1/8, node_size = 22) |> aside
 end
 
 # ╔═╡ 0d18cdf0-441e-4ca9-98e3-50bc3efa837f
@@ -1411,7 +1564,11 @@ let
 
 	layout = (_) -> componentwise_circle([1:6, 6 .+ (1:5)])
 	
-	visualize_bank_firm_network(IM, bank_df; figure=fig_attr(1.5, 1.0), hidespines=false, start = 1/6, layout, add_legend=true, show_firms=false) |> as_svg
+	fig = visualize_bank_firm_network(IM, bank_df; figure=fig_attr(1.6, 1.0), hidespines=false, start = 1/6, layout, add_legend=true, show_firms=false, node_size = 22)
+
+	rowgap!(fig.layout, 1)
+	
+	fig
 end
 
 # ╔═╡ a9d27019-72b7-4257-b72a-12952b516db9
@@ -1440,236 +1597,13 @@ let
 
 	layout = Shell()
 	
-	visualize_bank_firm_network(IM, bank_df; figure=fig_attr(1.0, 1.1), hidespines=false, start = 1/6, layout, add_legend=true, show_firms=false) |> aside_figure
+	visualize_bank_firm_network(IM, bank_df; figure=fig_attr(1.0, 1.1), hidespines=false, start = 1/6, layout, add_legend=true, show_firms=false, node_size = 22) |> aside
 end
 
 # ╔═╡ 3496c181-c4c3-4b1b-a5e5-83df27182c99
 md"""
 ## `LaTeXStrings` as `bar_labels`
 """
-
-# ╔═╡ e8d198fa-11db-43b2-846e-311abe9f59aa
-function get_xshift(lb, ub, align; default=0.5f0)
-    if align isa Symbol
-        align = align == :left   ? 0.0f0 :
-                align == :center ? 0.5f0 :
-                align == :right  ? 1.0f0 : default
-    end
-    lb * (1-align) + ub * align |> Float32
-end
-
-# ╔═╡ 2711b045-b879-4225-afae-13328a4e14b3
-function get_yshift(lb, ub, align; default=0.5f0)
-    if align isa Symbol
-        align = align == :bottom ? 0.0f0 :
-                align == :center ? 0.5f0 :
-                align == :top    ? 1.0f0 : default
-    end
-    lb * (1-align) + ub * align |> Float32
-end
-
-# ╔═╡ c4032c7a-73f4-4342-a5a7-19fd14017402
-begin
-fonts = (; regular = CairoMakie.Makie.MathTeXEngine.texfont(), bold = CairoMakie.Makie.MathTeXEngine.texfont())
-set_theme!(; fonts)
-	
-using Makie: automatic, compute_x_and_width, barplot_labels, bar_rectangle, generate_tex_elements, TeXChar, FreeTypeAbstraction, GlyphExtent, height_insensitive_boundingbox_with_advance, origin, GlyphCollection, stack_grouped_from_to, ATTRIBUTES, theme, bar_label_formatter
-	
-function Makie.plot!(p::BarPlot)
-
-    labels = Observable(Tuple{Union{String,LaTeXStrings.LaTeXString}, Point2f}[])
-    label_aligns = Observable(Vec2f[])
-    label_offsets = Observable(Vec2f[])
-    label_colors = Observable(RGBAf[])
-    function calculate_bars(xy, fillto, offset, width, dodge, n_dodge, gap, dodge_gap, stack,
-                            dir, bar_labels, flip_labels_at, label_color, color_over_background,
-                            color_over_bar, label_formatter, label_offset)
-
-        in_y_direction = get((y=true, x=false), dir) do
-            error("Invalid direction $dir. Options are :x and :y.")
-        end
-
-        x = first.(xy)
-        y = last.(xy)
-
-        # by default, `width` is `minimum(diff(sort(unique(x)))`
-        if width === automatic
-            x_unique = unique(filter(isfinite, x))
-            x_diffs = diff(sort(x_unique))
-            width = isempty(x_diffs) ? 1.0 : minimum(x_diffs)
-        end
-
-        # compute width of bars and x̂ (horizontal position after dodging)
-        x̂, barwidth = compute_x_and_width(x, width, gap, dodge, n_dodge, dodge_gap)
-
-        # --------------------------------
-        # ----------- Stacking -----------
-        # --------------------------------
-
-        if stack === automatic
-            if fillto === automatic
-                fillto = offset
-            end
-        elseif eltype(stack) <: Integer
-            fillto === automatic || @warn "Ignore keyword fillto when keyword stack is provided"
-            if !iszero(offset)
-                @warn "Ignore keyword offset when keyword stack is provided"
-                offset = 0.0
-            end
-            i_stack = stack
-
-            from, to = stack_grouped_from_to(i_stack, y, (x = x̂,))
-            y, fillto = to, from
-        else
-            ArgumentError("The keyword argument `stack` currently supports only `AbstractVector{<: Integer}`") |> throw
-        end
-
-        # --------------------------------
-        # ----------- Labels -------------
-        # --------------------------------
-
-        if !isnothing(bar_labels)
-            oback = color_over_background === automatic ? label_color : color_over_background
-            obar = color_over_bar === automatic ? label_color : color_over_bar
-            label_args = barplot_labels(x̂, y, bar_labels, in_y_direction,
-                                        flip_labels_at, to_color(oback), to_color(obar),
-                                        label_formatter, label_offset)
-            labels[], label_aligns[], label_offsets[], label_colors[] = label_args
-        end
-
-        return bar_rectangle.(x̂, y .+ offset, barwidth, fillto, in_y_direction)
-    end
-
-    bars = lift(calculate_bars, p[1], p.fillto, p.offset, p.width, p.dodge, p.n_dodge, p.gap,
-                p.dodge_gap, p.stack, p.direction, p.bar_labels, p.flip_labels_at,
-                p.label_color, p.color_over_background, p.color_over_bar, p.label_formatter, p.label_offset)
-
-	kwargs_df = DataFrame(; 
-		color=p.color[], colormap = p.colormap[], colorrange = p.colorrange[],
-        strokewidth = p.strokewidth[], strokecolor = p.strokecolor[],
-		visible = p.visible[],
-        inspectable = p.inspectable[], transparency = p.transparency[],
-        highclip = p.highclip[], lowclip = p.lowclip[], nan_color = p.nan_color[]
-	)
-	map(zip(bars[], eachrow(kwargs_df))) do (bar, kwargs)
-		poly!(p, bar; kwargs...)
-	end
-
-    if !isnothing(p.bar_labels[])
-		#@info p.label_size[]
-        text!(p, labels; align=label_aligns, offset=label_offsets, color=label_colors, font=p.label_font, fontsize=p.label_size,
-		rotation=p.label_rotation)
-    end
-end
-
-function Makie.texelems_and_glyph_collection(str::LaTeXString, fontscale_px, halign, valign,
-        rotation, color, strokecolor, strokewidth, word_wrap_width)
-
-    rot = convert_attribute(rotation, key"rotation"())
-
-    all_els = generate_tex_elements(str)
-    els = filter(x -> x[1] isa TeXChar, all_els)
-
-    # hacky, but attr per char needs to be fixed
-    fs = Vec2f(first(fontscale_px))
-
-    scales_2d = [Vec2f(x[3] * Vec2f(fs)) for x in els]
-
-    texchars = [x[1] for x in els]
-    glyphindices = [FreeTypeAbstraction.glyph_index(texchar) for texchar in texchars]
-    fonts = [texchar.font for texchar in texchars]
-    extents = GlyphExtent.(texchars)
-
-    bboxes = map(extents, scales_2d) do ext, scale
-        unscaled_hi_bb = height_insensitive_boundingbox_with_advance(ext)
-        return Rect2f(
-            origin(unscaled_hi_bb) * scale,
-            widths(unscaled_hi_bb) * scale
-        )
-    end
-
-    basepositions = [to_ndim(Vec3f, fs, 0) .* to_ndim(Point3f, x[2], 0) for x in els]
-
-    if word_wrap_width > 0
-        last_space_idx = 0
-        last_newline_idx = 1
-        newline_offset = Point3f(basepositions[1][1], 0f0, 0)
-
-        for i in eachindex(texchars)
-            basepositions[i] -= newline_offset
-            if texchars[i].represented_char == ' ' || i == length(texchars)
-                right_pos = basepositions[i][1] + width(bboxes[i])
-                if last_space_idx != 0 && right_pos > word_wrap_width
-                    section_offset = basepositions[last_space_idx + 1][1]
-                    lineheight = maximum((height(bb) for bb in bboxes[last_newline_idx:last_space_idx]))
-                    last_newline_idx = last_space_idx+1
-                    newline_offset += Point3f(section_offset, lineheight, 0)
-
-                    # TODO: newlines don't really need to represented at all?
-                    # chars[last_space_idx] = '\n'
-                    for j in last_space_idx+1:i
-                        basepositions[j] -= Point3f(section_offset, lineheight, 0)
-                    end
-                end
-                last_space_idx = i
-            elseif texchars[i].represented_char == '\n'
-                last_space_idx = 0
-            end
-        end
-    end
-
-    bb = isempty(bboxes) ? BBox(0, 0, 0, 0) : begin
-        mapreduce(union, zip(bboxes, basepositions)) do (b, pos)
-            Rect2f(Rect3f(b) + pos)
-        end
-    end
-
-    xshift = get_xshift(minimum(bb)[1], maximum(bb)[1], halign)
-    yshift = get_yshift(minimum(bb)[2], maximum(bb)[2], valign, default=0f0)
-    
-    shift = Vec3f(xshift, yshift, 0)
-    positions = basepositions .- Ref(shift)
-    positions .= Ref(rot) .* positions
-
-    pre_align_gl = GlyphCollection(
-        glyphindices,
-        fonts,
-        Point3f.(positions),
-        extents,
-        scales_2d,
-        rot,
-        color,
-        strokecolor,
-        strokewidth
-    )
-
-    all_els, pre_align_gl, Point2f(xshift, yshift)
-end
-
-end
-
-# ╔═╡ efbc1a42-ecc2-4907-a981-bd1d29ca0803
-balance_sheet = let
-	c = 0.7
-	ν = 1.2
-	x = 1.0
-	a = 0.7
-	y = 1.0
-	A = 1.0
-	ζ = recovery_rate
-	shortfall = max(y + ν - (c - ε_cash + x + a), 0)
-
-	figure = (; fonts, resolution = (400, 350), fontsize=15)
-
-	firm = (; a, A, ζ)
-	visualize_simple_balance_sheet((; c, ν, ε=ε_cash), firm, (; x, y); figure, show_illiquid) |> as_svg
-end	
-
-# ╔═╡ 8e6bdcfd-3cb0-4f6b-8dcf-f99f4afe87c2
-aside(md"$(balance_sheet)")
-
-# ╔═╡ 6fddaaa4-688d-4f40-a1b3-04bf62024955
-aside(md"$balance_sheet")
 
 # ╔═╡ b54dc329-7764-41e6-8716-ef20bef0b29b
 md"""
@@ -1761,13 +1695,12 @@ Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
 NamedTupleTools = "d9ec5142-1e00-5aa0-9d6a-321866360f50"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
-PlutoLinks = "0ff47ea0-7a50-410d-8455-4348d5de0420"
 PlutoTeachingTools = "661c6b06-c737-4d37-b85c-46df65de6f69"
 PlutoTest = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
@@ -1790,11 +1723,9 @@ Makie = "~0.20.7"
 MarkdownLiteral = "~0.1.1"
 NamedTupleTools = "~0.14.3"
 NetworkLayout = "~0.4.6"
-PlutoLinks = "~0.1.6"
 PlutoTeachingTools = "~0.2.14"
 PlutoTest = "~0.2.2"
-PlutoUI = "~0.7.55"
-Revise = "~3.5.13"
+PlutoUI = "~0.7.58"
 Roots = "~2.1.2"
 SimpleWeightedGraphs = "~1.4.0"
 StatsBase = "~0.34.2"
@@ -1805,9 +1736,9 @@ StructArrays = "~0.6.17"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.10.0"
+julia_version = "1.10.1"
 manifest_format = "2.0"
-project_hash = "f4c4a965e3b97d1a8ee061b84f051bec2f7cb7e2"
+project_hash = "22a97ecdc4e21784d8c8efcb4a56fbb63c29dc29"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -2109,7 +2040,7 @@ weakdeps = ["Dates", "LinearAlgebra"]
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.0.5+1"
+version = "1.1.0+0"
 
 [[deps.CompositionsBase]]
 git-tree-sha1 = "802bb88cd69dfd1509f6670416bd4434015693ad"
@@ -2988,7 +2919,7 @@ version = "1.3.5+1"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.23+2"
+version = "0.3.23+4"
 
 [[deps.OpenEXR]]
 deps = ["Colors", "FileIO", "OpenEXR_jll"]
@@ -3144,9 +3075,9 @@ version = "0.2.2"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "68723afdb616445c6caaef6255067a8339f91325"
+git-tree-sha1 = "71a22244e352aa8c5f0f2adde4150f62368a3f2e"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.55"
+version = "0.7.58"
 
 [[deps.PolygonOps]]
 git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
@@ -3757,21 +3688,21 @@ version = "3.5.0+0"
 # ╟─048d7ac7-204c-4bb4-aea0-612af18bb6d2
 # ╟─639f04a2-0979-41e2-b465-a4f52049166d
 # ╟─52052d98-0c41-45ec-95bf-d936b1c43e81
-# ╠═72e25b9c-89e3-441b-bf89-c1122535318a
-# ╠═a4dba7da-9d63-4d0d-a736-565d6ccf7d09
+# ╟─ab239918-1cde-4d6b-ac7f-716aaba5f39b
+# ╟─248909ee-2312-4e28-928a-ec65c0eec8a2
+# ╟─94e1ac76-3099-4e33-b987-e7f0cf365399
 # ╟─cdfc35e1-5082-4959-9d30-3abb2dc8a7ac
 # ╟─944b07ed-20e5-4068-ac5e-8a48f866fdd2
-# ╟─1d13564d-7256-4cf1-919f-6d8298cc476b
-# ╟─1d5d8c8a-8d86-426f-bb17-bd2279d91ff1
+# ╟─82f1b9c3-306d-416a-bb2f-7171c93693dc
 # ╟─7b876239-8ddc-4929-ad52-752edb72c0eb
-# ╠═e11a99df-d0f2-4838-b325-473d3043be98
-# ╠═144cfaf2-b78c-4f87-8b35-559914abf532
+# ╟─e11a99df-d0f2-4838-b325-473d3043be98
+# ╟─1d5d8c8a-8d86-426f-bb17-bd2279d91ff1
+# ╠═8347ab1d-f45e-4434-a8b7-60fa3918c97c
 # ╠═073982c7-6333-43f6-866a-91a49f8ba7eb
+# ╠═8ada8545-243e-4922-a306-ffff866a6135
 # ╠═8a2f3e4d-9c61-4a21-a229-58f731964181
 # ╟─73ba4210-d8f6-4a74-bf4d-d7bc0902bb5e
 # ╟─eba94b09-f061-432a-80ce-a68be83e6a99
-# ╟─ffc743af-b97c-4083-a02e-ea5725829f2a
-# ╟─8e6bdcfd-3cb0-4f6b-8dcf-f99f4afe87c2
 # ╟─bafc7db1-ac1d-4314-be83-0b9f6c63b5fc
 # ╠═ba39c037-c4e1-465e-a232-e5194caa14ba
 # ╟─acfdf348-e8bf-41ee-aa19-fe7ec29087cc
@@ -3780,18 +3711,14 @@ version = "3.5.0+0"
 # ╠═26a5c4f4-75c1-4a4c-a813-5fad0c571da1
 # ╠═5d283f89-4419-4b14-81ba-9826b4f1689e
 # ╟─a0ac4092-cd27-4523-85f9-f4a4d81456b3
-# ╟─6fddaaa4-688d-4f40-a1b3-04bf62024955
 # ╟─01eb57fd-a815-41f2-9e25-7730bff7917d
-# ╠═6af1e245-aaf8-4b7d-977a-1d76998f7cf8
-# ╠═5b6f26db-f63f-4db5-ae3e-d41ae476948f
-# ╠═0e4a53b5-1751-4723-a05d-a5504e427e3c
 # ╟─523e177c-f74d-4805-8a2b-9c27a4b0bc63
 # ╠═4ae1b6c2-bb63-4ca8-b8ec-057c8d2a371f
-# ╟─efbc1a42-ecc2-4907-a981-bd1d29ca0803
+# ╠═5f8c9ead-7598-452f-84b0-9189866aa200
+# ╠═efbc1a42-ecc2-4907-a981-bd1d29ca0803
 # ╟─7f058e4a-9b12-41c9-9fd7-4ad023058a14
-# ╟─96878ebb-fbc0-4d53-998a-210e13a42492
+# ╟─44ee4809-64ba-40dc-89ec-ae4f852535a8
 # ╟─e2041c57-0e3d-4dad-9bab-d70434f18509
-# ╠═9446b4db-4d93-4153-84e2-73d01fb31254
 # ╠═aaffd333-3aa1-48ee-b5db-d577bd7da830
 # ╠═a8a8a197-d54d-4c67-b7ce-19bdc8b64401
 # ╠═7970090f-eb3a-488e-b225-ce4198494f1d
@@ -3801,7 +3728,7 @@ version = "3.5.0+0"
 # ╠═c920d82c-cfe9-462a-bacd-436f01c314cf
 # ╟─72e5f4d3-c3e4-464d-b35c-2cf19fa9d4b5
 # ╟─d6345a8b-6d8f-4fd2-972b-199412cbdc26
-# ╠═c99e52e2-6711-4fb6-bcc0-8e4f378ed479
+# ╟─c99e52e2-6711-4fb6-bcc0-8e4f378ed479
 # ╟─15f45669-516b-4f3f-9ec1-f9e2c1d2e71a
 # ╟─d7111001-f632-4d0d-a2c7-7bbfd67bf87d
 # ╟─0d18cdf0-441e-4ca9-98e3-50bc3efa837f
@@ -3845,7 +3772,6 @@ version = "3.5.0+0"
 # ╠═36e610ff-1f42-4d58-b0a7-1bc33bd0d4af
 # ╟─87aae64c-c713-473f-8a8c-d28d5973273f
 # ╟─e8637286-ea8b-49c8-b49f-1ab556b83f0c
-# ╠═4878d013-053d-4490-b7c6-db0de4bf0a82
 # ╠═a047aeaa-fa54-4cbf-90f4-42d0537b7d06
 # ╠═b1c0d43c-f483-4290-998f-177ce79f41fa
 # ╟─4e9b785f-ad74-4aa8-ad48-89fa8b236939
@@ -3854,11 +3780,10 @@ version = "3.5.0+0"
 # ╠═0f03f537-f589-4abd-9587-0bb18835d9b9
 # ╟─25e84f19-9cd8-43ad-ae6a-d500b8ac74b6
 # ╠═74262581-3c64-4e5b-9328-416c4e1efc91
-# ╠═2b405f2b-3256-4c47-8334-c2d93713d409
 # ╠═103babf9-bbc3-4c77-9185-72f792a09706
 # ╠═bb0e41cf-66fb-4cae-8cd9-6ad771d1acf4
-# ╠═969aa5eb-c56f-4115-83df-bb0ec911b6aa
 # ╠═935da683-a4e2-4ddc-999f-55cb61390f39
+# ╠═6172ebbe-8a27-4c1c-bf5c-5a6e7357447a
 # ╠═2d1da571-0561-4c28-bb63-35ca5f9538d5
 # ╠═7c068d65-f472-44c2-af56-581bf9309bd5
 # ╠═631ce85b-db76-4f3b-bda5-0c51ffb3bc43
@@ -3866,13 +3791,13 @@ version = "3.5.0+0"
 # ╠═6a89953d-310b-49c9-89e1-8d51c8b75be0
 # ╠═50ac0182-32fe-4e21-8c6d-895ffc67ec27
 # ╠═8b75bc15-e07b-43e5-adb3-c5d6481ee9d8
-# ╠═cf61ebba-6800-4bfa-bb7c-cb9a6c846b65
-# ╠═36ac25b9-27e5-4728-bbcf-920f231ff6ab
 # ╟─11d6ac4f-e910-4a9f-9ee4-bdd270e9400b
 # ╠═c1b1a22b-8e18-4d19-bb9b-14d2853f0b72
 # ╠═cc1ff1e6-2968-4baf-b513-e963ab2ff1b4
 # ╠═c65323f5-211d-4a95-aed3-d6129bdd083e
 # ╠═5d263432-856b-4e9b-a303-a476222e8963
+# ╠═73c87a80-8bd9-4040-8a09-519f1a73f7c0
+# ╠═76482e5e-418a-4102-8a62-cae3c0cb88d4
 # ╟─25a01039-25e9-44b0-afd0-c3df37c7598f
 # ╟─71231141-c2f5-4695-ade0-548a0039f511
 # ╠═c993c1d8-8823-4db4-bf6e-bf2c21ea3d39
@@ -3900,6 +3825,7 @@ version = "3.5.0+0"
 # ╠═ebf41ae2-3985-439b-b193-eabfab701d16
 # ╠═b7d74679-904c-44c4-bedd-89f1b68a5e42
 # ╠═1b9c8f2b-8011-46f1-b46d-479031eb9ac3
+# ╠═3033ae5a-bada-4041-858d-a61c62bdc8b8
 # ╠═5104f0a5-a551-4f4c-8f89-2b8f834b3587
 # ╠═f63aee78-1209-40dd-9c9d-2699194807d8
 # ╠═6a2b3b9c-df52-41c3-908b-5dbf052ad107
@@ -3938,8 +3864,6 @@ version = "3.5.0+0"
 # ╠═3758f272-297c-4325-9a7c-042b4f41d615
 # ╠═a349099a-64aa-4e86-9bf2-b6157feff394
 # ╠═c4032c7a-73f4-4342-a5a7-19fd14017402
-# ╠═e8d198fa-11db-43b2-846e-311abe9f59aa
-# ╠═2711b045-b879-4225-afae-13328a4e14b3
 # ╟─b54dc329-7764-41e6-8716-ef20bef0b29b
 # ╠═cc9d4ea3-4d1b-4f6e-8d49-77fec05e2804
 # ╠═1d8be056-aa73-4491-8d6e-57502ccc48be
