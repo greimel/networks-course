@@ -207,7 +207,7 @@ using PlutoTest: @test
 
 # ╔═╡ 52052d98-0c41-45ec-95bf-d936b1c43e81
 md"""
-`systemic-risk.jl` | **Version 2.3** | *last updated: March 10, 2023*
+`systemic-risk.jl` | **Version 2.4** | *last updated: March 5, 2024*
 """
 
 # ╔═╡ ab239918-1cde-4d6b-ac7f-716aaba5f39b
@@ -233,24 +233,15 @@ md"""
 ## Overview: Contagion on Financial Networks
 """
 
-# ╔═╡ 1d5d8c8a-8d86-426f-bb17-bd2279d91ff1
-md_fig = @htl("""
-$(md"
-> _Financial network_:  banks linked by interbank lending
-
-1. _How do shocks propagate_ on a financial network?
-2. _How should a network look_ so that shocks don't spread?
-")
-
-$(md"
-* ring vs complete ``(γ)``: $(@bind _γ_ Slider(0:0.1:1.0, show_value = true, default = 0.5))
-* shock to bank ``1`` ``(ε)``: $(@bind _ε_ Slider(0.0:0.05:1, show_value = true, default = 0.0))
-*  $(blur(nisl_str)) $(@bind n_islands Slider(1:3, show_value = true, default = 1))
-")
-""")
-
 # ╔═╡ 8347ab1d-f45e-4434-a8b7-60fa3918c97c
 nisl_str = "number of islands:"
+
+# ╔═╡ cd766ddf-e5a9-4c72-b884-413eae45c4c5
+md"""
+## Plan for the lecture
+
+> **_Goal_**: Understand model and key results of Acemoglu, Ozdaglar & Tahbaz-Salehi (2015)
+"""
 
 # ╔═╡ eba94b09-f061-432a-80ce-a68be83e6a99
 md"""
@@ -308,7 +299,7 @@ md"""
 
 # ╔═╡ bf719f30-72c1-488e-ba77-c183effb7c60
 md"""
-### 1. More interbank lending leads to less stability and less resilience
+## Result 1: More interbank lending leads to less stability and less resilience
 
 Formally, for a given regular financial network ``(y_{ij})`` let ``\tilde y_{ij} = \beta y_{ij}`` for ``\beta > 1``. Financial network ``\tilde y`` is less resilient and less stable *(see __Proposition 3__)*.
 
@@ -317,7 +308,7 @@ Formally, for a given regular financial network ``(y_{ij})`` let ``\tilde y_{ij}
 
 # ╔═╡ a0767d80-0857-47ef-90a1-72bc34064716
 md"""
-### 2. Densely connected networks are _robust, yet fragile_
+## Result 2: Densely connected networks are _robust, yet fragile_
 
 > Our results thus confirm a conjecture of Andrew Haldane (2009, then Executive Director for Financial Stability at the Bank of England), who suggested that highly interconnected financial networks may be “robust-yet-fragile” in the sense that “within a certain range, connections serve as shock-absorbers [and] connectivity engenders robustness.” However, beyond that range, interconnections start to serve as a mechanism for the propagation of shocks, “the system [flips to] the wrong side of the knife-edge,” and fragility prevails.
 
@@ -344,11 +335,6 @@ md"""
 md"""
 ## Task 1 (6 Points)
 """
-
-# ╔═╡ 15f45669-516b-4f3f-9ec1-f9e2c1d2e71a
-@markdown("""
-Consider the interbank networks ``\\tilde y`` and ``\\hat y`` of $(out_T1.n) banks as depicted above. For all non-isolated banks the sum of interbank liabilities equal the sum of interbank claims (``y = $(out_T1.y)``).
-""")
 
 # ╔═╡ 51bfc57f-7b06-4e27-af32-51df38af30a1
 md"""
@@ -531,6 +517,11 @@ answer_e = md"""
 Your answer goes here ...
 """
 
+# ╔═╡ eda3fdcc-a3b4-47d2-bdab-8c1c673a7a15
+md"""
+## Objects for Task 2
+"""
+
 # ╔═╡ e8637286-ea8b-49c8-b49f-1ab556b83f0c
 md"""
 ## Functions for Task 3
@@ -616,6 +607,22 @@ md"""
 # ╔═╡ cc1ff1e6-2968-4baf-b513-e963ab2ff1b4
 blur(text) = @htl("""<span class="blurry-text">$text</span>""")
 
+# ╔═╡ 1d5d8c8a-8d86-426f-bb17-bd2279d91ff1
+md_fig = @htl("""
+$(md"
+> _Financial network_:  banks linked by interbank lending
+
+1. _How do shocks propagate_ on a financial network?
+2. _How should a network look_ so that shocks don't spread?
+")
+
+$(md"
+* ring vs complete ``(γ)``: $(@bind _γ_ Slider(0:0.1:1.0, show_value = true, default = 0.5))
+* shock to bank ``1`` ``(ε)``: $(@bind _ε_ Slider(0.0:0.05:1, show_value = true, default = 0.0))
+*  $(blur(nisl_str)) $(@bind n_islands Slider(1:3, show_value = true, default = 1))
+")
+""")
+
 # ╔═╡ c65323f5-211d-4a95-aed3-d6129bdd083e
 strike(text) = @htl("<s>$text</s>")
 
@@ -656,23 +663,23 @@ TwoColumns(
 
 	""",
 	md"""
-$(details("Parameters (I)", md"
 | variable            | value                                                        |
 |:------------------- | :----------------------------------------------------------- |
 | ring vs complete ``γ`` | $(@bind γ2 Slider(0:0.01:1, default=0.5, show_value=true))|
-| dividend ``a``      | $(@bind a Slider(0:0.01:1, default=0.7, show_value=true))    |
-| recovery rate ``ζ`` | $(@bind ζ Slider(0:0.01:1, default=0.3, show_value=true))    |
-"))
-	
-$(details("Parameters (II)", md"
+| shock ``ε``         | $(@bind ε Slider(0:0.1:2, default=0.0, show_value=true))     |
+
+
+$(details("Change parameters ...", md"
 | variable            | value                                                        |
 |:------------------- | :----------------------------------------------------------- |
+| dividend ``a``      | $(@bind a Slider(0:0.01:1, default=0.7, show_value=true))    |
+| recovery rate ``ζ`` | $(@bind ζ Slider(0:0.01:1, default=0.3, show_value=true))    |
 | **external**        | |
 | cash ``c``          | $(@bind c Slider(0:0.1:2, default=1.2, show_value=true))     |
-| shock ``ε``         | $(@bind ε Slider(0:0.1:2, default=0.0, show_value=true))     |
 | deposits ``ν``      | $(@bind ν Slider(0.0:0.1:2, default=1.8, show_value=true))   |
 | **internal**        | |
 | interbank ``y``     | $(@bind y Slider(0:0.1:2, default=1.0, show_value=true))     |
+
 "))
 """,
 45)
@@ -793,9 +800,42 @@ md"""
 ## Visualize bank-firm-network
 """
 
+# ╔═╡ 78965848-8694-4665-80c6-94191a95f95d
+function edge_attr_df(g)
+	A = adjacency_matrix(g)
+	n = size(A, 1)
+
+	df = map(edges(g)) do (; src, dst, weight)
+		(; src, dst, weight)
+	end |> DataFrame
+
+	norm_const = sum(A) / n
+	
+	@chain df begin
+		@transform!(
+			:edge_width = √(:weight / norm_const) * 1.5,
+			:arrow_size = √(:weight / norm_const) * 14
+		)
+	end
+
+	df
+end
+
+# ╔═╡ 1016a42f-cd4c-40f5-b359-186df8440c37
+function edge_attrs(g)
+	df = edge_attr_df(g)
+	(; df.edge_width, df.arrow_size)
+end
+
 # ╔═╡ 3998e822-d7e0-40f2-a866-71a3d81c4ca3
-function add_legend!(figpos; kwargs...)
-	dict = [:lightgray => "solvent", :orange => "insolvent", :red => "bankrupt"]
+function add_legend!(figpos; cols, kwargs...)
+	dict = [:lightgray => "solvent bank"]
+	if :orange ∈ cols
+		push!(dict, :orange => "insolvent")
+	end
+	if :red ∈ cols
+		push!(dict, :red => "bankrupt")
+	end
 	
 	elements = [
 		MarkerElement(marker = :circle, strokewidth=1, markersize = 20, color = c) for c in first.(dict)
@@ -1160,7 +1200,9 @@ function ring_network(n, ȳ)
 	for i in 1:(n-1)
 		Y[i, i+1] = ȳ
 	end
-	Y[n, 1] = ȳ
+	if n > 1
+		Y[n, 1] = ȳ
+	end
 	
 	Y
 end
@@ -1317,21 +1359,22 @@ function visualize_bank_firm_network!(ax, IM, bank_df; r = 1.4, start = Makie.au
 
 	n_banks = Base.size(A, 1)
 
-	edge_attr_df = map(edges(g)) do (; src, dst, weight)
-		if src ≤ n_banks && dst ≤ n_banks
-			linewidth = weight
-			linestyle = Makie.automatic
-			arrow_size = 7
-		elseif dst > n_banks
-			linewidth = 0.5
-			arrow_size = 0.0
-			linestyle = "--"
-		end
-		(; linewidth, arrow_size, linestyle)
-	end |> DataFrame
-
-	arrow_attr = (; markersize = edge_attr_df.arrow_size)
-	edge_attr = (; edge_attr_df.linewidth, edge_attr_df.linestyle)
+	edge_df = @chain g begin
+		edge_attr_df
+		@transform!(
+			@subset(:src ≤ n_banks, :dst ≤ n_banks),
+			:linestyle = Makie.automatic
+		)
+		@transform!(
+			@subset(:dst > n_banks),
+			:edge_width = 0.5,
+			:arrow_size = 0.0,
+			:linestyle = "--"
+		)
+	end
+	
+	arrow_attr = (; markersize = edge_df.arrow_size)
+	edge_attr = (; linewidth = edge_df.edge_width, edge_df.linestyle)
 
 	node_color = ifelse.(bank_df.y_pc .< 1.0, :red, ifelse.(bank_df.ℓ .> 0.0, :orange, :lightgray))
 	nlabels = string.(1:n_banks)
@@ -1362,7 +1405,7 @@ function visualize_bank_firm_network!(ax, IM, bank_df; r = 1.4, start = Makie.au
 		graphplot_attr...
 	)
 
-	nothing
+	unique(node_color)
 end
 
 # ╔═╡ 2c22e86e-1139-4f66-8992-093d38f4c6cb
@@ -1387,9 +1430,13 @@ minimal(; extend_limits=0.1, hidespines=true, kwargs...) = (;
 let
 	(; IM, firm, banks, bank_df) = transmission_analysis
 
-	fig = Figure(size = (600, 180), figure_padding=3)
+	fig = Figure(size = (650, 180), figure_padding=3)
 		
-	visualize_bank_firm_network!(Axis(fig[1,1]; minimal(extend_limits=0.1)...), IM, bank_df; start = 1/8, show_firms=false, node_size = 22)
+	visualize_bank_firm_network!(
+		Axis(fig[1,1]; minimal(extend_limits=0.1)..., aspect = DataAspect()),
+		IM, bank_df; 
+		start = 1/8, show_firms=false, node_size = 22
+	)
 
 	visualize_balance_sheets!(fig[1,2:4], bank_df, banks, firm)
 
@@ -1404,23 +1451,30 @@ fig_attr(xscale=1, yscale=xscale) = (; figure_padding=3, size = (xscale * 200, y
 # ╔═╡ c99e52e2-6711-4fb6-bcc0-8e4f378ed479
 out_T1 = let
 	y = 2.1
-	ỹ = IslandNetwork([3, 3, 5], y)
-	ŷ = IslandNetwork([6, 2, 1, 1, 1], y)
-
+	γ = 0
+	n1 = 6
+	ỹ = IslandNetwork([3, n1-3, 5], y; γ)
+	ŷ = IslandNetwork([n1, 2, 1, 1, 1], y; γ)
+	 
 	@assert nv(ỹ) == nv(ŷ)
 	n = nv(ỹ)
 
-	layout = (_) -> componentwise_circle([1:6, 6 .+ (1:5)])
+	layout(n) = (_) -> componentwise_circle([1:n, n .+ (1:5)])
 
 	fig = Figure(; fig_attr(3.0, 1.0)...)
 	ax1 = Axis(fig[1,1]; minimal(hidespines=false, title = L"interbank market $\tilde{y}$")...)
 	ax2 = Axis(fig[1,2]; minimal(hidespines=false, title = L"interbank market $\hat{y}$")...)
 
-	graphplot!(ax1, ỹ; layout, ilabels=vertices(ỹ))
-	graphplot!(ax2, ŷ; layout, ilabels=vertices(ŷ))
+	graphplot!(ax1, ỹ; layout=layout(n1), ilabels=vertices(ỹ), edge_attrs(ỹ)...)
+	graphplot!(ax2, ŷ; layout=layout(n1), ilabels=vertices(ŷ), edge_attrs(ŷ)...)
 
 	(; ỹ, ŷ, fig, n, y)
 end; out_T1.fig
+
+# ╔═╡ 15f45669-516b-4f3f-9ec1-f9e2c1d2e71a
+@markdown("""
+Consider the interbank networks ``\\tilde y`` and ``\\hat y`` of $(out_T1.n) banks as depicted above. For all non-isolated banks the sum of interbank liabilities equal the sum of interbank claims (``y = $(out_T1.y)``).
+""")
 
 # ╔═╡ d7111001-f632-4d0d-a2c7-7bbfd67bf87d
 md"""
@@ -1450,14 +1504,14 @@ out_T2 = let
 	ax1 = Axis(fig[1,1]; minimal(hidespines=false, title = L"interbank market $\tilde{y}$", extend_limits=0.1)...)
 	ax2 = Axis(fig[1,2]; minimal(hidespines=false, title = L"interbank market $\hat{y}$", extend_limits=0.1)...)
 
-	graphplot!(ax1, IM1; ilabels=vertices(IM1), layout)
-	graphplot!(ax2, IM2; ilabels=vertices(IM2), layout)
+	graphplot!(ax1, IM1; ilabels=vertices(IM1), layout, edge_attrs(IM1)...)
+	graphplot!(ax2, IM2; ilabels=vertices(IM2), layout, edge_attrs(IM2)...)
 
 	(; IM1, IM2, fig, n)
 end; out_T2.fig
 
-# ╔═╡ 0fb4d187-f03a-435b-b9fc-188925e058f1
-md"""
+# ╔═╡ 2c839d92-183a-4077-b7d6-39ac485ae06e
+tool_text = md"""
 If you have understood the mechanics of the model, you should be able to solve these tasks without simulations. You can use the given tool to verify your answer.
 
 * Which bank is hit? ``i`` $(@bind i_bank_T2 Slider(1:out_T2.n, default = 1, show_value = true))
@@ -1493,10 +1547,14 @@ end
 function visualize_bank_firm_network(IM, bank_df; figure = fig_attr(), add_legend=false, hidespines=true, kwargs...)
 	fig = Figure(; figure...)
 	ax = Axis(fig[1,1]; minimal(; hidespines, extend_limits=0.1)...)
-	visualize_bank_firm_network!(ax, IM, bank_df; kwargs...)
+	cols = visualize_bank_firm_network!(ax, IM, bank_df; kwargs...)
 
-	if add_legend
-		add_legend!(fig[0,:], orientation=:horizontal, framevisible=false)
+	if add_legend == :vertical
+		add_legend!(fig[:,end+1]; cols, orientation=:vertical, framevisible=false)
+		colgap!(fig.layout, 1)
+	elseif add_legend
+		add_legend!(fig[0,:]; cols, orientation=:horizontal, framevisible=false)
+		rowgap!(fig.layout, 1)
 	end
 	fig # |> as_svg
 end
@@ -1505,20 +1563,14 @@ end
 fig = let
 	(; promises, bank_df) = initial_analysis
 	
-	visualize_bank_firm_network(promises, bank_df; figure=fig_attr(), start = 1/6, show_firms=false, node_size = 22)
-end;
+	visualize_bank_firm_network(promises, bank_df; figure=fig_attr(1, 1.1), start = 1/6, show_firms=false, node_size = 22, add_legend=true)
+end
 
 # ╔═╡ 82f1b9c3-306d-416a-bb2f-7171c93693dc
 TwoColumns(md_fig, fig, 62)
 
 # ╔═╡ 73ba4210-d8f6-4a74-bf4d-d7bc0902bb5e
-md"""
-$(aside(fig))
-
-## Plan for the lecture
-
-> **_Goal_**: Understand model and key results of Acemoglu, Ozdaglar & Tahbaz-Salehi (2015)
-
+TwoColumns(md"""
 * I. Model setup
 * II. **insolvency** and **bankruptcy** in the payment equilibrium
 * III. **financial contagion**
@@ -1528,14 +1580,7 @@ $(aside(fig))
   * with **big shocks**, we want to have **disconnected components**
 * V. Empirical relevance, Outlook
 
-"""
-
-# ╔═╡ 7970090f-eb3a-488e-b225-ce4198494f1d
-firm_bank_aside = let
-	(; IM, firm, banks, bank_df) = transmission_analysis
-		
-	visualize_bank_firm_network(IM, bank_df; show_firms=false, start = 1/8, node_size = 22) |> aside
-end
+""", fig, 65)
 
 # ╔═╡ 0d18cdf0-441e-4ca9-98e3-50bc3efa837f
 let
@@ -1572,7 +1617,7 @@ let
 end
 
 # ╔═╡ a9d27019-72b7-4257-b72a-12952b516db9
-let
+tool_fig = let
 	i = i_bank_T2
 	#_ε4 = 0.4
 	IM = IM_T2
@@ -1597,8 +1642,11 @@ let
 
 	layout = Shell()
 	
-	visualize_bank_firm_network(IM, bank_df; figure=fig_attr(1.0, 1.1), hidespines=false, start = 1/6, layout, add_legend=true, show_firms=false, node_size = 22) |> aside
+	visualize_bank_firm_network(IM, bank_df; figure=fig_attr(1.4, 0.8), hidespines=false, start = 1/6, layout, add_legend=:vertical, show_firms=false, node_size = 22)
 end
+
+# ╔═╡ 0fb4d187-f03a-435b-b9fc-188925e058f1
+TwoColumns(tool_text, tool_fig, 60)
 
 # ╔═╡ 3496c181-c4c3-4b1b-a5e5-83df27182c99
 md"""
@@ -3695,12 +3743,13 @@ version = "3.5.0+0"
 # ╟─944b07ed-20e5-4068-ac5e-8a48f866fdd2
 # ╟─82f1b9c3-306d-416a-bb2f-7171c93693dc
 # ╟─7b876239-8ddc-4929-ad52-752edb72c0eb
-# ╟─e11a99df-d0f2-4838-b325-473d3043be98
+# ╠═e11a99df-d0f2-4838-b325-473d3043be98
 # ╟─1d5d8c8a-8d86-426f-bb17-bd2279d91ff1
 # ╠═8347ab1d-f45e-4434-a8b7-60fa3918c97c
 # ╠═073982c7-6333-43f6-866a-91a49f8ba7eb
 # ╠═8ada8545-243e-4922-a306-ffff866a6135
 # ╠═8a2f3e4d-9c61-4a21-a229-58f731964181
+# ╟─cd766ddf-e5a9-4c72-b884-413eae45c4c5
 # ╟─73ba4210-d8f6-4a74-bf4d-d7bc0902bb5e
 # ╟─eba94b09-f061-432a-80ce-a68be83e6a99
 # ╟─bafc7db1-ac1d-4314-be83-0b9f6c63b5fc
@@ -3721,7 +3770,6 @@ version = "3.5.0+0"
 # ╟─e2041c57-0e3d-4dad-9bab-d70434f18509
 # ╠═aaffd333-3aa1-48ee-b5db-d577bd7da830
 # ╠═a8a8a197-d54d-4c67-b7ce-19bdc8b64401
-# ╠═7970090f-eb3a-488e-b225-ce4198494f1d
 # ╟─da7c558d-a2b5-41a8-9c78-3e39a00dfd31
 # ╟─bf719f30-72c1-488e-ba77-c183effb7c60
 # ╟─a0767d80-0857-47ef-90a1-72bc34064716
@@ -3745,7 +3793,6 @@ version = "3.5.0+0"
 # ╠═c2633df1-2e30-4387-8749-de3280b0602d
 # ╟─253ab06f-6284-4cbf-b2a2-232ff99548c9
 # ╠═1d058f8b-16f5-4744-8425-452876006c47
-# ╟─a9d27019-72b7-4257-b72a-12952b516db9
 # ╟─0fb4d187-f03a-435b-b9fc-188925e058f1
 # ╟─27fadf93-0b17-446e-8001-d8394b7befaa
 # ╠═aed99485-cec3-4bf3-b05d-4d20572ec907
@@ -3771,6 +3818,9 @@ version = "3.5.0+0"
 # ╟─264e3358-babf-4bf4-9b57-f436676aa02a
 # ╠═36e610ff-1f42-4d58-b0a7-1bc33bd0d4af
 # ╟─87aae64c-c713-473f-8a8c-d28d5973273f
+# ╠═eda3fdcc-a3b4-47d2-bdab-8c1c673a7a15
+# ╠═a9d27019-72b7-4257-b72a-12952b516db9
+# ╠═2c839d92-183a-4077-b7d6-39ac485ae06e
 # ╟─e8637286-ea8b-49c8-b49f-1ab556b83f0c
 # ╠═a047aeaa-fa54-4cbf-90f4-42d0537b7d06
 # ╠═b1c0d43c-f483-4290-998f-177ce79f41fa
@@ -3819,6 +3869,8 @@ version = "3.5.0+0"
 # ╟─7c026a42-1c05-4968-b068-c8561ca5a2db
 # ╠═7b70a862-faf4-4c42-917c-238718c43708
 # ╠═fc01674e-73de-4cbf-9c80-fa1ea47fcb21
+# ╠═78965848-8694-4665-80c6-94191a95f95d
+# ╠═1016a42f-cd4c-40f5-b359-186df8440c37
 # ╠═222665dc-397b-4e58-b3ee-935b115cf13d
 # ╠═3998e822-d7e0-40f2-a866-71a3d81c4ca3
 # ╟─0d207cbe-5b97-4bd7-accf-fc49ce4522e9
