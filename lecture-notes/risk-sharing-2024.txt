@@ -1,0 +1,467 @@
+All right, welcome to today's class. Sorry that we have to have it online. I hope you don't mind too much. 
+
+This lecture and tomorrow's lecture, we are talking about financial networks. So we're talking about models of the financial sector or the financial system as a whole. Today, we're going to discuss why it's, what role the financial sector serves. 
+
+So we'll discuss a model of a bank, what purpose does a bank have from an economist's perspective. And this will be the model that has won the Nobel Memorial Prize in Economics a few years ago. That's the model by Diamond and Lipwig. 
+
+And this model can be embedded in a financial network model to discuss the good sides or the benefits of having a financial system. And tomorrow, we'll see how financial shocks can spread in the financial system. We'll see that if a single bank turns bankrupt, then this can push the whole financial system into bankruptcy if things go badly. 
+
+Okay. So we'll discuss tomorrow under what circumstances this happens and how it can be avoided. Good. 
+
+But before we discuss all these implications, let's first settle on what we think a bank is. So I'll give you a very simple model of a bank. So here it is. 
+
+We have people and people have money. And if they don't need the money, they put the money into the bank. Okay. 
+
+And we call these deposits. If on the other hand, people don't have money, but they need money, then they're going to take out a loan from the bank. Okay. 
+
+So if people put money to the bank, that's called a deposit. If they take money out of bank, that's called a loan. But banks don't only trade with people, they also trade with firms.
+
+They usually provide loans to firms. But they can also directly invest in firms. Okay, that's direct investment. 
+
+That's, for example, buying stocks. Okay. So they provide funding for businesses, they provide money to firms.
+
+And all these transactions of a bank can be put into a bank balance sheet. Balance sheet consists of assets and liabilities. Here we have deposits as the main form of liabilities and loans as the main form of assets. 
+
+Okay, the bank will also have some cash in addition to having loans, some liquid assets. And the bank can also directly be invested in firms. Okay. 
+
+And we call that projects, direct investment in firms. It's as if the firm bank runs the firms themselves. And the residual between assets and liabilities is equity, or net worth, or and now, be careful, capital. 
+
+Okay. When we talk about banks, capital means equity, or net worth. When we talk about firms, that's not true.
+
+When we talk about firms, capital is a type of asset. Okay, so capital could be machines, for example, but not here. Okay. 
+
+In order to avoid that confusion, I will not, I will try to not use the term capital in the following two lectures. Okay. But if you hear it, bank capital is the same as bank equity or bank net worth. 
+
+There's a difference between assets and liabilities. So that's one bank. But what we want to study is we want to how banks interact with each other.
+
+Okay, so you need to model of multiple banks. So let's not only have one bank, but three banks, bank two and bank three, and they have similar balance sheets. Okay. 
+
+Now, how can we connect them? You need to have something more, something more than the assets and liabilities that you had so far. We need some assets and liabilities that banks trade with each other. So for example, you could say that bank one has debt with another bank. 
+
+Okay. For example, bank two. That's the purple area here. 
+
+Okay. So, and, and the magnitude of this debt is why I want to bank one has debt with bank two. And that shows up on both balance sheets. 
+
+But bank one can also have assets with another bank or deposits at another bank. Why three, one, that's when bank one has deposits at bank three, which is the same as bank three has debt with bank one. Okay.
+
+So the arrow points from bank three to bank one, because bank three has debt with bank one. And since assets and liabilities need to match, let's also draw a link between bank two and bank three. Let's say bank two has debt with bank three. 
+
+Okay. So that's a very simple model of a financial network. Okay. 
+
+So what we're interested in really is the effects of these links. So the blue link, the purple link and the brown link. Okay. 
+
+And there could be other links. So we are interested in the links between banks and how this network that's, that these links form affects systemic risk or other macroeconomic economy wide outcomes. So let's talk about financial networks. 
+
+Financial network consists of nodes and edges. Okay. The edges or the network can be represented either as a graph or as a matrix as we had. 
+
+Well, that's, that's the same as we had in the previous lectures. The nodes are the banks or could be any other financial institutions and the edges are outstanding liabilities. Okay. 
+
+And when I is linked to J, that means that bank I has debt with, or liability with, or a promise to pay to bank J. So that's our first definition of, well, the only definition of, of financial networks. So let's now take a look at what we will cover today and tomorrow in the lectures. There's two things going on here in financial networks. 
+
+Okay. There's one feature about financial networks, financial networks can be used to share risk among banks. Okay. 
+
+If banks are connected to other banks, they can share risks with them. But on the other hand, financial networks are bad because shocks can spread across financial networks. Okay. 
+
+So if one bank goes bankrupt for some reason, this, this shock can spread across the network and potentially tear the whole system into bankruptcy. So today we're going to talk about the left part, risk sharing. First, I want to present you a model of banks to understand what banks are doing and why they're useful.
+
+We can use this model to show that banks are fragile. Okay. They're subject to bank runs.
+
+Things can go bad with, with banks. And third, I'll show you that financial networks can prevent bank runs under some circumstances. Okay. 
+
+The model that I show you is the model by Diamond and Dybwik. That's the one, that's the model that won the Nobel prize a few years ago. And the fragility comes from the network. 
+
+Well, the, the, the financial, oops, financial network part comes from Allen and Gale. Okay. They built on the Diamond and Dybwik model. 
+
+Good. So probably probably, you know, you know, soon, right? Hopefully. So if you quickly so you can either use the chat or you can use reactions to answer the following question, who has heard of the term bank runs? You can raise your hand or you can write yes, or I, or something in the chat who has heard of the term bank runs? Some of you, but not so many, it seems.
+
+Bank runs are a phenomenon that, well, it's kind of, you know, cool and old. So, so that, that was kind of the main thing, how banks went bankrupt a hundred years ago, or 150 years ago. And that's literally, there's a bank, you know, a building and people run to the building to withdraw their money. 
+
+Okay. So people have money on the bank and they, they all at once run to the bank to withdraw their money. Okay. 
+
+Because they know, and we'll see that, that the bank will never have enough money to pay out all depositors at once. Okay. And bank runs, you know, have, have been a frequent reason for bank bankruptcy in the early 20th century. 
+
+When regulation was introduced to prevent that this regulation is called deposit insurance. We still have that in the EU. So in the EU, you don't need to worry about your money because you know, that deposits up to a hundred thousand visits or 20,000 euros, you know, I guess it depends on the country. 
+
+I guess the standard thing would be 20,000 euros per bank per person are safe. Okay. So you need, you don't need to worry about that.
+
+Okay. But if things go really bad, if the trust goes bust in a financial crisis, then bank runs can still occur. If you Google bank runs in Europe, you'll see that during the financial crisis, 2007, there were, there were bank runs. 
+
+And also during the euro crisis, there were bank runs for European banks. And if I'm not mistaken, bank runs were a major concern in Cyprus a few years ago when there were troubles in the financial system. Okay. 
+
+So what we talk about today is relevant, is relevant for economic policy. Okay, good. So let's now go to this part one of today's plan, the role of banks, banks are liquidity providers. 
+
+So here are the model ingredients. The first assumption is that good investments are illiquid. And the second assumption is that agents are uncertain about their liquidity needs. 
+
+Okay. So what does it mean that good investments are illiquid? That means that if you put your money somewhere, you will usually get higher returns than if you don't put your money somewhere. Okay. 
+
+This one reason, one, one way to see it. If you keep your money under your pillow, you will get zero returns. If you invested somewhere, you'll get higher returns. 
+
+If you put your money to the bank on, on what's the word, but on a savings account, you'll get you'll get higher, higher, higher interest rates, the longer you the maturity of this savings account. So if you promise that you will not withdraw your money for 10 years, you will get higher interest rates usually, then if you promise that you will just not withdraw it for one year, okay. So if you promise to not withdraw your money for 10 years, then your investment is very illiquid. 
+
+You cannot access it for the next 10 years. Okay. If you buy stocks, then your money is a bit, your investment is a bit more illiquid than if you keep cash, you cannot access it anytime. 
+
+Okay. Because you first need to sell the stock via your broker. Okay. 
+
+And your, and this, this sale of your stock will be costly for you. So that's, that's what illiquidity means. It's costly or annoying or impossible to get rid of your investment. 
+
+Okay. So whenever you, you're sure that you don't need the money, then you want to invest in an illiquid assets, but you're, you're not sure. Okay. 
+
+You don't know if you're going to need your money soon. That's the assumption. Agents are uncertain about what the liquidity means.
+
+To avoid liquidation. Okay. Agents don't invest, which is bad.
+
+And by offering deposit contracts, banks can achieve the social optimum. Okay. So I want to, I want to explain this to you in the following setup. 
+
+So we think about a person and the person has one kilogram of potatoes. Okay. That's your initial endowment.
+
+You can also think of this, think of money. That's why it's, you know, it almost looks like coins, but think of potatoes. Then you can do, you can do two things with the potatoes. 
+
+Okay. There's an illiquid investment and a liquid investment. The first thing you can do. 
+
+So what do you do with these potatoes? The first thing you do is you could store them. And the second thing would be to invest them. Okay. 
+
+Storage means you just keep the potatoes in your fridge or some, another cool, dry, dark place. And the other option would be to invest your potatoes, which would be to plant them. Okay. 
+
+Now, one of the two investments is liquid. Storage is liquid. Okay. 
+
+So if you store them, you can access your potatoes at any time. What's illiquid? Planting them is illiquid. Okay. 
+
+Because once you've planted them, they're under the earth. Well, they're buried in the ground. Okay. 
+
+And while they're buried in the ground, you cannot eat them. You have to wait till autumn when new potatoes grow. Okay. 
+
+So if you store them, you can put them away, you know, into your fridge and you can today, and you can get them out tomorrow. And tomorrow you can again, put them into your fridge and you, you know, you can eat them two days from now, from now. Okay. 
+
+That's the technology. You store them away. You find them again, store them away. 
+
+You collect them again. Okay. On the other hand, when you plant them, you get rid of them. 
+
+And if you wait long enough, a year from now, you'll get a return. Okay. You will usually have much more potatoes than you planted today. 
+
+So the return on your investment is, are bigger than one. If you plant one potato, you will get more than one in two periods. But what if, if you're really, really hungry next period, in period one, you can dig out the unripe potatoes from the ground and you'll get a return little r, which is much smaller than one. 
+
+Okay. That's called liquidation. So you get a big return, big R if you harvest at the right time and you get a very small return if you dig them out too early. 
+
+Okay. Then you get either very small potatoes that are not yet, not yet ripened, or you get some ugly, you know, brownish greenish potatoes that you dug into the ground. And this is called liquidation. 
+
+Okay. You need to get rid of your investment when it's not yet mature. And you can only do this at a high cost. 
+
+Okay. This cost is that you don't get edible potatoes, but you get unripe small potatoes, for example. So what's the problem of this agent? The agent doesn't know when she will be hungry. 
+
+And this is formalized in the following utility function. Potentially the agent could eat in the first period or the second period with probability gamma. The agent wants to eat in the first period with probability one minus gamma. 
+
+The agent wants to eat in the second period. Okay. So with probability gamma, the agent is an early type and with probability one minus gamma, the agent is a late type.
+
+Okay. For an early type, only the consumption in the first period matters. For a late type, only the consumption in the second period matters. 
+
+So what should an agent do with their potatoes? Let's say X is the fraction invested. So the fraction dug into the ground and one minus X is the fraction stored, what you put into the fridge. Okay. 
+
+If you are an early type, then you will eat, you will go to the fridge and retrieve the amount of potatoes that are still in the fridge, one minus X. And then you will dig out the potatoes from the ground, X, and you get this small return R. Okay. So that's the liquidated investment and that's the stored investment. Okay. 
+
+If you're a late type, you will eat what you have stored. Okay. You go to the fridge a period later, you get one minus X and you eat X times R. That's how much you harvested when the potatoes are ripe. 
+
+Okay. That's the harvested potatoes. So let's assume you're an agent, you decide to invest fraction X. And then in the first period, you wake up and you learn that you are hungry. 
+
+You're hungry. You wake up hungry. Okay. 
+
+Then you eat everything in the fridge and you go out to the garden and liquidate your planted potatoes. Okay. You dig them out and still eat them, even though they're not good.
+
+If you wake up in the first period and you're not hungry, then you know, you can wait till tomorrow, you go to bed again. And in period two, you wake up and you can eat all the stored potatoes. And you can also eat all the potatoes that have grown in the garden.
+
+Okay. So what will be the optimal choice? The agent, let's, we assume that the agent maximizes expected utility, maximize gamma times the utility in case you are an early agent, plus one minus gamma times the utility that you get if you're a late agent. Okay.
+
+And you maximize, so you choose the amount, the fraction invested. The assumption, assumptions here is that agents maximize expected utility. And we assume that the utility function is strictly concave. 
+
+The agent faces a dilemma here. If the agent invests, but gets hungry early, she needs to liquidate and that's inefficient. So what will the agent do? We'll have a look at that. 
+
+So we'll go now to the Pluto notebook. How do we do that? It is a notebook that's called risk sharing. Okay. 
+
+Here you have a description of the, of the model and here you have this utility function. Okay. The expected utility is gamma times the utility of eating in the first period plus one minus gamma times eating a second period. 
+
+And there should be a U here, actually. I haven't noticed this mistake for many years. Okay. 
+
+Anyways, it's hopefully a lot better. So we, we choose some gamma, we choose some R and we choose some, some small R, which is how much you get from liquidating the potatoes and big R, which is what you get if you let the potatoes grow in the ground. And then you see the expected, the expected utility. 
+
+Okay. So that's this function here. And then you see a dotted, the dotted line here, the dotted vertical line denotes the optimal point.
+
+Okay. So you see, you get the optimal expected utility if you invest nothing. Okay.
+
+And you can play with this. This will only change. So you always get zero investment only if the, this loss from liquidation becomes small enough and this changes.
+
+Nothing changed yet, but now it changed. Okay. Now your optimal point is at one.
+
+Okay. So if the loss is not too large, so if small R, the return from liquidation is not too small, then you will invest everything. Okay. 
+
+Now your optimal choice is one. Okay. On the other hand, if R is sufficiently small, then you will always invest nothing.
+
+Okay. Good. Let's go back to, to the notes. 
+
+So next, while this, this, the notebook loads, we want to imagine the following situation. Let's say there's this whole classroom. Okay. 
+
+All of us. And we ask ourselves, how stupid is this? Okay. So let's say all of us have this problem.
+
+We have potatoes in the beginning and all of us know that the best thing is to not plant any potatoes. Okay. Because all of us could be hungry tomorrow. 
+
+So why is this stupid? Let's discuss that. So to recap, if R is low enough, then there will be no investment. And the question is, can't we do better than that? Isn't it somehow better if some potatoes are actually put to the ground and harvested next period? So what would have benevolent social planner do? Let's, let's see. 
+
+Let's say there's many people. Okay. This is all of us. 
+
+And let's say that they are on a continuum. Okay. So let's say there's infinitely many and a fraction gamma is early and a fraction one minus gamma is late. 
+
+Okay. But they don't know. They will only learn in the first period, what type they are. 
+
+What do you do now? What we do know is that a fraction will be early and the remaining fraction will be late consumers. So early ones want to eat in period one, the late consumers want to eat in period two. The planner takes all the potatoes from the people, chooses the optimal investment, and then redistributes the returns. 
+
+Okay. So the planner will take, will, will take some potatoes, or the planner will take all the potatoes of the people. Then it will put, it will plant some potatoes, dig them in the ground so that new potatoes can grow and the remaining potatoes will, he will keep, he or she will keep in the fridge. 
+
+And then when in the first period people wake up and realize who, who is an early type and who is a late type, the planner will give potatoes, will hand potatoes out to people. Okay. In particular, he will only hand out potatoes to the people that are hungry. 
+
+Okay. So the planner can reach a social optimum. So that's the best thing that can happen. 
+
+Okay. Because the planner wants to achieve the best situation, the best outcome for everybody. The planner maximizes the total utility. 
+
+Okay. So that's, that's kind of the integral of all utilities of all agents, the aggregate utility. Okay. 
+
+The planner maximizes that aggregate utility. And that's, that's gamma, the fraction of people that are hungry in the first period times the utility of these people plus one minus gamma, that's a fraction of people that's hungry in the second period times the utility of those people. Okay. 
+
+And the planner can only distribute the potatoes that, that he or she has. Okay. So the planner knows that the amount of potatoes that go to the, to the people that are hungry in the first period is whatever the planner stored. 
+
+Okay. And the potatoes that go to the people in the second period. So the fraction of people that are late types times what to consume is whatever is invested X times R. Okay. 
+
+So the planner wants to choose X fraction invested such that the planner can distribute the stored stuff to the early types and the invested stuff to the late types. And of course, what the planner could also do is dig out potatoes, but the planner would never do that. Okay. 
+
+The planner could say, okay, liquidate some fraction XR some fraction times and get the return from liquidation. And then the planner has less left over in the next period. Okay.
+
+But that's, that's inefficient. So the C1 and C2 are functions of X and L. Okay. What will the planner do? We can look at the Pluto notebook again. 
+
+And then we, after we looked at the Pluto notebook, we will have a short break. So I want to, before we look at the notebook, I want to, I want to put it in words once more, the situation that we, that we consider now is the following. All of you are people and all of you have one. 
+
+So each of you has one kilo of potatoes. Okay. And all of you know, individually, the best you can do is to store everything and to invest nothing. 
+
+Okay. Now let's say I'm the planner. Okay. 
+
+I'm just, I'm the benevolent social planner. I want to maximize all of your utility. Okay. 
+
+And I know that I, so I can make you better off if I take away all the, all your potatoes and invest them in an optimal way. Okay. And that's the, that's the problem that I solve.
+
+So how much should I invest X such that I make all of you better off? Okay. Here's the fraction of you that wants to eat early and the fraction that eats late. Okay. 
+
+So let's, let's see what the optimal investment is. Let's say we have this formula again, gamma times early plus one minus gamma times late. And we have this, these conditions here. 
+
+Okay. And then we choose optimally. And now I ask myself, why is the X so bad? Because I should check this before the lecture.
+
+X limits is zero one and zero one. Okay. So now we see that, and we actually go from minus.
+
+Okay. Anyways. So sorry for the bad plot now, but you get the idea. 
+
+So now we see that in optimum the fraction invested is 0.5. Okay. And that is if gamma is 0.5. If we have gamma is 0.3, then we have a higher optimal investment. If gamma is higher, you have a lower optimal investment. 
+
+But what I want you to see is that there is optimal investment, but there is investment. Okay. So it's not the case that the planner agrees with the people that the best thing to do is to invest nothing. 
+
+Okay. So the planner, the optimal thing for everybody taken together is to grow some potatoes and not to store everything. Okay.
+
+And you can play around with that. So the question that you're asking now, how can we achieve this optimum that social planner can achieve without a social planner? Okay. I don't know if you've looked around in a real world, usually there's no benevolent, benevolent social planner around. 
+
+Okay. So the question is, can there be an institution that can achieve the same outcome even without forcing people to do stuff? Okay. So do people want to use this institution? And I just introduce you to this question, and then we'll have a break. 
+
+So probably you have guessed, probably you haven't, this institution that might be able to achieve the exact same outcome as the planner is banks. Okay. So the planner's optimal solution says that there is a positive investment. 
+
+Okay. The optimal thing to do is to invest some of your potatoes. The question is, can a bank achieve the same optimal outcome? And the short answer is yes. 
+
+Okay. And I'll tell you after the break, how this works. Let's reconvene in nine minutes. 
+
+Okay. So let's reconvene at five past four. Okay.
+
+Okay. So let's continue. So to remind you where we were, we had potatoes and we don't know if we will be hungry next period, or if we'll only be hungry, or if we're not going to be hungry until new potatoes can grow. 
+
+So all of us individually, we would not like to invest any potatoes. We would not like to grow any new potatoes. We want to store them.
+
+Whereas if they were, if they were a social planner, social planner would take away all the potatoes from us and invest some of them to make all of us better off. So the question is now, could a bank achieve the same outcome as the social planner? And the answer will be yes. Okay. 
+
+But how will this work? A bank collects deposits with promised prepayment, C1 and C2, depending on the time of withdrawal. Okay. So if you withdraw in the first period, you'll get C1. 
+
+If you withdraw in the second period, you receive C2. Okay. So you get higher interest, you could say, if you wait longer. 
+
+The bank needs to make sure that late types don't withdraw early. Okay. And we call that incentive compatibility. 
+
+The bank wants to avoid that people who are not hungry in the first period still withdraw because the bank wants to invest their money and pay them out later. Okay. So what's the optimization problem for a bank? The bank maximizes this as before, subject to the following new constraint. 
+
+Okay. And that's the incentive compatibility constraint. And what does this say? This just says that that the amount promised in the second period is higher than the amount promised in the first period. 
+
+Okay. So if this holds, then every late agent would be stupid to withdraw in the first period. Right. 
+
+Because they are late, so they are not yet hungry. And if they know, and they know that if they withdraw today, they get a few potatoes. But if they wait and withdraw tomorrow, they get many potatoes. 
+
+Okay. Right. So it's basically the same problem as the planner, except that the planner can force people, whereas the bank cannot force people. 
+
+Okay. So the bank needs to rely on people being not stupid. And that's this condition here. 
+
+Okay. That no person that's not hungry wants to withdraw early. Now the question is, does the incentive compatibility constraint hold at optimal outcome? That's shown in the Pluto notebook, but since it's so much of a hassle to go back and forth between them, I'm not going to show you that. 
+
+I'll show you that next time, like the next time when there's a reason to go to the notebook. Okay. So that's kind of the result of Diamond and Deepwig.
+
+That was their innovation. Banks can achieve the outcome of the planner, because usually in this setup, the incentive constraint will be satisfied. Okay. 
+
+So banks offer a deposit contract, and everybody is better off going to the bank, depositing their money at the banks and withdrawing later on, compared to keeping all the money at home. Everybody's better off giving the potatoes to the bank compared to storing the potatoes in their own fridge. Good. 
+
+So that's good about banks. Okay. Banks make us better off because they can make illiquid investments, even though we don't know when we need the money. 
+
+But the bad thing about banks is that banks are fragile. Okay. That is, they're subject to bank runs. 
+
+And we'll describe now what bank runs are. If too many agents withdraw too early, there will be a bank run and the bank will go bankrupt. Okay. 
+
+We see a bank default. Okay. So let's analyze this. 
+
+What if more than gamma agents withdraw early? Well, the bank promised to pay C1, and that's one minus X over gamma. Okay. Now, if gamma withdraw, then gamma times C1 is one minus X. And that's exactly what what the bank has. 
+
+Okay. So if gamma, if the right, if the right number of people withdraws, then what the bank has reserved for them is exactly what the bank needs. So we can put a check there. 
+
+Because we have inequality, same number for needed withdrawals and available withdrawals. Now, what if more than gamma withdraw, then we need omega times C1. And this is bigger than gamma times C1, which is one minus X. Okay. 
+
+In that case, the bank does not have enough money to pay the people that want to withdraw. So what will the bank do? There's a queue outside. It has already paid out all the money that it has all one minus X. But then there's still people, the bank will go to the garden and dig out potatoes. 
+
+Okay. The bank needs to liquidate their investment. Dig out some of the potatoes, even though they're not mature yet. 
+
+So and how much so that what the bank needs, okay, that's that's how much money the bank needs to pay out equals what the bank is available. And that's one minus X. So that's the stored potatoes, plus the liquidated potatoes. So the potatoes that the bank has dug out times how much was invested times the low return, the liquidation return, okay, the very low return. 
+
+So we can compute that the necessary liquidation is omega times C1 minus one minus X over XR. Okay. Now, what does that mean? That means that if some potatoes have been dug out of the ground, they're not there anymore. 
+
+So next period, people will come and demand money. Okay. Now the question is, will the bank have enough big enough harvest next period to serve all the clients or the late customers? Or the late depositors? Oops. 
+
+Okay, one second shows up. There's less left for period two. Fewer potatoes are keep growing. 
+
+Okay. So the implied payout for people that withdraw late is what's left in the ground. Okay, so that's what's left in the ground times the big return.
+
+Okay, so that's, so that's kind of so all this is to put what's left in the ground. That's a big return, and then divided over all the remaining people. Okay. 
+
+And this must always be, you know, it is the case that this will always be smaller than C2. Okay. Because there's less around. 
+
+Okay. So the question is now, what if C2 tilde drops below C1? So let's say that so many people withdraw too early, that the bank has to dig out so many potatoes, that what's remaining in the ground is so little that the bank can pay less than C1 next period. Then all these late agents, they know, well, it's better for them to also withdraw early. 
+
+I mean, why, why wait? In order that if they withdraw today, they can get C1 and keep it in their fridge and eat it tomorrow. And if they wait, they will get C2 tilde, which is less than C1. Okay.
+
+Formally, the incentive compatibility constraint is violated. Late agents are better off withdrawing early and storing the potatoes at home. And this means that all agents run on the bank to withdraw the potatoes. 
+
+The bank is bankrupt. It cannot pay out to all customers. Okay. 
+
+So what happens now is agents predict there will be not very much money left next period. That's why they withdraw early. So everybody runs to the bank and they want to withdraw their money.
+
+Everybody wants to have C1. Now the question is how much money can the bank pay out in total? The bank has one minus X plus liquidate everything. That's one times X times R. Okay. 
+
+So how does the amount promised compared to the funds available after full liquidation? Well, that's actually a wrong sign here. That should be bigger. Okay. 
+
+The amount promised is bigger than the funds available. And that's why the bank goes bankrupt. And that's the case whenever gamma is smaller than one and R is close to zero. 
+
+Okay. That's certainly the case. All right. 
+
+So banks are subject to bankrupt. If more people than expected go to the bank in the early period, then the bank will go bankrupt. Okay.
+
+Because everybody will want to withdraw in the early period. And that's not possible. But the bank does not have enough potatoes to pay out. 
+
+So what can prevent this? And here's where the interbank market comes in. An interbank market can prevent bank runs if there's no aggregate risk. Okay. 
+
+I'll tell you what it is in a second. So let's say there's multiple banks and the withdrawals vary across banks. Okay. 
+
+So the omega I's is how much is withdrawn for each bank. So bank one has withdrawals omega one and bank two has withdrawals omega two. They're all not gamma. 
+
+That's called idiosyncratic risk. Risk that everybody faces individually, every bank face individually. But the aggregate withdrawal is known. 
+
+Okay. On average, the average omega I is gamma. Which means there's no aggregate risk.
+
+Okay. So some banks face too many withdrawals. Some banks face too few withdrawals. 
+
+But on average, the withdrawals are just as expected. Okay. That's the situation of idiosyncratic risk, but no aggregate risk. 
+
+So that's the following situation. Let's say that we have two banks with withdrawals, omega one and omega two. So they have some early, some late types. 
+
+Bank one has many late types and bank two has many early types and they make up the total population. Okay. So it could be that the bank knows in the total population, there's a fraction of gamma of early individuals, but they don't know which of those individuals go to which bank. 
+
+Okay. So the situation where the one bank has, so the difference between actual withdrawals and the population is the same. One bank has more withdrawals, one bank has fewer withdrawals. 
+
+Okay. Bank two has epsilon more than gamma and bank one has epsilon less than gamma. So let's consider this situation where we have these two banks. 
+
+Bank two has too many withdrawals and according to our previous argument, this would lead to default. Bank one would have too few withdrawals, which has excess liquidity because money left over in the first period. Okay. 
+
+So let's look at their funds available and the promises at both periods. So bank one has gamma times C one and one minus gamma times C two available in periods one and two, but they need only gamma minus epsilon times C one and one minus gamma minus epsilon times C two. Okay. 
+
+So in the first period, there's an excess liquidity of epsilon times C one. And in the second period, there is a shortfall of epsilon minus epsilon times C two. For bank two, it's the other way around. 
+
+Okay. They have the same funds available, gamma times C one and one minus gamma times C two, but now they have too many withdrawals. Okay.
+
+So they need gamma plus epsilon times C one in the first period, and they have too much one minus gamma plus epsilon times C two in the second period. Okay. So they have a shortfall in period one and an excess liquidity in period two. 
+
+Okay. Now what you can see is the following, that these people here in this bank, bank one has an excess of epsilon C one, so too much money. And this bank needs epsilon times C one. 
+
+Okay. So exactly the amount that bank one needs in period one is available there at bank one. Okay. 
+
+So this bank has, this bank needs. And the second period, it's the opposite. Bank two has, bank one needs. 
+
+Okay. So the solution would be an interbank market. Why don't the banks transfer their excess liquidity to the other bank to avoid default? So let's say, how would this have to be? We say, so for example, T equals zero, each bank deposits epsilon at the other bank.
+
+Okay. So we have the following interbank market, epsilon. So why is the interbank liabilities? Zero epsilon, epsilon zero.
+
+One has epsilon debt with two and two has epsilon debt with one. Okay. At T equals one, bank two needs liquidity. 
+
+So it withdraws deposits, receiving epsilon times C one. And at T equals two, bank one needs liquidity. So it withdraws their deposits, receiving epsilon times C two. 
+
+Okay. This interbank market will exactly, is exactly offsetting the liquidity needs of the banks. Okay. 
+
+So if they choose to deposit epsilon in the first period with each other, so bank one moves epsilon of their potatoes to bank two and bank two moves epsilon of their potatoes to bank one. Then they have the same amount of potatoes at their bank, but they have the right to withdraw additional potatoes if they need them. Okay. 
+
+So let's look at an exercise. And as you know, the exercise, but I should not write on this same notebook, otherwise I cannot use it anymore. So I need to move to that if it works. 
+
+Okay. We have the following situation. We have one, two, three, four banks. 
+
+Okay. And we have the following withdrawals. We have gamma minus epsilon and gamma plus epsilon. 
+
+That's the early withdrawals. Okay. We have two different situations that could occur state one and state two in state one banks, one and four have many early withdrawals. 
+
+And in state two, it's two and three. And in state one, two and three have few early withdrawals and one and four have few early withdrawals. Now let's say we have the following interbank network. 
+
+The question is what's the minimal interbank link that prevents default. So you know that if that the green banks, the green banks have excess liquidity in t equals one and the blue banks have liquidity shortage in t equals one. Okay. 
+
+And this liquidity shortage is exactly, so both the excess and the shortage is epsilon times C one. Okay. Now we know that the bank one needs in period one epsilon times C one, which means that interbank deposits of epsilon would be, so let's try deposits of epsilon. 
+
+Okay. Just because it worked before. There's no way to, well, if you, if you practice this, then you'd probably see how much you need, but there's no way of figuring out before. 
+
+So you just try a number and then you'll see that the money flows. Okay. So green has, it has sufficient money.
+
+So in t equals one money flows from two to four because four withdraws their deposits and money flows from three to one because one withdraws deposits and at t equals two money flows between the other banks. So now the other ones withdraw. The deposits, and then you can check that the same works in the other state. 
+
+Okay. That deposits of epsilon are enough to cover all liquidity needs. We'll discuss this once more in the tutorial. 
+
+You can ask yourself what would change in the following case. Let's say you have what changes if state one state two looks as follows. Let's say you have one, two, three, four, and this network and one, two, three, four, and this network, then you'll see that deposits of epsilon will not suffice anymore. 
+
+Epsilon is not enough. And so think for yourself, what kind of interbank lending is needed to avoid default. Think about it.
+
+And we'll talk about that in the tutorial. So in the last four minutes, I want to go back to to the notebook and tell you, well, so before I go back, I want to tell you that this model is interesting to get insights in how things could work. Okay. 
+
+It's interesting to see that financial markets can prevent bank runs and under which conditions they can. But if you look at the paper, it's not a model that's very helpful to do computations, okay. Or to compute optimal financial networks or to compute directly the necessary amount of interbank lending. 
+
+What they do in the paper is basically they come up with examples that they can solve by some trial and error, and then they present these examples. And we use a similar approach here in lecture and in the tutorial. There's not a straightforward way of coming up with necessary interbank lending.
+
+It's a bit of trial and error until things work out. Okay. So it might be a little bit frustrating.
+
+But then if you look at the collected exercises, this model has never been on the exam. Okay. Still, this could always change. 
+
+Okay. Although not very likely. So you should be able to at least reconstruct the problems that we do in the tutorial and today. 
+
+Good. So let me now go back to the other screen for one last bit of information. So the last bit is financial crisis.
+
+All right. There's one in addition. Damn it. 
+
+Okay. So let's talk about financial crisis. Let's talk about financial crisis. 
+
+The main contribution of the paper that I talked about, this Allen and Gale paper, is to show that if there is aggregate risk, okay, so that the average withdrawal omega i is unknown, not known. If there's a good risk, then there can be default cascades. Okay. 
+
+But we've not talked about that today. Today, we just talked about the case and there's no risk. And in that case, everything's fine. 
+
+We'll talk about these default cascades in the context of a different model tomorrow. Okay. And that model is nicer. 
+
+So tomorrow's model is nicer because it's more transparent how things work and it's easier to reason about. Okay. So tomorrow, we'll talk about financial crisis, default cascades, what happens if there's a shock to one bank and how it transmits to the whole financial system. 
+
+Okay. And then we'll analyze how a network should look like to avoid the default of the whole system. Good. 
+
+So thanks for your patience. Thanks for staying. We'll see each other tomorrow in the lecture. 
+
+It's again via Zoom. Have a nice evening. Bye-bye.
