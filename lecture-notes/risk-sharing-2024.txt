@@ -1,5 +1,7 @@
 All right, welcome to today's class. Sorry that we have to have it online. I hope you don't mind too much. 
 
+# Introduction 
+
 This lecture and tomorrow's lecture, we are talking about financial networks. So we're talking about models of the financial sector or the financial system as a whole. Today, we're going to discuss why it's, what role the financial sector serves. 
 
 So we'll discuss a model of a bank, what purpose does a bank have from an economist's perspective. And this will be the model that has won the Nobel Memorial Prize in Economics a few years ago. That's the model by Diamond and Lipwig. 
@@ -7,6 +9,8 @@ So we'll discuss a model of a bank, what purpose does a bank have from an econom
 And this model can be embedded in a financial network model to discuss the good sides or the benefits of having a financial system. And tomorrow, we'll see how financial shocks can spread in the financial system. We'll see that if a single bank turns bankrupt, then this can push the whole financial system into bankruptcy if things go badly. 
 
 Okay. So we'll discuss tomorrow under what circumstances this happens and how it can be avoided. Good. 
+
+## A model the financial system
 
 But before we discuss all these implications, let's first settle on what we think a bank is. So I'll give you a very simple model of a bank. So here it is. 
 
@@ -68,15 +72,17 @@ We can use this model to show that banks are fragile. Okay. They're subject to b
 
 Things can go bad with, with banks. And third, I'll show you that financial networks can prevent bank runs under some circumstances. Okay. 
 
-The model that I show you is the model by Diamond and Dybwik. That's the one, that's the model that won the Nobel prize a few years ago. And the fragility comes from the network. 
+The model that I show you is the model by Diamond and Dybvig. That's the one, that's the model that won the Nobel prize a few years ago. And the fragility comes from the network. 
 
-Well, the, the, the financial, oops, financial network part comes from Allen and Gale. Okay. They built on the Diamond and Dybwik model. 
+Well, the, the, the financial, oops, financial network part comes from Allen and Gale. Okay. They built on the Diamond and Dybvig model. 
 
-Good. So probably probably, you know, you know, soon, right? Hopefully. So if you quickly so you can either use the chat or you can use reactions to answer the following question, who has heard of the term bank runs? You can raise your hand or you can write yes, or I, or something in the chat who has heard of the term bank runs? Some of you, but not so many, it seems.
+Good. So probably probably, you know, you know, Zoom, right? Hopefully. So if you quickly so you can either use the chat or you can use reactions to answer the following question, who has heard of the term bank runs? You can raise your hand or you can write yes, or I, or something in the chat who has heard of the term bank runs? Some of you, but not so many, it seems.
 
 Bank runs are a phenomenon that, well, it's kind of, you know, cool and old. So, so that, that was kind of the main thing, how banks went bankrupt a hundred years ago, or 150 years ago. And that's literally, there's a bank, you know, a building and people run to the building to withdraw their money. 
 
 Okay. So people have money on the bank and they, they all at once run to the bank to withdraw their money. Okay. 
+
+### Bank runs today
 
 Because they know, and we'll see that, that the bank will never have enough money to pay out all depositors at once. Okay. And bank runs, you know, have, have been a frequent reason for bank bankruptcy in the early 20th century. 
 
@@ -88,7 +94,13 @@ Okay. But if things go really bad, if the trust goes bust in a financial crisis,
 
 And also during the euro crisis, there were bank runs for European banks. And if I'm not mistaken, bank runs were a major concern in Cyprus a few years ago when there were troubles in the financial system. Okay. 
 
-So what we talk about today is relevant, is relevant for economic policy. Okay, good. So let's now go to this part one of today's plan, the role of banks, banks are liquidity providers. 
+So what we talk about today is relevant, is relevant for economic policy. 
+
+# I. The role of banks: Banks as liquidity providers (Diamond and Dybvig, 1983)
+
+Okay, good. So let's now go to this part one of today's plan, the role of banks, banks are liquidity providers. 
+
+## Summary of assumptions and results
 
 So here are the model ingredients. The first assumption is that good investments are illiquid. And the second assumption is that agents are uncertain about their liquidity needs. 
 
@@ -111,6 +123,8 @@ You don't know if you're going to need your money soon. That's the assumption. A
 To avoid liquidation. Okay. Agents don't invest, which is bad.
 
 And by offering deposit contracts, banks can achieve the social optimum. Okay. So I want to, I want to explain this to you in the following setup. 
+
+## The model
 
 So we think about a person and the person has one kilogram of potatoes. Okay. That's your initial endowment.
 
@@ -174,6 +188,8 @@ And you maximize, so you choose the amount, the fraction invested. The assumptio
 
 The agent faces a dilemma here. If the agent invests, but gets hungry early, she needs to liquidate and that's inefficient. So what will the agent do? We'll have a look at that. 
 
+#### Pluto notebook (I)
+
 So we'll go now to the Pluto notebook. How do we do that? It is a notebook that's called risk sharing. Okay. 
 
 Here you have a description of the, of the model and here you have this utility function. Okay. The expected utility is gamma times the utility of eating in the first period plus one minus gamma times eating a second period. 
@@ -197,6 +213,8 @@ Now your optimal choice is one. Okay. On the other hand, if R is sufficiently sm
 Okay. Good. Let's go back to, to the notes. 
 
 So next, while this, this, the notebook loads, we want to imagine the following situation. Let's say there's this whole classroom. Okay. 
+
+## Planner's problem
 
 All of us. And we ask ourselves, how stupid is this? Okay. So let's say all of us have this problem.
 
@@ -272,6 +290,8 @@ Okay. And I'll tell you after the break, how this works. Let's reconvene in nine
 
 Okay. So let's reconvene at five past four. Okay.
 
+## Banks can achieve the optimal outcome
+
 Okay. So let's continue. So to remind you where we were, we had potatoes and we don't know if we will be hungry next period, or if we'll only be hungry, or if we're not going to be hungry until new potatoes can grow. 
 
 So all of us individually, we would not like to invest any potatoes. We would not like to grow any new potatoes. We want to store them.
@@ -300,6 +320,8 @@ Okay. That no person that's not hungry wants to withdraw early. Now the question
 
 I'll show you that next time, like the next time when there's a reason to go to the notebook. Okay. So that's kind of the result of Diamond and Deepwig.
 
+### Summary of Diamond & Dybvig
+
 That was their innovation. Banks can achieve the outcome of the planner, because usually in this setup, the incentive constraint will be satisfied. Okay. 
 
 So banks offer a deposit contract, and everybody is better off going to the bank, depositing their money at the banks and withdrawing later on, compared to keeping all the money at home. Everybody's better off giving the potatoes to the bank compared to storing the potatoes in their own fridge. Good. 
@@ -307,6 +329,8 @@ So banks offer a deposit contract, and everybody is better off going to the bank
 So that's good about banks. Okay. Banks make us better off because they can make illiquid investments, even though we don't know when we need the money. 
 
 But the bad thing about banks is that banks are fragile. Okay. That is, they're subject to bank runs. 
+
+# II. Banks are fragile (they are subject to bank runs)
 
 And we'll describe now what bank runs are. If too many agents withdraw too early, there will be a bank run and the bank will go bankrupt. Okay. 
 
@@ -328,7 +352,7 @@ So we can compute that the necessary liquidation is omega times C1 minus one min
 
 So next period, people will come and demand money. Okay. Now the question is, will the bank have enough big enough harvest next period to serve all the clients or the late customers? Or the late depositors? Oops. 
 
-Okay, one second shows up. There's less left for period two. Fewer potatoes are keep growing. 
+Okay, one second shows up. There's less left for period two. Fewer potatoes are kept growing. 
 
 Okay. So the implied payout for people that withdraw late is what's left in the ground. Okay, so that's what's left in the ground times the big return.
 
@@ -354,9 +378,15 @@ The amount promised is bigger than the funds available. And that's why the bank 
 
 Okay. That's certainly the case. All right. 
 
+### Summary
+
 So banks are subject to bankrupt. If more people than expected go to the bank in the early period, then the bank will go bankrupt. Okay.
 
-Because everybody will want to withdraw in the early period. And that's not possible. But the bank does not have enough potatoes to pay out. 
+Because everybody will want to withdraw in the early period. And that's not possible. But the bank does not have enough potatoes to pay out.
+
+So what can prevent this? And here's where the interbank market comes in.
+
+# III. An interbank market can prevent bank runs
 
 So what can prevent this? And here's where the interbank market comes in. An interbank market can prevent bank runs if there's no aggregate risk. Okay. 
 
@@ -445,6 +475,8 @@ It's a bit of trial and error until things work out. Okay. So it might be a litt
 But then if you look at the collected exercises, this model has never been on the exam. Okay. Still, this could always change. 
 
 Okay. Although not very likely. So you should be able to at least reconstruct the problems that we do in the tutorial and today. 
+
+# IV. Financial crises
 
 Good. So let me now go back to the other screen for one last bit of information. So the last bit is financial crisis.
 
