@@ -2,12 +2,12 @@
 # v0.19.38
 
 #> [frontmatter]
-#> chapter = 5
-#> section = 1
+#> chapter = 6
+#> section = 2
 #> order = 1
-#> title = "Risk sharing in financial networks"
+#> title = "The economy as a network of sectors"
 #> layout = "layout.jlhtml"
-#> tags = ["financial-networks"]
+#> tags = ["production-networks"]
 #> description = ""
 
 using Markdown
@@ -23,557 +23,967 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 85cfd495-ff91-4504-bb60-ca2d7f604f1f
+# ╔═╡ a09cb7a6-17e4-4570-ae0b-8104c39bbc24
+using SimpleWeightedGraphs
+
+# ╔═╡ 773c5304-4165-433c-bd33-f41d3fb9856a
+using PlutoUI: TableOfContents, Slider, CheckBox, as_svg
+
+# ╔═╡ f8116e43-37f6-4c28-ab62-85aab79ff986
 using CairoMakie.Makie.MathTeXEngine: texfont
 
-# ╔═╡ 9bc0e1d4-9c1b-4f3c-802f-6e5bddad689e
-using Graphs
-
-# ╔═╡ ceb4712b-98f6-407d-99e9-5bf3128749af
-using Optim
-
-# ╔═╡ ba378958-3da4-4d6c-9987-72f2519f510f
-using ForwardDiff
-
-# ╔═╡ e42f025a-11dc-48ed-92e3-3c5f473ba2bd
-using Chain: @chain
-
-# ╔═╡ f5d5d00c-da96-44fc-b164-f557d2430e9a
-using DataFrames
-
-# ╔═╡ 243a809d-8ee3-4f50-87bd-ea0da9c7c549
+# ╔═╡ 790e88cb-f6e8-43ae-99b8-876f3abbd3a2
 using DataFrameMacros
 
-# ╔═╡ 002a5601-69c9-4342-a808-b9cfa64919eb
+# ╔═╡ e87a3bc3-9dd9-4af3-baf0-fba7d3ccfdc9
+using DataFrames
+
+# ╔═╡ f6de4c5a-7d3f-417b-bd5c-1d793e937307
+using Chain: @chain
+
+# ╔═╡ 6526d6e4-774a-11eb-0b7a-bd644b5f7fea
+begin
+	using OffsetArrays
+	
+	using Statistics: mean
+	using SparseArrays#: sparse
+	using LinearAlgebra: I, dot, diag, Diagonal, norm
+	import Downloads
+	
+	using Distributions
+	using AxisKeys: KeyedArray
+	using NamedArrays: NamedArray
+	using CategoricalArrays: cut
+	using Colors: RGBA
+end
+
+# ╔═╡ a5b8d51f-22d2-48f7-840e-41c154528d36
+using GraphMakie, CairoMakie
+
+# ╔═╡ 59576485-57a5-4efc-838e-b4edf27eb420
 using AlgebraOfGraphics
 
-# ╔═╡ 5f710a04-876e-4d0e-8fd2-6b56357d3f3e
-using CairoMakie, Makie
-
-# ╔═╡ 97a3fbcd-5969-4886-9a9b-abc20674f95f
-using GraphMakie
-
-# ╔═╡ 6bff9775-1199-42a8-b0e6-099b0701cdb6
+# ╔═╡ 0d80d4ce-f720-4325-8255-8110f0bcb15e
 using NetworkLayout
 
-# ╔═╡ 7b3df55d-5d2f-4621-ae8a-b1d29999ee79
-using LaTeXStrings: latexstring, @L_str
-
-# ╔═╡ 95127df3-1c89-45c2-a6c9-012b02dd3bbf
-using Random
-
-# ╔═╡ 3b40bb50-ae8d-4a27-aff5-0a18ac57cf46
-using PlutoUI: Slider
-
-# ╔═╡ fede66c2-c073-43b4-8fb0-3cfd868f695f
-using NamedTupleTools: delete
-
-# ╔═╡ 49f91510-597d-4151-916f-33ceaa9939f2
-using PlutoUI
-
-# ╔═╡ 2148f702-32ee-40d8-896d-48ae684647bc
-md"""
-`risk-sharing.jl` | **Version 1.2+** | *last updated: Feb 7, 2024*
-"""
-
-# ╔═╡ 5d057554-f8af-4242-8291-0e584cf24764
-md"""
-# Risk Sharing and Systemic Risk in Financial Networks
-
-> A financial network is a **network of promises** (a liability is a _promised_ payment) between banks (or other financial institutions)
-
-👉 _Part A -- **Risk sharing** -- What's good about financial networks?_ \
-based on _[Allen & Gale, 2000](https://www.jstor.org/stable/10.1086/262109), Journal of Political Economy_
-* I. banks provide liquidity
-* II. banks are fragile (subject to bank runs)
-* III. an interbank market can **avoid default**, **prevent bank runs**
-
-_Part B -- **Systemic Risk** -- What's bad about financial networks?_ \
-based on _[Acemoglu, Ozdaglar & Tahbaz-Salehi, 2015](https://www.aeaweb.org/articles?id=10.1257/aer.20130456), American Economic Review_
-
-* I. Model setup
-* II. **insolvency** and **bankruptcy** in the payment equilibrium
-* III. **financial contagion**
-* IV. **stability** and **resilience** of financial networks
-  * more interbank lending leads to higher fragility
-  * densely connected networks are **robust, yet fragile**
-  * with **big shocks**, we want to have **disconnected components**
-
-
-"""
-
-# ╔═╡ fee3fc5e-7a5f-436b-af17-37e05943d340
-md"""
-# Part A: *Risk sharing in financial networks*
-
-We study the model of **Allen & Gale (2000)**, which builds on the **Diamond & Dybvig (1983)** of bank runs.
-"""
-
-# ╔═╡ 547715c2-98e2-4188-a840-36f3dfda45e8
-md"""
-If you want to read more about the Diamond-Dybvig model (_a true classic!_)
-* [Diamond & Dybvig (1983)](https://www.jstor.org/stable/1837095): Bank Runs, Deposit Insurance, and Liquidity, _Journal of Political Economy_
-* [Diamond 2007](https://www.richmondfed.org/-/media/RichmondFedOrg/publications/research/economic_quarterly/2007/spring/pdf/diamond.pdf): A simple exposition of the Diamond-Dybvig model, _Richmond Fed Economic Quarterly_
-"""
-
-# ╔═╡ 9562942c-990d-4e31-be1a-24e04ed01aee
-md"""
-## I. Banks provide liquidity -- A story
-
-### A simple world
-We are in a simple world. At period ``t=0`` there are is a big population, where each person owns 1 kg of potatoes (the _initial endowment_ is 1).
-
-#### Preferences
-At this moment ``(t=0)``, nobody is hungry. Everybody knows that they will be hungry _at some point_. But they don't know _when_ -- either in period ``1`` or period ``2``.
-
-The utility of an agent is 
-```math
-\begin{cases}
-	u(c_1) & \text{with probability }\gamma \\
-	u(c_2) &\text{with probability }1-\gamma
-\end{cases}
-```
-
-#### Investment opportunities
-
-There are two options. Either store the potatoes or **plant** potatoes to grow more of them. **Storage** has a gross return of ``1`` (no gain, no loss) and the _stored potatoes_ are a **liquid** asset. They can be eaten in either of the two periods. Each kilogram of **planted** potatos yield ``1.5`` kilograms of potatoes in period 2. (The gross return is ``R=1.5`` if _held to maturity_.) Planted potatoes are an **illiquid asset**. If you dig up the planted potatoes in the intermediate period they will have lost their quality and not be very enjoyable. So, in case of _early liquidation_ the gross return is ``r \in [0, 1)``.
-
-"""
-
-# ╔═╡ 51d69d70-1545-4096-bcbc-722bb3d9b200
-md"""
-### Investment decision of an agent
-
-Each agent can split up their initial endowment (1kg of potatoes), plant fraction ``x`` and store fraction ``1 - x``. When the agents wakes up hungry in period 1, the agent will dig up (_liquidate_) the planted potatoes and have a consumption of ``c_1 = (1-x) + r x``. If the agent wake is not hungry in period 1, she will keep the ``x`` potatoes in the ground, and the ``(1-x)`` potatoes in the storage and have a consumption of ``c_2 = (1-x) + R x`` in period 2.
-
-```math
-\begin{align}
-&\max_{x} \mathbb E U(c_1, c_2) = \gamma u(c_1) + (1-\gamma) u(c_2) \\
-&\begin{aligned}
-\text{such that } & c_1 = (1-x) + r x \\
-				  & c_2 = (1-x) + R x
-\end{aligned}
-\end{align}
-```
-"""
-
-# ╔═╡ fdea373b-cc1e-4bba-8b57-340e63a68ab1
-u = log
-
-# ╔═╡ f1beca33-7885-4132-8ce7-9e58339bc26d
-𝔼U(c₁, c₂; γ) = γ * u(c₁) + (1-γ) * c₂
-
-# ╔═╡ f8d5e164-f968-4b82-bf8f-8f79ade560df
-sliders = md"""
-* ``R``: $(@bind R Slider(0.5:0.05:1.5, default = 1.1, show_value = true))
-* ``r``: $(@bind r Slider(0.0:0.05:1.0, default = 0.1, show_value = true))
-* ``\gamma``: $(@bind γ Slider(0.0:0.05:1.0, default = 0.5, show_value = true))
-""";
-
-# ╔═╡ db2cff8e-0ddb-40e6-97ed-42b50a1d1b1f
-sliders
-
-# ╔═╡ b248eebe-0289-40de-8998-dd155db38af9
-md"""
-If the _return from liquidation_ $r$ is sufficiently low, agents will **not invest** in the liquid asset ($x=0$).
-
-The fact that nobody is investing in the asset is not very satisfying. Isn't it somehow possible to predict __how many agents will be hungry in period 2__? Then we could invest at least plant __some__ potatoes and distribute the returns somehow.
-"""
-
-# ╔═╡ 41b70c0c-7c48-40f9-bed6-b712bab83f1b
-md"""
-### The social optimum
-
-What would a benevolent social planner do? The planner can collect all initial endowments, make an investment decision and distribute the proceeds. The planner maximizes the _ex-ante_ expected utility of an agent.
-
-```math
-\begin{align}
-& \max_{x, \ell \in [0,1]} \gamma u(c_1) + (1-\gamma) u(c_2) \\
-&\begin{aligned}
-\text{such that } &&    \gamma c_1 &= (1-x) + \ell r x \\
-				  && (1-\gamma) c_2 &= (1-\ell) R x 
-\end{aligned}
-\end{align}
-```
-"""
-
-# ╔═╡ eee63073-78dc-4378-b2bb-0d1746dcde3b
-c₁(x, ℓ; γ=γ) = (1-x + ℓ*x*r) / γ
-
-# ╔═╡ 56783c5a-2381-44e3-aa0f-8c9bf3d0dce5
-c₂(x, ℓ; γ=γ) = (1-ℓ)*x*R == 0.0 ? 0.0 : (1-ℓ) * x*R / (1-γ)
-
-# ╔═╡ b8933bd2-f4bb-4dca-8278-c00fd8cfdfbd
-function obj(args; γ=γ)
-	x, ℓ = args
-    𝔼U(c₁(x, ℓ; γ), c₂(x, ℓ; γ); γ)
-end
-
-# ╔═╡ 98fabde8-90db-44a4-a439-45fcdfbf9e9c
-social_optimum = let
-	neg_obj(args) = -obj(args)
-		
-	res = optimize(neg_obj, [0.0, 0.0], [1.0, 1.0], 
-		[0.5, 0.5],
-		Fminbox(GradientDescent())
-	)
-
-	x_opt, ℓ_opt = Optim.minimizer(res)
+# ╔═╡ 579444bc-774a-11eb-1d80-0557b12da169
+begin	
+	using Graphs
+	using SimpleWeightedGraphs: AbstractSimpleWeightedGraph, SimpleWeightedDiGraph
+	const LG = Graphs
 	
-	(; x_opt, ℓ_opt, c₁_opt = c₁(x_opt, ℓ_opt; γ), c₂_opt = c₂(x_opt, ℓ_opt; γ))
+	function weighted_adjacency_matrix(graph::Graphs.AbstractGraph; dir = :in)
+		A = LG.weights(graph) .* adjacency_matrix(graph)
+		if dir == :in
+			return A
+		elseif dir == :out
+			return A'
+		else
+			@error "provide dir ∈ [:in, :out]"
+		end
+	end
+	
+	LG.adjacency_matrix(graph::AbstractSimpleWeightedGraph) = LG.weights(graph) .> 0
+	
+	function LG.katz_centrality(graph::AbstractGraph, α::Real=0.3; dir = :in,  node_weights = ones(nv(graph)))
+		v = node_weights
+
+	    A = weighted_adjacency_matrix(graph; dir)
+    	v = (I - α * A) \ v
+    	v /=  norm(v)
+	end
+	
+	function LG.eigenvector_centrality(graph::AbstractGraph; dir = :in)
+		A = weighted_adjacency_matrix(graph; dir)
+		eig = LG.eigs(A, which=LG.LM(), nev=1)
+		eigenvector = eig[2]
+	
+		centrality = abs.(vec(eigenvector))
+	end
+	
+	LG.indegree(graph::AbstractSimpleWeightedGraph) = sum(weighted_adjacency_matrix(graph), dims = 1) # column sum
+	LG.outdegree(graph::AbstractSimpleWeightedGraph) = sum(weighted_adjacency_matrix(graph), dims = 2) # row sum
+		
 end
 
-# ╔═╡ 20348017-411a-49fe-a178-eac580e71e63
-sliders
+# ╔═╡ 4a054faa-6d3b-4c50-89fa-12843546cc76
+using PlutoTest: @test
 
-# ╔═╡ 970e0ae1-e25e-4606-9007-eb63afa80083
+# ╔═╡ 38f5d048-7747-11eb-30f7-89bade5ed0a3
 md"""
-We can see that in the social optimum, there is a significant investment into the liquid asset. We can also see, that the optimal expected utility is higher than in the individual optimum above.
-
-In the real world, there is no benevolent social planner. So the question is: 
-
-> How can we achieve the social optimum?
-
-TL;DR: banks.
+`production.jl` | **Version 1.8+** | *last updated: Mar 13 2024*
 """
 
-# ╔═╡ 79665579-c707-48af-848d-3680c15dd380
+# ╔═╡ f1749b26-774b-11eb-2b42-43ffcb5cd7ee
 md"""
-### The role of a bank
+# The Economy as a Network of Sectors
 
-Agents _deposit_ their initial potatoes in the bank. The investment decision is delegated to the bank, who promises a fixed return ``(c_1, c_2)`` depending on the time of withdrawal.
+Here is what we will cover.
 
-The banks know that the fraction ``\gamma`` of people will withdraw in period 1 (because they are hungry) and ``(1-\gamma)`` will withdraw in period 2. The bank needs to make sure that ``c_2 \geq c_1``, otherwise _late_ agents have an incentive to withdraw their deposits in period 1 (and store them until period 2).
+_Part A -- **Shock Propagation in an Input-Output Network**_ \
+based on _[Long & Plosser (1983)](https://www.jstor.org/stable/1840430), Journal of Political Economy_ and _[Carvalho (2014)](https://www.aeaweb.org/articles.php?doi=10.1257/jep.28.4.23), Journal of Economic Perspectives_.
 
-We assume that banks act on a competitive market, so agents will only choose to deposit in a bank that provides the _optimal contract_. Thus, banks will only operate if they maximize
+1. Introduce Input-Output Tables. Re-interpret them as a network of economic sectors connected by input-output linkages
+2. Visualize and analyze this *intersectoral network*
+3. Simulate the *dynamic* production network model of [Long & Plosser (1983)](https://www.jstor.org/stable/1840430) \
+   (Visualize propagation of shocks | discuss the role of centrality)
 
-```math
-\begin{align}
-& \max_{x, \ell \in [0,1]} \gamma u(c_1) + (1-\gamma) u(c_2) \\
-&\begin{aligned}
-\text{such that } &&    \gamma c_1 &= (1-x) + ℓ r x \\
-				  && (1-\gamma) c_2 &= (1-ℓ) R x \\
-	  			  && c_2 &≥ c_1
-\end{aligned}
-\end{align}
-```
+_Part B -- **Network Origins of Aggregate Fluctuations**_ \
+based on _[Acemoglu, Carvalho, Ozdaglar & Tahbaz-Salehi (2012)](https://economics.mit.edu/files/8135), Econometrica_
 
-This problem is the same as the _planner's problem_, except that the incentive compatibility constraint (IC) ``c_2 \geq c_1`` is added. It turns out, that under some conditions for the utility function `u` the IC will always be satisfied. So the presence of banks will lead to the welfare-maximizing outcome in this model.
+4. Solve the *static* production network model of [Acemoglu, Carvalho, Ozdaglar & Tahbaz-Salehi (2012)](https://economics.mit.edu/files/8135)--_see the lecture notes_
+5. Show that sector-specific shocks don't necessarily wash out in equilibrium--_see the lecture notes_ 
+6. Show by simulation that iid industry-specific shocks will lead to aggregate flucuations
+
+#### Exercises
+
+7. Simulate how the Covid shocks propagates through the economy
+
+
+#### Additional Reading
+
+* **What if? The Economic Effects for Germany of a Stop of Energy Imports from Russia** *(Bachmann, Baqaee, Bayer, Kuhn, Löschel, Moll, Peichl, Pittel & Schularick, 2022)*
+* **Micro Propagation and Macro Aggregation** *(Baqaee & Rubbo, 2022)* 
 """
 
-# ╔═╡ f68d68d6-2bc9-4298-b4aa-8d8f0059dc04
+# ╔═╡ a771e504-77aa-11eb-199c-8778965769b6
 md"""
-## II. Financial fragility (Bank runs)
+## Appetizers
 
-What will happen, if a fraction ``\tilde \omega > \omega`` withdraws money in period ``t=1``? The bank will have to dig up some of its potatoes to fill the gap. This means that the payout in period two will have to be reduced (there are not enough potatoes left). As soon as the expected payout ``\tilde c_2`` becomes small enough, there will be a **bank run**. If the ``\tilde c_2 < c_1`` the incentive compatibility constraint is violated and the "late" types will start to withdraw their money.
+This plot shows how a shock to single sector propagates to other sectors.
 """
 
-# ╔═╡ 85a1a267-70e4-471c-a399-4fff1715627d
-begin
-	(; x_opt, ℓ_opt, c₁_opt, c₂_opt) = social_optimum
+# ╔═╡ cb75f8ac-77aa-11eb-041c-4b3fe85ec22b
+md"""
+This plot shows how the aggregate economy reacts to shocking two groups of sectors. The groups are equally big, but differ by their centrality.
+"""
 
-	liquid(ℓ) = 1 - x_opt + ℓ * x_opt * r
-	withdrawal(ω) = c₁_opt * ω
+# ╔═╡ 9b47991e-7c3d-11eb-1558-b5824ab10dc0
+md"""
+This plot shows how industry-specific iid shocks can either $(i)$ wash out, or $(ii)$ translate into aggregate fluctuations, depending on the network structure.
+"""
+
+# ╔═╡ d9465a80-7750-11eb-2dd5-d3052d3d5c50
+md"""
+# 1. Input-Output Tables: *Production Recipes* for the Economy
+"""
+
+# ╔═╡ cf680c48-7769-11eb-281c-d7a2d5ec8fe5
+md"""
+#### The list of industries
+"""
+
+# ╔═╡ dd41fe96-7769-11eb-06a6-3d6298f6e6fc
+md"""
+#### The Input-Output Table
+"""
+
+# ╔═╡ 128bb9e8-776a-11eb-3786-83531bd2dffb
+md"""
+#### The Input-Output table as a sparse matrix
+"""
+
+# ╔═╡ 280e8390-776a-11eb-0aed-19b0ba929c84
+#graphplot(SimpleWeightedDiGraph(wgts'))
+
+# ╔═╡ f65f7f8c-7769-11eb-3399-79bde01513cd
+md"""
+#### Important industries
+"""
+
+# ╔═╡ 04e731d0-7751-11eb-21fd-e7f9b022cdc9
+md"""
+# 2. Analyzing the *Intersectoral Network* 
+
+Recall, ``G = W'``. Also, in order to satisfy the assumptions of the model, we have to normalize the row sums to 1.
+"""
+
+# ╔═╡ 5aff086a-7751-11eb-039e-fd1b769b6fea
+md"""
+# 3. Simulating a *Dynamic* Production Network Model
+
+The model solution comes from equations (10b), (12), (14), (15) in [Long & Plosser (1987, p. 48)](https://www.jstor.org/stable/1840430)
+"""
+
+# ╔═╡ 2e7630ee-7770-11eb-32ae-112b4b282eaf
+function params(W)
+	N = size(W, 1)
+	θ = fill(1/(N+1), N) # utility weights of commodities
+	θ₀ = 1/(N+1) # utility weight of leisure
+	β = 0.95
+	H = 1
+	α = 0.3
+	param = (; α, β, θ, θ₀, H)
+end
+
+# ╔═╡ 4341e8cc-7770-11eb-04d5-c5d33d9a9e52
+get_γ(W, param) = (I - param.β * W) \ param.θ
+
+# ╔═╡ 486d0372-7770-11eb-1956-1d3314be6753
+function L(W, param)
+	(; α, β, θ, θ₀, H) = param
+	γ = get_γ(W, param)
+	L = β .* γ .* (1-α) ./ (θ₀ + (1-α) * β * sum(γ)) .* H
+end
+
+# ╔═╡ 4e17451a-7770-11eb-3c41-6d98b73d410b
+C(Y, W, param) = param.θ ./ get_γ(W, param) .* Y
+
+# ╔═╡ 56a4c272-7770-11eb-0626-131942edd52d
+function welfare(y, param)
+	dot(y, param.θ)
+end
+
+# ╔═╡ 5bb435cc-7770-11eb-33b6-cb78835406bc
+function κ(W, param)
+	N = size(W, 1)
+	(; α, β) = param
+	γ = get_γ(W, param)
+	
+	κ = (1 - α) .* log.(L(W, param))
+	for i in 1:N
+		tmp = sum(W[i,j] == 0 ? 0 : W[i,j] * log(β * γ[i] * W[i,j] / γ[j]) for j in 1:N)
+		κ[i] = κ[i] + α * tmp
+	end
+	κ
+end
+
+# ╔═╡ 5dbcbd44-7770-11eb-0f60-f74a9945477e
+y₀(W, param) = (I - param.α * W) \ κ(W, param)
+
+# ╔═╡ 6378c2aa-7770-11eb-3edc-9d41e709750e
+y_next(y, ε, W, param) = κ(W, param) + param.α * W * y + ε
+
+# ╔═╡ 6ca12836-7770-11eb-271f-354367f89cb0
+function impulse_response(T, W, param, shocked_nodes, ε₀; T_shock = 0, T₀=3)
+	y = y₀(W, param)
+	N = size(W, 2)
+	
+	t_indices = -T₀:T
+	
+	y_out = OffsetArray(zeros(N, length(t_indices)), 1:N, t_indices)
+	w_out = OffsetArray(zeros(length(t_indices)), t_indices)
+	
+	y_out[:, -T₀] .= y
+	w_out[-T₀]     = welfare(y, param)
+	
+	for t in (-T₀+1):T
+		ε = zeros(N)
+		if t ∈ T_shock 
+			ε[shocked_nodes] .= ε₀
+		end
+		y = y_next(y, ε, W, param)
+		
+		y_out[:, t] .= y
+		w_out[t]     = welfare(y, param)
+	end
+	
+	y_out .= y_out ./ -y_out[:,-T₀] .+ 1
+	w_out .= w_out ./ -w_out[-T₀] .+ 1
+	(production = y_out, welfare = w_out)
+end
+
+# ╔═╡ c2842ace-7751-11eb-240f-550286e812af
+md"""
+## Simple Networks
+"""
+
+# ╔═╡ bc30e12a-7770-11eb-3db2-b753ec458ce5
+function my_out_StarGraph(N)
+	A = zeros(N, N)
+	A[:,1] .= 1
+	
+	SimpleWeightedDiGraph(A')
 end	
 
-# ╔═╡ db66a02e-ab0a-4953-a96c-7743caaf0a90
-md"additional withdrawers ε: $(@bind ε Slider(0:0.01:(1-γ), default = 0.05, show_value = true))"
-
-# ╔═╡ 7f701bf1-67e2-437a-a499-3768f0c2154d
-ω = γ + ε
-
-# ╔═╡ c5b744d3-b674-49dc-a149-3a6cc629c998
-liquid(ℓ_opt)
-
-# ╔═╡ e1da1aed-e6df-4740-ae48-a1099a65d4ec
-withdrawal(ω)
-
-# ╔═╡ 95ebddf6-c9ba-494d-be9c-e5a1cf478ce7
-withdrawal(ω) ≤ liquid(ℓ_opt)
-
-# ╔═╡ 29b2d1b3-2ec6-4de8-82bf-ea05807d0699
-function realized_payout(ω, opt)
-	#; ib_payable=0.0, ib_deposit=0.0
-	(; x_opt, ℓ_opt, c₁_opt, c₂_opt) = opt
-
-	liquid(ℓ) = 1 - x_opt + ℓ * x_opt * r #- ib_payable
-	withdrawal(ω) = c₁_opt * ω
-
-	shortfall0 = max(withdrawal(ω) - liquid(0.0), 0.0)
-	#if 0 ≤ shortfall0 ≤ ib_deposit
-	#	ib_withdrawal = shortfall0
-	#else # shortfall > ib_deposit
-	#	ib_withdrawal = ib_deposit
-	#end
-	#@info shortfall0
-	
-	shortfall = shortfall0 #- ib_withdrawal
+# ╔═╡ b48335da-7771-11eb-2b17-1507687e446c
+function my_complete_DiGraph(N)
+	A = fill(1/(N-1), N, N)
+	A = A - 1/(N-1) * I
 		
-	ℓ_new = clamp(shortfall / (x_opt * r), 0.0, 1.0)
-	c₁_new = c₁(x_opt, ℓ_new, γ = max(γ, ω))
-	c₂_new = c₂(x_opt, ℓ_new, γ = max(γ, ω))
-
-	if c₂_new < c₁_new && ω < 1.0 # IC violated => everybody withdraws early
-		ω̃ = 1.0
-		return (; ω, delete(realized_payout(ω̃, opt), :ω)...)
-	end
-		
-		
-	(; ω, c₁_opt, c₂_opt, ℓ_opt, c₁_new, c₂_new, ℓ_new)
+	SimpleWeightedDiGraph(A')
 end
 
-# ╔═╡ 221eed48-6110-48ee-8aa5-c9ea58c47b46
-realized_payout(ω, social_optimum)
+# ╔═╡ 9a89d9b4-7772-11eb-0c86-9b5f5f1ab23e
+begin
+	#grph = my_complete_DiGraph(10)
+	#grph = my_out_StarGraph(10)
+	grph = CycleDiGraph(10)
+end	
 
-# ╔═╡ 59696736-58c5-46da-835e-e3e00843cf40
-#= let
-	ε = 0.2
-	ib_deposit = 0.2
+# ╔═╡ 15334fc2-7773-11eb-303e-67e90901f850
+begin
+	AA = weighted_adjacency_matrix(grph) |> Matrix |> transpose
+	param = params(AA)
 	
-	bank1 = realized_payout(γ - ε, social_optimum; ib_deposit)
-	bank2 = realized_payout(γ + ε, social_optimum; ib_deposit)
-
-	@chain [bank1; bank2] begin
-		DataFrame
-		#@select(:ω, :ℓ_new, :ib_withdrawal)
-	end
+	(; production) = impulse_response(10, AA, param, [1], -0.3, T_shock = 0:2)
+	
+	color_extr = extrema(production)
 end
-=#; md"(hidden cell)"
 
-# ╔═╡ 8b9edbc2-5849-4b1f-a897-1e909d2c9885
-sliders
+# ╔═╡ 36334032-7774-11eb-170f-5b7f9b7e0ec7
+t_range = axes(production, 2) |> x -> range(first(x), last(x), step=step(x))
 
-# ╔═╡ 69e6c200-25ac-4b05-8c34-a66f55009b2f
-# 1.1, 0.4. 0.5
-
-# ╔═╡ cc3a8e45-131e-4a3b-9239-babd134baacd
+# ╔═╡ f534c32c-7772-11eb-201c-233b5b7a27a4
 md"""
-## III. Risk-sharing in the interbank market
-
-Now, let's suppose that there are ``N`` banks. All banks face the same decision problem, so they will offer the same deposit contract ``(c_1, c_2)``. Agents will randomly pick one of the two banks the outcome will be the same as before.
-
-Let ``\omega_i`` be the fraction of bank ``i``'s customers that withdraws early. The average fraction of withdrawers is ``\gamma = \frac{1}{N}\sum_{i=1}^N \omega_i``. We assume that there is **idiosychratic** (i.e. bank-specific) **risk**, but **no aggregate risk**.  That is, banks don't know ``\omega_i``, but they know ``\gamma``.
-
-> Can the social optimum still be achieved?
-
-TL;DR: Yes, if there is an interbank market
+``t``: $(@bind t Slider(t_range, default = 1, show_value = true))
 """
 
-# ╔═╡ 7b0fe034-b70f-4dc1-ad98-3d29ec6797e7
+# ╔═╡ cbb1e550-7751-11eb-1313-7ff968453f36
 md"""
-Banks can serve at most ``\gamma`` early withdrawals without liquidating assets. If they are faced with ``\omega_i > \gamma`` early customers, the bank as excess liquidity needs of ``(\omega_i - \gamma) c_1`` in period 1. If faced with ``\omega_i < \gamma`` early customers, the bank has excess liquidity in period 1, but a shortage of funds of ``((1-\gamma) - (1-\omega_i))c_2 = (\omega_i - \gamma)c_2`` in period 2. Since ``0 \leq \omega_i \leq 1``, the maximal liquity need in period 1 is
-```math
-(1 - \gamma) c_1
-```
-
-
-Suppose banks can deposit at the same terms as agents. So for each unit deposited, agents get ``c_1`` if withdrawn in period ``t=1`` and ``c_2`` if withdrawn in period ``t=2``. Now suppose that each has total deposits of ``\bar y = 1-\gamma``.
+## Big Network from Input-Output Tables
 """
 
-# ╔═╡ aebd8501-e852-43c8-af64-3810a6f5a23c
+# ╔═╡ 4595d42a-8f0b-42e6-ab5c-f829a0ad2933
 md"""
-#### (illustration missing)
+#### 4. & 5. see lecture notes
 """
 
-# ╔═╡ 23c6b670-6685-467b-be9e-8c68b48c83ec
-#= let
-	ib_deposit = 0.2
-	ω = γ + 0.2
+# ╔═╡ ee72ef4c-7751-11eb-1781-6f4d027a9e66
+md"""
+# 6. Network Origins of Aggregate Fluctuations
+
+Instead of studying shocks to individual sectors, we will now simulate shocks to the whole economy. We assume that for each sector ``i`` and time period ``t``, the sector specific log-productivity follows a *white noise* process: ``\varepsilon_{it} \sim N(0, \sigma^2)``.
+
+We will simulate our welfare measure (flow utility).
+"""
+
+# ╔═╡ 3585b022-7853-11eb-1a05-7b4fe3921051
+function simulate_business_cycles(graph; dist = Normal(0, 1), T₀ = 15, T = 100)
+	N = nv(graph)
+	W = weighted_adjacency_matrix(graph)'
+	param = params(W)
+	y = y₀(W, param)
+		
+	t_indices = -T₀:T
 	
-	shortfall0 = max(ω*c₁_opt - γ*c₁_opt, 0.0)
+	y_out = OffsetArray(zeros(N, length(t_indices)), 1:N, t_indices)
+	w_out = OffsetArray(zeros(length(t_indices)), t_indices)
+
+	ε = rand(dist, N, T)
 	
-	if 0 ≤ shortfall0 < ib_deposit
-		ib_withdrawal = shortfall0
-		c₁ = c₁_opt
-		ℓ = 0.0
-		shortfall = 0.0
-	elseif shortfall0 ≤ ib_deposit + x_opt * r
-		ib_withdrawal = ib_deposit
-		shortfall = shortfall0 - ib_withdrawal
-		ℓ = shortfall / (x_opt * r) # /( γ / ω)
-		c₁ = c₁_opt
-	else
-		ib_withdrawal = ib_deposit
-		ℓ = 1.0
-		c₁ = (liquid(ℓ) + ib_withdrawal)/ω
+	y_out[:, -T₀:0] .= y
+	w_out[-T₀:0]    .= welfare(y, param)
+	
+	for t in 1:T
+		y = y_next(y, @view(ε[:,t]), W, param)
+		
+		y_out[:, t] .= y
+		w_out[t]     = welfare(y, param)
 	end
-	ζ = excess_liquidity = liquid(ℓ) + ib_withdrawal - ω * c₁
-
-	ζ_next = next_period = c₂_opt * (ω - γ)
 	
-	(; ζ_next, ib_withdrawal, ω, ℓ, c₁, ζ, shortfall0, shortfall)
-end =#
+	y_out .= y_out ./ -y_out[:,-T₀] .+ 1
+	w_out .= w_out ./ -w_out[-T₀] .+ 1
+	
+	(; y_out, w_out)	
+end
 
-# ╔═╡ 596df16c-a336-40fc-9df8-e93b321ca2e6
+# ╔═╡ ddfcd760-7853-11eb-38f7-298a4c1cb5aa
+fluct_fig = let
+	fig = Figure()
+	
+	ax = Axis(fig[1,1])
+	
+	N = 400
+	
+	grph = my_out_StarGraph(N)
+	
+	fluc = simulate_business_cycles(grph)
+	
+	for (i, row) in enumerate(eachrow(fluc.y_out))
+		lines!(ax, collect(axes(fluc.y_out, 2)), collect(row), color = (:black, 0.1))
+	end
+	
+	lines!(ax, collect(axes(fluc.y_out, 2)), collect(fluc.w_out), linewidth = 2, color = :red)
+
+	ax0 = ax
+	
+	ax = Axis(fig[2,1])
+	
+	grph = CycleDiGraph(N)
+	
+	fluc = simulate_business_cycles(grph)
+	
+	for (i, row) in enumerate(eachrow(fluc.y_out))
+		lines!(ax, collect(axes(fluc.y_out, 2)), collect(row), color = (:black, 0.1))
+	end
+	
+	lines!(ax, collect(axes(fluc.y_out, 2)), collect(fluc.w_out), linewidth = 2, color = :red)
+	
+	linkaxes!(ax0, ax)
+	hidexdecorations!(ax0)
+	
+	fig
+	
+
+	
+end
+
+# ╔═╡ d772a28a-7c3d-11eb-012f-9b81ad67f9a8
+fluct_fig
+
+# ╔═╡ cebdd63e-774a-11eb-3cd5-951c43b3c3ff
+md"""
+# 7. Old Assignment: The Covid Crisis
+"""
+
+# ╔═╡ 04e5b93a-77ae-11eb-0240-ad7517f0fde3
+md"""
+For this problem set you will simulate a Covid crisis using the model from the lecture.
+
+### Task 1: Which industries were hit by Covid? (3 points)
+
+Find 5 (groups of) industries that were hit by the Corona crisis *directly* (that is, not through propagation within the production network.)
+
+You can look through the industry definitions in `df_nodes1` (below) or go to [the BEA website](https://www.bea.gov/data/industries).
+
+👉 Put the codes of these industries into the `hit_industries` vector below.
+"""
+
+# ╔═╡ 2f672417-ab56-4e7b-b7b4-88655c2404c8
+hit_industries = ["111200", "111300"]
+
+# ╔═╡ 23100fcb-8118-471e-8dd8-47da26a981ae
+md"""
+👉 Explain your choice. _(< 300 words)_
+"""
+
+# ╔═╡ 5df355b6-77b1-11eb-120f-9bb529b208df
+answer1 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 85e7546c-77ae-11eb-0d0c-618c3669c903
+md"""
+### Task 2: Simulate a Covid crisis (4 points)
+
+👉 By putting your selected industries into the `hit_industries` vector in **Task 1**, you have already simulated the Covid crisis. You can also vary the length of the shock in [this cell](#ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6) (assume a period is a quarter).
+"""
+
+# ╔═╡ 3ec33a62-77b1-11eb-0821-e547d1422e6f
+# your code
+
+# ╔═╡ 45db03f2-77b1-11eb-2edd-6104bc85915b
+# goes here
+
+# ╔═╡ c3472d5b-c03e-4ff2-8cf9-bb0932ceb064
+md"""
+👉 Explain your findings in <200 words. Think about how much of the welfare loss is due to the directly hit industries, how much is due to network effects?
+"""
+
+# ╔═╡ 811e741e-77b1-11eb-000e-93a9a19a9f60
+answer2 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 48f0ffd4-77b0-11eb-04ab-43eac927ac9d
+md"""
+### Task 3: Is this model suitable for this exercise? (3 points)
+
+👉 Explain in <200 words how well you think that the model simulation can capture the real-world Covid crisis?
+"""
+
+# ╔═╡ 9fb0a0a8-77b1-11eb-011f-7fc7a549f552
+answer3 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 8142a702-f442-4652-a004-602527c1a14d
+md"""
+### Before you submit ...
+
+👉 Make sure you have added **your names** and **your group number** in the cells below.
+
+👉 Make sure that that **all group members proofread** your submission (especially your little essays).
+
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
+"""
+
+# ╔═╡ d8edddf9-0f24-4efe-88d0-ed10c84e8ce8
+group_number = 99
+
+# ╔═╡ 622a2e9c-495b-43d1-b976-1743f28ff84a
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]);
+
+# ╔═╡ 24c076d2-774a-11eb-2412-f3747af382a2
 md"""
 # Appendix
 """
 
-# ╔═╡ 03fc8645-689c-4e4a-8f15-740890602d70
+# ╔═╡ 3d47962f-958d-4729-bc20-e2bb5ab3e1e1
+TableOfContents()
+
+# ╔═╡ fe87f804-b3b6-4b6c-97cc-4a61e1b30eb1
 fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic))
 
-# ╔═╡ 670ce6ac-e8bc-4283-afbb-3b54e857eab5
-fig_attr(; size = (350, 300)) = (; figure_padding=3, fonts, size)
+# ╔═╡ 79d44149-c6f4-440e-8675-0574fad98a50
+#fig_attr(; size = (350, 300)) = (; figure_padding=3, fonts, size)
 
-# ╔═╡ 24000350-dd53-4938-9360-09fcd7e0c2fb
-let
-	function obj(x; γ=γ)
-		c₁ = 1 - x + x * r
-		c₂ = 1 - x + x * R
-	    𝔼U(c₁, c₂; γ)
+# ╔═╡ de7f1884-c549-401e-85c1-4c1ba5774826
+fig_attr(xscale=1, yscale=xscale) = (; figure_padding=3, size = (xscale * 200, yscale * 200), fonts)
+
+# ╔═╡ 0a5e66ac-e64c-4734-8cb2-51fdf60e4bb9
+minimal(; extend_limits=0.1, hidespines=true, kwargs...) = (; 
+	xgridvisible=false, xticksvisible=false, xticklabelsvisible=false,
+	ygridvisible=false, yticksvisible=false, yticklabelsvisible=false, 
+	leftspinevisible=!hidespines, rightspinevisible=!hidespines, topspinevisible=!hidespines, bottomspinevisible=!hidespines,
+	xautolimitmargin = (extend_limits, extend_limits),
+	yautolimitmargin = (extend_limits, extend_limits),
+	kwargs...
+)
+
+# ╔═╡ 50194494-7772-11eb-20ff-419e874ec00c
+fig = let
+	g = grph
+	#wgt = Matrix(weights(graph) .* adjacency_matrix(graph)) 	
+	#wg = SimpleWeightedDiGraph(wgt)
+	
+	fig = Figure(; fig_attr(2.5, 1.25)...)
+
+	node_color = parent(production[:,t])
+
+	graphplot(fig[1,1][1,1],
+		g;
+		ilabels = vertices(g),
+		layout = Spring(),
+		node_color,
+		node_attr = (; colorrange = color_extr),
+		edge_color = :gray,
+		axis = minimal(hidespines=false, alignmode = Inside())
+	)
+	
+	Colorbar(fig[1,2]; limits = color_extr)
+	
+	ax2 = Axis(fig[1,3], xlabel = L"t", alignmode = Inside())
+	
+	for i in 1:nv(g)
+		lines!(ax2, collect(axes(production, 2)), parent(production[i,:]))
+		vlines!(ax2, t, linestyle = :dash, color = :gray)
 	end
 
-	res = maximize(obj, 0, 1)
-
-	x_opt = Optim.maximizer(res)
-	@info x_opt
-	
-	xx = 0.0:0.05:1.0
-	fig = Figure(; fig_attr()...)
-	ax = Axis(fig[1,1], xlabel = L"fraction invested $x$", ylabel = "expected utility")
-	lines!(ax, xx, obj.(xx))
-	vlines!(ax, x_opt, linestyle = (:dash, :loose), color = :gray)
-
+	Label(fig[0,:], "Shock transmission in a production network")
 	fig
-end
+end;
 
+# ╔═╡ 94375d0e-77aa-11eb-3934-edb020ab0fd7
+fig
 
-# ╔═╡ 9f941a41-0b5d-4a98-96c5-1182784fa484
-let
-	(; x_opt, ℓ_opt) = social_optimum
-	
-	xx = range(0.0, 0.99, 100)
-	ℓℓ = 0.0:0.05:1.0
+# ╔═╡ 95f4f0d0-7772-11eb-1b2a-d179e76950fe
+fig
 
-#	objj = [obj([x, ℓ]) for ℓ ∈ ℓℓ, x ∈ xx]
+# ╔═╡ 7122605e-7753-11eb-09b8-4f0066353d17
+md"""
+## Downloading the Input-Output Table for the US
+"""
 
-	fig = Figure(; fig_attr()...)
-	ax = Axis(fig[1,1], xlabel = "fraction invested", ylabel = "expected utility", title=latexstring("expected utility for \$\\ell^* = $(round(ℓ_opt, digits=4)) \$"))
-#	ax = Axis3(fig[1,1], xlabel = "fraction invested", ylabel = "fraction liquidated", zlabel = "expected utility")
-#	surface!(ax, ℓℓ, xx, objj)
-	lines!(ax, xx, [obj([x, ℓ_opt]) for x ∈ xx])
-	vlines!(ax, x_opt, linestyle = (:dash, :loose), color = :gray)
+# ╔═╡ 356d2016-7754-11eb-2e6f-07d1c12831b5
+md"""
+Data is usually messy. Here is some evidence.
+"""
 
-	fig
-end
+# ╔═╡ ad8a6380-7755-11eb-1542-9972c0daa480
+md"""
+**The vector of input industries is not the vector of output industries.**
+"""
 
-# ╔═╡ 6a101f0f-88f4-40a5-96cc-6338f8d24323
-let
-	(; x_opt, ℓ_opt) = social_optimum
+# ╔═╡ 724dc756-7754-11eb-3a22-a309a77b2f28
+md"""
+Here are the industries that are *only outputs*.
+"""
 
-	xx = range(0.05, 0.95, 100)
+# ╔═╡ 7658c6d2-7754-11eb-32a9-41bf10cd7f6b
+md"""
+Here are the industries that are *only inputs*.
+"""
 
-	fig = Figure(; fig_attr()...)
-	ax1 = Axis(fig[1,1], xlabel= L"fraction invested $x$")
-	ax2 = Axis(fig[2,1], xlabel= L"fraction invested $x$")
+# ╔═╡ 83bdf67e-7753-11eb-06a2-cf39291d8a87
+md"""
+## Cleaning the Input-Output Table
+"""
 
-	lines!(ax1, xx, c₁.(xx, ℓ_opt), label = L"c_1")
-	lines!(ax1, xx, c₂.(xx, ℓ_opt), label = L"c_2")
-	lines!(ax2, xx, 𝔼U.(c₁.(xx, ℓ_opt), c₂.(xx, ℓ_opt); γ), label = L"\bbE U")
-	vlines!.([ax1, ax2], x_opt, linestyle = (:dash, :loose), color = :gray)
-	axislegend.([ax1, ax2])
-	linkxaxes!(ax1, ax2)
-	hidexdecorations!(ax1, grid=false)
-	
-	fig
-end
-
-# ╔═╡ f355b2ff-555e-458d-bc5b-f8c23bcf9cf8
-let
-	df = map(0:0.005:1) do ω
-		ε = ω - γ
-		(; ε, realized_payout(ω, social_optimum)...)
-	end |> DataFrame
-
-	@chain df begin
-		select(Not(:ω))
-		stack(Not(:ε))
-		@transform(@astable begin
-			tmp = split(:variable, "_")
-			:variable = tmp[1]
-			:mod = tmp[2] == "opt" ? "planned" : "realized"
-		end)
-		data(_) * mapping(:ε => L"additional withdrawers $ε$", :value, color = :variable, linestyle = :mod => "") * visual(Lines)
-		draw(_; figure = fig_attr(size=(400, 300)))
+# ╔═╡ c312d5d6-775a-11eb-24cd-f1cf36f3dd40
+begin
+	function nodes_weights_from_edges(from, to, weight)
+		# get the list of nodes
+		node_names = unique([from; to]) |> sort
+		# enumerate the nodes (node_id == index)
+		node_dict = Dict(n => i for (i,n) in enumerate(node_names))
+		# add columns with node_id
+		i_from = [node_dict[n] for n in from]
+		i_to   = [node_dict[n] for n in to]
+		
+		N = length(node_names)
+		# create the weight matrix
+		wgts = sparse(i_from, i_to, weight, N, N)
+		
+		# drop industries that are not used as inputs
+		drop = findall(dropdims(sum(wgts, dims=2), dims=2) .≈ 0)
+			
+		(node_names = node_names[Not(drop)], sparse_wgts = wgts[Not(drop), Not(drop)])
 	end
+	
+	nodes_weights_from_edges(df, from, to, weight) = 
+		nodes_weights_from_edges(df[!,from], df[!,to], df[!,weight]) 
 end
 
-# ╔═╡ deef738e-5636-4314-821a-9d6546963561
+# ╔═╡ 48dc654c-7765-11eb-313a-c598a7d09fb7
 md"""
-## Package environment
+## List of Sectors
 """
 
-# ╔═╡ eaf1c5bd-ee4f-4233-9756-59c27975256c
+# ╔═╡ 42b21fce-774a-11eb-2d00-c3bfd55a35fc
 md"""
-### Graphs
+## Package Environment
 """
 
-# ╔═╡ 5913fea9-07c0-41ba-b8f3-bc215f50405d
-md"""
-### Numerical Methods
-"""
+# ╔═╡ ec2a87fa-09a8-449f-8e32-37a97a754a75
+import CSV, HTTP, ZipFile, XLSX
 
-# ╔═╡ 1e5fd0a1-b029-4759-a017-c6d4a786caaf
-md"""
-### Data
-"""
+# ╔═╡ b223523e-7753-11eb-1d9a-67c0281ae473
+begin
+	url = "https://apps.bea.gov/industry/xls/io-annual/CxI_DR_2007_2012_DOM_DET.xlsx"
+	file = Downloads.download(url)
+	f = XLSX.readxlsx(file)
+	sh = f["2007"]
+end
 
-# ╔═╡ 7edf81ff-cd74-4d2b-ac29-779efa7be2b3
+# ╔═╡ 12798090-7754-11eb-3fdf-852bc740ed2a
+begin
+	code_column = sh["A6:A410"] |> vec .|> string # output == row
+	name_column = sh["B6:B410"] |> vec .|> string
+	code_row    = sh["C5:OQ5"]  |> vec .|> string  # input == column
+	name_row    = sh["C4:OQ4"]  |> vec .|> string
+	io_matrix   = sh["C6:OQ410"] .|> float
+	
+	df_in = DataFrame(
+		:code => vec(code_row),
+		:name => vec(name_row)		
+	)
+	df_out = DataFrame(
+		:code => vec(code_column),
+		:name => vec(name_column),
+	)
+	
+	io1 = NamedArray(io_matrix, (code_row, code_column), (:output, :input))
+	io2 = KeyedArray(io_matrix, output = code_row, input = code_column)
+	
+	io1
+end
+
+# ╔═╡ 5bbac0ac-7754-11eb-0ec0-7d564524afe6
+all(code_column .== code_row)
+
+# ╔═╡ 75b9fd42-7754-11eb-3219-c57ef876f04b
+out_not_in = @chain df_out begin
+	filter(:code => !in(df_in.code), _)
+    select(:code, :name)
+end
+
+# ╔═╡ ade0d2f4-7754-11eb-2693-074c67837de3
+in_not_out = @chain df_in begin
+	subset(:code => ByRow(x -> x ∉ df_out.code))
+	#@subset(:code ∈ [df_out.code])
+	#filter(:code => !in(df_out.code), _)
+    select([:code, :name])
+end
+
+# ╔═╡ 0fe4809c-7758-11eb-2569-33b178bfccca
+begin
+	df_io = DataFrame(io_matrix, code_column)
+	df_io[!,:output] = code_row
+	select!(df_io, :output, :)
+end
+
+# ╔═╡ 278c829c-7767-11eb-1d04-cb38ee52b79b
+df_io
+
+# ╔═╡ 6197cf52-7758-11eb-2c66-b7df9d59cbf7
+begin
+	io_edges0 = stack(df_io, Not("output"), variable_name = "input")
+	@subset!(io_edges0, :value > 0)
+end
+
+# ╔═╡ 5d85143c-7765-11eb-1a1c-29f3421fe857
+begin
+	node_names, wgts = nodes_weights_from_edges(io_edges0, :input, :output, :value)
+	droptol!(wgts, 0.0)
+	
+	node_names, wgts
+end;
+
+# ╔═╡ 0f0c1661-30e2-47de-b6f0-dbb85f6dae5f
+sum(wgts .> 0) / (403^2)
+
+# ╔═╡ 22c3abde-7767-11eb-0b6f-93ad1055bbae
+extrema(wgts)
+
+# ╔═╡ 44929fe0-7767-11eb-0318-e720b844f710
+begin
+	used_inputs = sum(wgts, dims=2) |> vec # row sums
+	hist(used_inputs, axis = (title = "Inputs Used per Dollar of Output", ))
+end
+
+# ╔═╡ f6144074-7768-11eb-3624-51bbc44be7ec
+begin
+	used_as_input = sum(wgts, dims=1) |> vec # col sums
+	#filter!(>(√eps()), used_as_input)
+	hist(used_as_input, axis = (title = "Used as Inputs in Other Sectors", ))
+end
+
+# ╔═╡ 775f99b8-77a9-11eb-2ebf-7bbe0d398306
+extrema(wgts)
+
+# ╔═╡ 6cec81a0-77ac-11eb-06e3-bd9dcb73a896
+network = SimpleWeightedDiGraph(wgts')
+
+# ╔═╡ 8212939e-7770-11eb-1f4e-9b698be25d1f
+begin
+	#sorted_nodes = sortperm(outdegree_centrality(network)[:], rev = true)
+	#sorted_nodes = sortperm(katz_centrality(network)[:], rev = true)
+	sorted_nodes = sortperm(eigenvector_centrality(network)[:], rev = true)
+	n = 40
+	bot_n = sorted_nodes[end-n+1:end]
+	top_n = sorted_nodes[1:n]
+end
+
+# ╔═╡ 9aa77c76-7770-11eb-35ed-9b83924e8176
+fig_welfare = let
+	nodes_vec = [bot_n => "bottom", top_n => "top"]
+	#nodes = [bot_n, top_n]
+	
+	A = weighted_adjacency_matrix(network)'
+	
+	fig = Figure(; fig_attr(1.4, 1.2)...)
+	
+	ax = Axis(fig[1,1], title = "Welfare loss after shock\nto different industries")
+	
+	for (i, nodes) in enumerate(nodes_vec)
+		(; welfare) = impulse_response(10, A, params(A), nodes[1], -0.5, T_shock = 0:2)
+		lines!(ax, collect(axes(welfare, 1)), parent(welfare), label = nodes[2] * " $(length(nodes[1]))")
+	end
+	
+	axislegend(ax, position = :rb)
+
+	fig
+end
+
+# ╔═╡ 76e6f44e-77aa-11eb-1f12-438937941606
+fig_welfare
+
+# ╔═╡ 834669c4-776c-11eb-29b7-77dc465077d7
+begin
+	wgts_n = wgts ./ sum(wgts, dims=2) |> dropzeros!
+	network_n = SimpleWeightedDiGraph(wgts_n')
+	extrema(wgts_n)
+end
+
+# ╔═╡ 5c2ef34e-776f-11eb-2a6f-ff99b5d24997
+unweighted_network = SimpleDiGraph(wgts .> 0.01)
+
+# ╔═╡ d6a23266-7757-11eb-346c-534caaf657fb
+begin
+	df_all = outerjoin(df_in, df_out, on = [:code, :name])
+	n_rows = size(df_all, 1)
+	
+	@assert length(unique(df_all.code)) == n_rows
+	@assert length(unique(df_all.name)) == n_rows
+	
+	df_all
+end
+
+# ╔═╡ cbc03264-7769-11eb-345a-71ae30cc7526
+@subset(df_all, :code ∈ node_names)
+
+# ╔═╡ bd27268e-7766-11eb-076b-71688ecb4ae3
+begin
+	df_nodes = @subset(df_all, :code ∈ node_names)
+	df_nodes.inputs_used    = sum(wgts, dims=2) |> vec
+	df_nodes.used_as_input = sum(wgts, dims=1) |> vec
+	@transform!(df_nodes, :node_id = @bycol 1:length(:code))
+	df_nodes
+end;
+
+# ╔═╡ d9fd6bb0-7766-11eb-150b-410bb7d09d20
+sort(df_nodes, :inputs_used, rev = true)
+
+# ╔═╡ b43f6b02-776c-11eb-2685-655705eb1681
+begin
+	df_nodes1 = df_nodes
+	df_nodes1.eigv_c = eigenvector_centrality(network, dir = :in)
+	df_nodes1.eigv_c_out = eigenvector_centrality(network, dir = :out)
+	df_nodes1.katz_c = katz_centrality(network)
+	df_nodes1.katz_c = katz_centrality(network, dir = :out)
+end
+
+# ╔═╡ ffdbb91c-776c-11eb-3b28-51314d40f7a2
+sort(df_nodes1, :eigv_c, rev = true)
+
+# ╔═╡ ebfcbb8e-77ae-11eb-37fc-e798175197d0
+df_nodes1
+
+# ╔═╡ 2b54193b-ed2e-4f22-bdfb-e95f0a274812
+hit_nodes_df = @subset(df_nodes, :code ∈ hit_industries)
+
+# ╔═╡ ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6
+fig_covid = let
+	hit_nodes = hit_nodes_df.node_id
+	n_hit = length(hit_nodes)
+	
+	nodes_vec = [bot_n[1:n_hit] => "bottom", top_n[1:n_hit] => "top", hit_nodes => "Covid"]
+	
+	A = weighted_adjacency_matrix(network)'
+	
+	fig = Figure(; fig_attr(1.5, 1)...)
+		
+	ax = Axis(fig[1,1], title = "Welfare loss after shock\nto different industries")
+	
+	for (i, nodes) in enumerate(nodes_vec)
+		(; welfare) = impulse_response(10, A, params(A), nodes[1], -0.5, T_shock = 0:2)
+		lines!(ax, collect(axes(welfare, 1)), parent(welfare), label = nodes[2] * " $(length(nodes[1]))")
+	end
+	
+	axislegend(ax, position = :rb)#(fig[1,2], ax)
+
+	fig
+end
+
+# ╔═╡ be81874a-f60a-45b5-8855-1a77f50227d2
 md"""
 ### Plotting
 """
 
-# ╔═╡ 5c302835-c976-43f9-87d4-77f1ef3fc78f
+# ╔═╡ 5a931c10-774a-11eb-05cb-d7ed3da85835
 md"""
-### Other
+## Patch 1: Weights and Centralities
 """
 
-# ╔═╡ 3c4b48db-ead0-4dc3-b72c-1c53188419b9
-TableOfContents()
+# ╔═╡ 39f2fdd5-27bb-40c0-a8c0-1bb90aeaccf7
+md"""
+## Assignment infrastructure
+"""
+
+# ╔═╡ 7a2980a0-77cf-42cf-a79d-93e1686ff2d8
+begin
+	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
+	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
+	still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
+	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
+	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
+	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
+end
+
+# ╔═╡ 6a87bbe9-6e4b-4802-998f-e0517b11bc7e
+function wordcount(text)
+	stripped_text = strip(replace(string(text), r"\s" => " "))
+   	words = split(stripped_text, (' ', '-', '.', ',', ':', '_', '"', ';', '!', '\''))
+   	length(filter(!=(""), words))
+end
+
+# ╔═╡ 7a9cc068-8469-4f8d-bfa1-c49101c4dc23
+@test wordcount("  Hello,---it's me.  ") == 4
+
+# ╔═╡ 4a3d7e25-a941-486b-a1f8-8f7d563468d3
+@test wordcount("This;doesn't really matter.") == 5
+
+# ╔═╡ 1f7d4622-d3ed-4bcb-a655-289cbcaa62a6
+show_words(answer) = md"_approximately $(wordcount(answer)) words_"
+
+# ╔═╡ 664efcec-77b1-11eb-2301-5da84a5de423
+show_words(answer1)
+
+# ╔═╡ 03f290eb-b8ca-4ef1-a029-98f07723485a
+function show_words_limit(answer, limit)
+	count = wordcount(answer)
+	if count ≤ 1.1 * limit
+		return show_words(answer)
+	else
+		return almost(md"You are at $count words. Please shorten your text a bit, to get **below $limit words**.")
+	end
+end
+
+# ╔═╡ 9298e2de-77b1-11eb-0a56-1f50bb0f4dc3
+show_words_limit(answer2, 200)
+
+# ╔═╡ 9da09070-77b1-11eb-0d2e-e9a4433bf34e
+show_words_limit(answer3, 200)
+
+# ╔═╡ ae9b740b-d0a6-46b0-a548-672a72f92e45
+members = let
+	names = map(group_members) do (; firstname, lastname)
+		firstname * " " * lastname
+	end
+	join(names, ", ", " & ")
+end
+
+# ╔═╡ 2c840e2e-9bfa-4a5f-9be2-a29d8cdf328d
+md"""
+*submitted by* **$members** (*group $(group_number)*)
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
+AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
+Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
-LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
-Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-NamedTupleTools = "d9ec5142-1e00-5aa0-9d6a-321866360f50"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NamedArrays = "86f7a689-2022-50b4-a561-43c23ac3c673"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
-Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
+PlutoTest = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
+ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [compat]
 AlgebraOfGraphics = "~0.6.18"
-CairoMakie = "~0.11.8"
-Chain = "~0.5.0"
+AxisKeys = "~0.2.14"
+CSV = "~0.10.13"
+CairoMakie = "~0.11.9"
+CategoricalArrays = "~0.10.8"
+Chain = "~0.6.0"
+Colors = "~0.12.10"
 DataFrameMacros = "~0.4.1"
 DataFrames = "~1.6.1"
-ForwardDiff = "~0.10.36"
+Distributions = "~0.25.107"
 GraphMakie = "~0.5.9"
 Graphs = "~1.9.0"
-LaTeXStrings = "~1.3.1"
-Makie = "~0.20.7"
-NamedTupleTools = "~0.14.3"
+HTTP = "~1.10.3"
+NamedArrays = "~0.10.0"
 NetworkLayout = "~0.4.6"
-Optim = "~1.9.2"
-PlutoUI = "~0.7.55"
+OffsetArrays = "~1.13.0"
+PlutoTest = "~0.2.2"
+PlutoUI = "~0.7.58"
+SimpleWeightedGraphs = "~1.4.0"
+XLSX = "~0.10.1"
+ZipFile = "~0.10.1"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.10.0"
+julia_version = "1.10.1"
 manifest_format = "2.0"
-project_hash = "3dc408642ef9ecf8813bc4b5642e2a2e180d5469"
+project_hash = "eeff15e0b2a82aebcf57803288676eaeeba08acf"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -593,20 +1003,20 @@ version = "0.3.0"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
-git-tree-sha1 = "c278dfab760520b8bb7e9511b968bf4ba38b7acc"
+git-tree-sha1 = "0f748c81756f2e5e6854298f11ad8b2dfae6911a"
 uuid = "6e696c72-6542-2067-7265-42206c756150"
-version = "1.2.3"
+version = "1.3.0"
 
 [[deps.AbstractTrees]]
-git-tree-sha1 = "faa260e4cb5aba097a73fab382dd4b5819d8ec8c"
+git-tree-sha1 = "2d9c9a55f9c93e8887ad391fbae72f8ef55e1177"
 uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
-version = "0.4.4"
+version = "0.4.5"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
-git-tree-sha1 = "0fb305e0253fd4e833d486914367a2ee2c2e78d0"
+git-tree-sha1 = "cea4ac3f5b4bc4b3000aa55afb6e5626518948fa"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-version = "4.0.1"
+version = "4.0.3"
 weakdeps = ["StaticArrays"]
 
     [deps.Adapt.extensions]
@@ -635,16 +1045,18 @@ uuid = "ec485272-7323-5ecc-a04f-4719b315124d"
 version = "0.2.0"
 
 [[deps.ArrayInterface]]
-deps = ["Adapt", "LinearAlgebra", "Requires", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "bbec08a37f8722786d87bedf84eae19c020c4efa"
+deps = ["Adapt", "LinearAlgebra", "SparseArrays", "SuiteSparse"]
+git-tree-sha1 = "44691067188f6bd1b2289552a23e4b7572f4528d"
 uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
-version = "7.7.0"
+version = "7.9.0"
 
     [deps.ArrayInterface.extensions]
     ArrayInterfaceBandedMatricesExt = "BandedMatrices"
     ArrayInterfaceBlockBandedMatricesExt = "BlockBandedMatrices"
     ArrayInterfaceCUDAExt = "CUDA"
+    ArrayInterfaceChainRulesExt = "ChainRules"
     ArrayInterfaceGPUArraysCoreExt = "GPUArraysCore"
+    ArrayInterfaceReverseDiffExt = "ReverseDiff"
     ArrayInterfaceStaticArraysCoreExt = "StaticArraysCore"
     ArrayInterfaceTrackerExt = "Tracker"
 
@@ -652,7 +1064,9 @@ version = "7.7.0"
     BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
     BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
     CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+    ChainRules = "082447d4-558c-5d27-93f4-14fc19e9eca2"
     GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
+    ReverseDiff = "37e2e3b7-166d-5795-8a7a-e32c996b4267"
     StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
     Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 
@@ -677,14 +1091,45 @@ git-tree-sha1 = "16351be62963a67ac4083f748fdb3cca58bfd52f"
 uuid = "39de3d68-74b9-583c-8d2d-e117c070f3a9"
 version = "0.4.7"
 
+[[deps.AxisKeys]]
+deps = ["IntervalSets", "LinearAlgebra", "NamedDims", "Tables"]
+git-tree-sha1 = "2404d61946c5d17a120101dbc753739ef216b0de"
+uuid = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5"
+version = "0.2.14"
+
+    [deps.AxisKeys.extensions]
+    AbstractFFTsExt = "AbstractFFTs"
+    ChainRulesCoreExt = "ChainRulesCore"
+    CovarianceEstimationExt = "CovarianceEstimation"
+    InvertedIndicesExt = "InvertedIndices"
+    LazyStackExt = "LazyStack"
+    OffsetArraysExt = "OffsetArrays"
+    StatisticsExt = "Statistics"
+    StatsBaseExt = "StatsBase"
+
+    [deps.AxisKeys.weakdeps]
+    AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    CovarianceEstimation = "587fd27a-f159-11e8-2dae-1979310e6154"
+    InvertedIndices = "41ab1584-1d38-5bbf-9106-f11c6c58b48f"
+    LazyStack = "1fad7336-0346-5a1a-a56f-a06ba010965b"
+    OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
+    Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+    StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+
 [[deps.Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
 [[deps.BenchmarkTools]]
 deps = ["JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
-git-tree-sha1 = "f1f03a9fa24271160ed7e73051fba3c1a759b53f"
+git-tree-sha1 = "f1dff6729bc61f4d49e140da1af55dcd1ac97b2f"
 uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-version = "1.4.0"
+version = "1.5.0"
+
+[[deps.BitFlags]]
+git-tree-sha1 = "2dc09997850d68179b69dafb58ae806167a32b1b"
+uuid = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
+version = "0.1.8"
 
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -700,17 +1145,17 @@ version = "0.5.0"
 [[deps.CRC32c]]
 uuid = "8bf52ea8-c179-5cab-976a-9e18b702a9bc"
 
-[[deps.CRlibm]]
-deps = ["CRlibm_jll"]
-git-tree-sha1 = "32abd86e3c2025db5172aa182b982debed519834"
-uuid = "96374032-68de-5a5b-8d9e-752f78720389"
-version = "1.0.1"
-
 [[deps.CRlibm_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "e329286945d0cfc04456972ea732551869af1cfc"
 uuid = "4e9b3aee-d8a1-5a3d-ad8b-7d824db253f0"
 version = "1.0.1+0"
+
+[[deps.CSV]]
+deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mmap", "Parsers", "PooledArrays", "PrecompileTools", "SentinelArrays", "Tables", "Unicode", "WeakRefStrings", "WorkerUtilities"]
+git-tree-sha1 = "a44910ceb69b0d44fe262dd451ab11ead3ed0be8"
+uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+version = "0.10.13"
 
 [[deps.Cairo]]
 deps = ["Cairo_jll", "Colors", "Glib_jll", "Graphics", "Libdl", "Pango_jll"]
@@ -720,15 +1165,15 @@ version = "1.0.5"
 
 [[deps.CairoMakie]]
 deps = ["CRC32c", "Cairo", "Colors", "FFTW", "FileIO", "FreeType", "GeometryBasics", "LinearAlgebra", "Makie", "PrecompileTools"]
-git-tree-sha1 = "a80d49ed3333f5f78df8ffe76d07e88cc35e9172"
+git-tree-sha1 = "6dc1bbdd6a133adf4aa751d12dbc2c6ae59f873d"
 uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-version = "0.11.8"
+version = "0.11.9"
 
 [[deps.Cairo_jll]]
-deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "4b859a208b2397a7a623a03449e4636bdb17bcf2"
+deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
+git-tree-sha1 = "a4c43f59baa34011e303e76f5c8c91bf58415aaf"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
-version = "1.16.1+1"
+version = "1.18.0+1"
 
 [[deps.Calculus]]
 deps = ["LinearAlgebra"]
@@ -736,16 +1181,34 @@ git-tree-sha1 = "f641eb0a4f00c343bbc32346e1217b86f3ce9dad"
 uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
 version = "0.5.1"
 
+[[deps.CategoricalArrays]]
+deps = ["DataAPI", "Future", "Missings", "Printf", "Requires", "Statistics", "Unicode"]
+git-tree-sha1 = "1568b28f91293458345dabba6a5ea3f183250a61"
+uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
+version = "0.10.8"
+
+    [deps.CategoricalArrays.extensions]
+    CategoricalArraysJSONExt = "JSON"
+    CategoricalArraysRecipesBaseExt = "RecipesBase"
+    CategoricalArraysSentinelArraysExt = "SentinelArrays"
+    CategoricalArraysStructTypesExt = "StructTypes"
+
+    [deps.CategoricalArrays.weakdeps]
+    JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+    RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+    SentinelArrays = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
+    StructTypes = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
+
 [[deps.Chain]]
-git-tree-sha1 = "8c4920235f6c561e401dfe569beb8b924adad003"
+git-tree-sha1 = "9ae9be75ad8ad9d26395bf625dea9beac6d519f1"
 uuid = "8be319e6-bccf-4806-a6f7-6fae938471bc"
-version = "0.5.0"
+version = "0.6.0"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra"]
-git-tree-sha1 = "ab79d1f9754a3988a7792caec43bfdc03996020f"
+git-tree-sha1 = "575cd02e080939a33b6df6c5853d14924c08e35b"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.21.0"
+version = "1.23.0"
 weakdeps = ["SparseArrays"]
 
     [deps.ChainRulesCore.extensions]
@@ -810,9 +1273,9 @@ version = "0.3.0"
 
 [[deps.Compat]]
 deps = ["TOML", "UUIDs"]
-git-tree-sha1 = "75bd5b6fc5089df449b5d35fa501c846c9b6549b"
+git-tree-sha1 = "c955881e3c981181362ae4088b35995446298b80"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "4.12.0"
+version = "4.14.0"
 weakdeps = ["Dates", "LinearAlgebra"]
 
     [deps.Compat.extensions]
@@ -821,7 +1284,13 @@ weakdeps = ["Dates", "LinearAlgebra"]
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.0.5+1"
+version = "1.1.0+0"
+
+[[deps.ConcurrentUtilities]]
+deps = ["Serialization", "Sockets"]
+git-tree-sha1 = "6cbbd4d241d7e6579ab354737f4dd95ca43946e1"
+uuid = "f0e56b4a-5159-44fe-b623-3e5288b988bb"
+version = "2.4.1"
 
 [[deps.ConstructionBase]]
 deps = ["LinearAlgebra"]
@@ -863,9 +1332,9 @@ version = "1.6.1"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
-git-tree-sha1 = "ac67408d9ddf207de5cfa9a97e114352430f01ed"
+git-tree-sha1 = "0f4b5d62a88d8f59003e43c25a8a90de9eb76317"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.18.16"
+version = "0.18.18"
 
 [[deps.DataValueInterfaces]]
 git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
@@ -881,6 +1350,12 @@ deps = ["DataStructures", "EnumX", "ExactPredicates", "Random", "SimpleGraphs"]
 git-tree-sha1 = "d4e9dc4c6106b8d44e40cd4faf8261a678552c7c"
 uuid = "927a84f5-c5f4-47a5-9785-b46e178433df"
 version = "0.8.12"
+
+[[deps.DelimitedFiles]]
+deps = ["Mmap"]
+git-tree-sha1 = "9e2f36d3c96a820c678f2f1f1782582fcf685bae"
+uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+version = "1.9.1"
 
 [[deps.Dictionaries]]
 deps = ["Indexing", "Random", "Serialization"]
@@ -965,6 +1440,12 @@ git-tree-sha1 = "b3f2ff58735b5f024c392fde763f29b057e4b025"
 uuid = "429591f6-91af-11e9-00e2-59fbe8cec110"
 version = "2.2.8"
 
+[[deps.ExceptionUnwrapping]]
+deps = ["Test"]
+git-tree-sha1 = "dcb08a0d93ec0b1cdc4af184b26b591e9695423a"
+uuid = "460bff9d-24e4-43bc-9d9f-a8973cb893f4"
+version = "0.1.10"
+
 [[deps.Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "4558ab818dcceaab612d1bb8c19cee87eda2b83c"
@@ -976,11 +1457,17 @@ git-tree-sha1 = "2140cd04483da90b2da7f99b2add0750504fc39c"
 uuid = "411431e0-e8b7-467b-b5e0-f676ba4f2910"
 version = "0.1.2"
 
+[[deps.EzXML]]
+deps = ["Printf", "XML2_jll"]
+git-tree-sha1 = "380053d61bb9064d6aa4a9777413b40429c79901"
+uuid = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
+version = "1.2.0"
+
 [[deps.FFMPEG_jll]]
 deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
-git-tree-sha1 = "466d45dc38e15794ec7d5d63ec03d776a9aff36e"
+git-tree-sha1 = "ab3f7e1819dba9434a3a5126510c8fda3a4e7000"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
-version = "4.4.4+1"
+version = "6.1.1+0"
 
 [[deps.FFTW]]
 deps = ["AbstractFFTs", "FFTW_jll", "LinearAlgebra", "MKL_jll", "Preferences", "Reexport"]
@@ -1029,9 +1516,9 @@ weakdeps = ["PDMats", "SparseArrays", "Statistics"]
 
 [[deps.FiniteDiff]]
 deps = ["ArrayInterface", "LinearAlgebra", "Requires", "Setfield", "SparseArrays"]
-git-tree-sha1 = "73d1214fec245096717847c62d389a5d2ac86504"
+git-tree-sha1 = "bc0c5092d6caaea112d3c8e3b238d61563c58d5f"
 uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
-version = "2.22.0"
+version = "2.23.0"
 
     [deps.FiniteDiff.extensions]
     FiniteDiffBandedMatricesExt = "BandedMatrices"
@@ -1055,11 +1542,10 @@ git-tree-sha1 = "21efd19106a55620a188615da6d3d06cd7f6ee03"
 uuid = "a3f928ae-7b40-5064-980b-68af3947d34b"
 version = "2.13.93+0"
 
-[[deps.Formatting]]
-deps = ["Printf"]
-git-tree-sha1 = "8339d61043228fdd3eb658d86c926cb282ae72a8"
-uuid = "59287772-0a20-5a39-b81b-1366585eb4c0"
-version = "0.4.2"
+[[deps.Format]]
+git-tree-sha1 = "f3cf88025f6d03c194d73f5d13fee9004a108329"
+uuid = "1fa38f19-a742-5d3f-a2b9-30dd87b9d5f8"
+version = "1.3.6"
 
 [[deps.ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions"]
@@ -1105,12 +1591,6 @@ git-tree-sha1 = "273bd1cd30768a2fddfa3fd63bbc746ed7249e5f"
 uuid = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
 version = "1.9.0"
 
-[[deps.GPUArraysCore]]
-deps = ["Adapt"]
-git-tree-sha1 = "ec632f177c0d990e64d955ccc1b8c04c485a0950"
-uuid = "46192b85-c4d5-4398-a991-12ede77f4527"
-version = "0.1.6"
-
 [[deps.GeoInterface]]
 deps = ["Extents"]
 git-tree-sha1 = "d4f85701f569584f2cff7ba67a137d03f0cfb7d0"
@@ -1131,9 +1611,9 @@ version = "0.21.0+0"
 
 [[deps.Glib_jll]]
 deps = ["Artifacts", "Gettext_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libiconv_jll", "Libmount_jll", "PCRE2_jll", "Zlib_jll"]
-git-tree-sha1 = "e94c92c7bf4819685eb80186d51c43e71d4afa17"
+git-tree-sha1 = "359a1ba2e320790ddbe4ee8b4d54a305c0ea2aff"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
-version = "2.76.5+0"
+version = "2.80.0+0"
 
 [[deps.GraphMakie]]
 deps = ["DataStructures", "GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "PolynomialRoots", "SimpleTraits", "StaticArrays"]
@@ -1169,6 +1649,12 @@ version = "0.10.0"
 git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
 uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
 version = "1.0.2"
+
+[[deps.HTTP]]
+deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
+git-tree-sha1 = "db864f2d91f68a5912937af80327d288ea1f3aee"
+uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+version = "1.10.3"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg"]
@@ -1285,24 +1771,26 @@ version = "0.15.1"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.IntervalArithmetic]]
-deps = ["CRlibm", "RoundingEmulator"]
-git-tree-sha1 = "c274ec586ea58eb7b42afd0c5d67e50ff50229b5"
+deps = ["CRlibm_jll", "RoundingEmulator"]
+git-tree-sha1 = "2d6d22fe481eff6e337808cc0880c567d7324f9a"
 uuid = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
-version = "0.22.5"
-weakdeps = ["DiffRules", "RecipesBase"]
+version = "0.22.8"
+weakdeps = ["DiffRules", "ForwardDiff", "RecipesBase"]
 
     [deps.IntervalArithmetic.extensions]
     IntervalArithmeticDiffRulesExt = "DiffRules"
+    IntervalArithmeticForwardDiffExt = "ForwardDiff"
     IntervalArithmeticRecipesBaseExt = "RecipesBase"
 
 [[deps.IntervalSets]]
-git-tree-sha1 = "581191b15bcb56a2aa257e9c160085d0f128a380"
+git-tree-sha1 = "dba9ddf07f77f60450fe5d2e2beb9854d9a49bd0"
 uuid = "8197267c-284f-5f27-9208-e0e47529a953"
-version = "0.7.9"
-weakdeps = ["Random", "Statistics"]
+version = "0.7.10"
+weakdeps = ["Random", "RecipesBase", "Statistics"]
 
     [deps.IntervalSets.extensions]
     IntervalSetsRandomExt = "Random"
+    IntervalSetsRecipesBaseExt = "RecipesBase"
     IntervalSetsStatisticsExt = "Statistics"
 
 [[deps.InvertedIndices]]
@@ -1351,9 +1839,9 @@ version = "0.1.5"
 
 [[deps.JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "60b1194df0a3298f460063de985eae7b01bc011a"
+git-tree-sha1 = "3336abae9a713d2210bb57ab484b1e065edd7d23"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
-version = "3.0.1+0"
+version = "3.0.2+0"
 
 [[deps.KernelDensity]]
 deps = ["Distributions", "DocStringExtensions", "FFTW", "Interpolations", "StatsBase"]
@@ -1445,16 +1933,16 @@ uuid = "94ce4f54-9a6c-5748-9c1c-f9c7231a4531"
 version = "1.17.0+0"
 
 [[deps.Libmount_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "9c30530bf0effd46e15e0fdcf2b8636e78cbbd73"
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "dae976433497a2f841baadea93d27e68f1a12a97"
 uuid = "4b2f31a3-9ecc-558c-b454-b3730dcb73e9"
-version = "2.35.0+0"
+version = "2.39.3+0"
 
 [[deps.Libuuid_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "7f3efec06033682db852f8b3bc3c1d2b0a0ab066"
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "0a04a1318df1bf510beb2562cf90fb0c386f58c4"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
-version = "2.36.0+0"
+version = "2.39.3+1"
 
 [[deps.LightXML]]
 deps = ["Libdl", "XML2_jll"]
@@ -1486,9 +1974,9 @@ version = "0.6.3"
 
 [[deps.LogExpFunctions]]
 deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
-git-tree-sha1 = "7d6dd4e9212aebaeed356de34ccf262a3cd415aa"
+git-tree-sha1 = "18144f3e9cbe9b15b070288eef858f71b291ce37"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "0.3.26"
+version = "0.3.27"
 
     [deps.LogExpFunctions.extensions]
     LogExpFunctionsChainRulesCoreExt = "ChainRulesCore"
@@ -1502,6 +1990,12 @@ version = "0.3.26"
 
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
+
+[[deps.LoggingExtras]]
+deps = ["Dates", "Logging"]
+git-tree-sha1 = "c1dd6d7978c12545b4179fb6153b9250c96b0075"
+uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
+version = "1.0.3"
 
 [[deps.MIMEs]]
 git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
@@ -1521,10 +2015,10 @@ uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 version = "0.5.13"
 
 [[deps.Makie]]
-deps = ["Animations", "Base64", "CRC32c", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "DelaunayTriangulation", "Distributions", "DocStringExtensions", "Downloads", "FFMPEG_jll", "FileIO", "FilePaths", "FixedPointNumbers", "Formatting", "FreeType", "FreeTypeAbstraction", "GeometryBasics", "GridLayoutBase", "ImageIO", "InteractiveUtils", "IntervalArithmetic", "IntervalSets", "Isoband", "KernelDensity", "LaTeXStrings", "LinearAlgebra", "MacroTools", "MakieCore", "Markdown", "MathTeXEngine", "Observables", "OffsetArrays", "Packing", "PlotUtils", "PolygonOps", "PrecompileTools", "Printf", "REPL", "Random", "RelocatableFolders", "Scratch", "ShaderAbstractions", "Showoff", "SignedDistanceFields", "SparseArrays", "StableHashTraits", "Statistics", "StatsBase", "StatsFuns", "StructArrays", "TriplotBase", "UnicodeFun"]
-git-tree-sha1 = "40c5dfbb99c91835171536cd571fe6f1ba18ff97"
+deps = ["Animations", "Base64", "CRC32c", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "DelaunayTriangulation", "Distributions", "DocStringExtensions", "Downloads", "FFMPEG_jll", "FileIO", "FilePaths", "FixedPointNumbers", "Format", "FreeType", "FreeTypeAbstraction", "GeometryBasics", "GridLayoutBase", "ImageIO", "InteractiveUtils", "IntervalSets", "Isoband", "KernelDensity", "LaTeXStrings", "LinearAlgebra", "MacroTools", "MakieCore", "Markdown", "MathTeXEngine", "Observables", "OffsetArrays", "Packing", "PlotUtils", "PolygonOps", "PrecompileTools", "Printf", "REPL", "Random", "RelocatableFolders", "Scratch", "ShaderAbstractions", "Showoff", "SignedDistanceFields", "SparseArrays", "StableHashTraits", "Statistics", "StatsBase", "StatsFuns", "StructArrays", "TriplotBase", "UnicodeFun"]
+git-tree-sha1 = "27af6be179c711fb916a597b6644fbb5b80becc0"
 uuid = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-version = "0.20.7"
+version = "0.20.8"
 
 [[deps.MakieCore]]
 deps = ["Observables", "REPL"]
@@ -1543,15 +2037,21 @@ uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
 [[deps.MathOptInterface]]
 deps = ["BenchmarkTools", "CodecBzip2", "CodecZlib", "DataStructures", "ForwardDiff", "JSON", "LinearAlgebra", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "Printf", "SparseArrays", "SpecialFunctions", "Test", "Unicode"]
-git-tree-sha1 = "8b40681684df46785a0012d352982e22ac3be59e"
+git-tree-sha1 = "679c1aec6934d322783bd15db4d18f898653be4f"
 uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
-version = "1.25.2"
+version = "1.27.0"
 
 [[deps.MathTeXEngine]]
 deps = ["AbstractTrees", "Automa", "DataStructures", "FreeTypeAbstraction", "GeometryBasics", "LaTeXStrings", "REPL", "RelocatableFolders", "UnicodeFun"]
 git-tree-sha1 = "96ca8a313eb6437db5ffe946c457a401bbb8ce1d"
 uuid = "0a4f8689-d25c-4efe-a92b-7142dfc1aa53"
 version = "0.5.7"
+
+[[deps.MbedTLS]]
+deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "NetworkOptions", "Random", "Sockets"]
+git-tree-sha1 = "c067a280ddc25f196b5e7df3877c6b226d390aaf"
+uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
+version = "1.1.9"
 
 [[deps.MbedTLS_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1589,9 +2089,9 @@ version = "0.4.4"
 
 [[deps.MutableArithmetics]]
 deps = ["LinearAlgebra", "SparseArrays", "Test"]
-git-tree-sha1 = "806eea990fb41f9b36f1253e5697aa645bf6a9f8"
+git-tree-sha1 = "302fd161eb1c439e4115b51ae456da4e9984f130"
 uuid = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
-version = "1.4.0"
+version = "1.4.1"
 
 [[deps.NLSolversBase]]
 deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
@@ -1605,10 +2105,30 @@ git-tree-sha1 = "0877504529a3e5c3343c6f8b4c0381e57e4387e4"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "1.0.2"
 
-[[deps.NamedTupleTools]]
-git-tree-sha1 = "90914795fc59df44120fe3fff6742bb0d7adb1d0"
-uuid = "d9ec5142-1e00-5aa0-9d6a-321866360f50"
-version = "0.14.3"
+[[deps.NamedArrays]]
+deps = ["Combinatorics", "DataStructures", "DelimitedFiles", "InvertedIndices", "LinearAlgebra", "Random", "Requires", "SparseArrays", "Statistics"]
+git-tree-sha1 = "6d42eca6c3a27dc79172d6d947ead136d88751bb"
+uuid = "86f7a689-2022-50b4-a561-43c23ac3c673"
+version = "0.10.0"
+
+[[deps.NamedDims]]
+deps = ["LinearAlgebra", "Pkg", "Statistics"]
+git-tree-sha1 = "90178dc801073728b8b2d0d8677d10909feb94d8"
+uuid = "356022a1-0364-5f58-8944-0da4b18d706f"
+version = "1.2.2"
+
+    [deps.NamedDims.extensions]
+    AbstractFFTsExt = "AbstractFFTs"
+    ChainRulesCoreExt = "ChainRulesCore"
+    CovarianceEstimationExt = "CovarianceEstimation"
+    TrackerExt = "Tracker"
+
+    [deps.NamedDims.weakdeps]
+    AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    CovarianceEstimation = "587fd27a-f159-11e8-2dae-1979310e6154"
+    Requires = "ae029012-a4dd-5104-9daa-d747884805df"
+    Tracker = "9f7883ad-71c0-57eb-9f7f-b5c9e6d3789c"
 
 [[deps.Netpbm]]
 deps = ["FileIO", "ImageCore", "ImageMetadata"]
@@ -1653,7 +2173,7 @@ version = "1.3.5+1"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.23+2"
+version = "0.3.23+4"
 
 [[deps.OpenEXR]]
 deps = ["Colors", "FileIO", "OpenEXR_jll"]
@@ -1671,6 +2191,12 @@ version = "3.1.4+0"
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
 version = "0.8.1+2"
+
+[[deps.OpenSSL]]
+deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
+git-tree-sha1 = "af81a32750ebc831ee28bdaaba6e1067decef51e"
+uuid = "4d8831e6-92b7-49fb-bdf8-b643e874388c"
+version = "1.4.2"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1732,9 +2258,9 @@ version = "0.5.12"
 
 [[deps.Pango_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "4745216e94f71cb768d58330b059c9b76f32cb66"
+git-tree-sha1 = "526f5a03792669e4187e584e8ec9d534248ca765"
 uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
-version = "1.50.14+0"
+version = "1.52.1+0"
 
 [[deps.Parameters]]
 deps = ["OrderedCollections", "UnPack"]
@@ -1779,15 +2305,21 @@ version = "0.3.3"
 
 [[deps.PlotUtils]]
 deps = ["ColorSchemes", "Colors", "Dates", "PrecompileTools", "Printf", "Random", "Reexport", "Statistics"]
-git-tree-sha1 = "862942baf5663da528f66d24996eb6da85218e76"
+git-tree-sha1 = "7b1a9df27f072ac4c9c7cbe5efb198489258d1f5"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
-version = "1.4.0"
+version = "1.4.1"
+
+[[deps.PlutoTest]]
+deps = ["HypertextLiteral", "InteractiveUtils", "Markdown", "Test"]
+git-tree-sha1 = "17aa9b81106e661cffa1c4c36c17ee1c50a86eda"
+uuid = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
+version = "0.2.2"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "68723afdb616445c6caaef6255067a8339f91325"
+git-tree-sha1 = "71a22244e352aa8c5f0f2adde4150f62368a3f2e"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.55"
+version = "0.7.58"
 
 [[deps.PolygonOps]]
 git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
@@ -1826,15 +2358,15 @@ version = "0.2.4"
 
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
-git-tree-sha1 = "03b4c25b43cb84cee5c90aa9b5ea0a78fd848d2f"
+git-tree-sha1 = "5aa36f7049a63a1528fe8f7c3f2113413ffd4e1f"
 uuid = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
-version = "1.2.0"
+version = "1.2.1"
 
 [[deps.Preferences]]
 deps = ["TOML"]
-git-tree-sha1 = "00805cd429dcb4870060ff49ef443486c262e38e"
+git-tree-sha1 = "9306f6085165d270f7e3db02af26a400d580f5c6"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
-version = "1.4.1"
+version = "1.4.3"
 
 [[deps.PrettyTables]]
 deps = ["Crayons", "LaTeXStrings", "Markdown", "PrecompileTools", "Printf", "Reexport", "StringManipulation", "Tables"]
@@ -1844,9 +2376,9 @@ version = "2.3.1"
 
 [[deps.Primes]]
 deps = ["IntegerMathUtils"]
-git-tree-sha1 = "1d05623b5952aed1307bf8b43bec8b8d1ef94b6e"
+git-tree-sha1 = "cb420f77dc474d23ee47ca8d14c90810cafe69e7"
 uuid = "27ebfcd6-29c5-5fa9-bf4b-fb8fc14df3ae"
-version = "0.5.5"
+version = "0.5.6"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -1858,9 +2390,9 @@ uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 
 [[deps.ProgressMeter]]
 deps = ["Distributed", "Printf"]
-git-tree-sha1 = "00099623ffee15972c16111bcf84c58a0051257c"
+git-tree-sha1 = "763a8ceb07833dd51bb9e3bbca372de32c0605ad"
 uuid = "92933f4c-e287-5a05-a399-4b506db050ca"
-version = "1.9.0"
+version = "1.10.0"
 
 [[deps.QOI]]
 deps = ["ColorTypes", "FileIO", "FixedPointNumbers"]
@@ -1995,6 +2527,11 @@ git-tree-sha1 = "d263a08ec505853a5ff1c1ebde2070419e3f28e9"
 uuid = "73760f76-fbc4-59ce-8f25-708e95d2df96"
 version = "0.4.0"
 
+[[deps.SimpleBufferStream]]
+git-tree-sha1 = "874e8867b33a00e784c8a7e4b60afe9e037b74e1"
+uuid = "777ac1f9-54b0-4bf8-805c-2214025038e7"
+version = "1.1.0"
+
 [[deps.SimpleGraphs]]
 deps = ["AbstractLattices", "Combinatorics", "DataStructures", "IterTools", "LightXML", "LinearAlgebra", "LinearAlgebraX", "Optim", "Primes", "Random", "RingLists", "SimplePartitions", "SimplePolynomials", "SimpleRandom", "SparseArrays", "Statistics"]
 git-tree-sha1 = "f65caa24a622f985cc341de81d3f9744435d0d0f"
@@ -2003,9 +2540,9 @@ version = "0.8.6"
 
 [[deps.SimplePartitions]]
 deps = ["AbstractLattices", "DataStructures", "Permutations"]
-git-tree-sha1 = "e9330391d04241eafdc358713b48396619c83bcb"
+git-tree-sha1 = "e182b9e5afb194142d4668536345a365ea19363a"
 uuid = "ec83eff0-a5b5-5643-ae32-5cbf6eedec9d"
-version = "0.3.1"
+version = "0.3.2"
 
 [[deps.SimplePolynomials]]
 deps = ["Mods", "Multisets", "Polynomials", "Primes"]
@@ -2024,6 +2561,12 @@ deps = ["InteractiveUtils", "MacroTools"]
 git-tree-sha1 = "5d7e3f4e11935503d3ecaf7186eac40602e7d231"
 uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 version = "0.9.4"
+
+[[deps.SimpleWeightedGraphs]]
+deps = ["Graphs", "LinearAlgebra", "Markdown", "SparseArrays"]
+git-tree-sha1 = "4b33e0e081a825dbfaf314decf58fa47e53d6acb"
+uuid = "47aef6b3-ad0c-573a-a1e2-d07658019622"
+version = "1.4.0"
 
 [[deps.Sixel]]
 deps = ["Dates", "FileIO", "ImageCore", "IndirectArrays", "OffsetArrays", "REPL", "libsixel_jll"]
@@ -2057,9 +2600,9 @@ weakdeps = ["ChainRulesCore"]
 
 [[deps.StableHashTraits]]
 deps = ["Compat", "PikaParser", "SHA", "Tables", "TupleTools"]
-git-tree-sha1 = "662f56ffe22b3985f3be7474f0aecbaf214ecf0f"
+git-tree-sha1 = "10dc702932fe05a0e09b8e5955f00794ea1e8b12"
 uuid = "c5dd0088-6c3f-4803-b00e-f31a60c170fa"
-version = "1.1.6"
+version = "1.1.8"
 
 [[deps.StackViews]]
 deps = ["OffsetArrays"]
@@ -2069,9 +2612,9 @@ version = "0.1.1"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "PrecompileTools", "Random", "StaticArraysCore"]
-git-tree-sha1 = "7b0e9c14c624e435076d19aea1e5cbdec2b9ca37"
+git-tree-sha1 = "bf074c045d3d5ffd956fa0a461da38a44685d6b2"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.9.2"
+version = "1.9.3"
 weakdeps = ["ChainRulesCore", "Statistics"]
 
     [deps.StaticArrays.extensions]
@@ -2102,9 +2645,9 @@ version = "0.34.2"
 
 [[deps.StatsFuns]]
 deps = ["HypergeometricFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
-git-tree-sha1 = "f625d686d5a88bcd2b15cd81f18f98186fdc0c9a"
+git-tree-sha1 = "cef0472124fab0695b58ca35a77c6fb942fdab8a"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
-version = "1.3.0"
+version = "1.3.1"
 
     [deps.StatsFuns.extensions]
     StatsFunsChainRulesCoreExt = "ChainRulesCore"
@@ -2127,10 +2670,22 @@ uuid = "892a3eda-7b42-436c-8928-eab12a02cf0e"
 version = "0.3.4"
 
 [[deps.StructArrays]]
-deps = ["Adapt", "ConstructionBase", "DataAPI", "GPUArraysCore", "StaticArraysCore", "Tables"]
-git-tree-sha1 = "1b0b1205a56dc288b71b1961d48e351520702e24"
+deps = ["ConstructionBase", "DataAPI", "Tables"]
+git-tree-sha1 = "f4dc295e983502292c4c3f951dbb4e985e35b3be"
 uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-version = "0.6.17"
+version = "0.6.18"
+
+    [deps.StructArrays.extensions]
+    StructArraysAdaptExt = "Adapt"
+    StructArraysGPUArraysCoreExt = "GPUArraysCore"
+    StructArraysSparseArraysExt = "SparseArrays"
+    StructArraysStaticArraysExt = "StaticArrays"
+
+    [deps.StructArrays.weakdeps]
+    Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
+    GPUArraysCore = "46192b85-c4d5-4398-a991-12ede77f4527"
+    SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
@@ -2180,9 +2735,9 @@ uuid = "731e570b-9d59-4bfa-96dc-6df516fadf69"
 version = "0.6.8"
 
 [[deps.TranscodingStreams]]
-git-tree-sha1 = "54194d92959d8ebaa8e26227dbe3cdefcdcd594f"
+git-tree-sha1 = "3caa21522e7efac1ba21834a03734c57b4611c7e"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-version = "0.10.3"
+version = "0.10.4"
 weakdeps = ["Random", "Test"]
 
     [deps.TranscodingStreams.extensions]
@@ -2199,9 +2754,9 @@ uuid = "981d1d27-644d-49a2-9326-4793e63143c3"
 version = "0.1.0"
 
 [[deps.TupleTools]]
-git-tree-sha1 = "155515ed4c4236db30049ac1495e2969cc06be9d"
+git-tree-sha1 = "41d61b1c545b06279871ef1a4b5fcb2cac2191cd"
 uuid = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
-version = "1.4.3"
+version = "1.5.0"
 
 [[deps.URIs]]
 git-tree-sha1 = "67db6cc7b3821e19ebe75791a9dd19c9b1188f2b"
@@ -2226,17 +2781,34 @@ git-tree-sha1 = "53915e50200959667e78a92a418594b428dffddf"
 uuid = "1cfade01-22cf-5700-b092-accc4b62d6e1"
 version = "0.4.1"
 
+[[deps.WeakRefStrings]]
+deps = ["DataAPI", "InlineStrings", "Parsers"]
+git-tree-sha1 = "b1be2855ed9ed8eac54e5caff2afcdb442d52c23"
+uuid = "ea10d353-3f73-51f8-a26c-33c1cb351aa5"
+version = "1.4.2"
+
 [[deps.WoodburyMatrices]]
 deps = ["LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "c1a7aa6219628fcd757dede0ca95e245c5cd9511"
 uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
 version = "1.0.0"
 
+[[deps.WorkerUtilities]]
+git-tree-sha1 = "cd1659ba0d57b71a464a29e64dbc67cfe83d54e7"
+uuid = "76eceee3-57b5-4d4a-8e66-0e911cebbf60"
+version = "1.6.1"
+
+[[deps.XLSX]]
+deps = ["Artifacts", "Dates", "EzXML", "Printf", "Tables", "ZipFile"]
+git-tree-sha1 = "319b05e790046f18f12b8eae542546518ef1a88f"
+uuid = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
+version = "0.10.1"
+
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Zlib_jll"]
-git-tree-sha1 = "801cbe47eae69adc50f36c3caec4758d2650741b"
+git-tree-sha1 = "07e470dabc5a6a4254ffebc29a1b3fc01464e105"
 uuid = "02c8fc9c-b97f-50b9-bbe4-9be30ff0a78a"
-version = "2.12.2+0"
+version = "2.12.5+0"
 
 [[deps.XSLT_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgcrypt_jll", "Libgpg_error_jll", "Libiconv_jll", "Pkg", "XML2_jll", "Zlib_jll"]
@@ -2292,6 +2864,12 @@ git-tree-sha1 = "e92a1a012a10506618f10b7047e478403a046c77"
 uuid = "c5fb5394-a638-5e4d-96e5-b29de1b5cf10"
 version = "1.5.0+0"
 
+[[deps.ZipFile]]
+deps = ["Libdl", "Printf", "Zlib_jll"]
+git-tree-sha1 = "f492b7fe1698e623024e873244f10d89c95c340a"
+uuid = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
+version = "0.10.1"
+
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
@@ -2328,9 +2906,9 @@ version = "2.0.2+0"
 
 [[deps.libpng_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "93284c28274d9e75218a416c65ec49d0e0fcdf3d"
+git-tree-sha1 = "d7015d2e18a5fd9a4f47de711837e980519781a4"
 uuid = "b53b4c65-9356-5827-b1ea-8c7a1a84506f"
-version = "1.6.40+0"
+version = "1.6.43+1"
 
 [[deps.libsixel_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Pkg", "libpng_jll"]
@@ -2368,70 +2946,129 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─2148f702-32ee-40d8-896d-48ae684647bc
-# ╟─5d057554-f8af-4242-8291-0e584cf24764
-# ╟─fee3fc5e-7a5f-436b-af17-37e05943d340
-# ╟─547715c2-98e2-4188-a840-36f3dfda45e8
-# ╟─9562942c-990d-4e31-be1a-24e04ed01aee
-# ╟─51d69d70-1545-4096-bcbc-722bb3d9b200
-# ╠═fdea373b-cc1e-4bba-8b57-340e63a68ab1
-# ╠═f1beca33-7885-4132-8ce7-9e58339bc26d
-# ╟─f8d5e164-f968-4b82-bf8f-8f79ade560df
-# ╟─db2cff8e-0ddb-40e6-97ed-42b50a1d1b1f
-# ╟─24000350-dd53-4938-9360-09fcd7e0c2fb
-# ╟─b248eebe-0289-40de-8998-dd155db38af9
-# ╟─41b70c0c-7c48-40f9-bed6-b712bab83f1b
-# ╠═eee63073-78dc-4378-b2bb-0d1746dcde3b
-# ╠═56783c5a-2381-44e3-aa0f-8c9bf3d0dce5
-# ╠═b8933bd2-f4bb-4dca-8278-c00fd8cfdfbd
-# ╠═98fabde8-90db-44a4-a439-45fcdfbf9e9c
-# ╟─9f941a41-0b5d-4a98-96c5-1182784fa484
-# ╟─20348017-411a-49fe-a178-eac580e71e63
-# ╟─970e0ae1-e25e-4606-9007-eb63afa80083
-# ╟─79665579-c707-48af-848d-3680c15dd380
-# ╟─6a101f0f-88f4-40a5-96cc-6338f8d24323
-# ╟─f68d68d6-2bc9-4298-b4aa-8d8f0059dc04
-# ╠═85a1a267-70e4-471c-a399-4fff1715627d
-# ╟─db66a02e-ab0a-4953-a96c-7743caaf0a90
-# ╠═7f701bf1-67e2-437a-a499-3768f0c2154d
-# ╠═c5b744d3-b674-49dc-a149-3a6cc629c998
-# ╠═e1da1aed-e6df-4740-ae48-a1099a65d4ec
-# ╠═95ebddf6-c9ba-494d-be9c-e5a1cf478ce7
-# ╠═221eed48-6110-48ee-8aa5-c9ea58c47b46
-# ╠═29b2d1b3-2ec6-4de8-82bf-ea05807d0699
-# ╟─59696736-58c5-46da-835e-e3e00843cf40
-# ╟─8b9edbc2-5849-4b1f-a897-1e909d2c9885
-# ╠═69e6c200-25ac-4b05-8c34-a66f55009b2f
-# ╟─f355b2ff-555e-458d-bc5b-f8c23bcf9cf8
-# ╟─cc3a8e45-131e-4a3b-9239-babd134baacd
-# ╟─7b0fe034-b70f-4dc1-ad98-3d29ec6797e7
-# ╟─aebd8501-e852-43c8-af64-3810a6f5a23c
-# ╟─23c6b670-6685-467b-be9e-8c68b48c83ec
-# ╟─596df16c-a336-40fc-9df8-e93b321ca2e6
-# ╠═85cfd495-ff91-4504-bb60-ca2d7f604f1f
-# ╠═03fc8645-689c-4e4a-8f15-740890602d70
-# ╠═670ce6ac-e8bc-4283-afbb-3b54e857eab5
-# ╟─deef738e-5636-4314-821a-9d6546963561
-# ╟─eaf1c5bd-ee4f-4233-9756-59c27975256c
-# ╠═9bc0e1d4-9c1b-4f3c-802f-6e5bddad689e
-# ╟─5913fea9-07c0-41ba-b8f3-bc215f50405d
-# ╠═ceb4712b-98f6-407d-99e9-5bf3128749af
-# ╠═ba378958-3da4-4d6c-9987-72f2519f510f
-# ╟─1e5fd0a1-b029-4759-a017-c6d4a786caaf
-# ╠═e42f025a-11dc-48ed-92e3-3c5f473ba2bd
-# ╠═f5d5d00c-da96-44fc-b164-f557d2430e9a
-# ╠═243a809d-8ee3-4f50-87bd-ea0da9c7c549
-# ╟─7edf81ff-cd74-4d2b-ac29-779efa7be2b3
-# ╠═002a5601-69c9-4342-a808-b9cfa64919eb
-# ╠═5f710a04-876e-4d0e-8fd2-6b56357d3f3e
-# ╠═97a3fbcd-5969-4886-9a9b-abc20674f95f
-# ╠═6bff9775-1199-42a8-b0e6-099b0701cdb6
-# ╠═7b3df55d-5d2f-4621-ae8a-b1d29999ee79
-# ╟─5c302835-c976-43f9-87d4-77f1ef3fc78f
-# ╠═95127df3-1c89-45c2-a6c9-012b02dd3bbf
-# ╠═3b40bb50-ae8d-4a27-aff5-0a18ac57cf46
-# ╠═fede66c2-c073-43b4-8fb0-3cfd868f695f
-# ╠═49f91510-597d-4151-916f-33ceaa9939f2
-# ╠═3c4b48db-ead0-4dc3-b72c-1c53188419b9
+# ╟─38f5d048-7747-11eb-30f7-89bade5ed0a3
+# ╟─f1749b26-774b-11eb-2b42-43ffcb5cd7ee
+# ╟─a771e504-77aa-11eb-199c-8778965769b6
+# ╠═94375d0e-77aa-11eb-3934-edb020ab0fd7
+# ╟─cb75f8ac-77aa-11eb-041c-4b3fe85ec22b
+# ╠═76e6f44e-77aa-11eb-1f12-438937941606
+# ╟─9b47991e-7c3d-11eb-1558-b5824ab10dc0
+# ╠═d772a28a-7c3d-11eb-012f-9b81ad67f9a8
+# ╟─d9465a80-7750-11eb-2dd5-d3052d3d5c50
+# ╟─cf680c48-7769-11eb-281c-d7a2d5ec8fe5
+# ╠═cbc03264-7769-11eb-345a-71ae30cc7526
+# ╟─dd41fe96-7769-11eb-06a6-3d6298f6e6fc
+# ╠═278c829c-7767-11eb-1d04-cb38ee52b79b
+# ╟─128bb9e8-776a-11eb-3786-83531bd2dffb
+# ╠═5d85143c-7765-11eb-1a1c-29f3421fe857
+# ╠═280e8390-776a-11eb-0aed-19b0ba929c84
+# ╠═0f0c1661-30e2-47de-b6f0-dbb85f6dae5f
+# ╠═22c3abde-7767-11eb-0b6f-93ad1055bbae
+# ╠═44929fe0-7767-11eb-0318-e720b844f710
+# ╠═f6144074-7768-11eb-3624-51bbc44be7ec
+# ╟─f65f7f8c-7769-11eb-3399-79bde01513cd
+# ╠═bd27268e-7766-11eb-076b-71688ecb4ae3
+# ╠═d9fd6bb0-7766-11eb-150b-410bb7d09d20
+# ╟─04e731d0-7751-11eb-21fd-e7f9b022cdc9
+# ╠═775f99b8-77a9-11eb-2ebf-7bbe0d398306
+# ╠═6cec81a0-77ac-11eb-06e3-bd9dcb73a896
+# ╠═834669c4-776c-11eb-29b7-77dc465077d7
+# ╠═b43f6b02-776c-11eb-2685-655705eb1681
+# ╠═ffdbb91c-776c-11eb-3b28-51314d40f7a2
+# ╠═5c2ef34e-776f-11eb-2a6f-ff99b5d24997
+# ╟─5aff086a-7751-11eb-039e-fd1b769b6fea
+# ╠═2e7630ee-7770-11eb-32ae-112b4b282eaf
+# ╠═4341e8cc-7770-11eb-04d5-c5d33d9a9e52
+# ╠═486d0372-7770-11eb-1956-1d3314be6753
+# ╠═4e17451a-7770-11eb-3c41-6d98b73d410b
+# ╠═56a4c272-7770-11eb-0626-131942edd52d
+# ╠═5bb435cc-7770-11eb-33b6-cb78835406bc
+# ╠═5dbcbd44-7770-11eb-0f60-f74a9945477e
+# ╠═6378c2aa-7770-11eb-3edc-9d41e709750e
+# ╠═6ca12836-7770-11eb-271f-354367f89cb0
+# ╟─c2842ace-7751-11eb-240f-550286e812af
+# ╠═bc30e12a-7770-11eb-3db2-b753ec458ce5
+# ╟─b48335da-7771-11eb-2b17-1507687e446c
+# ╠═9a89d9b4-7772-11eb-0c86-9b5f5f1ab23e
+# ╠═36334032-7774-11eb-170f-5b7f9b7e0ec7
+# ╟─f534c32c-7772-11eb-201c-233b5b7a27a4
+# ╠═95f4f0d0-7772-11eb-1b2a-d179e76950fe
+# ╠═15334fc2-7773-11eb-303e-67e90901f850
+# ╠═a09cb7a6-17e4-4570-ae0b-8104c39bbc24
+# ╠═50194494-7772-11eb-20ff-419e874ec00c
+# ╟─cbb1e550-7751-11eb-1313-7ff968453f36
+# ╠═8212939e-7770-11eb-1f4e-9b698be25d1f
+# ╠═9aa77c76-7770-11eb-35ed-9b83924e8176
+# ╟─4595d42a-8f0b-42e6-ab5c-f829a0ad2933
+# ╟─ee72ef4c-7751-11eb-1781-6f4d027a9e66
+# ╠═3585b022-7853-11eb-1a05-7b4fe3921051
+# ╠═ddfcd760-7853-11eb-38f7-298a4c1cb5aa
+# ╟─cebdd63e-774a-11eb-3cd5-951c43b3c3ff
+# ╟─2c840e2e-9bfa-4a5f-9be2-a29d8cdf328d
+# ╟─04e5b93a-77ae-11eb-0240-ad7517f0fde3
+# ╠═2f672417-ab56-4e7b-b7b4-88655c2404c8
+# ╠═2b54193b-ed2e-4f22-bdfb-e95f0a274812
+# ╟─23100fcb-8118-471e-8dd8-47da26a981ae
+# ╠═5df355b6-77b1-11eb-120f-9bb529b208df
+# ╟─664efcec-77b1-11eb-2301-5da84a5de423
+# ╠═ebfcbb8e-77ae-11eb-37fc-e798175197d0
+# ╟─85e7546c-77ae-11eb-0d0c-618c3669c903
+# ╠═3ec33a62-77b1-11eb-0821-e547d1422e6f
+# ╠═45db03f2-77b1-11eb-2edd-6104bc85915b
+# ╟─c3472d5b-c03e-4ff2-8cf9-bb0932ceb064
+# ╠═811e741e-77b1-11eb-000e-93a9a19a9f60
+# ╟─9298e2de-77b1-11eb-0a56-1f50bb0f4dc3
+# ╟─ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6
+# ╟─48f0ffd4-77b0-11eb-04ab-43eac927ac9d
+# ╠═9fb0a0a8-77b1-11eb-011f-7fc7a549f552
+# ╟─9da09070-77b1-11eb-0d2e-e9a4433bf34e
+# ╟─8142a702-f442-4652-a004-602527c1a14d
+# ╠═d8edddf9-0f24-4efe-88d0-ed10c84e8ce8
+# ╠═622a2e9c-495b-43d1-b976-1743f28ff84a
+# ╟─24c076d2-774a-11eb-2412-f3747af382a2
+# ╠═773c5304-4165-433c-bd33-f41d3fb9856a
+# ╠═3d47962f-958d-4729-bc20-e2bb5ab3e1e1
+# ╠═f8116e43-37f6-4c28-ab62-85aab79ff986
+# ╠═fe87f804-b3b6-4b6c-97cc-4a61e1b30eb1
+# ╠═79d44149-c6f4-440e-8675-0574fad98a50
+# ╠═de7f1884-c549-401e-85c1-4c1ba5774826
+# ╠═0a5e66ac-e64c-4734-8cb2-51fdf60e4bb9
+# ╟─7122605e-7753-11eb-09b8-4f0066353d17
+# ╠═b223523e-7753-11eb-1d9a-67c0281ae473
+# ╟─356d2016-7754-11eb-2e6f-07d1c12831b5
+# ╠═12798090-7754-11eb-3fdf-852bc740ed2a
+# ╟─ad8a6380-7755-11eb-1542-9972c0daa480
+# ╠═5bbac0ac-7754-11eb-0ec0-7d564524afe6
+# ╟─724dc756-7754-11eb-3a22-a309a77b2f28
+# ╠═75b9fd42-7754-11eb-3219-c57ef876f04b
+# ╟─7658c6d2-7754-11eb-32a9-41bf10cd7f6b
+# ╠═ade0d2f4-7754-11eb-2693-074c67837de3
+# ╟─83bdf67e-7753-11eb-06a2-cf39291d8a87
+# ╠═0fe4809c-7758-11eb-2569-33b178bfccca
+# ╠═6197cf52-7758-11eb-2c66-b7df9d59cbf7
+# ╠═c312d5d6-775a-11eb-24cd-f1cf36f3dd40
+# ╟─48dc654c-7765-11eb-313a-c598a7d09fb7
+# ╠═d6a23266-7757-11eb-346c-534caaf657fb
+# ╟─42b21fce-774a-11eb-2d00-c3bfd55a35fc
+# ╠═790e88cb-f6e8-43ae-99b8-876f3abbd3a2
+# ╠═e87a3bc3-9dd9-4af3-baf0-fba7d3ccfdc9
+# ╠═f6de4c5a-7d3f-417b-bd5c-1d793e937307
+# ╠═ec2a87fa-09a8-449f-8e32-37a97a754a75
+# ╠═6526d6e4-774a-11eb-0b7a-bd644b5f7fea
+# ╟─be81874a-f60a-45b5-8855-1a77f50227d2
+# ╠═a5b8d51f-22d2-48f7-840e-41c154528d36
+# ╠═59576485-57a5-4efc-838e-b4edf27eb420
+# ╠═0d80d4ce-f720-4325-8255-8110f0bcb15e
+# ╟─5a931c10-774a-11eb-05cb-d7ed3da85835
+# ╠═579444bc-774a-11eb-1d80-0557b12da169
+# ╟─39f2fdd5-27bb-40c0-a8c0-1bb90aeaccf7
+# ╠═7a2980a0-77cf-42cf-a79d-93e1686ff2d8
+# ╠═6a87bbe9-6e4b-4802-998f-e0517b11bc7e
+# ╠═4a054faa-6d3b-4c50-89fa-12843546cc76
+# ╠═7a9cc068-8469-4f8d-bfa1-c49101c4dc23
+# ╠═4a3d7e25-a941-486b-a1f8-8f7d563468d3
+# ╠═1f7d4622-d3ed-4bcb-a655-289cbcaa62a6
+# ╠═03f290eb-b8ca-4ef1-a029-98f07723485a
+# ╠═ae9b740b-d0a6-46b0-a548-672a72f92e45
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
