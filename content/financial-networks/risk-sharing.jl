@@ -73,7 +73,7 @@ using PlutoUI
 
 # ╔═╡ 2148f702-32ee-40d8-896d-48ae684647bc
 md"""
-`risk-sharing.jl` | **Version 1.2+** | *last updated: Feb 7, 2024*
+`risk-sharing.jl` | **Version 1.3** | *last updated: Mar 13, 2024*
 """
 
 # ╔═╡ 5d057554-f8af-4242-8291-0e584cf24764
@@ -161,7 +161,7 @@ Each agent can split up their initial endowment (1kg of potatoes), plant fractio
 u = log
 
 # ╔═╡ f1beca33-7885-4132-8ce7-9e58339bc26d
-𝔼U(c₁, c₂; γ) = γ * u(c₁) + (1-γ) * c₂
+𝔼U(c₁, c₂; γ) = γ * u(c₁) + (1-γ) * u(c₂)
 
 # ╔═╡ f8d5e164-f968-4b82-bf8f-8f79ade560df
 sliders = md"""
@@ -442,18 +442,20 @@ end
 let
 	(; x_opt, ℓ_opt) = social_optimum
 	
-	xx = range(0.0, 0.99, 100)
+	xx = range(0.001, 0.99, 100)
 	ℓℓ = 0.0:0.05:1.0
 
-#	objj = [obj([x, ℓ]) for ℓ ∈ ℓℓ, x ∈ xx]
-
 	fig = Figure(; fig_attr()...)
-	ax = Axis(fig[1,1], xlabel = "fraction invested", ylabel = "expected utility", title=latexstring("expected utility for \$\\ell^* = $(round(ℓ_opt, digits=4)) \$"))
-#	ax = Axis3(fig[1,1], xlabel = "fraction invested", ylabel = "fraction liquidated", zlabel = "expected utility")
-#	surface!(ax, ℓℓ, xx, objj)
+	ax = Axis(fig[1,1], 
+		xlabel = "fraction invested", ylabel = "expected utility",
+		title = L"expected utility for $ℓ^* = %$(round(ℓ_opt, digits=4)) $"
+	)
+	# objj = [obj([x, ℓ]) for ℓ ∈ ℓℓ, x ∈ xx]
+	# ax = Axis3(fig[1,1], xlabel = "fraction invested", ylabel = "fraction liquidated", zlabel = "expected utility")
+	# surface!(ax, ℓℓ, xx, objj)
 	lines!(ax, xx, [obj([x, ℓ_opt]) for x ∈ xx])
 	vlines!(ax, x_opt, linestyle = (:dash, :loose), color = :gray)
-
+	
 	fig
 end
 

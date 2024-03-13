@@ -207,7 +207,7 @@ using PlutoTest: @test
 
 # ╔═╡ 52052d98-0c41-45ec-95bf-d936b1c43e81
 md"""
-`systemic-risk.jl` | **Version 2.4** | *last updated: March 5, 2024*
+`systemic-risk.jl` | **Version 2.4+** | *last updated: March 13, 2024*
 """
 
 # ╔═╡ ab239918-1cde-4d6b-ac7f-716aaba5f39b
@@ -234,7 +234,7 @@ md"""
 """
 
 # ╔═╡ 8347ab1d-f45e-4434-a8b7-60fa3918c97c
-nisl_str = "number of islands:"
+nisl_str = "number of components:"
 
 # ╔═╡ cd766ddf-e5a9-4c72-b884-413eae45c4c5
 md"""
@@ -619,7 +619,7 @@ $(md"
 $(md"
 * ring vs complete ``(γ)``: $(@bind _γ_ Slider(0:0.1:1.0, show_value = true, default = 0.5))
 * shock to bank ``1`` ``(ε)``: $(@bind _ε_ Slider(0.0:0.05:1, show_value = true, default = 0.0))
-*  $(blur(nisl_str)) $(@bind n_islands Slider(1:3, show_value = true, default = 1))
+*  $(blur(nisl_str)) $(@bind n_components Slider(1:3, show_value = true, default = 1))
 ")
 """)
 
@@ -1223,28 +1223,28 @@ function γNetwork(n, ȳ, γ)
 end
 
 # ╔═╡ f708e6c0-cfac-4b4d-a3ed-69b98883294a
-function island_network(n_islands, n_banks_per_island, ȳ, γ)
-	blocks = (γ_network(n_banks_per_island, ȳ, γ) for _ in 1:n_islands)
+function component_network(n_components, n_banks_per_component, ȳ, γ)
+	blocks = (γ_network(n_banks_per_component, ȳ, γ) for _ in 1:n_components)
 	
 	cat(blocks...,dims=(1,2))
 end
 
 # ╔═╡ d6cb95c1-a075-4544-9031-58aef65c7577
-function island_network(n_banks::AbstractVector, ȳ, γ)
+function component_network(n_banks::AbstractVector, ȳ, γ)
 	blocks = (γ_network(n, ȳ, γ) for n ∈ n_banks)
 	
 	cat(blocks...,dims=(1,2))
 end
 
 # ╔═╡ 1bb841e0-ddd2-4571-83a5-d929e0a8a69c
-function IslandNetwork(n_islands, n_banks_per_island, ȳ; γ=0.0)
-	Y = island_network(n_islands, n_banks_per_island, ȳ, γ)	
+function ComponentNetwork(n_components, n_banks_per_component, ȳ; γ=0.0)
+	Y = component_network(n_components, n_banks_per_component, ȳ, γ)	
 	SimpleWeightedDiGraph(Y)
 end
 
 # ╔═╡ 7fbcfbde-0b5e-4bf2-9eda-9b15a4dd6bec
-function IslandNetwork(n_banks::AbstractVector, ȳ; γ=0.0)
-	Y = island_network(n_banks, ȳ, γ)	
+function ComponentNetwork(n_banks::AbstractVector, ȳ; γ=0.0)
+	Y = component_network(n_banks, ȳ, γ)	
 	SimpleWeightedDiGraph(Y)
 end
 
@@ -1262,7 +1262,7 @@ initial_analysis = let
 	εs = zeros(n_banks)
 
 	ȳ = 1.2
-	promises = IslandNetwork(n_islands, n_banks ÷ n_islands, ȳ; γ=_γ_)
+	promises = ComponentNetwork(n_components, n_banks ÷ n_components, ȳ; γ=_γ_)
 	
 	(; bank_df) = equilibrium(banks, promises, firm, εs)
 
@@ -1271,7 +1271,7 @@ end;
 
 # ╔═╡ a8a8a197-d54d-4c67-b7ce-19bdc8b64401
 transmission_analysis = let
-	n_islands = 1
+	n_components = 1
 	n_banks = 3
 	
 	banks = [(; ν, c = max(c - (i==1)*ε, 0)) for i ∈ 1:n_banks]
@@ -1280,7 +1280,7 @@ transmission_analysis = let
 	εs = zeros(n_banks)
 
 	ȳ = y
-	IM = IslandNetwork(n_islands, n_banks ÷ n_islands, ȳ; γ=γ2)
+	IM = ComponentNetwork(n_components, n_banks ÷ n_components, ȳ; γ=γ2)
 
 	(; bank_df) = equilibrium(banks, IM, firm, εs)
 
@@ -1378,11 +1378,11 @@ function visualize_bank_firm_network!(ax, IM, bank_df; r = 1.4, start = Makie.au
 
 	node_color = ifelse.(bank_df.y_pc .< 1.0, :red, ifelse.(bank_df.ℓ .> 0.0, :orange, :lightgray))
 	nlabels = string.(1:n_banks)
-	node_marker = fill(:circle, n_banks)
+	node_marker = fill(Circle, n_banks)
 	
 	if show_firms
 		nlabels = [nlabels; ["F$i" for i ∈ 1:n_firms]]
-		node_marker = [node_marker; fill(:rect, n_firms)]
+		node_marker = [node_marker; fill(Rect, n_firms)]
 		
 		node_color = [
 			node_color;
@@ -1435,7 +1435,7 @@ let
 	visualize_bank_firm_network!(
 		Axis(fig[1,1]; minimal(extend_limits=0.1)..., aspect = DataAspect()),
 		IM, bank_df; 
-		start = 1/8, show_firms=false, node_size = 22
+		start = 1/8, show_firms=false
 	)
 
 	visualize_balance_sheets!(fig[1,2:4], bank_df, banks, firm)
@@ -1453,8 +1453,8 @@ out_T1 = let
 	y = 2.1
 	γ = 0
 	n1 = 6
-	ỹ = IslandNetwork([3, n1-3, 5], y; γ)
-	ŷ = IslandNetwork([n1, 2, 1, 1, 1], y; γ)
+	ỹ = ComponentNetwork([3, n1-3, 5], y; γ)
+	ŷ = ComponentNetwork([n1, 2, 1, 1, 1], y; γ)
 	 
 	@assert nv(ỹ) == nv(ŷ)
 	n = nv(ỹ)
@@ -1488,8 +1488,8 @@ For this exercise you can use the tool below, to simulate the payment equilibriu
 # ╔═╡ c7b99d3c-5d32-45e6-84fa-8a6513e6beb9
 out_T2 = let
 	ȳ = 2.1
-	IM1 = IslandNetwork([3, 2], ȳ; γ=0.0)
-	IM2 = IslandNetwork([3, 2], ȳ; γ=1.0)
+	IM1 = ComponentNetwork([3, 2], ȳ; γ=0.0)
+	IM2 = ComponentNetwork([3, 2], ȳ; γ=1.0)
 
 	n1 = nv(IM1)
 	n2 = nv(IM2)
@@ -1563,7 +1563,7 @@ end
 fig = let
 	(; promises, bank_df) = initial_analysis
 	
-	visualize_bank_firm_network(promises, bank_df; figure=fig_attr(1, 1.1), start = 1/6, show_firms=false, node_size = 22, add_legend=true)
+	visualize_bank_firm_network(promises, bank_df; figure=fig_attr(1, 1.1), start = 1/6, show_firms=false, add_legend=true)
 end
 
 # ╔═╡ 82f1b9c3-306d-416a-bb2f-7171c93693dc
@@ -1609,7 +1609,7 @@ let
 
 	layout = (_) -> componentwise_circle([1:6, 6 .+ (1:5)])
 	
-	fig = visualize_bank_firm_network(IM, bank_df; figure=fig_attr(1.6, 1.0), hidespines=false, start = 1/6, layout, add_legend=true, show_firms=false, node_size = 22)
+	fig = visualize_bank_firm_network(IM, bank_df; figure=fig_attr(1.6, 1.0), hidespines=false, start = 1/6, layout, add_legend=true, show_firms=false)
 
 	rowgap!(fig.layout, 1)
 	
@@ -1642,7 +1642,7 @@ tool_fig = let
 
 	layout = Shell()
 	
-	visualize_bank_firm_network(IM, bank_df; figure=fig_attr(1.4, 0.8), hidespines=false, start = 1/6, layout, add_legend=:vertical, show_firms=false, node_size = 22)
+	visualize_bank_firm_network(IM, bank_df; figure=fig_attr(1.4, 0.8), hidespines=false, start = 1/6, layout, add_legend=:vertical, show_firms=false)
 end
 
 # ╔═╡ 0fb4d187-f03a-435b-b9fc-188925e058f1
@@ -3744,7 +3744,7 @@ version = "3.5.0+0"
 # ╟─82f1b9c3-306d-416a-bb2f-7171c93693dc
 # ╟─7b876239-8ddc-4929-ad52-752edb72c0eb
 # ╠═e11a99df-d0f2-4838-b325-473d3043be98
-# ╟─1d5d8c8a-8d86-426f-bb17-bd2279d91ff1
+# ╠═1d5d8c8a-8d86-426f-bb17-bd2279d91ff1
 # ╠═8347ab1d-f45e-4434-a8b7-60fa3918c97c
 # ╠═073982c7-6333-43f6-866a-91a49f8ba7eb
 # ╠═8ada8545-243e-4922-a306-ffff866a6135
@@ -3818,7 +3818,7 @@ version = "3.5.0+0"
 # ╟─264e3358-babf-4bf4-9b57-f436676aa02a
 # ╠═36e610ff-1f42-4d58-b0a7-1bc33bd0d4af
 # ╟─87aae64c-c713-473f-8a8c-d28d5973273f
-# ╠═eda3fdcc-a3b4-47d2-bdab-8c1c673a7a15
+# ╟─eda3fdcc-a3b4-47d2-bdab-8c1c673a7a15
 # ╠═a9d27019-72b7-4257-b72a-12952b516db9
 # ╠═2c839d92-183a-4077-b7d6-39ac485ae06e
 # ╟─e8637286-ea8b-49c8-b49f-1ab556b83f0c
