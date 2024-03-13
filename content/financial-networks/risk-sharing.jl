@@ -71,6 +71,9 @@ using NamedTupleTools: delete
 # ╔═╡ 49f91510-597d-4151-916f-33ceaa9939f2
 using PlutoUI
 
+# ╔═╡ 358fd453-cb0d-4de3-bdec-531d889fd8a5
+using PlutoTest: @test
+
 # ╔═╡ 2148f702-32ee-40d8-896d-48ae684647bc
 md"""
 `risk-sharing.jl` | **Version 1.3** | *last updated: Mar 13, 2024*
@@ -404,6 +407,134 @@ md"""
 	(; ζ_next, ib_withdrawal, ω, ℓ, c₁, ζ, shortfall0, shortfall)
 end =#
 
+# ╔═╡ 7781c9d1-30a9-4d8c-b73b-59692feb74f2
+md"""
+# Exercise: Avoiding a bank run
+"""
+
+# ╔═╡ 02d8e04f-690a-45e4-8b0d-c23d82f80069
+md"""
+Consider the setup of Allen & Gale with banks ``i \in \{1, 2, 3, 4\}``. Banks know that a fraction ``\gamma`` of the population are _early types_. In the social optimum, banks offer deposit contracts ``(c_1, c_2)``. The fraction of early types ``\omega_i`` in each bank is random. There are three possible states ``S_j = (\omega_{1j}, \omega_{2j}, \omega_{3j}, \omega_{4j})``
+
+```math
+\begin{align}
+S_1 &= (\gamma, \gamma, \gamma, \gamma) \\
+S_2 &= (\gamma + \varepsilon, \gamma + \varepsilon, \gamma - \varepsilon, \gamma - \varepsilon) \\
+S_3 &= (\gamma - \varepsilon, \gamma - \varepsilon, \gamma + \varepsilon, \gamma + \varepsilon) \\
+\end{align}
+```
+
+The states are shown in the figure below. The red dots mean "more early customers" (``\gamma + \varepsilon``), the green dots mean "more late customers" (``\gamma - \varepsilon``) and the gray dots mean "no shock" (``\gamma``).
+"""
+
+# ╔═╡ e495aa59-749e-4795-a720-7b58251d720d
+states = [
+	[:none, :none, :none, :none],
+	[:early, :early, :late, :late],
+	[:late, :late, :early, :early],
+]
+
+# ╔═╡ 048b89b3-0b96-415d-b87b-7eff74fc44bb
+md"""
+Select state (the ``i`` in ``S_i``): $(@bind i_state NumberField(1:length(states))).
+"""
+
+# ╔═╡ 39a44c79-95f3-4279-ba92-03606762f228
+md"""
+👉 **(a)** What is the minimal number of edges that will prevent a bank run in period ``t=1`` in state ``S_1``? Explain briefly.
+"""
+
+# ╔═╡ bb29dbdd-330b-474b-aceb-6ec959cbeb53
+answer_a = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 3b7b9f2a-a2cc-43d6-8cb5-08749dc9fab9
+md"""
+👉 **(b)** What is the minimal number of edges that will prevent a bank run in period ``t=1`` in all possible states? Explain and adjust the adjacency matrix `G_minimal` accordingly.
+"""
+
+# ╔═╡ 9e77e320-5bb3-45be-84dd-2202e3504acf
+G_minimal = [
+	0 1 1 1;
+    0 0 1 1;
+	1 0 0 1;
+	1 1 0 0
+]
+
+# ╔═╡ eee3a176-b894-4053-bed6-37d7f4f33d82
+answer_b = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 327c8f09-0b55-4008-88db-b69932f50b4b
+md"""
+👉 **(c)** Assume that your minimal network from **(a)** has _uniform weights_. What is the lower bound ``y_\text{min}`` for that weight that will allow the socially optimal allocation in all states?
+"""
+
+# ╔═╡ 475ae5ca-af74-47c5-a2ee-0a1aa41d4100
+answer_c = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 1ea5101a-08f4-4288-9a5d-d9f9346eeb03
+md"""
+👉 **(d)** What will happen if ``y < y_\text{min}``?
+"""
+
+# ╔═╡ 42b39964-fc84-4a96-8b47-4d79d2995ef5
+answer_d = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ 267751ab-1814-4b2c-95ee-f0cc507a55ac
+md"""
+👉 **(e)** Assume that there is a complete interbank network with a uniform weights to ensure the socially optimal allocation in all states. What would be an alternative state ``S_4`` in which the complete interbank network has a better outcome?
+"""
+
+# ╔═╡ fd9f974c-6a21-4855-aa26-9ae6221b4574
+answer_e = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ ff1b837d-1573-45bd-833b-66f47e2210af
+md"""
+## Functions for exercise
+"""
+
+# ╔═╡ d0cd38fa-84c1-40a1-bdab-3275b88f9c8e
+exX = let
+	S = states[i_state]
+	n = length(S)
+
+	node_styles = (title = "shock", df = DataFrame(label = string.([:early, :late, :none]), color = ["lightgreen", "tomato", "lightgray"]))
+
+	df = @chain begin
+		DataFrame(bank = 1:n, label = string.(S))
+		leftjoin(_, node_styles.df, on = :label)
+	end
+
+	(; n, color = df.color, node_styles)
+end;
+
+# ╔═╡ 3a54c8c5-135d-4a5b-bd2a-a8380c06ee6f
+function node_legend(figpos, node_styles, title = "")
+	
+	elems = [MarkerElement(; color, markersize = 15, marker = :circle) for color ∈ node_styles.color]
+
+	if length(title) == 0
+		title_tuple = ()
+	else
+		title_tuple = (title, )
+	end
+	
+	Legend(
+		figpos,
+    	elems, node_styles.label, title_tuple...;
+		orientation=:horizontal, titleposition=:left, framevisible=false
+	)
+end
+
 # ╔═╡ 596df16c-a336-40fc-9df8-e93b321ca2e6
 md"""
 # Appendix
@@ -413,7 +544,10 @@ md"""
 fonts = (regular = texfont(), bold = texfont(:bold), italic = texfont(:italic))
 
 # ╔═╡ 670ce6ac-e8bc-4283-afbb-3b54e857eab5
-fig_attr(; size = (350, 300)) = (; figure_padding=3, fonts, size)
+#fig_attr(; size = (350, 300)) = (; figure_padding=3, fonts, size)
+
+# ╔═╡ 795d4d28-60f8-479b-bd7b-4891b21f51db
+fig_attr(xscale=1, yscale=xscale) = (; figure_padding=3, size = (xscale * 200, yscale * 200), fonts)
 
 # ╔═╡ 24000350-dd53-4938-9360-09fcd7e0c2fb
 let
@@ -429,7 +563,7 @@ let
 	@info x_opt
 	
 	xx = 0.0:0.05:1.0
-	fig = Figure(; fig_attr()...)
+	fig = Figure(; fig_attr(1.2, 1)...)
 	ax = Axis(fig[1,1], xlabel = L"fraction invested $x$", ylabel = "expected utility")
 	lines!(ax, xx, obj.(xx))
 	vlines!(ax, x_opt, linestyle = (:dash, :loose), color = :gray)
@@ -445,7 +579,7 @@ let
 	xx = range(0.001, 0.99, 100)
 	ℓℓ = 0.0:0.05:1.0
 
-	fig = Figure(; fig_attr()...)
+	fig = Figure(; fig_attr(1.2, 1)...)
 	ax = Axis(fig[1,1], 
 		xlabel = "fraction invested", ylabel = "expected utility",
 		title = L"expected utility for $ℓ^* = %$(round(ℓ_opt, digits=4)) $"
@@ -465,7 +599,7 @@ let
 
 	xx = range(0.05, 0.95, 100)
 
-	fig = Figure(; fig_attr()...)
+	fig = Figure(; fig_attr(1.5, 1)...)
 	ax1 = Axis(fig[1,1], xlabel= L"fraction invested $x$")
 	ax2 = Axis(fig[2,1], xlabel= L"fraction invested $x$")
 
@@ -492,12 +626,50 @@ let
 		stack(Not(:ε))
 		@transform(@astable begin
 			tmp = split(:variable, "_")
-			:variable = tmp[1]
+			:variable = latexstring(replace(tmp[1], "₁" => "_1", "₂" => "_2"))
 			:mod = tmp[2] == "opt" ? "planned" : "realized"
 		end)
-		data(_) * mapping(:ε => L"additional withdrawers $ε$", :value, color = :variable, linestyle = :mod => "") * visual(Lines)
-		draw(_; figure = fig_attr(size=(400, 300)))
+		data(_) * mapping(
+			:ε => L"additional withdrawers $ε$", :value, 
+			color = :variable,
+			linestyle = :mod => ""
+		) * visual(Lines)
+		draw(_; figure = fig_attr(2.0, 1.1))
 	end
+end
+
+# ╔═╡ b886c92a-f449-4b83-8826-e809206b01de
+minimal(; extend_limits=0.1, hidespines=true, kwargs...) = (; 
+	xgridvisible=false, xticksvisible=false, xticklabelsvisible=false,
+	ygridvisible=false, yticksvisible=false, yticklabelsvisible=false, 
+	leftspinevisible=!hidespines, rightspinevisible=!hidespines, topspinevisible=!hidespines, bottomspinevisible=!hidespines,
+	xautolimitmargin = (extend_limits, extend_limits),
+	yautolimitmargin = (extend_limits, extend_limits),
+	kwargs...
+)
+
+# ╔═╡ 29330100-b631-43f7-aeb9-87a487a02496
+let
+	g = SimpleDiGraph(G_minimal)
+
+	fig, ax, _ = graphplot(g;
+		ilabels = vertices(g),
+		node_color = exX.color,
+		layout = Shell(),
+		figure = fig_attr(1.3, 1.1),
+		axis = minimal(title = L"interbank network in state $ S_%$i_state $", extend_limits=0.1)
+	)
+
+
+	(; node_styles) = exX
+	if !ismissing(node_styles)
+		(title, df) = node_styles
+		node_legend(fig[end+1,1], df, title)
+	end
+
+	rowgap!(fig.layout, 1)
+	
+	fig
 end
 
 # ╔═╡ deef738e-5636-4314-821a-9d6546963561
@@ -533,6 +705,52 @@ md"""
 # ╔═╡ 3c4b48db-ead0-4dc3-b72c-1c53188419b9
 TableOfContents()
 
+# ╔═╡ 02b20d16-c9ce-4836-9da0-4b093c547e72
+md"""
+## Assignment infrastructure
+"""
+
+# ╔═╡ 424b51e1-f79c-4019-8ec1-2b0ea7ecaff3
+function wordcount(text)
+	stripped_text = strip(replace(string(text), r"\s" => " "))
+   	words = split(stripped_text, (' ', '-', '.', ',', ':', '_', '"', ';', '!', '\''))
+   	length(filter(!=(""), words))
+end
+
+# ╔═╡ 21be1393-329d-4e7d-be0e-480239a5257c
+@test wordcount("  Hello,---it's me.  ") == 4
+
+# ╔═╡ a1c9307c-54f6-4f62-b245-39e67c33dbbc
+@test wordcount("This;doesn't really matter.") == 5
+
+# ╔═╡ 63bc37b2-a750-4ae7-8f1e-d4c1f7fe08fd
+show_words(answer) = md"_approximately $(wordcount(answer)) words_"
+
+# ╔═╡ f0814ca8-c8ce-4b14-b58f-e9073ed7a435
+show_words(answer_a)
+
+# ╔═╡ af8d08d9-1f17-4933-b39d-05d7274e255d
+show_words(answer_b)
+
+# ╔═╡ f255e7df-fff3-404e-a2a9-8285e34e1892
+show_words(answer_c)
+
+# ╔═╡ 0cb77cbc-7d5a-484a-9794-ea1b7feffc8c
+show_words(answer_d)
+
+# ╔═╡ b6766aa0-3a30-4284-827b-63798edbc8e5
+show_words(answer_e)
+
+# ╔═╡ aaea224f-87bc-4081-93e8-de785bf4f1dc
+function show_words_limit(answer, limit)
+	count = wordcount(answer)
+	if count < 1.02 * limit
+		return show_words(answer)
+	else
+		return almost(md"You are at $count words. Please shorten your text a bit, to get **below $limit words**.")
+	end
+end
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -549,6 +767,7 @@ Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 NamedTupleTools = "d9ec5142-1e00-5aa0-9d6a-321866360f50"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+PlutoTest = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
@@ -566,6 +785,7 @@ Makie = "~0.20.7"
 NamedTupleTools = "~0.14.3"
 NetworkLayout = "~0.4.6"
 Optim = "~1.9.2"
+PlutoTest = "~0.2.2"
 PlutoUI = "~0.7.55"
 """
 
@@ -573,9 +793,9 @@ PlutoUI = "~0.7.55"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.10.0"
+julia_version = "1.10.1"
 manifest_format = "2.0"
-project_hash = "3dc408642ef9ecf8813bc4b5642e2a2e180d5469"
+project_hash = "cbfda74a19ca6a9965879bc5f4f2c506cbdd788f"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -823,7 +1043,7 @@ weakdeps = ["Dates", "LinearAlgebra"]
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.0.5+1"
+version = "1.1.0+0"
 
 [[deps.ConstructionBase]]
 deps = ["LinearAlgebra"]
@@ -1655,7 +1875,7 @@ version = "1.3.5+1"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.23+2"
+version = "0.3.23+4"
 
 [[deps.OpenEXR]]
 deps = ["Colors", "FileIO", "OpenEXR_jll"]
@@ -1784,6 +2004,12 @@ deps = ["ColorSchemes", "Colors", "Dates", "PrecompileTools", "Printf", "Random"
 git-tree-sha1 = "862942baf5663da528f66d24996eb6da85218e76"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.4.0"
+
+[[deps.PlutoTest]]
+deps = ["HypertextLiteral", "InteractiveUtils", "Markdown", "Test"]
+git-tree-sha1 = "17aa9b81106e661cffa1c4c36c17ee1c50a86eda"
+uuid = "cb4044da-4d16-4ffa-a6a3-8cad7f73ebdc"
+version = "0.2.2"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
@@ -2409,10 +2635,36 @@ version = "3.5.0+0"
 # ╟─7b0fe034-b70f-4dc1-ad98-3d29ec6797e7
 # ╟─aebd8501-e852-43c8-af64-3810a6f5a23c
 # ╟─23c6b670-6685-467b-be9e-8c68b48c83ec
+# ╟─7781c9d1-30a9-4d8c-b73b-59692feb74f2
+# ╟─02d8e04f-690a-45e4-8b0d-c23d82f80069
+# ╟─048b89b3-0b96-415d-b87b-7eff74fc44bb
+# ╟─29330100-b631-43f7-aeb9-87a487a02496
+# ╟─e495aa59-749e-4795-a720-7b58251d720d
+# ╟─39a44c79-95f3-4279-ba92-03606762f228
+# ╠═bb29dbdd-330b-474b-aceb-6ec959cbeb53
+# ╟─f0814ca8-c8ce-4b14-b58f-e9073ed7a435
+# ╟─3b7b9f2a-a2cc-43d6-8cb5-08749dc9fab9
+# ╠═9e77e320-5bb3-45be-84dd-2202e3504acf
+# ╠═eee3a176-b894-4053-bed6-37d7f4f33d82
+# ╟─af8d08d9-1f17-4933-b39d-05d7274e255d
+# ╟─327c8f09-0b55-4008-88db-b69932f50b4b
+# ╠═475ae5ca-af74-47c5-a2ee-0a1aa41d4100
+# ╟─f255e7df-fff3-404e-a2a9-8285e34e1892
+# ╟─1ea5101a-08f4-4288-9a5d-d9f9346eeb03
+# ╠═42b39964-fc84-4a96-8b47-4d79d2995ef5
+# ╟─0cb77cbc-7d5a-484a-9794-ea1b7feffc8c
+# ╟─267751ab-1814-4b2c-95ee-f0cc507a55ac
+# ╠═fd9f974c-6a21-4855-aa26-9ae6221b4574
+# ╟─b6766aa0-3a30-4284-827b-63798edbc8e5
+# ╟─ff1b837d-1573-45bd-833b-66f47e2210af
+# ╠═d0cd38fa-84c1-40a1-bdab-3275b88f9c8e
+# ╠═3a54c8c5-135d-4a5b-bd2a-a8380c06ee6f
 # ╟─596df16c-a336-40fc-9df8-e93b321ca2e6
 # ╠═85cfd495-ff91-4504-bb60-ca2d7f604f1f
 # ╠═03fc8645-689c-4e4a-8f15-740890602d70
 # ╠═670ce6ac-e8bc-4283-afbb-3b54e857eab5
+# ╠═795d4d28-60f8-479b-bd7b-4891b21f51db
+# ╠═b886c92a-f449-4b83-8826-e809206b01de
 # ╟─deef738e-5636-4314-821a-9d6546963561
 # ╟─eaf1c5bd-ee4f-4233-9756-59c27975256c
 # ╠═9bc0e1d4-9c1b-4f3c-802f-6e5bddad689e
@@ -2435,5 +2687,12 @@ version = "3.5.0+0"
 # ╠═fede66c2-c073-43b4-8fb0-3cfd868f695f
 # ╠═49f91510-597d-4151-916f-33ceaa9939f2
 # ╠═3c4b48db-ead0-4dc3-b72c-1c53188419b9
+# ╟─02b20d16-c9ce-4836-9da0-4b093c547e72
+# ╠═424b51e1-f79c-4019-8ec1-2b0ea7ecaff3
+# ╠═358fd453-cb0d-4de3-bdec-531d889fd8a5
+# ╠═21be1393-329d-4e7d-be0e-480239a5257c
+# ╠═a1c9307c-54f6-4f62-b245-39e67c33dbbc
+# ╠═63bc37b2-a750-4ae7-8f1e-d4c1f7fe08fd
+# ╠═aaea224f-87bc-4081-93e8-de785bf4f1dc
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

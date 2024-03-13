@@ -430,135 +430,14 @@ end
 # ╔═╡ 900a4b24-04dc-4a1b-9829-a166cf9eb7fb
 md"""
 ## Task 3 (not graded): Avoiding a bank run
-"""
 
-# ╔═╡ 871f33f0-4882-4ff0-bbde-eb954059e907
-md"""
-Consider the setup of Allen & Gale with banks ``i \in \{1, 2, 3, 4\}``. Banks know that a fraction ``\gamma`` of the population are _early types_. In the social optimum, banks offer deposit contracts ``(c_1, c_2)``. The fraction of early types ``\omega_i`` in each bank is random. There are three possible states ``S_j = (\omega_{1j}, \omega_{2j}, \omega_{3j}, \omega_{4j})``
-
-```math
-\begin{align}
-S_1 &= (\gamma, \gamma, \gamma, \gamma) \\
-S_2 &= (\gamma + \varepsilon, \gamma + \varepsilon, \gamma - \varepsilon, \gamma - \varepsilon) \\
-S_3 &= (\gamma - \varepsilon, \gamma - \varepsilon, \gamma + \varepsilon, \gamma + \varepsilon) \\
-\end{align}
-```
-
-The states are shown in the figure below. The red dots mean "more early customers" (``\gamma + \varepsilon``), the green dots mean "more late customers" (``\gamma - \varepsilon``) and the gray dots mean "no shock" (``\gamma``).
-"""
-
-# ╔═╡ 4242531a-e74f-4618-939f-2adf9d6e1db2
-states = [
-	[:none, :none, :none, :none],
-	[:early, :early, :late, :late],
-	[:late, :late, :early, :early],
-]
-
-# ╔═╡ cb435758-d2a8-4203-9915-971e041d4319
-md"""
-Select state (the ``i`` in ``S_i``): $(@bind i_state NumberField(1:length(states))).
-"""
-
-# ╔═╡ 6f28bcfb-2b56-4548-bbd1-9528876525dd
-md"""
-👉 **(a)** What is the minimal number of edges that will prevent a bank run in period ``t=1`` in state ``S_1``? Explain briefly.
-"""
-
-# ╔═╡ fa50a9b9-cdc4-4d84-ae3b-db039f1609e4
-answer_a = md"""
-Your answer goes here ...
-"""
-
-# ╔═╡ cfa98250-1d4a-43a6-a99f-cf106001f3cb
-md"""
-👉 **(b)** What is the minimal number of edges that will prevent a bank run in period ``t=1`` in all possible states? Explain and adjust the adjacency matrix `G_minimal` accordingly.
-"""
-
-# ╔═╡ 9b0da913-fc5e-42ea-bc5f-e37bd59f2cd2
-G_minimal = [
-	0 1 1 1;
-    0 0 1 1;
-	1 0 0 1;
-	1 1 0 0
-]
-
-# ╔═╡ a7e36f2c-d588-4fc5-a247-4323d646a51b
-answer_b = md"""
-Your answer goes here ...
-"""
-
-# ╔═╡ 77b5b0ea-bfae-406f-8fcf-472165bdcd1d
-md"""
-👉 **(c)** Assume that your minimal network from **(a)** has _uniform weights_. What is the lower bound ``y_\text{min}`` for that weight that will allow the socially optimal allocation in all states?
-"""
-
-# ╔═╡ dbfd2f13-89f4-4932-a778-b2d375d45ac6
-answer_c = md"""
-Your answer goes here ...
-"""
-
-# ╔═╡ 63a8c85f-9cd1-4cf5-9f58-e482494f8d24
-md"""
-👉 **(d)** What will happen if ``y < y_\text{min}``?
-"""
-
-# ╔═╡ 55904c61-4531-4984-b73c-1065a7114772
-answer_d = md"""
-Your answer goes here ...
-"""
-
-# ╔═╡ 264e3358-babf-4bf4-9b57-f436676aa02a
-md"""
-👉 **(e)** Assume that there is a complete interbank network with a uniform weights to ensure the socially optimal allocation in all states. What would be an alternative state ``S_4`` in which the complete interbank network has a better outcome?
-"""
-
-# ╔═╡ 36e610ff-1f42-4d58-b0a7-1bc33bd0d4af
-answer_e = md"""
-Your answer goes here ...
+_see notebook `risk-sharing.jl`_
 """
 
 # ╔═╡ eda3fdcc-a3b4-47d2-bdab-8c1c673a7a15
 md"""
 ## Objects for Task 2
 """
-
-# ╔═╡ e8637286-ea8b-49c8-b49f-1ab556b83f0c
-md"""
-## Functions for Task 3
-"""
-
-# ╔═╡ a047aeaa-fa54-4cbf-90f4-42d0537b7d06
-exX = let
-	S = states[i_state]
-	n = length(S)
-
-	node_styles = (title = "shock", df = DataFrame(label = string.([:early, :late, :none]), color = ["lightgreen", "tomato", "lightgray"]))
-
-	df = @chain begin
-		DataFrame(bank = 1:n, label = string.(S))
-		leftjoin(_, node_styles.df, on = :label)
-	end
-
-	(; n, color = df.color, node_styles)
-end;
-
-# ╔═╡ b1c0d43c-f483-4290-998f-177ce79f41fa
-function node_legend(figpos, node_styles, title = "")
-	
-	elems = [MarkerElement(; color, markersize = 15, marker = :circle) for color ∈ node_styles.color]
-
-	if length(title) == 0
-		title_tuple = ()
-	else
-		title_tuple = (title, )
-	end
-	
-	Legend(
-		figpos,
-    	elems, node_styles.label, title_tuple...;
-		orientation=:horizontal, titleposition=:left, framevisible=false
-	)
-end
 
 # ╔═╡ 4e9b785f-ad74-4aa8-ad48-89fa8b236939
 md"""
@@ -1519,30 +1398,6 @@ If you have understood the mechanics of the model, you should be able to solve t
 * Select ``\tilde y`` or ``\hat y`` $(@bind IM_T2 Select([out_T2.IM1 => "ỹ", out_T2.IM2 => "ŷ"]))
 """
 
-# ╔═╡ 2fe4c931-d4b2-4b4d-8634-73573125cfb5
-let
-	g = SimpleDiGraph(G_minimal)
-
-	fig, ax, _ = graphplot(g;
-		ilabels = vertices(g),
-		node_color = exX.color,
-		layout = Shell(),
-		figure = fig_attr(1.3, 1.1),
-		axis = minimal(title = L"interbank network in state $ S_%$i_state $", extend_limits=0.1)
-	)
-
-
-	(; node_styles) = exX
-	if !ismissing(node_styles)
-		(title, df) = node_styles
-		node_legend(fig[end+1,1], df, title)
-	end
-
-	rowgap!(fig.layout, 1)
-	
-	fig
-end
-
 # ╔═╡ 7b70a862-faf4-4c42-917c-238718c43708
 function visualize_bank_firm_network(IM, bank_df; figure = fig_attr(), add_legend=false, hidespines=true, kwargs...)
 	fig = Figure(; figure...)
@@ -1696,21 +1551,6 @@ end
 
 # ╔═╡ 8ed4dff0-c0b5-4247-a779-59ef7aa500a1
 show_words(answer) = md"_approximately $(wordcount(answer)) words_"
-
-# ╔═╡ 55d00dc9-b257-446b-9d60-688a43b79a7f
-show_words(answer_a)
-
-# ╔═╡ 6a615560-37dd-4c08-852e-da67e3a6ccf2
-show_words(answer_b)
-
-# ╔═╡ c0203246-97cd-4568-93bb-d79898fa7233
-show_words(answer_c)
-
-# ╔═╡ 61d2b83f-12a2-46e4-bf41-477053455e4f
-show_words(answer_d)
-
-# ╔═╡ 87aae64c-c713-473f-8a8c-d28d5973273f
-show_words(answer_e)
 
 # ╔═╡ b5a91cd7-6e0b-4690-9dfa-36a2986ac8db
 function show_words_limit(answer, limit)
@@ -3798,32 +3638,9 @@ version = "3.5.0+0"
 # ╠═aed99485-cec3-4bf3-b05d-4d20572ec907
 # ╠═db841316-9106-40bb-9ca3-ae6f8b975404
 # ╟─900a4b24-04dc-4a1b-9829-a166cf9eb7fb
-# ╟─871f33f0-4882-4ff0-bbde-eb954059e907
-# ╟─cb435758-d2a8-4203-9915-971e041d4319
-# ╟─2fe4c931-d4b2-4b4d-8634-73573125cfb5
-# ╟─4242531a-e74f-4618-939f-2adf9d6e1db2
-# ╟─6f28bcfb-2b56-4548-bbd1-9528876525dd
-# ╠═fa50a9b9-cdc4-4d84-ae3b-db039f1609e4
-# ╟─55d00dc9-b257-446b-9d60-688a43b79a7f
-# ╟─cfa98250-1d4a-43a6-a99f-cf106001f3cb
-# ╠═9b0da913-fc5e-42ea-bc5f-e37bd59f2cd2
-# ╠═a7e36f2c-d588-4fc5-a247-4323d646a51b
-# ╟─6a615560-37dd-4c08-852e-da67e3a6ccf2
-# ╟─77b5b0ea-bfae-406f-8fcf-472165bdcd1d
-# ╠═dbfd2f13-89f4-4932-a778-b2d375d45ac6
-# ╟─c0203246-97cd-4568-93bb-d79898fa7233
-# ╟─63a8c85f-9cd1-4cf5-9f58-e482494f8d24
-# ╠═55904c61-4531-4984-b73c-1065a7114772
-# ╟─61d2b83f-12a2-46e4-bf41-477053455e4f
-# ╟─264e3358-babf-4bf4-9b57-f436676aa02a
-# ╠═36e610ff-1f42-4d58-b0a7-1bc33bd0d4af
-# ╟─87aae64c-c713-473f-8a8c-d28d5973273f
 # ╟─eda3fdcc-a3b4-47d2-bdab-8c1c673a7a15
 # ╠═a9d27019-72b7-4257-b72a-12952b516db9
 # ╠═2c839d92-183a-4077-b7d6-39ac485ae06e
-# ╟─e8637286-ea8b-49c8-b49f-1ab556b83f0c
-# ╠═a047aeaa-fa54-4cbf-90f4-42d0537b7d06
-# ╠═b1c0d43c-f483-4290-998f-177ce79f41fa
 # ╟─4e9b785f-ad74-4aa8-ad48-89fa8b236939
 # ╠═1a997e44-f29c-4c55-a953-a9039f096d47
 # ╟─78bedfcc-3671-4852-985b-3e1b5aaade5a
