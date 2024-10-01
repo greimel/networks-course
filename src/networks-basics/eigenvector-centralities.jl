@@ -4,6 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ 975cc198-d747-4433-b716-09265e6994b6
+using PlutoUI
+
+# ╔═╡ 956907ed-d7e1-4bbf-b412-28926f7e0ada
+using Graphs
+
+# ╔═╡ 69f8f83a-517e-4b1c-ac67-824164dec933
+using SimpleWeightedGraphs
+
+# ╔═╡ 5dacb17c-7a36-430f-9baf-419eba107012
+using LinearAlgebra
+
 # ╔═╡ eccbde9c-7a4f-40fa-848b-05ad58d9fbf3
 using GraphMakie
 
@@ -12,24 +24,6 @@ using CairoMakie, AlgebraOfGraphics
 
 # ╔═╡ 3752ee57-14dc-436f-9522-1f4666bd54dd
 using DataFrames
-
-# ╔═╡ 975cc198-d747-4433-b716-09265e6994b6
-using PlutoUI
-
-# ╔═╡ 74bb40d7-1c82-4340-9cee-fe670657e490
-using PythonCall
-
-# ╔═╡ 9fb32ee1-fdf3-479b-8d93-9277ac3c176e
-using CondaPkg; CondaPkg.add("networkx"); CondaPkg.add("scipy")
-
-# ╔═╡ 956907ed-d7e1-4bbf-b412-28926f7e0ada
-using Graphs
-
-# ╔═╡ 69f8f83a-517e-4b1c-ac67-824164dec933
-using SimpleWeightedGraphs
-
-# ╔═╡ fcc5e01f-bd9a-41c3-8237-4f25bc2594d6
-using LinearAlgebra
 
 # ╔═╡ b1e5d4b9-057b-42da-a68c-2fe0b1bfcab6
 md"
@@ -125,8 +119,8 @@ but vary the mathematical formulation a bit. Everybody gets **an exogenous level
 
 ```math
 \begin{align*}
-c_i &= \alpha \sum_j g_{\textcolor{red}{j}i} c_j + \beta \\
-\iff  𝒄 &= \alpha G^T 𝒄 + 𝜷 \\
+c_i &= \alpha \sum_j g_{\textcolor{red}{j}i} c_j \textcolor{darkorange}{+ \beta} \\
+\iff  𝒄 &= \alpha G^T 𝒄 \textcolor{darkorange}{+ 𝜷} \\
 \stackrel{(*)}{\implies}  𝒄 &= (I - \alpha G^T)^{-1} 𝜷
 \end{align*}
 ```
@@ -139,11 +133,111 @@ md"""
 ### The Leontief inverse ``(I - A)^{-1}``
 """
 
-# ╔═╡ ddedd896-7fb8-11ef-27e4-777e6401ae0f
-# ╠═╡ disabled = true
-#=╠═╡
-using Graphs
-  ╠═╡ =#
+# ╔═╡ d5571478-a9f7-4153-98ec-0be75aaa9374
+let
+	g = SimpleGraph(5)
+
+	for i ∈ 1:3
+		for j ∈ (i+1):3
+			add_edge!(g, i, j)
+		end
+	end
+	for i ∈ 4:5
+		for j ∈ (i+1):5
+			add_edge!(g, i, j)
+		end
+	end
+#	add_edge!.(Ref(g), 4:6, (4:6)')#$, 1.0)
+	#add_edge!.(Ref(g), [3,4], 7)
+
+	G = Matrix(adjacency_matrix(g))
+	eig = eigen(G)
+
+
+	
+	ρ = maximum(abs, eig.values)
+	α = 1 * 1/ρ
+
+	sum((α * G)^i for i ∈ 0:3000) - sum((α * G)^i for i ∈ 0:3001) 
+	
+#	@info ρ
+#	centr1 = katz_centrality(g, 0.3)# * (1/ρ))
+#	centr2 = eigenvector_centrality(g)
+
+#	inv(I - 0.2 * Matrix(adjacency_matrix(g)))
+#	centr1 - centr2
+#	graphplot(g, ilabels = round.(centr2, digits=3))
+#	eigen(Matrix(adjacency_matrix(g)))
+	
+end
+
+# ╔═╡ 1c962a45-2f12-4a7e-88f3-de2a607d26de
+
+
+# ╔═╡ 0166cafd-da4c-49b4-89f7-1ae44b8ceaa9
+md"""
+### Note
+"""
+
+# ╔═╡ 55d27110-8ac6-4a9a-9957-3889f7b525da
+md"""
+Note that one can find two similar definitions in the literature.
+```math
+\begin{align*}
+𝒄^\text{Katz} &= ((I - \alpha G^T)^{-1} - I) 𝜷 &&= \sum_{i = 1}^\infty (\alpha G^T)^i\\
+𝒄^\text{Bonacich} &= (I - \alpha G^T)^{-1} 𝜷 &&= \sum_{i = 0}^\infty (\alpha G^T)^i
+\end{align*}
+```math
+
+We will use whatever definition is more convenient in our applications.
+"""
+
+# ╔═╡ 64091e7a-8faf-4ed3-b50e-8bbe4adff94a
+md"""
+## Variation 2: Page-Rank
+"""
+
+# ╔═╡ 75c434a7-0396-44ef-9d46-367327eaae81
+md"""
+### Exercises
+"""
+
+# ╔═╡ 4ddc3590-0b81-4e63-9ca6-ac6a65f3fe0c
+md"""
+# Centrality
+"""
+
+# ╔═╡ acec7487-9a8e-4173-9ecd-800dc4f64436
+md"""
+## 1. Degree centrality
+"""
+
+# ╔═╡ 279bf412-91c0-4fc9-904e-8afc6c51efcb
+md"""
+## 2. Betweenness centrality
+
+fraction of shortest paths that go through ``i``
+"""
+
+# ╔═╡ 4ae73070-f16f-4be4-9301-d109cfb81a75
+md"""
+## 3. Closeness centrality
+
+``C_i^\text{closeness} = \frac{1}{\text{average distance to } i}``
+"""
+
+# ╔═╡ 31f34f76-d975-4f76-8826-934e75155328
+md"""
+# Appendix
+"""
+
+# ╔═╡ 7841e12a-8d03-4503-8a33-e273efe9e223
+TableOfContents()
+
+# ╔═╡ 749581ac-c791-43b2-b246-83257b925425
+md"""
+## Defining named graphs
+"""
 
 # ╔═╡ eb43d141-63d3-4e68-a509-b25978199250
 Gs = [StarGraph, WheelGraph, CycleGraph, CompleteGraph, PathGraph]
@@ -190,48 +284,31 @@ let
 	fig
 end
 
-# ╔═╡ 4ddc3590-0b81-4e63-9ca6-ac6a65f3fe0c
+# ╔═╡ 8615df03-d7d3-44ce-abe8-120200bfb2d8
 md"""
-# Centrality
+## Playing around with `PythonCall.jl` and `networkx`
 """
 
-# ╔═╡ 7841e12a-8d03-4503-8a33-e273efe9e223
-TableOfContents()
-
-# ╔═╡ acec7487-9a8e-4173-9ecd-800dc4f64436
-md"""
-## 1. Degree centrality
-"""
-
-# ╔═╡ 279bf412-91c0-4fc9-904e-8afc6c51efcb
-md"""
-## 2. Betweenness centrality
-
-fraction of shortest paths that go through ``i``
-"""
-
-# ╔═╡ 4ae73070-f16f-4be4-9301-d109cfb81a75
-md"""
-## 3. Closeness centrality
-
-``C_i^\text{closeness} = \frac{1}{\text{average distance to } i}``
-"""
-
-# ╔═╡ d6c4c26d-9f2f-4db5-938c-12924e7c37da
-md"""
-## 4. Eigenvector centrality
-"""
-
-# ╔═╡ 9c800196-37c2-4e01-9c5b-cf5c24eb1a6a
-nx = pyimport("networkx")
-
-# ╔═╡ 5dacb17c-7a36-430f-9baf-419eba107012
+# ╔═╡ 74bb40d7-1c82-4340-9cee-fe670657e490
 # ╠═╡ disabled = true
 #=╠═╡
-using LinearAlgebra
+using PythonCall
+  ╠═╡ =#
+
+# ╔═╡ 9fb32ee1-fdf3-479b-8d93-9277ac3c176e
+# ╠═╡ disabled = true
+#=╠═╡
+using CondaPkg; CondaPkg.add("networkx"); CondaPkg.add("scipy")
+  ╠═╡ =#
+
+# ╔═╡ 9c800196-37c2-4e01-9c5b-cf5c24eb1a6a
+# ╠═╡ disabled = true
+#=╠═╡
+nx = pyimport("networkx")
   ╠═╡ =#
 
 # ╔═╡ a43d60bf-91df-4321-b038-c1416ee503b0
+#=╠═╡
 #(; g, G) = 
 let
 	g = nx.Graph()
@@ -256,80 +333,27 @@ let
 	#(; g, G)
 	#g.
 end
-
-# ╔═╡ 024c45f1-6fe2-4917-ba9a-443ee6be9ab5
-abs.(vec(eigs(adjacency_matrix(g); which=LM(), nev=1)[2]))::Vector{Float64}
-
-# ╔═╡ 86819a1e-f5b5-44e0-8993-a3a64914fcc5
-
-
-# ╔═╡ d5571478-a9f7-4153-98ec-0be75aaa9374
-let
-	g = SimpleGraph(5)
-
-	for i ∈ 1:3
-		for j ∈ (i+1):3
-			add_edge!(g, i, j)
-		end
-	end
-	for i ∈ 4:5
-		for j ∈ (i+1):5
-			add_edge!(g, i, j)
-		end
-	end
-#	add_edge!.(Ref(g), 4:6, (4:6)')#$, 1.0)
-	#add_edge!.(Ref(g), [3,4], 7)
-
-	G = Matrix(adjacency_matrix(g))
-	eig = eigen(G)
-
-
-	
-	ρ = maximum(abs, eig.values)
-	α = 1 * 1/ρ
-
-	sum((α * G)^i for i ∈ 0:3000) - sum((α * G)^i for i ∈ 0:3001) 
-	
-#	@info ρ
-#	centr1 = katz_centrality(g, 0.3)# * (1/ρ))
-#	centr2 = eigenvector_centrality(g)
-
-#	inv(I - 0.2 * Matrix(adjacency_matrix(g)))
-#	centr1 - centr2
-#	graphplot(g, ilabels = round.(centr2, digits=3))
-#	eigen(Matrix(adjacency_matrix(g)))
-	
-end
-
-# ╔═╡ 4b14e262-66db-46f9-930e-d271c884bdcc
-
-
-# ╔═╡ a4b833ec-569b-4146-a240-d704571b4bca
-graphplot(G)
+  ╠═╡ =#
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 
 [compat]
 AlgebraOfGraphics = "~0.8.10"
 CairoMakie = "~0.12.11"
-CondaPkg = "~0.2.23"
 DataFrames = "~1.7.0"
 GraphMakie = "~0.5.12"
 Graphs = "~1.11.2"
 PlutoUI = "~0.7.60"
-PythonCall = "~0.9.23"
 SimpleWeightedGraphs = "~1.4.0"
 """
 
@@ -339,7 +363,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.0-rc4"
 manifest_format = "2.0"
-project_hash = "f4321fcd21bfe8d1010ba2bbc3ee528ead5cb1a7"
+project_hash = "c77b4e0bf9817505fffd8610d2daa78935f04eee"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -563,12 +587,6 @@ weakdeps = ["InverseFunctions"]
 
     [deps.CompositionsBase.extensions]
     CompositionsBaseInverseFunctionsExt = "InverseFunctions"
-
-[[deps.CondaPkg]]
-deps = ["JSON3", "Markdown", "MicroMamba", "Pidfile", "Pkg", "Preferences", "TOML"]
-git-tree-sha1 = "8f7faef2ca039ee068cd971a80ccd710d23fb2eb"
-uuid = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
-version = "0.2.23"
 
 [[deps.ConstructionBase]]
 git-tree-sha1 = "76219f1ed5771adbb096743bff43fb5fdd4c1157"
@@ -1072,18 +1090,6 @@ git-tree-sha1 = "31e996f0a15c7b280ba9f76636b3ff9e2ae58c9a"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.21.4"
 
-[[deps.JSON3]]
-deps = ["Dates", "Mmap", "Parsers", "PrecompileTools", "StructTypes", "UUIDs"]
-git-tree-sha1 = "eb3edce0ed4fa32f75a0a11217433c31d56bd48b"
-uuid = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
-version = "1.14.0"
-
-    [deps.JSON3.extensions]
-    JSON3ArrowExt = ["ArrowTypes"]
-
-    [deps.JSON3.weakdeps]
-    ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"
-
 [[deps.JpegTurbo]]
 deps = ["CEnum", "FileIO", "ImageCore", "JpegTurbo_jll", "TOML"]
 git-tree-sha1 = "fa6d0bcff8583bac20f1ffa708c3913ca605c611"
@@ -1281,12 +1287,6 @@ deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.28.6+0"
 
-[[deps.MicroMamba]]
-deps = ["Pkg", "Scratch", "micromamba_jll"]
-git-tree-sha1 = "011cab361eae7bcd7d278f0a7a00ff9c69000c51"
-uuid = "0b3b1443-0f03-428d-bdfb-f27f9c1191ea"
-version = "0.1.14"
-
 [[deps.Missings]]
 deps = ["DataAPI"]
 git-tree-sha1 = "ec4f7fbeab05d7747bdf98eb74d130a2a2ed298d"
@@ -1444,12 +1444,6 @@ git-tree-sha1 = "8489905bcdbcfac64d1daa51ca07c0d8f0283821"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 version = "2.8.1"
 
-[[deps.Pidfile]]
-deps = ["FileWatching", "Test"]
-git-tree-sha1 = "2d8aaf8ee10df53d0dfb9b8ee44ae7c04ced2b03"
-uuid = "fa939f87-e72e-5be4-a000-7fc836dbe307"
-version = "1.3.0"
-
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LLVMOpenMP_jll", "Libdl"]
 git-tree-sha1 = "35621f10a7531bc8fa58f74610b1bfb70a3cfc6b"
@@ -1532,12 +1526,6 @@ version = "1.10.2"
 git-tree-sha1 = "77a42d78b6a92df47ab37e177b2deac405e1c88f"
 uuid = "43287f4e-b6f4-7ad1-bb20-aadabca52c3d"
 version = "1.2.1"
-
-[[deps.PythonCall]]
-deps = ["CondaPkg", "Dates", "Libdl", "MacroTools", "Markdown", "Pkg", "REPL", "Requires", "Serialization", "Tables", "UnsafePointers"]
-git-tree-sha1 = "06a778ec6d6e76b0c2fb661436a18bce853ec45f"
-uuid = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
-version = "0.9.23"
 
 [[deps.QOI]]
 deps = ["ColorTypes", "FileIO", "FixedPointNumbers"]
@@ -1798,12 +1786,6 @@ version = "0.6.18"
     SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
     StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
-[[deps.StructTypes]]
-deps = ["Dates", "UUIDs"]
-git-tree-sha1 = "159331b30e94d7b11379037feeb9b690950cace8"
-uuid = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
-version = "1.11.0"
-
 [[deps.StyledStrings]]
 uuid = "f489334b-da3d-4c2e-b8f0-e476e12c162b"
 version = "1.11.0"
@@ -1901,11 +1883,6 @@ weakdeps = ["ConstructionBase", "InverseFunctions"]
     [deps.Unitful.extensions]
     ConstructionBaseUnitfulExt = "ConstructionBase"
     InverseFunctionsUnitfulExt = "InverseFunctions"
-
-[[deps.UnsafePointers]]
-git-tree-sha1 = "c81331b3b2e60a982be57c046ec91f599ede674a"
-uuid = "e17b2a0c-0bdf-430a-bd0c-3a23cae4ff39"
-version = "1.0.0"
 
 [[deps.WoodburyMatrices]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -2025,12 +2002,6 @@ git-tree-sha1 = "490376214c4721cdaca654041f635213c6165cb3"
 uuid = "f27f6e37-5d2b-51aa-960f-b287f2bc3b7a"
 version = "1.3.7+2"
 
-[[deps.micromamba_jll]]
-deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
-git-tree-sha1 = "b4a5a3943078f9fd11ae0b5ab1bdbf7718617945"
-uuid = "f8abcde7-e9b7-5caa-b8af-a437887ae8e4"
-version = "1.5.8+0"
-
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
@@ -2068,40 +2039,41 @@ version = "3.6.0+0"
 # ╟─5dab8407-8fb7-4015-87a5-ec9d22b4fb94
 # ╠═3b5f3e53-8cfd-49a7-9d91-84fbf62d28d3
 # ╠═c28f89d8-c848-4760-82bd-0bd66aab9123
-# ╠═ec8bc50a-646a-4845-96e1-8194ce77710c
+# ╟─ec8bc50a-646a-4845-96e1-8194ce77710c
 # ╠═690df743-b730-4ff5-8e24-64e3177f3f0f
 # ╠═bda6bbe9-31de-44c1-ae97-a1fde80a7080
 # ╠═f8f2bc41-75a7-4a34-a406-55b2bb40e5aa
 # ╟─2d72846c-7ea2-4c8e-955a-1bd03984cf9a
 # ╟─71926bf4-415d-4061-baf6-30c362f2cc0f
 # ╟─3ca985e3-b187-474a-be7d-a2e5bc7af995
-# ╠═ddedd896-7fb8-11ef-27e4-777e6401ae0f
-# ╠═eccbde9c-7a4f-40fa-848b-05ad58d9fbf3
-# ╠═81424aa1-8614-4fea-864c-893603d4987f
-# ╠═eb43d141-63d3-4e68-a509-b25978199250
-# ╠═3752ee57-14dc-436f-9522-1f4666bd54dd
-# ╠═37ab3b8e-150d-4087-8a15-eaa0c28518fe
-# ╠═1e0a568a-6f42-406f-bb7b-8af0b087daa6
-# ╠═9d3d0317-851c-48b0-80b8-6f4f703a5f76
+# ╠═d5571478-a9f7-4153-98ec-0be75aaa9374
+# ╠═1c962a45-2f12-4a7e-88f3-de2a607d26de
+# ╟─0166cafd-da4c-49b4-89f7-1ae44b8ceaa9
+# ╟─55d27110-8ac6-4a9a-9957-3889f7b525da
+# ╟─64091e7a-8faf-4ed3-b50e-8bbe4adff94a
+# ╠═75c434a7-0396-44ef-9d46-367327eaae81
 # ╟─4ddc3590-0b81-4e63-9ca6-ac6a65f3fe0c
-# ╠═975cc198-d747-4433-b716-09265e6994b6
-# ╠═7841e12a-8d03-4503-8a33-e273efe9e223
 # ╠═acec7487-9a8e-4173-9ecd-800dc4f64436
 # ╟─279bf412-91c0-4fc9-904e-8afc6c51efcb
 # ╟─4ae73070-f16f-4be4-9301-d109cfb81a75
-# ╠═d6c4c26d-9f2f-4db5-938c-12924e7c37da
+# ╟─31f34f76-d975-4f76-8826-934e75155328
+# ╠═975cc198-d747-4433-b716-09265e6994b6
+# ╠═7841e12a-8d03-4503-8a33-e273efe9e223
+# ╠═956907ed-d7e1-4bbf-b412-28926f7e0ada
+# ╠═69f8f83a-517e-4b1c-ac67-824164dec933
+# ╠═5dacb17c-7a36-430f-9baf-419eba107012
+# ╠═eccbde9c-7a4f-40fa-848b-05ad58d9fbf3
+# ╠═81424aa1-8614-4fea-864c-893603d4987f
+# ╠═3752ee57-14dc-436f-9522-1f4666bd54dd
+# ╟─749581ac-c791-43b2-b246-83257b925425
+# ╠═eb43d141-63d3-4e68-a509-b25978199250
+# ╠═37ab3b8e-150d-4087-8a15-eaa0c28518fe
+# ╠═1e0a568a-6f42-406f-bb7b-8af0b087daa6
+# ╠═9d3d0317-851c-48b0-80b8-6f4f703a5f76
+# ╟─8615df03-d7d3-44ce-abe8-120200bfb2d8
 # ╠═74bb40d7-1c82-4340-9cee-fe670657e490
 # ╠═9fb32ee1-fdf3-479b-8d93-9277ac3c176e
 # ╠═9c800196-37c2-4e01-9c5b-cf5c24eb1a6a
-# ╠═5dacb17c-7a36-430f-9baf-419eba107012
 # ╠═a43d60bf-91df-4321-b038-c1416ee503b0
-# ╠═024c45f1-6fe2-4917-ba9a-443ee6be9ab5
-# ╠═86819a1e-f5b5-44e0-8993-a3a64914fcc5
-# ╠═956907ed-d7e1-4bbf-b412-28926f7e0ada
-# ╠═69f8f83a-517e-4b1c-ac67-824164dec933
-# ╠═fcc5e01f-bd9a-41c3-8237-4f25bc2594d6
-# ╠═d5571478-a9f7-4153-98ec-0be75aaa9374
-# ╠═4b14e262-66db-46f9-930e-d271c884bdcc
-# ╠═a4b833ec-569b-4146-a240-d704571b4bca
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
