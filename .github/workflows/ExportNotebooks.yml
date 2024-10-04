@@ -14,7 +14,7 @@ jobs:
     build-and-deploy:
         runs-on: ubuntu-latest
         steps:
-            - name: Checkout Spring 24 source
+            - name: Checkout Winter 24 source
               uses: actions/checkout@v2
 
             - name: 🙌 Install Julia
@@ -54,7 +54,7 @@ jobs:
             - name: 🔀 Combine semesters into single site
               run: |
                 mkdir www
-                mv _site www/Spring24
+                mv _site www/Winter24
                 mv extra_outputs/* www
 
             - name: 🚀 Deploy to GitHub Pages
