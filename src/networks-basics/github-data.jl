@@ -246,15 +246,20 @@ TableOfContents()
 core(graph) = argmax(length, connected_components(graph))
 
 # ╔═╡ c19b16da-8981-4ee7-8ae7-f78fc3ab1440
-garbled_token = "hitgub__XX_I4Y01nwfEK5qt_YY_mIw7LNvK0bMH73XOJhbIs_ZZ_pa7U6RLB3OXNtP0s1hh"
+garbled_token = "hitgub__XX_I4Y0_WW_fl_VV_cPqWIWRPVEoUV0nqdVQW_ZZ_JO6k5J3"
 
 # ╔═╡ 8b6af171-9746-4f02-851d-a52c7d406e70
 auth = GitHub.authenticate(
-	replace(garbled_token, 
-	   "_XX_" => "pat_11ABP5",
-	   "_YY_" => "Kim_vi7P8PDAX",
-	   "_ZZ_" => "jjGSnnwU6I",
-	   "hitgub" => "github"
+	#correct_t
+	replace(
+		replace(garbled_token, 
+		   "_XX_" => "pat_11ABP5",
+		   "_VV_" => "PreKtGuMD", 
+		   "_WW_" => "BS6RMK1E_YY_kCknplz",
+		),
+		"_YY_" => "ass2_jpPpy",
+		"_ZZ_" => "ZASLX2YAY",
+		"hitgub" => "github"
 	)
 )
 
