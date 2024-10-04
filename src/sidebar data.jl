@@ -10,15 +10,14 @@ Dict(
     ],
     :about => Dict(
         :authors => [
-            (name = "Fabian Greimel", url = "https://www.greimel.eu"),
-            (name = "Simon Trimborn", url = "https://www.simontrimborn.de")
+            (name = "Fabian Greimel", url = "https://www.greimel.eu")
         ],
         :title => "Networks in Economics and Finance",
-        :subtitle => "Theory, Computation and Data",
-        :term => "Spring 2024",
-        :institution => "University of Amsterdam",
+        :subtitle => "BSc Economics | University of Vienna",
+        :term => "Winter 2024",
+        :institution => "University of Vienna",
         :institution_url => "http://www.uva.nl",
-        :institution_logo => "uva_logo.svg",
-        :institution_logo_darkmode => "uva_logo.svg"
+        :institution_logo => "univie-logo.svg",
+        :institution_logo_darkmode => "univie-logo-bg.svg"
     )
 )
