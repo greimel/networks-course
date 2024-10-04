@@ -3,13 +3,9 @@
 
 pluto_state_cache
 
-website/__site/
-build/
-website/config.md
-
 generate/*.toml
 
-PlutoPages/_site/
-PlutoPages/_cache/
+_site/
+_cache/
 
 generation_report.html
