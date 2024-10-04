@@ -9,5 +9,5 @@ create_index = true
 exclude = [
     # these are in the repo but not used on the website
     "tools/*",
-    "PlutoPages.jl",
+    "src/syllabus.md"
 ]
