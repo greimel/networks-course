@@ -70,7 +70,7 @@ using MarkdownLiteral: @markdown
 
 # ╔═╡ eb6a3510-6477-11eb-0e4e-33557d794e45
 md"""
-`first-networks.jl` | **Version 1.6** | *last updated: October 4, 2024*
+`first-networks.jl` | **Version 1.7** | *last updated: October 7, 2024*
 """
 
 # ╔═╡ 6009f070-5ef8-11eb-340a-d9780be085ad
@@ -234,6 +234,28 @@ task3_graph = let
 	graph
 end
 
+# ╔═╡ 40defc1b-f9a7-4653-a52f-3d217a424ee5
+let
+	fig = Figure(size = (600, 250))
+	n = 6
+	task_comparison = WheelGraph(n)
+
+	layout = Shell(; nlist = [[1]])
+	a1, _ = graphplot(
+		fig[1,1], task3_graph; layout, ilabels = vertices(task3_graph),
+		axis = (; title = "Your attempt")
+	)
+	a2, _ = graphplot(
+		fig[1,2], task_comparison; layout, ilabels = vertices(task_comparison),
+		axis = (; title = "Your goal")
+	)
+
+	hidedecorations!(a1)
+	hidedecorations!(a2)
+	
+	fig
+end
+
 # ╔═╡ 60bca082-5be8-46b9-acbf-2dbbcfa984ea
 md"""
 ### Task 4 (2 points)
@@ -246,31 +268,9 @@ md"""
 	graph = SimpleGraph(5)
 
 	# add your code here, e.g.
-	add_edge!(graph, 1, 2)
+	add_edge!(graph, 1, 3)
 	
 	(; task4_graph = graph)
-end
-
-# ╔═╡ 40defc1b-f9a7-4653-a52f-3d217a424ee5
-let
-	fig = Figure(size = (600, 250))
-	n = 6
-	task_comparison = WheelGraph(n)
-
-	layout = Shell(; nlist = [[1]])
-	a1, _ = graphplot(
-		fig[1,1], task4_graph; layout, ilabels = vertices(task3_graph),
-		axis = (; title = "Your attempt")
-	)
-	a2, _ = graphplot(
-		fig[1,2], task_comparison; layout, ilabels = vertices(task_comparison),
-		axis = (; title = "Your goal")
-	)
-
-	hidedecorations!(a1)
-	hidedecorations!(a2)
-	
-	fig
 end
 
 # ╔═╡ 30ce82be-d68f-424d-8a4c-cb6272268251

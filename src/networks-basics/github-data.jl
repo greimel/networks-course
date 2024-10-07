@@ -46,7 +46,7 @@ using MarkdownLiteral: @markdown
 
 # ╔═╡ eef87040-4c96-49e4-8297-e90231b438fb
 md"
-`github-data.jl` | **Version 1.1+** | *last changed: September 30, 2024*"
+`github-data.jl` | **Version 1.1** | *last changed: September 30, 2024*"
 
 # ╔═╡ c0220198-9f64-4059-b13f-801233ce1c03
 @bind csv_in FilePicker()
