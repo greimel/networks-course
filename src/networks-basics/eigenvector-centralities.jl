@@ -1,6 +1,15 @@
 ### A Pluto.jl notebook ###
 # v0.19.46
 
+#> [frontmatter]
+#> chapter = 1
+#> section = 7
+#> order = 7
+#> title = "Eigenvector centralities"
+#> layout = "layout.jlhtml"
+#> tags = ["networks-basics"]
+#> description = ""
+
 using Markdown
 using InteractiveUtils
 
