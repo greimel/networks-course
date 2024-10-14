@@ -2,7 +2,7 @@
 # v0.19.46
 
 #> [frontmatter]
-#> chapter = 1
+#> chapter = 2
 #> section = 7
 #> order = 7
 #> title = "Eigenvector centralities"
@@ -36,7 +36,7 @@ using DataFrames
 
 # ╔═╡ b1e5d4b9-057b-42da-a68c-2fe0b1bfcab6
 md"
-`eigenvector-centralities.jl` | **Version 1.0** | *last changed: October 7, 2024*
+`eigenvector-centralities.jl` | **Version 1.0** | *last changed: October 11, 2024*
 "
 
 # ╔═╡ c2166483-9d8d-4c4c-b493-0a38ce9ce249
@@ -231,6 +231,8 @@ We will use whatever definition is more convenient in our applications.
 # ╔═╡ 64091e7a-8faf-4ed3-b50e-8bbe4adff94a
 md"""
 ## Variation 2: Page-Rank
+
+... the algorithm that made Google stand out. Check Wikipedia if you're interested.
 """
 
 # ╔═╡ 75c434a7-0396-44ef-9d46-367327eaae81
@@ -241,36 +243,12 @@ md"""
 # ╔═╡ 89ef165a-36dd-4857-8f91-d578b544b22a
 let
 	g = PathDiGraph(5)#Graph(4)
-	graphplot(g, ilabels = vertices(g))
+	@info graphplot(g, ilabels = vertices(g), figure = (; size = (300, 300)))
 
 	A = adjacency_matrix(g)
 
 	A^5
 end
-
-# ╔═╡ 4ddc3590-0b81-4e63-9ca6-ac6a65f3fe0c
-md"""
-# Centrality
-"""
-
-# ╔═╡ acec7487-9a8e-4173-9ecd-800dc4f64436
-md"""
-## 1. Degree centrality
-"""
-
-# ╔═╡ 279bf412-91c0-4fc9-904e-8afc6c51efcb
-md"""
-## 2. Betweenness centrality
-
-fraction of shortest paths that go through ``i``
-"""
-
-# ╔═╡ 4ae73070-f16f-4be4-9301-d109cfb81a75
-md"""
-## 3. Closeness centrality
-
-``C_i^\text{closeness} = \frac{1}{\text{average distance to } i}``
-"""
 
 # ╔═╡ 31f34f76-d975-4f76-8826-934e75155328
 md"""
@@ -356,7 +334,6 @@ md"""
   ╠═╡ =#
 
 # ╔═╡ a43d60bf-91df-4321-b038-c1416ee503b0
-#=╠═╡
 #(; g, G) = 
 let
 	g = nx.Graph()
@@ -381,7 +358,6 @@ let
 	#(; g, G)
 	#g.
 end
-  ╠═╡ =#
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2105,12 +2081,8 @@ version = "3.6.0+0"
 # ╟─0166cafd-da4c-49b4-89f7-1ae44b8ceaa9
 # ╟─55d27110-8ac6-4a9a-9957-3889f7b525da
 # ╟─64091e7a-8faf-4ed3-b50e-8bbe4adff94a
-# ╠═75c434a7-0396-44ef-9d46-367327eaae81
+# ╟─75c434a7-0396-44ef-9d46-367327eaae81
 # ╠═89ef165a-36dd-4857-8f91-d578b544b22a
-# ╟─4ddc3590-0b81-4e63-9ca6-ac6a65f3fe0c
-# ╠═acec7487-9a8e-4173-9ecd-800dc4f64436
-# ╟─279bf412-91c0-4fc9-904e-8afc6c51efcb
-# ╟─4ae73070-f16f-4be4-9301-d109cfb81a75
 # ╟─31f34f76-d975-4f76-8826-934e75155328
 # ╠═975cc198-d747-4433-b716-09265e6994b6
 # ╠═7841e12a-8d03-4503-8a33-e273efe9e223
