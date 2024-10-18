@@ -139,6 +139,9 @@ end
 # ╔═╡ f48fa122-649a-11eb-2041-bbf0d0c4670c
 const States = Union{subtypes(State)...}
 
+# ╔═╡ 9bb5691d-4cb3-44e7-be3c-c2c9412a4281
+Markdown.MD(Markdown.Admonition("warning", "Note", [md"The code uses the concept _Multiple dispatch_. For a simpler illustration have a look at the notebook `more-julia.jl`"]))
+
 # ╔═╡ 10dd6814-f796-42ea-8d40-287ed7c9d239
 md"
 ## Define the transitions
@@ -2908,6 +2911,7 @@ version = "3.6.0+0"
 # ╟─2f9f008a-64aa-11eb-0d9a-0fdfc41d4657
 # ╠═b8d874b6-648d-11eb-251c-636c5ebc1f42
 # ╠═f48fa122-649a-11eb-2041-bbf0d0c4670c
+# ╟─9bb5691d-4cb3-44e7-be3c-c2c9412a4281
 # ╟─10dd6814-f796-42ea-8d40-287ed7c9d239
 # ╠═8ddb6f1e-649e-11eb-3982-83d2d319b31f
 # ╠═61a36e78-57f8-4ef0-83b4-90e5952c116f
