@@ -387,7 +387,7 @@ md"""
 
 👉 Make sure that that **all group members proofread** your submission (especially your little essay).
 
-👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. In addition, **upload the source code** of the notebook (the .jl file).
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
 """
 
 # ╔═╡ a81600e1-6b52-460c-808f-a785989bd4a6
