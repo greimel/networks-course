@@ -135,7 +135,7 @@ end
 
 # ╔═╡ 47594b98-6c72-11eb-264f-e5416a8faa32
 md"""
-`facebook.jl` | **Version 1.10** | *last updated: Oct 31, 2024*
+`facebook.jl` | **Version 1.11** | *last updated: Nov 20, 2024*
 """
 
 # ╔═╡ 7f8a57f0-6c72-11eb-27dd-2dae50f00232
@@ -1246,6 +1246,11 @@ begin
 	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
 	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
 end
+
+# ╔═╡ a41b41f3-06b8-4cb1-af3b-d579a787d963
+hint(md"A possible approach: Is there a variation of Eigenvector centrality, that allows you to take into account the size (= population) of a country?
+
+Feel free to take another route.")
 
 # ╔═╡ 52b29c95-35f7-44f7-b0f2-e2fb2231f7d5
 hint(md"Uncomment line 5 in the cell below.")
@@ -3546,6 +3551,7 @@ version = "3.6.0+0"
 # ╠═d5c448e6-713c-11eb-1b3b-9b8e4af8ae5f
 # ╟─477b9a84-713d-11eb-2b48-0553087b0735
 # ╟─55ab86e6-6fa8-11eb-2ac4-9f0548598014
+# ╟─a41b41f3-06b8-4cb1-af3b-d579a787d963
 # ╠═dcb2cd6c-713c-11eb-1f3d-2de066d25c6f
 # ╟─3e69678e-713d-11eb-3591-ff5c3563d0eb
 # ╟─74c2e86c-6fa8-11eb-32f7-a97c939225ef
