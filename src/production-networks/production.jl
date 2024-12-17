@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.3
 
 #> [frontmatter]
 #> chapter = 6
@@ -15,12 +15,14 @@ using InteractiveUtils
 
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
+    #! format: off
     quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
+    #! format: on
 end
 
 # ╔═╡ a09cb7a6-17e4-4570-ae0b-8104c39bbc24
@@ -457,14 +459,11 @@ Your answer goes here ...
 md"""
 ### Task 2: Simulate a Covid crisis (4 points)
 
-👉 By putting your selected industries into the `hit_industries` vector in **Task 1**, you have already simulated the Covid crisis. You can also vary the length of the shock in [this cell](#ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6) (assume a period is a quarter).
+👉 By putting your selected industries into the `hit_industries` vector in **Task 1**, you have already simulated the Covid crisis. You can adjust the length of the shock (assume a period is a quarter) and the magnitude of the shock.
+
+* Duration of the shock: $(@bind shock_duration Slider(1:10, default = 2, show_value = true))
+* Magnitude of the shock: $(@bind shock_size Slider(0.1:0.1:2.0, default = 0.5, show_value = true))
 """
-
-# ╔═╡ 3ec33a62-77b1-11eb-0821-e547d1422e6f
-# your code
-
-# ╔═╡ 45db03f2-77b1-11eb-2edd-6104bc85915b
-# goes here
 
 # ╔═╡ c3472d5b-c03e-4ff2-8cf9-bb0932ceb064
 md"""
@@ -842,7 +841,7 @@ fig_covid = let
 	ax = Axis(fig[1,1], title = "Welfare loss after shock\nto different industries")
 	
 	for (i, nodes) in enumerate(nodes_vec)
-		(; welfare) = impulse_response(10, A, params(A), nodes[1], -0.5, T_shock = 0:2)
+		(; welfare) = impulse_response(10, A, params(A), nodes[1], -shock_size, T_shock = 0:shock_duration)
 		lines!(ax, collect(axes(welfare, 1)), parent(welfare), label = nodes[2] * " $(length(nodes[1]))")
 	end
 	
@@ -981,7 +980,7 @@ ZipFile = "~0.10.1"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.1"
+julia_version = "1.11.2"
 manifest_format = "2.0"
 project_hash = "95541792fa0f8c4d479cf5b70cfed8b1595226b9"
 
@@ -2929,12 +2928,10 @@ version = "3.6.0+0"
 # ╟─664efcec-77b1-11eb-2301-5da84a5de423
 # ╠═ebfcbb8e-77ae-11eb-37fc-e798175197d0
 # ╟─85e7546c-77ae-11eb-0d0c-618c3669c903
-# ╠═3ec33a62-77b1-11eb-0821-e547d1422e6f
-# ╠═45db03f2-77b1-11eb-2edd-6104bc85915b
+# ╟─ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6
 # ╟─c3472d5b-c03e-4ff2-8cf9-bb0932ceb064
 # ╠═811e741e-77b1-11eb-000e-93a9a19a9f60
 # ╟─9298e2de-77b1-11eb-0a56-1f50bb0f4dc3
-# ╟─ea1afdc0-77b4-11eb-1c7a-2f92bbdb83a6
 # ╟─48f0ffd4-77b0-11eb-04ab-43eac927ac9d
 # ╠═9fb0a0a8-77b1-11eb-011f-7fc7a549f552
 # ╟─9da09070-77b1-11eb-0d2e-e9a4433bf34e

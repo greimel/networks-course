@@ -489,7 +489,7 @@ Your answer goes here ...
 
 # ╔═╡ 267751ab-1814-4b2c-95ee-f0cc507a55ac
 md"""
-👉 **(e)** Assume that there is a complete interbank network with a uniform weights to ensure the socially optimal allocation in all states. What would be an alternative state ``S_4`` in which the complete interbank network has a better outcome?
+👉 **(e)** Assume that there is a complete interbank network with uniform weights to ensure the socially optimal allocation in all states. What would be an alternative state ``S_4``, where the given network has a worse outcome than the empty network?
 """
 
 # ╔═╡ fd9f974c-6a21-4855-aa26-9ae6221b4574
