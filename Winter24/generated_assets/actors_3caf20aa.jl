@@ -70,7 +70,7 @@ using NetworkLayout
 using MarkdownLiteral: @markdown
 
 # ╔═╡ d3221cd9-0c8c-42a6-a3ec-00b69e7642b7
-md"`actors.jl` | **Version 1.0** | *last changed: October 7, 2025*"
+md"`actors.jl` | **Version 1.1** | *last changed: October 10, 2025*"
 
 # ╔═╡ 1d0539e4-a108-4a36-b00c-e5a90943ac4f
 md"""
@@ -186,13 +186,13 @@ md"""
 """
 
 # ╔═╡ 6685d43b-2b61-4ddd-a158-960b85362fe7
-url_to_data_gist = "https://gist.githubusercontent.com/greimel/def8e0bc5c39a06925fb9921cd7a780c/raw/a86a6fefaae0b4769e9aada075c9546746d85bdb"
+url_to_data_gist = "https://gist.githubusercontent.com/greimel/def8e0bc5c39a06925fb9921cd7a780c/raw/a86a6fefaae0b4769e9aada075c9546746d85bdb/"
 
 # ╔═╡ cabcc864-48e7-4b5e-8db2-c157be49911f
-actors_df0 = CSV.read(HTTP.get(joinpath(url_to_data_gist, "actors.csv")).body, DataFrame)
+actors_df0 = CSV.read(HTTP.get(url_to_data_gist * "actors.csv").body, DataFrame)
 
 # ╔═╡ 11c52177-5fd6-4a3d-b1da-e9e5dad1df76
-movies_df = CSV.read(HTTP.get(joinpath(url_to_data_gist, "movies.csv")).body, DataFrame)
+movies_df = CSV.read(HTTP.get(url_to_data_gist * "movies.csv").body, DataFrame)
 
 # ╔═╡ 7e073380-b1de-4f8b-b89e-4043d15f656b
 md"""
