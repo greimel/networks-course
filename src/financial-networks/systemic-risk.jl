@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.0
+# v0.20.19
 
 #> [frontmatter]
 #> chapter = 5
@@ -15,12 +15,14 @@ using InteractiveUtils
 
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
-    quote
+    #! format: off
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
+    #! format: on
 end
 
 # ╔═╡ 8ada8545-243e-4922-a306-ffff866a6135
@@ -207,7 +209,7 @@ using PlutoTest: @test
 
 # ╔═╡ 52052d98-0c41-45ec-95bf-d936b1c43e81
 md"""
-`systemic-risk.jl` | **Version 2.5+** | *last updated: November 25, 2024*
+`systemic-risk.jl` | **Version 2.5++** | *last updated: November 30, 2025*
 """
 
 # ╔═╡ ab239918-1cde-4d6b-ac7f-716aaba5f39b
@@ -245,7 +247,7 @@ md"""
 
 # ╔═╡ eba94b09-f061-432a-80ce-a68be83e6a99
 md"""
-# I. Model Setup
+# 1. Model Setup
 
 ## Model I: Banks
 """
@@ -277,7 +279,7 @@ end
 
 # ╔═╡ a0ac4092-cd27-4523-85f9-f4a4d81456b3
 md"""
-# II. Payment equilibrium
+# 2. Payment equilibrium
 """
 
 # ╔═╡ 523e177c-f74d-4805-8a2b-9c27a4b0bc63
@@ -289,7 +291,7 @@ md"""
 
 # ╔═╡ 7f058e4a-9b12-41c9-9fd7-4ad023058a14
 md"""
-# III. Financial Contagion
+# 3. Financial Contagion
 """
 
 # ╔═╡ 5012c275-8157-4488-b868-f45c92d43100
@@ -305,7 +307,7 @@ Ring: step-wise increase in defaults, Complete: bang-bang
 
 # ╔═╡ da7c558d-a2b5-41a8-9c78-3e39a00dfd31
 md"""
-# IV. Stability and Resilience
+# 4. Stability and Resilience
 """
 
 # ╔═╡ bf719f30-72c1-488e-ba77-c183effb7c60
@@ -1635,7 +1637,7 @@ StructArrays = "~0.6.17"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.1"
+julia_version = "1.11.6"
 manifest_format = "2.0"
 project_hash = "b109112e619bbe1d886583b3949f6c890f570483"
 
@@ -2762,7 +2764,7 @@ version = "3.2.4+0"
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+2"
+version = "0.8.5+0"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
