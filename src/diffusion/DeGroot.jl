@@ -64,6 +64,11 @@ using DataFrameMacros: @transform!
 # ╔═╡ 0b79fb30-66d3-11eb-052b-89cfca69b3a6
 md"""
 `DeGroot.jl` | **Version 1.3+** | *last updated: Feb 7, 2024*
+
+Use 
+Golub and Jackson: Naïve Learning in Social Networks and the Wisdom of Crowds (2010, AEJ: Micro)
+and Bachelor thesis by
+Moritz Tolle
 """
 
 # ╔═╡ 7c18cc0e-66d3-11eb-3e8e-09d869dd5731
