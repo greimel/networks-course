@@ -440,27 +440,10 @@ sci_url_pre = "https://data.humdata.org/dataset/e9988552-74e4-4ff4-943f-c782ac8b
 # ╔═╡ b6d47ef5-5a9a-4e36-9bb4-d0d8fa4bcb38
 sci_urls = [
 	:countries =>
-		"35ca6ade-a5bd-4782-b266-797169dca74b/download/countries-countries-fb-social-connectedness-index-october-2021.tsv",
+		"652cf9c9-541f-47de-8d53-ff818062bd0c/download/country.csv",
 	:US_counties =>
-		"c59fd5ac-0458-4e83-b6be-5334f0ea9a69/download/us-counties-us-counties-fb-social-connectedness-index-october-2021.zip",
-	:US_counties__countries => 
-		"868a2fdb-f5c8-4a98-af7c-cfc8bf0daeb3/download/us-counties-countries-fb-social-connectedness-index-october-2021.tsv",
-	:GADM_NUTS2 =>
-		"cc5b6046-c417-4e25-930a-3d31538dffc5/download/gadm1_nuts2-gadm1_nuts2-fb-social-connectedness-index-october-2021.zip",
-	:GADM_NUTS3_counties =>
-		"18bf46fe-7f84-47b7-9d7e-b79a9c491f52/download/gadm1_nuts3_counties-gadm1_nuts3_counties-fb-social-connectedness-index-october-2021.zip"
+		"97dc352f-c9c5-47d6-a6ef-88709e14006c/download/us_counties.csv",
 	]
-
-# ╔═╡ f5fdbf36-36e0-4714-9f35-ec538d3d447a
-sci_checksums = Dict(
-	:US_counties =>
-		"023cf8a522a4e15ca321113adf9dcda85b7796fee3a5688f825ffc71a0eeaa1f",
-	:countries =>
-		"bc6269eb10da945e2327beb725e3ef4fa955fd430535b0357cc118a0b3c7cfd6",
-	:US_counties__countries => nothing,
-	:GADM_NUTS2 => nothing,
-	:GADM_NUTS3_counties => nothing
-	)
 
 # ╔═╡ 5b4444ad-1156-4b8c-bf84-b6f993d9f52b
 begin
@@ -469,13 +452,11 @@ begin
 	
 	for (id, url) in sci_urls
 		register(DataDep(
-    		"SCI_$id",
+    		"SCI_2026_$id",
     		"""
 	
 			""",
-    		sci_url_pre * url,
-	    	sci_checksums[id],
-		 	post_fetch_method = id ∉ [:US_counties__countries, :countries] ? unpack : identity 
+    		sci_url_pre * url
 		))
 	end
 	
@@ -720,13 +701,10 @@ function SCI_data(id)
 	if id ∉ valid_ids
 		ArgumentError("provide one of $valid_ids") |> throw
 	end
-	if id == :US_counties
-		path = joinpath(@datadep_str("SCI_$id"), "county_county.tsv")
-	else
-		path = joinpath(@datadep_str("SCI_$id"), files[id])
-	end
+	path = joinpath(@datadep_str("SCI_2026_$id"), files[id])
 	
-	CSV.File(path) |> DataFrame
+	df = CSV.File(path; select = [:user_region, :friend_region, :scaled_sci]) |> DataFrame
+	rename(df, :user_region => :user_loc, :friend_region => :fr_loc)
 end
 
 # ╔═╡ b20ab98c-710d-11eb-0a6a-7de2477acf35
@@ -3849,7 +3827,6 @@ version = "4.1.0+0"
 # ╠═0a47261d-1061-4c3d-bda8-7e0106c4a1df
 # ╠═b0fc1027-4a33-49c6-b0ac-bb4e4bfb9414
 # ╠═b6d47ef5-5a9a-4e36-9bb4-d0d8fa4bcb38
-# ╠═f5fdbf36-36e0-4714-9f35-ec538d3d447a
 # ╠═19528ac3-4dcd-49cd-934d-fb0392394b59
 # ╠═765fa3eb-2ffe-4b7d-8dbd-191f21ec0302
 # ╠═4ffaca67-8600-4f2c-a360-05c48a960cf2
