@@ -13,11 +13,11 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 91f4f3a7-2226-48a1-8880-25306adf95b9
-using MetaGraphs
-
 # ╔═╡ 923d97aa-1843-40a9-b3b0-1f33e94c07a4
 using Graphs
+
+# ╔═╡ 91f4f3a7-2226-48a1-8880-25306adf95b9
+using MetaGraphs
 
 # ╔═╡ c704150e-3a59-4ea7-8e3a-809d52cc8794
 using GraphDataFrameBridge
@@ -45,9 +45,6 @@ using DataFrameMacros, Chain
 
 # ╔═╡ 6c9646f7-3c33-4c87-9fa4-dabbfe896b3a
 using PlutoUI
-
-# ╔═╡ 38ee92bb-714f-4cc6-a945-21ff017edc10
-using Statistics: mean, std
 
 # ╔═╡ 9009f6a9-f46f-46c9-acee-ebe02b47fea5
 using StatsBase
@@ -135,7 +132,7 @@ Note that the betweenness centrality picks out nodes 5 and 6 as being most centr
 
 ### Exercise 3
 
-👉 Write out the series representing the Katz-Bonacich centrality for general $0 < \alpha < \lambda_{\rm max}$. Explain why all nodes have the same Katz-Bonacich centrality in this case.
+👉 Write out the series representing the Katz-Bonacich centrality for general $0 < \alpha < 1/\lambda_{\rm max}$. Explain why all nodes have the same Katz-Bonacich centrality in this case.
 "
 
 # ╔═╡ 98e5e1c9-45e6-47ab-b43a-768cbc64b6c5
@@ -166,7 +163,7 @@ Let us now find the most central researchers of the Tinbergen institute.
 
 # ╔═╡ bb2b8184-6737-11eb-279e-6fc09622b8ca
 md"
-👉 Calculate the top 10 centralities for the largest component in this co-authorship network in terms of degree, betweenness, eigenvector centrality and Katz-Bonancich centrality with ``\alpha = 0.2``
+👉 Calculate the top 10 centralities for the largest component in this co-authorship network in terms of degree, betweenness, eigenvector centrality and Katz-Bonacich centrality with ``\alpha = 0.2``
 "
 
 # ╔═╡ bcafe43f-a38e-4824-9db4-5fec7f675e46
@@ -271,8 +268,8 @@ graphplot(ti_graph,
 components = connected_components(ti_graph)
 
 # ╔═╡ aac6e282-6603-11eb-18bd-95a57f187167
-# nodes in first (largest) component
-core = components[1]
+# nodes in the largest component
+core = argmax(length, components)
 
 # ╔═╡ a860b0c8-6738-11eb-37f5-ebb8ce7b40cb
 gc = ti_graph[core]
@@ -288,7 +285,7 @@ ti_plot = graphplot(gc,
 )
 
 # ╔═╡ 3432e110-673f-11eb-2275-59c3aa7df804
-competerank(eigenvector_centrality(ti_graph))
+competerank(eigenvector_centrality(ti_graph), rev=true)
 
 # ╔═╡ 395fe4f2-42b9-48f8-a5cb-ebea288aff90
 researchers_df = let
@@ -365,6 +362,22 @@ TableOfContents()
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
+[deps]
+AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
+DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
+DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+GraphDataFrameBridge = "3c71623a-a715-5176-9801-629b201a4880"
+GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
+NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+
 [compat]
 AlgebraOfGraphics = "~0.13.2"
 CSV = "~0.10.17"
@@ -380,23 +393,6 @@ MetaGraphs = "~0.7.2"
 NetworkLayout = "~0.4.11"
 PlutoUI = "~0.7.83"
 StatsBase = "~0.34.13"
-
-[deps]
-AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
-DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
-DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
-DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-GraphDataFrameBridge = "3c71623a-a715-5176-9801-629b201a4880"
-GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
-Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
-MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
-NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
-PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -405,7 +401,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.9"
 manifest_format = "2.0"
-project_hash = "46cc3296788af4b8259cd600787f5efba359cab8"
+project_hash = "b13823374db09b60ade9a6e6fc1d3c8ff17e3680"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -2406,13 +2402,13 @@ version = "4.1.0+0"
 # ╠═24dd4376-5e8f-11eb-02e7-f34f7c169726
 # ╠═395fe4f2-42b9-48f8-a5cb-ebea288aff90
 # ╠═45ce2bae-b2ad-4665-a8a6-86f78d7dcc2a
-# ╠═91f4f3a7-2226-48a1-8880-25306adf95b9
 # ╠═3fee5013-2f1e-4965-90ed-d8f2c084ea79
 # ╠═30bb2d4e-5dcd-4959-a1a6-dc6e1525a267
 # ╠═ee5e68e5-292d-4c89-8157-b1102a490356
 # ╟─6d4ec768-649f-11eb-1093-054ab8976450
 # ╟─cb02fb71-3433-4187-84fe-94c055ea5f25
 # ╠═923d97aa-1843-40a9-b3b0-1f33e94c07a4
+# ╠═91f4f3a7-2226-48a1-8880-25306adf95b9
 # ╠═c704150e-3a59-4ea7-8e3a-809d52cc8794
 # ╟─30bc4c58-18d5-4265-ae4e-7cbb004c4c5e
 # ╠═4d6a9177-36a0-4492-a1c1-6d50e51207be
@@ -2425,7 +2421,6 @@ version = "4.1.0+0"
 # ╠═49a082f3-6f27-4996-9094-8f6a17029440
 # ╟─ac7a38f5-a636-4956-9ca1-218253de72db
 # ╠═6c9646f7-3c33-4c87-9fa4-dabbfe896b3a
-# ╠═38ee92bb-714f-4cc6-a945-21ff017edc10
 # ╠═9009f6a9-f46f-46c9-acee-ebe02b47fea5
 # ╠═14a046a8-7f5d-41bd-a5c5-6040c16d019f
 # ╟─00000000-0000-0000-0000-000000000001
