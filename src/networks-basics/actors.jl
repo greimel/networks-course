@@ -67,7 +67,7 @@ using PlutoUI
 using MarkdownLiteral: @markdown
 
 # ╔═╡ d3221cd9-0c8c-42a6-a3ec-00b69e7642b7
-md"`actors.jl` | **Version 1.1** | *content updated: 10 Oct 2025, packages updated: 4 Oct 2026*"
+md"`actors.jl` | **Version 1.2** | *content updated: 5 Oct 2026, packages updated: 4 Oct 2026*"
 
 # ╔═╡ 1d0539e4-a108-4a36-b00c-e5a90943ac4f
 md"""

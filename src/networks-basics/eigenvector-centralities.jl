@@ -36,7 +36,7 @@ using DataFrames
 
 # ╔═╡ b1e5d4b9-057b-42da-a68c-2fe0b1bfcab6
 md"
-`eigenvector-centralities.jl` | **Version 1.1** | *content updated: 6 Oct 2025, packages updated: 4 Oct 2026*
+`eigenvector-centralities.jl` | **Version 1.2** | *content updated: 5 Oct 2026, packages updated: 4 Oct 2026*
 "
 
 # ╔═╡ b620dfff-1756-48ca-a03c-883e48cc69c5

@@ -51,7 +51,7 @@ using StatsBase
 
 # ╔═╡ c4bc21f1-899d-48e8-9c4c-883f7608f753
 md"""
-`exercises-week1.jl` | **Version 1.2** | *content updated: 3 Feb 2023, packages updated: 4 Oct 2026*
+`exercises-week1.jl` | **Version 1.3** | *content updated: 5 Oct 2026, packages updated: 4 Oct 2026*
 """
 
 # ╔═╡ 839922f0-97b2-4bc9-9aa9-e3e93336b7e4
