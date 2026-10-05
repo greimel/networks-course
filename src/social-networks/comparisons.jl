@@ -4,7 +4,7 @@
 #> [frontmatter]
 #> chapter = 4
 #> section = 2
-#> order = 1
+#> order = 2
 #> title = "Social comparisons"
 #> layout = "layout.jlhtml"
 #> tags = ["social-networks"]

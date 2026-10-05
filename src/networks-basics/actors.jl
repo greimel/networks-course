@@ -3,8 +3,8 @@
 
 #> [frontmatter]
 #> chapter = 2
-#> section = 6
-#> order = 6
+#> section = 3
+#> order = 3
 #> title = "Assignment 2: The Movie Database"
 #> layout = "layout.jlhtml"
 #> tags = ["networks-basics"]

@@ -3,7 +3,7 @@
 
 #> [frontmatter]
 #> chapter = 6
-#> section = 2
+#> section = 1
 #> order = 1
 #> title = "The economy as a network of sectors"
 #> layout = "layout.jlhtml"
