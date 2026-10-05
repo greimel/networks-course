@@ -3,8 +3,8 @@
 
 #> [frontmatter]
 #> chapter = 2
-#> section = 2
-#> order = 2
+#> section = 3
+#> order = 3
 #> title = "Exercises"
 #> layout = "layout.jlhtml"
 #> tags = ["networks-basics"]

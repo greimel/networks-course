@@ -3,8 +3,8 @@
 
 #> [frontmatter]
 #> chapter = 2
-#> section = 4
-#> order = 4
+#> section = 2
+#> order = 2
 #> title = "Eigenvector centralities"
 #> layout = "layout.jlhtml"
 #> tags = ["networks-basics"]
