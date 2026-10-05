@@ -3,8 +3,8 @@
 
 #> [frontmatter]
 #> chapter = 2
-#> section = 3
-#> order = 3
+#> section = 4
+#> order = 4
 #> title = "Assignment 2: The Movie Database"
 #> layout = "layout.jlhtml"
 #> tags = ["networks-basics"]
@@ -28,20 +28,11 @@ end
 # ╔═╡ 16b324c0-bae1-4d5f-873c-9ddb1572f5c8
 using HTTP: HTTP
 
-# ╔═╡ 99b27fd9-9a09-43ae-8e5d-15159cf6c45d
-using Dates
-
-# ╔═╡ 0137936f-b706-4a53-925a-f0054640e061
-using PlutoUI
-
 # ╔═╡ 15dc0fda-b534-49a2-bea1-6489f3e7ca43
 using Chain, DataFrameMacros, DataFrames
 
 # ╔═╡ f14b340b-1791-43a2-a6cb-f322e811bb9d
 using CSV
-
-# ╔═╡ 32031b0a-a6c9-4b50-ba83-cae260e4ed0e
-using Statistics
 
 # ╔═╡ 63380aee-31ac-47c8-bf66-ac7a9c1901bb
 using GraphMakie, CairoMakie
@@ -65,6 +56,12 @@ using Combinatorics: combinations
 
 # ╔═╡ ba38875a-8526-497f-87cf-ac4cfb537453
 using NetworkLayout
+
+# ╔═╡ 99b27fd9-9a09-43ae-8e5d-15159cf6c45d
+using Dates
+
+# ╔═╡ 0137936f-b706-4a53-925a-f0054640e061
+using PlutoUI
 
 # ╔═╡ eb314a3c-f540-46e4-923a-a69786d70e12
 using MarkdownLiteral: @markdown
@@ -92,7 +89,7 @@ Your answer goes here ...
 # ╔═╡ 49974268-d996-477e-a90e-25ec593f13d8
 md"""
 ### Task 1: Analyze the network (4 points)
-👉 Describe the network in terms of the measures that are discussed in lectures 1 and 2. You can look at the notebook **first-networks.jl** and the section *Analyzing the network* for some inspiration.
+👉 Describe the network in terms of the measures that are discussed in lectures 1 and 2. You can look at the notebook **first-networks.jl** and the section *Language for network analysis* for some inspiration.
 
 👉 Interpret all results that you show.
 
@@ -374,26 +371,18 @@ important_movies = @chain actor_movie_df begin
 end
   ╠═╡ =#
 
-# ╔═╡ b3449051-d0d5-4378-b579-57ee7cc4e1f6
-#=╠═╡
-@bind i_movie PlutoUI.Slider(1:size(important_movies, 1), default = 1, show_value = true)
-  ╠═╡ =#
-
 # ╔═╡ 9819677f-8b60-4342-8b88-bf7ab3f48dfc
 #=╠═╡
 xxx = important_movies.title[i_movie]
   ╠═╡ =#
 
 # ╔═╡ a28e46c2-5a8c-428d-ac40-1521617dd9af
-#=╠═╡
 actors_of_important_movie = @chain actor_movie_df begin
 	leftjoin(nodes_df, on = [:actor, :actor_id])
 	@subset(:title == xxx)
 end
-  ╠═╡ =#
 
 # ╔═╡ 8c68c105-3a5a-4372-97b2-7f93aaa580b5
-#=╠═╡
 let
 	layout = NetworkLayout.Spring()(graph)
 
@@ -409,6 +398,10 @@ let
 	
 	fig
 end
+
+# ╔═╡ b3449051-d0d5-4378-b579-57ee7cc4e1f6
+#=╠═╡
+@bind i_movie PlutoUI.Slider(1:size(important_movies, 1), default = 1, show_value = true)
   ╠═╡ =#
 
 # ╔═╡ 37bf0f99-5830-4d1d-ace9-51f5f9a7e851
@@ -416,11 +409,13 @@ md"""
 # Appendix
 """
 
-# ╔═╡ 3d671a58-9e06-11f0-206c-9159215c612e
-DATADIR(args...) = normpath(joinpath(@__DIR__(), "..", "assets", "data", args...)) 
-
 # ╔═╡ 1c5028de-46bd-4848-9afe-bf9387e15ca2
 TableOfContents()
+
+# ╔═╡ 5b7e2c1a-3d4f-4e6a-8b9c-0a1b2c3d4e5f
+md"""
+## Packages
+"""
 
 # ╔═╡ 334c3117-20e3-4efd-8541-1511871fa1a7
 md"""
@@ -451,7 +446,7 @@ end
 
 👉 Make sure you have added your name and names of your group members [in the cells below]($cell2).
 
-👉 Make sure that that **all group members proofread** your submission (especially your little essay).
+👉 Make sure that **all group members proofread** your submission (especially your little essay).
 
 👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
 """)
@@ -536,22 +531,6 @@ note(text; title="FYI") = Markdown.MD(Markdown.Admonition("note", title, [text])
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
-[compat]
-CSV = "~0.10.17"
-CairoMakie = "~0.15.15"
-CategoricalArrays = "~1.1.1"
-Chain = "~1.0.0"
-Combinatorics = "~1.1.0"
-DataFrameMacros = "~0.4.1"
-DataFrames = "~1.8.2"
-GraphMakie = "~0.6.6"
-Graphs = "~1.15.0"
-HTTP = "~1.11.0"
-MarkdownLiteral = "~0.1.5"
-NetworkLayout = "~0.4.11"
-PlutoUI = "~0.7.83"
-SimpleWeightedGraphs = "~1.5.1"
-
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
@@ -569,7 +548,22 @@ NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+[compat]
+CSV = "~0.10.17"
+CairoMakie = "~0.15.15"
+CategoricalArrays = "~1.1.1"
+Chain = "~1.0.0"
+Combinatorics = "~1.1.0"
+DataFrameMacros = "~0.4.1"
+DataFrames = "~1.8.2"
+GraphMakie = "~0.6.6"
+Graphs = "~1.15.0"
+HTTP = "~1.11.0"
+MarkdownLiteral = "~0.1.5"
+NetworkLayout = "~0.4.11"
+PlutoUI = "~0.7.83"
+SimpleWeightedGraphs = "~1.5.1"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -578,7 +572,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.9"
 manifest_format = "2.0"
-project_hash = "3d93ebc177a0ee8c1c77cfd7fcd307c067bbda22"
+project_hash = "d643dfd6b8f2d08939fada5c48cd70ec7d2d2544"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -2522,14 +2516,13 @@ version = "4.1.0+0"
 # ╟─5f4863e9-4c62-4b5a-aabd-d785a8c4baba
 # ╠═6685d43b-2b61-4ddd-a158-960b85362fe7
 # ╠═cabcc864-48e7-4b5e-8db2-c157be49911f
-# ╠═16b324c0-bae1-4d5f-873c-9ddb1572f5c8
 # ╠═11c52177-5fd6-4a3d-b1da-e9e5dad1df76
-# ╠═7e073380-b1de-4f8b-b89e-4043d15f656b
+# ╟─7e073380-b1de-4f8b-b89e-4043d15f656b
 # ╠═2c17a693-8842-4f35-ad29-5e6c78a9e6ff
-# ╠═f8634273-58e2-4591-b790-f305db5c5fe3
+# ╟─f8634273-58e2-4591-b790-f305db5c5fe3
 # ╠═1d655b55-40c8-4435-b705-d8e1466c4f45
 # ╠═b877d12d-33a8-465b-8f78-8712d9a9207b
-# ╠═60a4f063-99c8-4e4a-9bcf-a2c35cb544c7
+# ╟─60a4f063-99c8-4e4a-9bcf-a2c35cb544c7
 # ╠═646dcad3-6e94-4c85-8122-b191bde8afc6
 # ╠═0447c192-fe19-497b-b082-528f3a873485
 # ╟─15d4c0a4-26c6-4e66-9387-ca1be622c968
@@ -2542,21 +2535,21 @@ version = "4.1.0+0"
 # ╟─8c68c105-3a5a-4372-97b2-7f93aaa580b5
 # ╟─b3449051-d0d5-4378-b579-57ee7cc4e1f6
 # ╟─37bf0f99-5830-4d1d-ace9-51f5f9a7e851
-# ╠═3d671a58-9e06-11f0-206c-9159215c612e
-# ╠═99b27fd9-9a09-43ae-8e5d-15159cf6c45d
-# ╠═0137936f-b706-4a53-925a-f0054640e061
 # ╠═1c5028de-46bd-4848-9afe-bf9387e15ca2
+# ╟─5b7e2c1a-3d4f-4e6a-8b9c-0a1b2c3d4e5f
+# ╠═16b324c0-bae1-4d5f-873c-9ddb1572f5c8
 # ╠═15dc0fda-b534-49a2-bea1-6489f3e7ca43
 # ╠═f14b340b-1791-43a2-a6cb-f322e811bb9d
-# ╠═32031b0a-a6c9-4b50-ba83-cae260e4ed0e
 # ╠═63380aee-31ac-47c8-bf66-ac7a9c1901bb
 # ╠═e1a25a5b-7483-499a-b315-01803ec03b02
 # ╠═44942067-c4a8-44c5-945e-cb0a99102624
 # ╠═d0a87628-f283-4d83-accf-e3c073802682
 # ╠═d687e005-7203-4a9e-b939-e73aaafaeabd
 # ╠═ba38875a-8526-497f-87cf-ac4cfb537453
-# ╟─334c3117-20e3-4efd-8541-1511871fa1a7
+# ╠═99b27fd9-9a09-43ae-8e5d-15159cf6c45d
+# ╠═0137936f-b706-4a53-925a-f0054640e061
 # ╠═eb314a3c-f540-46e4-923a-a69786d70e12
+# ╟─334c3117-20e3-4efd-8541-1511871fa1a7
 # ╠═8a92b975-e11f-4376-99a1-09286dd388e4
 # ╠═e9810378-8457-4c24-baf1-5cdcb1d1c525
 # ╠═a8febb10-1c73-4dc8-94cb-09315b78197c
