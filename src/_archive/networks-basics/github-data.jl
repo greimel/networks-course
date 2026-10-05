@@ -4,468 +4,510 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ aff48e14-82fb-49db-b7d1-662f8b138978
-md"""
-`movies-data.jl` | **Version 1.0** | *content updated: 7 Oct 2025, packages updated: 4 Oct 2026*
-"""
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
 
-# ╔═╡ 6eb5afa8-9a94-44f8-be5f-6540bd01febb
-using Dates
+# ╔═╡ 61d837dd-1675-4f8b-ab88-c1e9cce3cd5b
+using Graphs
 
-# ╔═╡ a7b6af79-f784-4ac7-9cfd-312898b470cf
+# ╔═╡ 1defacf5-16e3-458e-9679-2aa13f5c9b37
 using PlutoUI
 
-# ╔═╡ 601b75df-c853-482e-bef5-f6918493866c
-using Chain, DataFrameMacros, DataFrames
+# ╔═╡ b816d306-c42a-11ee-0450-03a6f623e031
+using GitHub
 
-# ╔═╡ fc80de49-4368-4ab1-a2c7-bf36a5a82662
-using HTTP
+# ╔═╡ 9832aa67-9add-4475-8e81-52355b9f6917
+using Chain, DataFrameMacros
 
-# ╔═╡ 30b51289-20b2-47b5-a932-3645e117025b
-using JSON3
-
-# ╔═╡ 8e3023ea-c25e-44f4-87e6-1ec4c2adef99
-using CSV
-
-# ╔═╡ fdd03f4c-490d-4bec-a203-346efc243d44
-using Statistics, Combinatorics
-
-# ╔═╡ e82f66da-b5f6-4612-91b5-d798bb705aa9
+# ╔═╡ 91997733-8567-4f5c-aae3-75b29e6dc174
 using GraphMakie, CairoMakie
 
-# ╔═╡ 036a18ca-cbd9-434f-8176-2c20dd1ef9f9
-begin
-	using Graphs
-	using SimpleWeightedGraphs
-	using Graphs: betweenness_centrality, closeness_centrality, degree_centrality,
-	              eigenvector_centrality, katz_centrality
-end
+# ╔═╡ 7b06c8bb-0c59-472d-8459-4573c81af95f
+using DataFrames
 
-# ╔═╡ e5482ede-fcb2-48cb-8d3d-33186534c7f5
-#const TMDB_API_KEY = get(ENV, "TMDB_API_KEY", "YOUR_API_KEY_HERE")
+# ╔═╡ 5fcb1819-bb67-4ae1-8637-d022b89cbc0e
+using MarkdownLiteral: @markdown
 
-# ╔═╡ c6330f8c-f815-4dcb-bace-c0623fe9b95b
-TMDB_API_KEY = "a4154fdac4d2dec566bfa245cb95232b"
+# ╔═╡ eef87040-4c96-49e4-8297-e90231b438fb
+md"
+`github-data.jl` | **Version 1.1** | *content updated: 30 Sep 2024, packages updated: 4 Oct 2026*"
 
-# ╔═╡ 7bdc69be-907d-453e-88d8-0086d1991373
-const BASE = "https://api.themoviedb.org/3"
+# ╔═╡ c0220198-9f64-4059-b13f-801233ce1c03
+@bind csv_in FilePicker()
 
-# ╔═╡ a04af02d-bd08-497f-8ff9-8509425433df
-const LANG = "en-US"
-
-# ╔═╡ aab39699-fee8-424f-b819-756fd89af39d
-function get_json(url::AbstractString; params=Dict{String,String}())
-    q = Dict("api_key" => TMDB_API_KEY, "language" => LANG)
-    merge!(q, params)
-	qs = join(["$k=$(HTTP.escapeuri(v))" for (k,v) in q], "&")
-    resp = HTTP.get("$url?$qs")
-    resp.status == 200 || error("HTTP $(resp.status): $url")
-    return JSON3.read(String(resp.body))
-end
-
-# ╔═╡ 1995b04c-387a-4d2f-ac0e-0cd04b5a2e8c
+# ╔═╡ d677ab32-2c3f-4906-ad8a-f4aa7e4af6ca
 md"""
-# 1) Download / assemble data
+#### Task 1: Analyze the network (5 points)
+👉 Describe the network in terms of the measures that are discussed in lectures 1 and 2. You can look at the notebook **first-networks.jl** and the section *Analyzing the network* for some inspiration.
 
-Example endpoints you likely use in the R code:
-- Discover/Trending/Top lists → list of movies (id, title, release_date, vote counts)
-- /movie/{id}/credits         → cast list (actors)
-- /movie/{id}                 → genres, runtime, etc.
+👉 Interpret all results that you show.
 
-Adjust the “fetch_movies” query as you like (year range, sort, popularity threshold).
+👉 Be accurate but concise. Aim at no more than 500 words.
+
+You can spread your answer over multiple cells. Add code and text cells as it suits you.
 """
 
-# ╔═╡ d64d8a42-a978-47b8-a0b3-78bc8bbfa4a7
-function fetch_movies(; year_min=1990, year_max=2020, pages=15, min_votes=1000)
-    movies = DataFrame(movie_id=Int[], title=String[], release_date=String[],
-                       popularity=Float64[], vote_count=Int[])
-    for page in 1:pages
-        data = get_json("$BASE/discover/movie";
-                        params=Dict(
-                            "primary_release_date.gte" => "$year_min-01-01",
-                            "primary_release_date.lte" => "$year_max-12-31",
-                            "sort_by"                  => "popularity.desc",
-							"vote_count.gte"           => string(min_votes),
-							"page"                     => string(page)
-                        ))
-        for m in data.results
-            push!(movies, (m.id, String(m.title), String(get(m, :release_date, "")),
-                           Float64(get(m, :popularity, 0.0)), Int(get(m, :vote_count, 0))))
-        end
-    end
-    unique!(movies, :movie_id)
-    return movies
-end
-
-# ╔═╡ ac21014c-25bd-4332-96c0-946ab18d01b5
-function fetch_credits_and_genres(movies::DataFrame)
-    credit_rows = Vector{NamedTuple{(:actor,:movie_id,:title),Tuple{String,Int,String}}}()
-    genre_rows  = Vector{NamedTuple{(:movie_id,:title,:genre_ids),Tuple{Int,String,Vector{Int}}}}()
-
-    for (i, mid) in enumerate(movies.movie_id)
-        det = get_json("$BASE/movie/$mid"; params=Dict(
-            "append_to_response" => "credits",
-            "include_image_language" => "en,null",   # optional; harmless here
-        ))
-
-        # genres come inline on the detail
-        gids = haskey(det, :genres) ? [Int(g.id) for g in det.genres] : Int[]
-        ttl  = String(get(det, :title, ""))
-
-        push!(genre_rows, (Int(mid), ttl, gids))
-
-        # credits appended via append_to_response
-        if haskey(det, :credits) && haskey(det.credits, :cast)
-            for c in det.credits.cast
-                nm = String(get(c, :name, ""))
-                isempty(nm) && continue
-                push!(credit_rows, (nm, Int(mid), ttl))
-            end
-        end
-    end
-
-    credits = DataFrame(credit_rows)  # columns: actor, movie_id, title
-    genres = DataFrame(genre_rows)  # columns: movie_id, title, genre_ids
-    return (; credits, genres)
-end
-
-# ╔═╡ d6919d9e-d3ea-47f2-88a0-84ee186d7876
-function fetch_credits(movies::DataFrame)
-	    # returns long table: actor, movie_id
-	    rows = Vector{NamedTuple{(:actor, :movie_id),Tuple{String,Int}}}()
-	    for (i, mid) in enumerate(movies.movie_id)
-	        cred = get_json("$BASE/movie/$mid/credits")
-	        if haskey(cred, :cast)
-	            for c in cred.cast
-	                nm = String(get(c, :name, ""))
-	                isempty(nm) && continue
-	                push!(rows, (nm, mid))
-	            end
-	        end
-	    end
-    return credits = DataFrame(rows)
-	# leftjoin!(credits, movies[:, [:movie_id, :title]], on=:movie_id)
-	# credits
-end
-
-# ╔═╡ 1002c799-873c-4c85-84a6-01ccf96a3f8c
-
-
-# ╔═╡ 16ed8c61-f92d-427c-a3e0-faf8ced75c4a
-function fetch_movie_meta(movies::DataFrame)
-	# pull genres vector per movie_id
-	genre_rows = Vector{NamedTuple{(:movie_id,:genres),Tuple{Int,Vector{Int}}}}()
-	for mid in movies.movie_id
-	    meta = get_json("$BASE/movie/$mid")
-	    ids = haskey(meta, :genres) ? [Int(g.id) for g in meta.genres] : Int[]
-	    push!(genre_rows, (mid, ids))
-	end
-	
-	return genres = DataFrame(genre_rows)
-	
-	# @info genres
-	# leftjoin(movies, genres, on=:movie_id)
-end
-
-# ╔═╡ 46693087-b71a-4150-a8bf-4fc383041e21
-function fetch_genre_translation()
-	data = get_json("$BASE/genre/movie/list")
-	DataFrame(genre_id = Int.(get.(data.genres,:id)),
-	          genre    = String.(get.(data.genres,:name)))
-end
-
-
-# ╔═╡ b703fb1b-d5a9-42a2-a240-87ee16150e22
-md"""
-# 2) Build co-actor pairs and weights
-Within each movie, produce all unordered pairs of actors; count frequency across movies.
+# ╔═╡ 6f7c5b2d-cbfe-4bda-be55-2e22105b6265
+answer1_1 = md"""
+Your answer goes here ...
 """
 
-# ╔═╡ e8322e7b-fe47-41f0-95e0-c4fb0147a370
-function actor_pairs(credits::DataFrame)
-	    @chain credits begin
-	        groupby(:movie_id)
-	        combine(_) do df
-	            actors = unique(df.actor)
-	            if length(actors) < 2
-	                return DataFrame(actor1=String[], actor2=String[], movie_id=Int[])
-	            end
-	            pairs = [(a,b) for (a,b) in combinations(actors, 2)]
-	            DataFrame(actor1 = first.(pairs), actor2 = last.(pairs),
-	                      movie_id = fill(only(unique(df.movie_id)), length(pairs)))
-		end
-	end
-end
+# ╔═╡ 29dd5ca2-b531-4c62-92ee-d477140aadd8
+# some
 
-# ╔═╡ 53904adb-c258-47bc-a4fd-b045e57c4163
-function edge_weights(pair_df::DataFrame)
-	 @chain pair_df begin
-	    @transform(:a = :actor1 .< :actor2 ? :actor1 : :actor2,
-	               :b = :actor1 .< :actor2 ? :actor2 : :actor1)
-	    groupby([:a,:b])
-	    combine(nrow => :weight)
-	    rename(:a => :actor1, :b => :actor2)
-	end
-end
+# ╔═╡ 29ffdf2b-0d3e-4aaa-a7bf-25a4a05f9160
+# analysis
 
-# ╔═╡ d1d7fc59-00e1-48f6-9ab4-fedcee405ddf
-md"""
-# 3) Graph construction (undirected, weighted)
+# ╔═╡ 319781e4-ac31-412a-aa47-90c08646305a
+# analyze
+
+# ╔═╡ 57b9f288-a885-4904-9222-2237363e52a2
+# more
+
+# ╔═╡ e7d9e7ec-edd5-481a-bac3-5f5a09d5220c
+answer1_3 = md"""
+... write more ... add more cells if you need. If you want to use the word count above, adjust the cell below. 
+
 """
 
-# ╔═╡ 76d3626e-37cf-45c2-8358-d51bc11b21ac
-struct ActorGraph
-	    g::SimpleWeightedGraph{Int,Float64}
-	    index::Dict{String,Int}    # actor name -> vertex id
-	    names::Vector{String}      # vertex id -> actor name
-	end
-
-# ╔═╡ 940a1a80-b57c-46f2-af0f-751d71339826
-function build_actor_graph(edges::DataFrame; min_weight::Int=1, max_nodes::Int=10_000)
-	    # filter edges by weight threshold
-	    e = @chain edges begin
-	        @subset(:weight .>= min_weight)
-	    end
-	    # collect all unique actors
-	    actors = unique(vcat(e.actor1, e.actor2))
-	    if length(actors) > max_nodes
-	        actors = actors[1:max_nodes]
-	        @info "Truncating to first $max_nodes actors"
-	        e = @subset(e, :actor1 .∈ Ref(Set(actors)) .& :actor2 .∈ Ref(Set(actors)))
-	    end
-	    index = Dict{String,Int}(a => i for (i,a) in enumerate(actors))
-	    names = actors
-	    g = SimpleWeightedGraph(length(actors))
-	    for r in eachrow(e)
-	        u = index[r.actor1]; v = index[r.actor2]
-	        w = Float64(r.weight)
-	        if has_edge(g, u, v)
-	            # accumulate weight
-	            w_old = weight(g, u, v)
-	            add_edge!(g, u, v, w_old + w)
-	        else
-	            add_edge!(g, u, v, w)
-	        end
-	    end
-	    ActorGraph(g, index, names)
-	end
-
-
-# ╔═╡ e800da39-11ba-4c97-b12a-acc6a1d226e9
+# ╔═╡ f9780dc1-b507-46a4-a877-d69b145ddae0
 md"""
-# 4) Community detection & node metrics ##########
-
-Louvain on weighted graph
+**NOTE** the word count is done by the function `wordcount` at the very bottom. It may not be completely accurate :-). It's ok to be below the word limit, but it's not ok to be above!
 """
 
-# ╔═╡ f9944412-f26d-4a38-947d-305996ef7191
-function communities_louvain(AG::ActorGraph)
-	    parts = louvain_communities(AG.g)   # returns vector of vectors (vertex ids)
-	    # map vertex -> community id
-	    v2c = Dict{Int,Int}()
-	    for (cid, verts) in enumerate(parts)
-	        for v in verts
-	            v2c[v] = cid
-	        end
-	    end
-	    v2c, parts
-	end
-	
-	# centralities
-
-# ╔═╡ 687c92df-6308-43ea-84a4-4f05c787991c
-struct NodeStats
-	    df::DataFrame   # per-vertex stats
-	end
-
-# ╔═╡ a2f9b46e-46f9-437b-891b-bcfb410d709d
-function compute_node_stats(AG::ActorGraph; α_katz=0.001)
-	    g = AG.g
-	    deg  = degree_centrality(g)
-	    betw = betweenness_centrality(g)
-	    clos = closeness_centrality(g)
-	    eig  = eigenvector_centrality(g)
-	    katz = katz_centrality(g; α=α_katz)
-	    df = DataFrame(
-	        vid   = 1:nv(g),
-	        actor = AG.names,
-	        degree = deg,
-	        betweenness = betw,
-	        closeness = clos,
-	        eigenvector = eig,
-	        katz = katz
-	    )
-	    NodeStats(df)
-	end
-
-# ╔═╡ 75c4eef3-233d-4b01-af40-c0ea9953b6b2
+# ╔═╡ bfe802e4-1af1-4556-9f25-895989791407
 md"""
-# Analysis
+#### Task 2: Adding context (3 points)
+
+Let us now color the nodes (repositories) **according to their programming language** (Julia, R, Python).
 """
 
-# ╔═╡ bc575e40-d8b2-49e9-87e1-424012103b81
-movies0 = let
-	
-	year_min=1990
-	year_max=2025
-	pages=100
-	
-	fetch_movies(; year_min, year_max, pages)
-end
+# ╔═╡ b15f2df0-b5ed-4308-a092-0888b8a57e10
+md"""
+👉 Play with the sliders below. These determine how the network is defined. 
+"""
 
-# ╔═╡ 7a5470da-6df2-4d10-8040-149f326c7b86
-movies1 = @chain movies0 begin
-	@transform(:release_date = Date(:release_date))
-	@transform(:year = year(:release_date))
-	@groupby(:year)
-	@combine(:number = length(:title))
-	lines(_.year, _.number)
-end
+# ╔═╡ 1a2bc4ed-868e-439f-bd29-78716d6e763e
+md"""
+* _Minimal number of joint contributors:_ There need to be **at least** $(@bind min_joint PlutoUI.Slider(1:15, default = 2, show_value = true)) people that have contribted in both repos, so that we consider them as linked.
 
-# ╔═╡ b400fa3f-6128-4aa2-a539-177f4aacd75d
-movie_ids = let
-	@chain movies0 begin
-		@select(:movie_id, :title, :new_id = @bycol 1:length(:movie_id))
-	end
-end
+* _Minimal number of contributions per contributor:_ people with **fewer than** $(@bind min_contrib PlutoUI.Slider(1:15, default = 2, show_value = true))  contributions (in either repo) will not be considered.
+"""
 
-# ╔═╡ 90414397-248f-4e87-8bdc-2c7c93399acb
-(; credits, genres) = fetch_credits_and_genres(movies0)
+# ╔═╡ bc9def15-5b41-4c94-8c88-3bb6c109fa19
+md"""
+👉 What can you learn about these groups of *R*, *Julia* and *Python* repositories? <250 words. 
+"""
 
-# ╔═╡ 0bd119c5-2c65-4099-9d8e-7c5dacff7eca
+# ╔═╡ 3f2014aa-8318-4ae6-8f0d-c58f0cc61b9d
+answer2 = md"""
+Your answer goes here ...
+"""
 
+# ╔═╡ 2b764133-26fd-4933-a915-1a163be10e85
+md"""
+#### Task 3: Looking under the hood (3 points)
 
-# ╔═╡ f93c421e-9c82-4b47-874b-5662d4966a52
-actors = @chain credits begin
-	leftjoin(movie_ids, on = [:title, :movie_id])
-	@groupby(:actor)
-	@combine(:movie_id = [:movie_id],
-			 :new_id = [:new_id]
-			)
-	@transform(:number = length(:new_id))
-	@subset(:number > 1)
-	@transform(:actor_id = @bycol 1:length(:actor))
-	#@aside CSV.write(DATADIR("actor_ids.csv"), select(_, :actor_id, :actor))
-	flatten([:new_id, :movie_id])
-	@select(:actor, :movie_id)
-end
+Now look at section **Constructing the network** of this notebook. Make sure you understand what data are available to us and how we created the network from the data. 
 
-# ╔═╡ f6f36473-a57b-435a-bd05-c77e96093ec8
-let
-	actor_ids = DataFrame( actor = unique(credits.actor))
+👉 I want to read your critical thoughts in <250 words. Write about an idea how to generate a different network from the data. Or about a twist you would add to our network to make it more interesting. 
+"""
 
-	@transform(actor_ids, :actor_id = @bycol 1:length(:actor))
+# ╔═╡ 265ce115-a04c-4320-9289-f7afa34915c4
+answer3 = md"""
+Your answer goes here ...
+"""
 
-#	CSV.write(DATADIR("actor_ids.csv"), actor_ids)
+# ╔═╡ a4ab528d-bc5b-4ae3-974c-7aa51dfe3d37
+md"""
+## Selecting Github repositories
+"""
 
-	actor_ids
-end
+# ╔═╡ ece45ccb-8566-4677-93e4-4aae78c81bc4
+md"""
+#### _Step 1:_ Specify a number of Github repositories
+"""
 
-# ╔═╡ 25ef8eb4-2347-46ba-ba56-fbd9b167da13
+# ╔═╡ 854fdf93-da34-4c01-bece-6c4cb3bfe121
+dataframes_packages = ["pandas-dev/pandas", "Rdatatable/data.table", "JuliaData/DataFrames.jl"]
 
+# ╔═╡ e3c0c318-1079-442b-8385-4d52ecdbe109
+networks_packages = ["networkx/networkx", "JuliaGraphs/Graphs.jl", "igraph/rigraph"]
 
-# ╔═╡ 34ea0e3d-69e7-48c8-81d6-a2466218a5df
-DATADIR(args...) = normpath(joinpath(@__DIR__(), "..", "assets", "data", args...)) #|> isdir
+# ╔═╡ 87b3aea6-8a7d-43e1-a1f1-c97c1197632d
+plotting_packages = ["matplotlib/matplotlib", "JuliaPlots/Plots.jl", "tidyverse/ggplot2"]
 
-# ╔═╡ 209eae02-3e39-427a-81d5-1b13d2ab7720
-CSV.write(DATADIR("movies.csv"), movies0)
+# ╔═╡ d7ab9443-5e8b-40c8-845c-3ff147b91167
+md"""
+Pick packages to compare (this will take a few minutes to run)
+"""
 
-# ╔═╡ d85454cc-f792-45cc-bf94-2c2bda7e57cf
-CSV.write(DATADIR("actors.csv"), actors)
+# ╔═╡ 73ebdc58-0df3-485d-8539-803d5190d147
+@bind df_repos Select([
+	dataframes_packages => "dataframes",
+	networks_packages => "networks",
+	plotting_packages => "plotting"
+])
 
-# ╔═╡ 465f5b2c-c11d-459c-b5d4-d18a414c997e
-CSV.write(DATADIR("genres.csv"), genres)
+# ╔═╡ ecd2189b-ad94-4d98-8f42-4e11d8c0b6df
+md"""
+# Constructing the network
+"""
 
-# ╔═╡ d4166d73-64a9-43d9-b80e-cb857d5c9d37
-# ╠═╡ disabled = true
-#=╠═╡
-#credits = fetch_credits(movies0)
-  ╠═╡ =#
+# ╔═╡ 357e427d-7efa-4398-804f-650e3d0af831
+md"""
+#### _Step 2:_ Get the main contributors of these repositories
+"""
 
-# ╔═╡ a37792f2-ae63-40b8-a70a-f01c31b58879
-# ╠═╡ disabled = true
-#=╠═╡
-movies = @chain movies0 begin
-	leftjoin(movies_meta, on = :movie_id)
-	leftjoin(credits, on = :movie_id)
-end
-  ╠═╡ =#
+# ╔═╡ d9b1f681-97d7-40ce-be35-b869df51573f
+md"""
+#### _Step 3:_ Get the starred repositories of these contributors
+"""
 
-# ╔═╡ cd684601-2079-4688-ba8e-6c8ac9a30fe7
-#=╠═╡
-pairs = actor_pairs(movies)
-  ╠═╡ =#
+# ╔═╡ 534bdb50-eb50-46c8-bb63-2c3e704a9131
+md"""
+#### _Step 4:_ Select the most popular of these packages
+"""
 
-# ╔═╡ 822abb46-c38a-48a7-95c7-56076dc04c59
-#=╠═╡
-weights = edge_weights(pairs)
-  ╠═╡ =#
+# ╔═╡ 3b32c857-0132-4f5a-83e9-466a7c7edaa9
+md"""
+#### _Step 5:_ Find all contributors of these packages
+"""
 
-# ╔═╡ 2f32da11-dbe5-4a16-a763-2541bbcbc0fb
+# ╔═╡ 4183de92-8700-41a0-b367-a05471376a8b
+md"""
+#### _Save dataset_
+"""
 
+# ╔═╡ 5d94b49a-995d-44b0-b8b7-93a95486ce62
+md"""
+#### _Step 6:_ Create a list of packages with their contributors
+"""
 
-# ╔═╡ 07f7ac89-ffb7-4908-b0dc-13b4aa53c437
-########## 9) Full pipeline ##########
-function run_pipeline(; year_min=1990, year_max=2020, pages=5,
-                       min_edge_weight=2, top_communities=10, metric=:eigenvector)
+# ╔═╡ 8710aa87-9b2c-4491-9537-c3a15286ed07
+md"""
+#### _Step 7:_ Build the graph
+"""
 
-    
-	@info "Fetching movies…" year_min year_max pages
-    movies0 = fetch_movies(; year_min, year_max, pages)
-    
-	#=
-	@info "Fetching meta (genres)…"
-    movies = fetch_movie_meta!(movies0)
-    @info "Fetching credits…"
-    credits = fetch_credits!(movies0)
+# ╔═╡ 96c6ae89-7f11-4063-a331-e0a6a804f5e7
+language2color = Dict(["R", "Python", "Julia"] .=> Makie.wong_colors()[1:3])
 
-    @info "Building pairs & weights…"
-    pairs = actor_pairs(credits)
-    weights = edge_weights(pairs)
-
-    @info "Graph…"
-    AG = build_actor_graph(weights; min_weight=min_edge_weight)
-
-    @info "Communities…"
-    v2c, parts = communities_louvain(AG)
-
-    @info "Node stats…"
-    stats = compute_node_stats(AG)
-
-    @info "Middle nodes…"
-    mids = middle_nodes_per_community(stats, v2c; metric)
-
-    # choose largest communities (by size) and keep their reps
-    sizes = DataFrame(community = 1:length(parts), size = length.(parts))
-    keep  = first(sort(sizes, :size, rev=true), min(top_communities, nrow(sizes))).community
-    mids  = mids[in.(mids.community, Ref(keep)), :]
-
-    @info "Distances between middle nodes…"
-    dist = distance_matrix_between(AG, mids)
-    rename!(dist, Symbol.(string.("c", mids.community)))
-    dist.rowindex = string.("c", mids.community)
-
-    @info "Genres per community (top 3)…"
-    inc = actor_genre_incidence(credits, movies)
-    genres = fetch_genre_translation()
-    comm_genres = summarize_genres_by_community(inc, AG, v2c, genres; topk=3)
-
-    return (; movies, credits, weights, AG, parts, v2c, stats = stats.df,
-             middle_nodes = mids, dist, comm_genres)
-	=#
-end
-
-# ╔═╡ 7ecb4ba7-2d64-473b-9906-b1eb2337fb95
-result = run_pipeline(; year_min=1995, year_max=2010, pages=3,
-                          min_edge_weight=2, top_communities=12, metric=:eigenvector)
-
-# ╔═╡ 527aabe8-8556-427d-88c3-2f4e11cb0610
+# ╔═╡ c067ae31-5867-43fe-ae04-1565e0bc119c
 md"""
 # Appendix
 """
 
-# ╔═╡ 2c922699-d19f-49a6-81b4-09e71d6e350f
+# ╔═╡ 3378ff91-3308-41c6-b6ea-717bcf85ce25
 TableOfContents()
+
+# ╔═╡ 43d8772b-132e-4470-be6c-f100f5419a64
+core(graph) = argmax(length, connected_components(graph))
+
+# ╔═╡ ca208660-7465-4ca7-b626-2ab25f337d1d
+github_token = get(ENV, "GITHUB_TOKEN") do
+	error("Set the environment variable GITHUB_TOKEN before starting Pluto.")
+end
+
+# ╔═╡ 8b6af171-9746-4f02-851d-a52c7d406e70
+auth = GitHub.authenticate(github_token)
+
+# ╔═╡ d06cb138-52d8-43b9-abc4-c93573406a7f
+df_repos_contribs0 = DataFrame.(first.(contributors.(df_repos; auth)))
+
+# ╔═╡ 9daa5f85-9a3e-4315-beee-e6136dcd3782
+df_repos_contribs = vcat(first.(df_repos_contribs0, 5)..., source = :package => df_repos)
+
+# ╔═╡ 460f2009-e10c-4861-8bc0-77c22f8f8f7a
+strrd = starred.(unique(df_repos_contribs.contributor); auth)
+
+# ╔═╡ 523d6720-1220-4db2-9666-25c92f26c6ac
+repo_list_long = DataFrame(vcat(first.(strrd)...))
+
+# ╔═╡ c9e1f87d-9b5f-44d0-ba50-e466fad61f7e
+repo_list_short = @chain repo_list_long begin
+	@select(:name, :full_name, :language, :stargazers_count)
+	@subset(:language ∈ ["Julia", "R", "Python"])
+	@subset(:full_name ∉ df_repos)
+	sort(:stargazers_count, rev=true)
+	unique
+	@groupby(:language)
+	combine(x -> first(x, 15))
+	#
+	#unique
+end
+
+# ╔═╡ 9a886758-5680-4905-b76a-291ce9ebe8f4
+repo_list_short_with_contribs = @transform(
+	repo_list_short,
+	:contributors = first(contributors(:full_name; auth))
+)
+
+# ╔═╡ 7132140b-b19c-44ae-8719-dcd890f2db7c
+repo_contrib_list0 = @chain repo_list_short_with_contribs begin
+	flatten(:contributors)
+	select(:full_name => :repo, :language, :contributors => AsTable)
+	@transform(:contributor = :contributor.login)
+	@groupby(:repo)
+	@transform(:share_contributions = @bycol :contributions ./ sum(:contributions))
+end
+
+# ╔═╡ f2aaa908-6b59-4384-8bc1-f4d840ab1f94
+import CSV
+
+# ╔═╡ d180f3f7-0415-4a66-a417-73afde45b92b
+md"""
+## Assignment infrastructure
+"""
+
+# ╔═╡ 4f164a34-cbd4-462a-8851-30b1f9f8865c
+cell_id() = "#" * (string(PlutoRunner.currently_running_cell_id[]))
+
+# ╔═╡ 24133af4-86f5-45cf-9a0c-472661c5b518
+group_number = 99; cell1 = cell_id();
+
+# ╔═╡ 1cd457a6-f718-4481-a844-4aca9b8c9696
+@markdown("""
+#### Before you submit ...
+
+👉 Make sure you have added your names and your group number [in the cells below]($cell1).
+
+👉 Make sure that that **all group members proofread** your submission (especially your little essay).
+
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
+""")
+
+# ╔═╡ c7e84bc5-78f8-4c23-8e98-86bdffe727f3
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]); cell2 = cell_id();
+
+# ╔═╡ 41da2593-0528-43b1-be0e-054b820a1ea8
+if group_number == 99 || (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
+	@markdown("""
+!!! danger "Note!"
+    **Before you submit**, please replace the [randomly generated names in this cell]($cell2) by the names of your group and put the [right group number in the cell above.]($cell1).
+	""")
+end
+
+# ╔═╡ f21d41cc-6c5a-4ee5-815a-654f9b0c4b6a
+members = let
+	names = map(group_members) do (; firstname, lastname)
+		firstname * " " * lastname
+	end
+	join(names, ", ", " & ")
+end
+
+# ╔═╡ c9a57e32-2bd6-40b1-a3da-b9c785c21765
+md"""
+# Assignment 2: A GitHub Network
+
+*submitted by* **$members** (*group $(group_number)*)
+
+In this assignment you will analyze a network of **GitHub repositories**. GitHub is a social network where people can **collaborate on code**. Code is organized in **repos** (repositories): each repo corresponds to one project.
+
+Once you have run the notebook, the picture below shows a **network of selected repos**. These **repos are linked if a person has contributed to both repositories**.
+"""
+
+# ╔═╡ 01c0f340-1486-4317-9d5b-95390088ab21
+function wordcount(text)
+	stripped_text = strip(replace(string(text), r"\s" => " "))
+   	words = split(stripped_text, (' ', '-', '.', ',', ':', '_', '"', ';', '!', '\''))
+   	length(filter(!=(""), words))
+end
+
+# ╔═╡ 1cef5c54-741b-4a3f-91d5-291e11c98dda
+show_words(answer) = md"_approximately $(wordcount(answer)) words_"
+
+# ╔═╡ 9cab98b9-c380-4525-8e5c-67f9f6a9ba45
+begin
+	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
+	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
+	still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
+	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
+	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
+	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
+end
+
+# ╔═╡ 6632b6fa-6f8d-4545-92b1-40ac1ef97642
+if answer1_1 == md"Your answer goes here ..."
+	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
+else
+	correct(md"Great, we are looking forward to reading your answer!")
+end
+
+# ╔═╡ fec31d6a-4101-47e3-9197-a16fe2051ae7
+if answer2 == md"Your answer goes here ..."
+	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
+else
+	correct(md"Great, we are looking forward to reading your answer!")
+end
+
+# ╔═╡ aec9c518-c613-42dc-b14c-ef508e1e8889
+if answer3 == md"Your answer goes here ..."
+	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
+else
+	correct(md"Great, we are looking forward to reading your answer!")
+end
+
+# ╔═╡ 2970cdb4-f418-4c4f-badf-afcc52d56920
+function show_words_limit(answer, limit)
+	count = wordcount(answer)
+	if count < 1.02 * limit
+		return show_words(answer)
+	else
+		return almost(md"You are at $count words. Please shorten your text a bit, to get **below $limit words**.")
+	end
+end
+
+# ╔═╡ ae4890bd-337a-4507-8c90-13a21745b47e
+show_words_limit(answer2, 250)
+
+# ╔═╡ 1ad904eb-85fa-4c50-b835-e161ebdeacaf
+show_words_limit(answer3, 250)
+
+# ╔═╡ f563dbec-d4e5-47d6-9911-fcdeaabb02d7
+note(text; title="FYI") = Markdown.MD(Markdown.Admonition("note", title, [text]))
+
+# ╔═╡ 3b4b8127-f219-4f6f-b127-657f15f92442
+if !isnothing(csv_in) 
+	data_source = csv_in["name"]
+	repo_contrib_list = CSV.File(csv_in["data"])
+	note(md"""You are using data from $(csv_in["name"]). Remove the file from the file picker to generate your own dataset.""")
+else
+	data_source = "generated in notebook"
+	repo_contrib_list = repo_contrib_list0
+	note(md"""You are using data that were generated in the notebook. Alternatively you can use a `.csv` file that was generated by a member of your group and upload it using the _File Picker_ above.""")
+end
+
+# ╔═╡ a6ac9c08-5d58-4bc8-8dbc-0976692c3512
+begin
+	csv = joinpath(tempdir(), "github-data.csv")
+	csv_file = CSV.write(csv, repo_contrib_list)
+end
+
+# ╔═╡ 89d96030-18e6-45c3-b2e8-5643a1561f10
+md"""
+$(DownloadButton(read(csv), basename(csv))) (This downloads the current dataset to share with the rest of your group.)
+"""
+
+# ╔═╡ be304942-3d7e-4397-bb81-120b410a66f3
+node_df(min_contrib) = @chain repo_contrib_list begin
+	@subset(:contributions ≥ min_contrib)
+	@groupby(:repo)
+	@combine(:contributors = Set(:contributor), :languages = unique(:language))
+	@transform(:color = language2color[:languages])
+end
+
+# ╔═╡ b7e72871-4cb7-4ea0-aeb1-5100bfc4ca9e
+function repo_graph(min_contrib, min_joint)
+	node_list = node_df(min_contrib)
+	
+	nv = size(node_list, 1)
+	graph = SimpleGraph(nv)
+	
+	for i ∈ 1:nv
+		for j ∈ (i+1):nv
+			if length(node_list[i, :contributors] ∩ node_list[j, :contributors]) ≥ min_joint
+				add_edge!(graph, i, j)
+			end
+		end
+	end
+
+	(; node_list, graph)
+end
+
+# ╔═╡ 5ae6ec3e-e06f-4b79-8973-990f7413d699
+(; graph) = repo_graph(1, 15);
+
+# ╔═╡ 512e9c60-4c18-4ede-9b49-deab80c131d6
+let
+	fig, ax, _ = graphplot(graph, 
+		node_color="orange", edge_width = 0.5,
+		figure = (; size = (400, 300)))
+	hidedecorations!(ax)
+
+	fig
+end
+
+# ╔═╡ 0d5d5df4-d097-4abe-8328-29594dea4b01
+# some dummy analysis
+begin
+	n_edges = ne(graph)
+	n_nodes = nv(graph)
+
+	(; n_edges, n_nodes)
+end
+
+# ╔═╡ 7845e1d8-a008-4dcb-bb45-0a0ac212b902
+answer1_2 = md"""
+... Continue here ... This **network of Github repos** has $n_nodes nodes and $n_edges edges. ...
+"""
+
+# ╔═╡ 821b1a45-9ad0-442f-9047-838a283f821b
+answer1 = [answer1_1, answer1_2, answer1_3];
+
+# ╔═╡ 22fc3325-7909-4416-8763-e3c7981cfcca
+show_words_limit(join(answer1, " "), 500)
+
+# ╔═╡ 7ddd10b5-bfeb-4059-82ec-9c190a4b41c9
+node_list2, graph2 = repo_graph(min_joint, min_contrib);
+
+# ╔═╡ 0cdba445-c620-4525-b10c-6dfa4fde2b71
+selected_nodes = vertices(graph2)
+#selected_nodes = argmax(length, connected_components(graph2))
+
+# ╔═╡ 58687117-ffdf-469c-8c6b-115719796d1d
+let	
+	graph, node_list = graph2, node_list2
+	selected_nodes
+	
+	fig, ax, plt = graphplot(graph[selected_nodes], 
+		node_color = tuple.(node_list.color[selected_nodes], 1.0),
+		edge_color = :lightgray, edge_width = 1.0,
+		figure = (; size = (500, 300))
+	)
+
+	hidedecorations!(ax)
+	
+	lang2col = collect(pairs(language2color))
+	elements = [MarkerElement(; color, marker=:circle) for color ∈ last.(lang2col)]
+	labels = first.(lang2col)
+	Legend(fig[1,2], elements, labels)
+	
+	fig
+end
+
+# ╔═╡ fdcc24b1-67e6-484d-8baf-000f3082afd2
+# https://www.behindthename.com/random/
+random_names = 
+"""
+Snježana	Szymańska
+Kamal	ad-Din Milošević
+Büşra	Afolabi
+Sarvesh	Tesařová
+Rameshwar	Okonkwo
+Bohuslava	Martinović
+Michaela	Horák
+Sawsan	Yuen
+Apolonia	Wattana
+Salman	Martinek
+Ranya	Shevchenko
+Chao	Lysenko
+Azad	Feng
+Ramprasad	Sharma
+Nneka	Bokori
+""" |> IOBuffer |> x -> CSV.File(x, header=["firstname", "lastname"])
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -473,31 +515,25 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 CSV = "~0.10.17"
 CairoMakie = "~0.15.15"
 Chain = "~1.0.0"
-Combinatorics = "~1.1.0"
 DataFrameMacros = "~0.4.1"
 DataFrames = "~1.8.2"
+GitHub = "~5.14.0"
 GraphMakie = "~0.6.6"
 Graphs = "~1.15.0"
-HTTP = "~1.11.0"
-JSON3 = "~1.14.3"
+MarkdownLiteral = "~0.1.5"
 PlutoUI = "~0.7.83"
-SimpleWeightedGraphs = "~1.5.1"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
-Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+GitHub = "bc5e4493-9b4d-5f90-b8aa-2b2bcaad7a26"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
-HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -506,7 +542,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.9"
 manifest_format = "2.0"
-project_hash = "9b4c3afdbb3f2512299da545faecbd80601bc0b0"
+project_hash = "18dec61599984d0fbe194acf59b20ab75c1b3e21"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -743,10 +779,19 @@ git-tree-sha1 = "291665b547f137df070e4dd83e432b5fee8cc4a0"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.13.2"
 
-[[deps.Combinatorics]]
-git-tree-sha1 = "c761b00e7755700f9cdf5b02039939d1359330e1"
-uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
-version = "1.1.0"
+[[deps.CommonMark]]
+deps = ["PrecompileTools"]
+git-tree-sha1 = "7c8fe02c7eb6fe22e89d3990123a2a931ca8fcfb"
+uuid = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
+version = "1.0.4"
+
+    [deps.CommonMark.extensions]
+    CommonMarkMarkdownASTExt = "MarkdownAST"
+    CommonMarkMarkdownExt = "Markdown"
+
+    [deps.CommonMark.weakdeps]
+    Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
+    MarkdownAST = "d0879d2d-cac2-40c8-9cee-1863dc0c7391"
 
 [[deps.CommonSolve]]
 deps = ["PrecompileTools"]
@@ -1070,6 +1115,12 @@ git-tree-sha1 = "a3efbbc027441271444dcd0c0a46f2d119dc4329"
 uuid = "59f7168a-df46-5410-90c8-f2779963d0ec"
 version = "6.1.3+0"
 
+[[deps.GitHub]]
+deps = ["Base64", "Dates", "HTTP", "JSON", "OpenSSL_jll", "SHA", "Sockets", "SodiumSeal", "URIs"]
+git-tree-sha1 = "810caa22175697373225e9ee64d8b7dc8f2a40b9"
+uuid = "bc5e4493-9b4d-5f90-b8aa-2b2bcaad7a26"
+version = "5.14.0"
+
 [[deps.Glib_jll]]
 deps = ["Artifacts", "GettextRuntime_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libiconv_jll", "Libmount_jll", "PCRE2_jll", "Zlib_jll"]
 git-tree-sha1 = "090526e65de8f69648ac156daae153de8b56df62"
@@ -1324,18 +1375,6 @@ version = "1.10.0"
     [deps.JSON.weakdeps]
     ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"
 
-[[deps.JSON3]]
-deps = ["Dates", "Mmap", "Parsers", "PrecompileTools", "StructTypes", "UUIDs"]
-git-tree-sha1 = "411eccfe8aba0814ffa0fdf4860913ed09c34975"
-uuid = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
-version = "1.14.3"
-
-    [deps.JSON3.extensions]
-    JSON3ArrowExt = ["ArrowTypes"]
-
-    [deps.JSON3.weakdeps]
-    ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"
-
 [[deps.JpegTurbo]]
 deps = ["CEnum", "FileIO", "ImageCore", "JpegTurbo_jll", "TOML"]
 git-tree-sha1 = "9496de8fb52c224a2e3f9ff403947674517317d9"
@@ -1509,6 +1548,12 @@ version = "0.4.3"
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 version = "1.11.0"
+
+[[deps.MarkdownLiteral]]
+deps = ["CommonMark", "HypertextLiteral"]
+git-tree-sha1 = "e88f9af659a0cc9326fa464427f71ae6c9a83381"
+uuid = "736d6165-7244-6769-4267-6b50796e6954"
+version = "0.1.5"
 
 [[deps.MathTeXEngine]]
 deps = ["AbstractTrees", "Automa", "DataStructures", "FreeTypeAbstraction", "GeometryBasics", "LaTeXStrings", "REPL", "RelocatableFolders", "UnicodeFun"]
@@ -1949,12 +1994,6 @@ git-tree-sha1 = "7ddb0b49c109481b046972c0e4ab02b2127d6a75"
 uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 version = "0.9.6"
 
-[[deps.SimpleWeightedGraphs]]
-deps = ["Graphs", "LinearAlgebra", "Markdown", "SparseArrays"]
-git-tree-sha1 = "749a2b719ec7f34f280c0d97ac3dab5c89818631"
-uuid = "47aef6b3-ad0c-573a-a1e2-d07658019622"
-version = "1.5.1"
-
 [[deps.Sixel]]
 deps = ["Dates", "FileIO", "ImageCore", "IndirectArrays", "OffsetArrays", "REPL", "libsixel_jll"]
 git-tree-sha1 = "2c79185e5261b159474903598c571ddd9f12ff7b"
@@ -1964,6 +2003,12 @@ version = "0.1.6"
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 version = "1.11.0"
+
+[[deps.SodiumSeal]]
+deps = ["Base64", "Libdl", "libsodium_jll"]
+git-tree-sha1 = "80cef67d2953e33935b41c6ab0a178b9987b1c99"
+uuid = "2133526b-2bfb-4018-ac12-889fb3908a75"
+version = "0.1.1"
 
 [[deps.SortingAlgorithms]]
 deps = ["DataStructures"]
@@ -2067,12 +2112,6 @@ version = "0.7.3"
     LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
     SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
     StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
-
-[[deps.StructTypes]]
-deps = ["Dates", "UUIDs"]
-git-tree-sha1 = "159331b30e94d7b11379037feeb9b690950cace8"
-uuid = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
-version = "1.11.0"
 
 [[deps.StructUtils]]
 deps = ["Dates", "UUIDs"]
@@ -2343,6 +2382,12 @@ git-tree-sha1 = "e067c8bae65bb40866552296a2d5b4dc65b8928f"
 uuid = "075b6546-f08a-558a-be8f-8157d0f608a5"
 version = "1.80.702+0"
 
+[[deps.libsodium_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "011b0a7331b41c25524b64dc42afc9683ee89026"
+uuid = "a9144af2-ca23-56d9-984f-0d03f7b5ccf8"
+version = "1.0.21+0"
+
 [[deps.libva_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll", "Xorg_libXext_jll", "Xorg_libXfixes_jll", "libdrm_jll"]
 git-tree-sha1 = "7dbf96baae3310fe2fa0df0ccbb3c6288d5816c9"
@@ -2385,59 +2430,91 @@ version = "4.1.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─aff48e14-82fb-49db-b7d1-662f8b138978
-# ╠═e5482ede-fcb2-48cb-8d3d-33186534c7f5
-# ╠═c6330f8c-f815-4dcb-bace-c0623fe9b95b
-# ╠═7bdc69be-907d-453e-88d8-0086d1991373
-# ╠═a04af02d-bd08-497f-8ff9-8509425433df
-# ╠═aab39699-fee8-424f-b819-756fd89af39d
-# ╟─1995b04c-387a-4d2f-ac0e-0cd04b5a2e8c
-# ╠═d64d8a42-a978-47b8-a0b3-78bc8bbfa4a7
-# ╠═ac21014c-25bd-4332-96c0-946ab18d01b5
-# ╠═d6919d9e-d3ea-47f2-88a0-84ee186d7876
-# ╠═1002c799-873c-4c85-84a6-01ccf96a3f8c
-# ╠═16ed8c61-f92d-427c-a3e0-faf8ced75c4a
-# ╠═46693087-b71a-4150-a8bf-4fc383041e21
-# ╟─b703fb1b-d5a9-42a2-a240-87ee16150e22
-# ╠═e8322e7b-fe47-41f0-95e0-c4fb0147a370
-# ╠═53904adb-c258-47bc-a4fd-b045e57c4163
-# ╟─d1d7fc59-00e1-48f6-9ab4-fedcee405ddf
-# ╠═76d3626e-37cf-45c2-8358-d51bc11b21ac
-# ╠═940a1a80-b57c-46f2-af0f-751d71339826
-# ╠═e800da39-11ba-4c97-b12a-acc6a1d226e9
-# ╠═f9944412-f26d-4a38-947d-305996ef7191
-# ╠═687c92df-6308-43ea-84a4-4f05c787991c
-# ╠═a2f9b46e-46f9-437b-891b-bcfb410d709d
-# ╟─75c4eef3-233d-4b01-af40-c0ea9953b6b2
-# ╠═bc575e40-d8b2-49e9-87e1-424012103b81
-# ╠═6eb5afa8-9a94-44f8-be5f-6540bd01febb
-# ╠═7a5470da-6df2-4d10-8040-149f326c7b86
-# ╠═b400fa3f-6128-4aa2-a539-177f4aacd75d
-# ╠═90414397-248f-4e87-8bdc-2c7c93399acb
-# ╠═0bd119c5-2c65-4099-9d8e-7c5dacff7eca
-# ╠═f93c421e-9c82-4b47-874b-5662d4966a52
-# ╠═f6f36473-a57b-435a-bd05-c77e96093ec8
-# ╠═209eae02-3e39-427a-81d5-1b13d2ab7720
-# ╠═d85454cc-f792-45cc-bf94-2c2bda7e57cf
-# ╠═465f5b2c-c11d-459c-b5d4-d18a414c997e
-# ╠═25ef8eb4-2347-46ba-ba56-fbd9b167da13
-# ╠═34ea0e3d-69e7-48c8-81d6-a2466218a5df
-# ╠═d4166d73-64a9-43d9-b80e-cb857d5c9d37
-# ╠═a37792f2-ae63-40b8-a70a-f01c31b58879
-# ╠═cd684601-2079-4688-ba8e-6c8ac9a30fe7
-# ╠═822abb46-c38a-48a7-95c7-56076dc04c59
-# ╠═2f32da11-dbe5-4a16-a763-2541bbcbc0fb
-# ╠═07f7ac89-ffb7-4908-b0dc-13b4aa53c437
-# ╠═7ecb4ba7-2d64-473b-9906-b1eb2337fb95
-# ╠═527aabe8-8556-427d-88c3-2f4e11cb0610
-# ╠═a7b6af79-f784-4ac7-9cfd-312898b470cf
-# ╠═2c922699-d19f-49a6-81b4-09e71d6e350f
-# ╠═601b75df-c853-482e-bef5-f6918493866c
-# ╠═fc80de49-4368-4ab1-a2c7-bf36a5a82662
-# ╠═30b51289-20b2-47b5-a932-3645e117025b
-# ╠═8e3023ea-c25e-44f4-87e6-1ec4c2adef99
-# ╠═fdd03f4c-490d-4bec-a203-346efc243d44
-# ╠═e82f66da-b5f6-4612-91b5-d798bb705aa9
-# ╠═036a18ca-cbd9-434f-8176-2c20dd1ef9f9
+# ╟─41da2593-0528-43b1-be0e-054b820a1ea8
+# ╟─eef87040-4c96-49e4-8297-e90231b438fb
+# ╟─c9a57e32-2bd6-40b1-a3da-b9c785c21765
+# ╟─512e9c60-4c18-4ede-9b49-deab80c131d6
+# ╠═5ae6ec3e-e06f-4b79-8973-990f7413d699
+# ╟─c0220198-9f64-4059-b13f-801233ce1c03
+# ╟─3b4b8127-f219-4f6f-b127-657f15f92442
+# ╟─89d96030-18e6-45c3-b2e8-5643a1561f10
+# ╟─d677ab32-2c3f-4906-ad8a-f4aa7e4af6ca
+# ╠═6f7c5b2d-cbfe-4bda-be55-2e22105b6265
+# ╟─6632b6fa-6f8d-4545-92b1-40ac1ef97642
+# ╠═0d5d5df4-d097-4abe-8328-29594dea4b01
+# ╠═29dd5ca2-b531-4c62-92ee-d477140aadd8
+# ╠═29ffdf2b-0d3e-4aaa-a7bf-25a4a05f9160
+# ╠═7845e1d8-a008-4dcb-bb45-0a0ac212b902
+# ╠═319781e4-ac31-412a-aa47-90c08646305a
+# ╠═57b9f288-a885-4904-9222-2237363e52a2
+# ╠═e7d9e7ec-edd5-481a-bac3-5f5a09d5220c
+# ╠═821b1a45-9ad0-442f-9047-838a283f821b
+# ╟─22fc3325-7909-4416-8763-e3c7981cfcca
+# ╟─f9780dc1-b507-46a4-a877-d69b145ddae0
+# ╟─bfe802e4-1af1-4556-9f25-895989791407
+# ╟─58687117-ffdf-469c-8c6b-115719796d1d
+# ╟─b15f2df0-b5ed-4308-a092-0888b8a57e10
+# ╟─1a2bc4ed-868e-439f-bd29-78716d6e763e
+# ╠═0cdba445-c620-4525-b10c-6dfa4fde2b71
+# ╟─bc9def15-5b41-4c94-8c88-3bb6c109fa19
+# ╠═3f2014aa-8318-4ae6-8f0d-c58f0cc61b9d
+# ╟─ae4890bd-337a-4507-8c90-13a21745b47e
+# ╟─fec31d6a-4101-47e3-9197-a16fe2051ae7
+# ╠═7ddd10b5-bfeb-4059-82ec-9c190a4b41c9
+# ╟─2b764133-26fd-4933-a915-1a163be10e85
+# ╠═265ce115-a04c-4320-9289-f7afa34915c4
+# ╟─1ad904eb-85fa-4c50-b835-e161ebdeacaf
+# ╟─aec9c518-c613-42dc-b14c-ef508e1e8889
+# ╟─1cd457a6-f718-4481-a844-4aca9b8c9696
+# ╠═24133af4-86f5-45cf-9a0c-472661c5b518
+# ╠═c7e84bc5-78f8-4c23-8e98-86bdffe727f3
+# ╟─a4ab528d-bc5b-4ae3-974c-7aa51dfe3d37
+# ╟─ece45ccb-8566-4677-93e4-4aae78c81bc4
+# ╠═854fdf93-da34-4c01-bece-6c4cb3bfe121
+# ╠═e3c0c318-1079-442b-8385-4d52ecdbe109
+# ╠═87b3aea6-8a7d-43e1-a1f1-c97c1197632d
+# ╟─d7ab9443-5e8b-40c8-845c-3ff147b91167
+# ╟─73ebdc58-0df3-485d-8539-803d5190d147
+# ╟─ecd2189b-ad94-4d98-8f42-4e11d8c0b6df
+# ╟─357e427d-7efa-4398-804f-650e3d0af831
+# ╠═9daa5f85-9a3e-4315-beee-e6136dcd3782
+# ╠═d06cb138-52d8-43b9-abc4-c93573406a7f
+# ╟─d9b1f681-97d7-40ce-be35-b869df51573f
+# ╠═460f2009-e10c-4861-8bc0-77c22f8f8f7a
+# ╠═523d6720-1220-4db2-9666-25c92f26c6ac
+# ╟─534bdb50-eb50-46c8-bb63-2c3e704a9131
+# ╠═c9e1f87d-9b5f-44d0-ba50-e466fad61f7e
+# ╟─3b32c857-0132-4f5a-83e9-466a7c7edaa9
+# ╠═9a886758-5680-4905-b76a-291ce9ebe8f4
+# ╠═7132140b-b19c-44ae-8719-dcd890f2db7c
+# ╟─4183de92-8700-41a0-b367-a05471376a8b
+# ╠═a6ac9c08-5d58-4bc8-8dbc-0976692c3512
+# ╟─5d94b49a-995d-44b0-b8b7-93a95486ce62
+# ╠═be304942-3d7e-4397-bb81-120b410a66f3
+# ╟─8710aa87-9b2c-4491-9537-c3a15286ed07
+# ╠═b7e72871-4cb7-4ea0-aeb1-5100bfc4ca9e
+# ╠═96c6ae89-7f11-4063-a331-e0a6a804f5e7
+# ╟─c067ae31-5867-43fe-ae04-1565e0bc119c
+# ╠═3378ff91-3308-41c6-b6ea-717bcf85ce25
+# ╠═43d8772b-132e-4470-be6c-f100f5419a64
+# ╠═61d837dd-1675-4f8b-ab88-c1e9cce3cd5b
+# ╠═1defacf5-16e3-458e-9679-2aa13f5c9b37
+# ╠═b816d306-c42a-11ee-0450-03a6f623e031
+# ╠═ca208660-7465-4ca7-b626-2ab25f337d1d
+# ╠═8b6af171-9746-4f02-851d-a52c7d406e70
+# ╠═9832aa67-9add-4475-8e81-52355b9f6917
+# ╠═91997733-8567-4f5c-aae3-75b29e6dc174
+# ╠═7b06c8bb-0c59-472d-8459-4573c81af95f
+# ╠═f2aaa908-6b59-4384-8bc1-f4d840ab1f94
+# ╠═5fcb1819-bb67-4ae1-8637-d022b89cbc0e
+# ╟─d180f3f7-0415-4a66-a417-73afde45b92b
+# ╠═4f164a34-cbd4-462a-8851-30b1f9f8865c
+# ╠═f21d41cc-6c5a-4ee5-815a-654f9b0c4b6a
+# ╠═01c0f340-1486-4317-9d5b-95390088ab21
+# ╠═1cef5c54-741b-4a3f-91d5-291e11c98dda
+# ╠═2970cdb4-f418-4c4f-badf-afcc52d56920
+# ╠═9cab98b9-c380-4525-8e5c-67f9f6a9ba45
+# ╠═f563dbec-d4e5-47d6-9911-fcdeaabb02d7
+# ╠═fdcc24b1-67e6-484d-8baf-000f3082afd2
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
