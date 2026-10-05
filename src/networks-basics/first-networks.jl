@@ -25,12 +25,6 @@ macro bind(def, element)
     #! format: on
 end
 
-# ╔═╡ 97676f28-4ae3-446b-97ef-2b715f90d8fa
-using DataFrames
-
-# ╔═╡ 915ca82e-f358-4515-889a-5a226539223d
-using Colors: @colorant_str
-
 # ╔═╡ de6c3f24-618b-44a1-a9ef-b56bd35b4b87
 using Graphs # for analyzing networks
 
@@ -52,23 +46,26 @@ using NetworkLayout# layout algorithms
 # ╔═╡ 30fa9b9e-8e78-43b8-8405-1e70087b7c63
 using CairoMakie# hist
 
-# ╔═╡ 6998ffab-2cf1-410f-b09c-5e70f2da0438
-using Statistics: mean, std
+# ╔═╡ 915ca82e-f358-4515-889a-5a226539223d
+using Colors: @colorant_str
 
-# ╔═╡ 40358272-eca0-4a98-be8a-66fb23573d32
-using FreqTables
+# ╔═╡ 6998ffab-2cf1-410f-b09c-5e70f2da0438
+using Statistics: mean
 
 # ╔═╡ 431229ad-a4f5-415c-8946-9888dc335857
 using StatsBase: ecdf
 
-# ╔═╡ 2ecf4ffd-d41d-494c-9fec-d681a176a8ba
-using PlutoUI: TableOfContents, Slider
-
 # ╔═╡ b4cec279-9bd4-46c5-8dc3-13003730916f
-using PlutoUI
+begin
+	using PlutoUI
+	using PlutoUI: Slider # CairoMakie also exports a Slider
+end
 
 # ╔═╡ 2068d1e1-7c8a-4319-a440-8ef5ddc74369
 using MarkdownLiteral: @markdown
+
+# ╔═╡ 97676f28-4ae3-446b-97ef-2b715f90d8fa
+using DataFrames
 
 # ╔═╡ eb6a3510-6477-11eb-0e4e-33557d794e45
 md"""
@@ -174,17 +171,11 @@ let
 	for G ∈ Gs
 		graph = G(6)
 		push!(what_graph, G)
-		push!(info, nv(graph))
+		push!(info, ne(graph))
 	end
 
 	what_graph, info
 end
-
-# ╔═╡ ff7668e2-43af-4b0c-8e06-ac6d3e1fce73
-# goes
-
-# ╔═╡ 5101887d-ed0d-46af-86b3-2412de936f5a
-# here
 
 # ╔═╡ 10b252de-4c0c-48ab-b579-2c9450e8f084
 md"""
@@ -512,7 +503,10 @@ md"""
 components = connected_components(network)
 
 # ╔═╡ 56ffb909-1dce-49c4-90a5-b45ede78e624
-subnetwork = network[components[1]]
+largest_component = argmax(length, components)
+
+# ╔═╡ 3a0c5a52-6f0e-4d4a-9b8e-2f1c7d9e4a11
+subnetwork = network[largest_component]
 
 # ╔═╡ 7784fe91-ceb0-4756-8571-65efa217a065
 diameter(subnetwork)
@@ -555,10 +549,14 @@ graphplot(subgraph, node_size=20, arrow_size=20, node_color="orange")
 
 # ╔═╡ ef85efd2-da5c-4197-831e-110aebe5a1d7
 let
-	f(x) = log(1 - ecdf(degree(network))(x))
-	x_vec = exp.(0:0.01:6)
+	d = degree(network)
+	k = sort(unique(d))
+	ccdf = 1 .- ecdf(d).(k .- 1) # share of nodes with degree ≥ k
 
-	lines(x_vec, f.(x_vec))
+	scatter(k, ccdf,
+		axis = (xscale = log10, yscale = log10, xlabel = "degree k",
+			ylabel = "share of nodes with degree ≥ k")
+	)
 end
 
 # ╔═╡ 62063f20-4041-454d-964b-e2e89a8634f0
@@ -731,7 +729,7 @@ group_number = 99; cell1 = cell_id();
 
 👉 Make sure you have added your names and your group number [in the cells below]($cell1).
 
-👉 Make sure that that **all group members proofread** your submission (especially your little essay).
+👉 Make sure that **all group members proofread** your submission.
 
 👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
 """)
@@ -806,26 +804,10 @@ note(@markdown("The assignment starts [here (link)]($assignment_cell)"))
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
-[compat]
-CairoMakie = "~0.15.15"
-Colors = "~0.13.2"
-DataFrames = "~1.8.2"
-FreqTables = "~1.0.0"
-GraphMakie = "~0.6.6"
-Graphs = "~1.15.0"
-MarkdownLiteral = "~0.1.5"
-MetaGraphs = "~0.7.2"
-NetworkLayout = "~0.4.11"
-PlutoUI = "~0.7.83"
-SNAPDatasets = "~0.2.1"
-SimpleWeightedGraphs = "~1.5.1"
-StatsBase = "~0.34.13"
-
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-FreqTables = "da1fdf0e-e0ff-5433-a45f-9bb5ff651cb1"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
@@ -836,6 +818,20 @@ SNAPDatasets = "fc66bc1b-447b-53fc-8f09-bc9cfb0b0c10"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+
+[compat]
+CairoMakie = "~0.15.15"
+Colors = "~0.13.2"
+DataFrames = "~1.8.2"
+GraphMakie = "~0.6.6"
+Graphs = "~1.15.0"
+MarkdownLiteral = "~0.1.5"
+MetaGraphs = "~0.7.2"
+NetworkLayout = "~0.4.11"
+PlutoUI = "~0.7.83"
+SNAPDatasets = "~0.2.1"
+SimpleWeightedGraphs = "~1.5.1"
+StatsBase = "~0.34.13"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -844,7 +840,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.9"
 manifest_format = "2.0"
-project_hash = "7b27f67d4cd9d0d6a7331666d68bc6bc82d12853"
+project_hash = "f54568558c3b8e8625b122391b781f41e72adc93"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -1005,28 +1001,6 @@ git-tree-sha1 = "7b841680738c19948120f6e4cf8d0200518bd564"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.18.8+0"
 
-[[deps.CategoricalArrays]]
-deps = ["Compat", "DataAPI", "Future", "Missings", "Printf", "Requires", "Statistics", "Unicode"]
-git-tree-sha1 = "20ff1463035a170b25eba2ef9823bb9ad51635e4"
-uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
-version = "1.1.1"
-
-    [deps.CategoricalArrays.extensions]
-    CategoricalArraysArrowExt = "Arrow"
-    CategoricalArraysJSONExt = "JSON"
-    CategoricalArraysRecipesBaseExt = "RecipesBase"
-    CategoricalArraysSentinelArraysExt = "SentinelArrays"
-    CategoricalArraysStatsBaseExt = "StatsBase"
-    CategoricalArraysStructTypesExt = "StructTypes"
-
-    [deps.CategoricalArrays.weakdeps]
-    Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
-    JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
-    RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
-    SentinelArrays = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
-    StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-    StructTypes = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
-
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra"]
 git-tree-sha1 = "12177ad6b3cad7fd50c8b3825ce24a99ad61c18f"
@@ -1080,11 +1054,6 @@ deps = ["ColorTypes", "FixedPointNumbers", "LinearAlgebra", "Reexport"]
 git-tree-sha1 = "291665b547f137df070e4dd83e432b5fee8cc4a0"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.13.2"
-
-[[deps.Combinatorics]]
-git-tree-sha1 = "c761b00e7755700f9cdf5b02039939d1359330e1"
-uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
-version = "1.1.0"
 
 [[deps.CommonMark]]
 deps = ["PrecompileTools"]
@@ -1201,12 +1170,6 @@ deps = ["AdaptivePredicates", "EnumX", "ExactPredicates", "Random"]
 git-tree-sha1 = "4ac548adcad90c1d5d677af13568a748af4c952b"
 uuid = "927a84f5-c5f4-47a5-9785-b46e178433df"
 version = "1.6.7"
-
-[[deps.DelimitedFiles]]
-deps = ["Mmap"]
-git-tree-sha1 = "9e2f36d3c96a820c678f2f1f1782582fcf685bae"
-uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
-version = "1.9.1"
 
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
@@ -1366,12 +1329,6 @@ deps = ["BaseDirs", "ColorVectorSpace", "Colors", "FreeType", "GeometryBasics", 
 git-tree-sha1 = "4ebb930ef4a43817991ba35db6317a05e59abd11"
 uuid = "663a7486-cb36-511b-a19d-713bb74d65c9"
 version = "0.10.8"
-
-[[deps.FreqTables]]
-deps = ["CategoricalArrays", "Missings", "NamedArrays", "Tables"]
-git-tree-sha1 = "a2f24a17652beedaac07ce78f4c985a52c76d005"
-uuid = "da1fdf0e-e0ff-5433-a45f-9bb5ff651cb1"
-version = "1.0.0"
 
 [[deps.FriBidi_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1894,12 +1851,6 @@ deps = ["OpenLibm_jll"]
 git-tree-sha1 = "dbd2e8cd2c1c27f0b584f6661b4309609c5a685e"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "1.1.4"
-
-[[deps.NamedArrays]]
-deps = ["Combinatorics", "DelimitedFiles", "InvertedIndices", "LinearAlgebra", "OrderedCollections", "Random", "Requires", "SparseArrays", "Statistics"]
-git-tree-sha1 = "33d258318d9e049d26c02ca31b4843b2c851c0b0"
-uuid = "86f7a689-2022-50b4-a561-43c23ac3c673"
-version = "0.10.5"
 
 [[deps.Netpbm]]
 deps = ["FileIO", "ImageCore", "ImageMetadata"]
@@ -2720,13 +2671,10 @@ version = "4.1.0+0"
 # ╠═7ca8de90-04bc-4e79-9905-59ffbdfae6af
 # ╟─a0ea3f82-91a1-46c1-bb80-4ac050561f16
 # ╠═8a56d6d9-91e0-4f6d-8f7d-3cf62717b75c
-# ╠═97676f28-4ae3-446b-97ef-2b715f90d8fa
 # ╟─31f06624-9fa0-4b7a-a869-aa2ede238854
 # ╠═59dafdda-1e42-44f2-b0b9-6859dcdf8671
 # ╠═265e89b7-07e2-4102-b697-a8adaac042ff
 # ╠═d6d7256c-1e1a-401a-a925-0a8fb8561138
-# ╠═ff7668e2-43af-4b0c-8e06-ac6d3e1fce73
-# ╠═5101887d-ed0d-46af-86b3-2412de936f5a
 # ╠═10b252de-4c0c-48ab-b579-2c9450e8f084
 # ╟─5f1e3589-48fe-418a-958b-74b5dc0d7eff
 # ╠═b01cef89-6258-4050-9d35-7628eaf54010
@@ -2769,11 +2717,11 @@ version = "4.1.0+0"
 # ╠═32dd4b65-15a4-4247-afe7-15a4daec2294
 # ╠═aa91eb44-8cf9-4df4-a926-23dc6cc92cda
 # ╠═4a5319ed-14f6-4635-8f58-a387de0cd8ad
-# ╠═915ca82e-f358-4515-889a-5a226539223d
 # ╠═26fbde25-c520-4ca3-8bfd-22753d9a7a94
 # ╟─5d7adf23-4fef-4597-a3ac-18adbef08d8e
 # ╠═383c5cca-2301-4f9e-9610-9e5b7fdb13b5
 # ╠═56ffb909-1dce-49c4-90a5-b45ede78e624
+# ╠═3a0c5a52-6f0e-4d4a-9b8e-2f1c7d9e4a11
 # ╠═7784fe91-ceb0-4756-8571-65efa217a065
 # ╠═9f083058-6a12-41cc-bb65-ad81e5d79aea
 # ╟─a22c9ec0-647b-11eb-2141-974fa4223428
@@ -2819,14 +2767,14 @@ version = "4.1.0+0"
 # ╠═48a5a2db-637a-4f8e-9994-ae6c1850ed70
 # ╠═7f248ca3-825f-4698-8ead-f7bd30e0d5c5
 # ╠═30fa9b9e-8e78-43b8-8405-1e70087b7c63
+# ╠═915ca82e-f358-4515-889a-5a226539223d
 # ╟─4de43ab8-4187-49ea-9c96-779a6d39c757
 # ╠═6998ffab-2cf1-410f-b09c-5e70f2da0438
-# ╠═40358272-eca0-4a98-be8a-66fb23573d32
 # ╠═431229ad-a4f5-415c-8946-9888dc335857
 # ╟─f45dfb17-aef7-4540-a790-9148fa921d25
-# ╠═2ecf4ffd-d41d-494c-9fec-d681a176a8ba
 # ╠═b4cec279-9bd4-46c5-8dc3-13003730916f
 # ╠═2068d1e1-7c8a-4319-a440-8ef5ddc74369
+# ╠═97676f28-4ae3-446b-97ef-2b715f90d8fa
 # ╟─e0b98b3b-1a2a-420e-9cf0-b08bfa7b4244
 # ╠═095e3198-eba0-4e33-a966-92c30f9caa7d
 # ╠═c1a7ce59-f524-474e-9816-8955aa180bf3
