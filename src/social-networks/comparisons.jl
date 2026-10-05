@@ -40,9 +40,7 @@ using LinearAlgebra: I, dot
 md"""
 !!! danger "Under construction!"
 
-	This notebook is used for the course _Economic and Financial Network Analysis_ at the University of Amsterdam.
-
-	**The notebook will get updated for Spring 2022.**
+	This notebook is being reworked.
 """
 
 # ╔═╡ 7fadac3a-6b77-11eb-2030-f92648bcef71

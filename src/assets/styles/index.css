@@ -161,13 +161,9 @@ a.pluto_home_link {
     /* content: " | "; */
 }
 
-.semester-details,
 .authors {
     border-radius: var(--border-radius);
     padding: var(--child-padding);
-}
-.semester-details > a {
-    font-weight: 700;
 }
 
 #pages-sidebar h1 {

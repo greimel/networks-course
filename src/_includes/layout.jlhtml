@@ -147,9 +147,6 @@ $(pluto_head)
                 about = sidebar_data[:about]
 
                 @htl("""
-                <div class="semester-details">
-                    <a href="$(root_url)/semesters/">$(about[:term])</a>
-                </div>
                 <div class="logos">
                     <picture title=$(about[:institution])>
                         <source srcset="$(root_url)/assets/$(about[:institution_logo_darkmode])" media="(prefers-color-scheme: dark)" />

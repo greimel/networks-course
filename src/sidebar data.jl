@@ -14,9 +14,8 @@ Dict(
         ],
         :title => "Networks in Economics and Finance",
         :subtitle => "BSc Economics | University of Vienna",
-        :term => "Winter 2024",
         :institution => "University of Vienna",
-        :institution_url => "http://www.uva.nl",
+        :institution_url => "https://www.univie.ac.at",
         :institution_logo => "univie-logo.svg",
         :institution_logo_darkmode => "univie-logo-bg.svg"
     )
