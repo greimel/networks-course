@@ -85,7 +85,7 @@ using HypertextLiteral
 
 # ╔═╡ 0e30624c-65fc-11eb-185d-1d018f68f82c
 md"""
-`disease.jl` | **Version 1.8+** | *last updated: October 6, 2025*
+`disease.jl` | **Version 1.8** | *content updated: 14 Oct 2024, packages updated: 4 Oct 2026*
 """
 
 # ╔═╡ f4266196-64aa-11eb-3fc1-2bf0e099d19c

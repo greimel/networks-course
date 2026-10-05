@@ -51,7 +51,7 @@ using PlutoUI
 
 # ╔═╡ 13313236-502d-46ca-bf24-a4defd6d792f
 md"""
-`school-closures.jl` | **Version 1.3** | *last updated: Feb 20, 2023*
+`school-closures.jl` | **Version 1.3** | *content updated: 20 Feb 2023, packages updated: 4 Oct 2026*
 """
 
 # ╔═╡ 44c1c228-d864-49ab-a8bf-bd7d6bd260cd

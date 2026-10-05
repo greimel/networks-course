@@ -27,7 +27,7 @@ using PlutoUI
 
 # ╔═╡ ba649465-3d71-4854-9151-bf6147225865
 md"""
-`more-julia.jl` | **Version 1.1** | *last updated: May 10 2022* | *created by [Daniel Schmidt](https://github.com/danieljschmidt)*
+`more-julia.jl` | **Version 1.1** | *content updated: 10 May 2022, packages updated: 4 Oct 2026* | *created by [Daniel Schmidt](https://github.com/danieljschmidt)*
 """
 
 # ╔═╡ c704103c-3093-4f50-971e-c37eb14546de

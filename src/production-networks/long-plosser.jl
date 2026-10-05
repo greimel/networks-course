@@ -69,7 +69,7 @@ using GraphMakie: automatic
 
 # ╔═╡ 35721b85-c06a-4c57-99d1-2a7bd4bff22f
 md"""
-`long-plosser.jl` | **Version 1.1** | *last updated: Mar 12, 2023*
+`long-plosser.jl` | **Version 1.1** | *content updated: 12 Mar 2023, packages updated: 4 Oct 2026*
 """
 
 # ╔═╡ 866ae0b6-426e-41f1-b498-e2e7f38100fe

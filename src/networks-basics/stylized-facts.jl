@@ -45,7 +45,7 @@ using StatsBase: ecdf
 
 # ╔═╡ eb6a3510-6477-11eb-0e4e-33557d794e45
 md"""
-`stylized-facts.jl` | **Version 1.0+** | *last updated: Feb 2, 2023*
+`stylized-facts.jl` | **Version 1.0** | *content updated: 2 Feb 2023, packages updated: 4 Oct 2026*
 """
 
 # ╔═╡ ce5a4af6-5930-4ba6-a6dc-ececf1efda6b

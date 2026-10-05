@@ -161,7 +161,7 @@ end
 
 # ╔═╡ 47594b98-6c72-11eb-264f-e5416a8faa32
 md"""
-`facebook.jl` | **Version 1.11** | *last updated: Nov 20, 2024*
+`facebook.jl` | **Version 1.12** | *content updated: 4 Oct 2026, packages updated: 4 Oct 2026*
 """
 
 # ╔═╡ 7f8a57f0-6c72-11eb-27dd-2dae50f00232

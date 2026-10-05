@@ -72,7 +72,7 @@ using MarkdownLiteral: @markdown
 
 # ╔═╡ eb6a3510-6477-11eb-0e4e-33557d794e45
 md"""
-`first-networks.jl` | **Version 1.7+** | *last updated: October 7, 2024*
+`first-networks.jl` | **Version 1.7** | *content updated: 7 Oct 2024, packages updated: 4 Oct 2026*
 """
 
 # ╔═╡ 6009f070-5ef8-11eb-340a-d9780be085ad

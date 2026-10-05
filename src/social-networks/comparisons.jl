@@ -47,7 +47,7 @@ md"""
 
 # ╔═╡ 7fadac3a-6b77-11eb-2030-f92648bcef71
 md"""
-`comparisons.jl` | **Version 1.2+** | *last updated: Oct 14 2021 (fixed Feb 2024)*
+`comparisons.jl` | **Version 1.2** | *content updated: 14 Oct 2021, packages updated: 4 Oct 2026*
 """
 
 # ╔═╡ 549c17f0-6b77-11eb-3cc7-379d1bcfad6f

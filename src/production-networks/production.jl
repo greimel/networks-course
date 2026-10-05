@@ -113,7 +113,7 @@ using PlutoTest: @test
 
 # ╔═╡ 38f5d048-7747-11eb-30f7-89bade5ed0a3
 md"""
-`production.jl` | **Version 1.8++** | *last updated: November 30 2025*
+`production.jl` | **Version 1.8** | *content updated: 10 Mar 2023, packages updated: 4 Oct 2026*
 """
 
 # ╔═╡ f1749b26-774b-11eb-2b42-43ffcb5cd7ee

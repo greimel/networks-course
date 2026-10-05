@@ -78,7 +78,7 @@ using PlutoTest: @test
 
 # ╔═╡ 2148f702-32ee-40d8-896d-48ae684647bc
 md"""
-`risk-sharing.jl` | **Version 1.3+** | *last updated: November 20, 2025*
+`risk-sharing.jl` | **Version 1.3** | *content updated: 13 Mar 2024, packages updated: 4 Oct 2026*
 """
 
 # ╔═╡ 5d057554-f8af-4242-8291-0e584cf24764

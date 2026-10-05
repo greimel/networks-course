@@ -118,7 +118,7 @@ using PlutoTest: @test
 
 # ╔═╡ 52052d98-0c41-45ec-95bf-d936b1c43e81
 md"""
-`systemic-risk.jl` | **Version 2.5++** | *last updated: November 30, 2025*
+`systemic-risk.jl` | **Version 2.5** | *content updated: 25 Nov 2024, packages updated: 4 Oct 2026*
 """
 
 # ╔═╡ ab239918-1cde-4d6b-ac7f-716aaba5f39b

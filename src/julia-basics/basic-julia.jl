@@ -18,7 +18,7 @@ using PlutoUI
 
 # ╔═╡ 8501e2eb-4616-4cc8-a5b5-dfcd546c6ff3
 md"""
-`basic-julia.jl` | **Version 1.2** | *last updated: Feb 3 2022*
+`basic-julia.jl` | **Version 1.2** | *content updated: 3 Feb 2022, packages updated: 4 Oct 2026*
 """
 
 # ╔═╡ 0d3aec92-edeb-11ea-3adb-cd0dc17cbdab

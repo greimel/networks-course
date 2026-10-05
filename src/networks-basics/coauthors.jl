@@ -51,7 +51,7 @@ using PlutoUI: TableOfContents, FilePicker, Slider
 
 # ╔═╡ 0b79fb30-66d3-11eb-052b-89cfca69b3a6
 md"""
-`view_ti_network.jl` | **Version 1.3+** | *last updated: Feb 26, 2024*
+`coauthors.jl` | **Version 1.3** | *content updated: 7 Feb 2022, packages updated: 4 Oct 2026*
 """
 
 # ╔═╡ 7c18cc0e-66d3-11eb-3e8e-09d869dd5731

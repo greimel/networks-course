@@ -4,6 +4,11 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ aff48e14-82fb-49db-b7d1-662f8b138978
+md"""
+`movies-data.jl` | **Version 1.0** | *content updated: 7 Oct 2025, packages updated: 4 Oct 2026*
+"""
+
 # ╔═╡ 6eb5afa8-9a94-44f8-be5f-6540bd01febb
 using Dates
 
@@ -2380,6 +2385,7 @@ version = "4.1.0+0"
 """
 
 # ╔═╡ Cell order:
+# ╟─aff48e14-82fb-49db-b7d1-662f8b138978
 # ╠═e5482ede-fcb2-48cb-8d3d-33186534c7f5
 # ╠═c6330f8c-f815-4dcb-bace-c0623fe9b95b
 # ╠═7bdc69be-907d-453e-88d8-0086d1991373
