@@ -4,7 +4,7 @@
 #> [frontmatter]
 #> chapter = 6
 #> section = 2
-#> order = 1
+#> order = 2
 #> title = "Simulating Long & Plosser"
 #> layout = "layout.jlhtml"
 #> tags = ["production-networks"]

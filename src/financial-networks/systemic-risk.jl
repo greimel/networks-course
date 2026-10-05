@@ -4,7 +4,7 @@
 #> [frontmatter]
 #> chapter = 5
 #> section = 2
-#> order = 1
+#> order = 2
 #> title = "Systemic risk in financial networks"
 #> layout = "layout.jlhtml"
 #> tags = ["financial-networks"]

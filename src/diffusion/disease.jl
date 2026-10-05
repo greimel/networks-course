@@ -3,7 +3,7 @@
 
 #> [frontmatter]
 #> chapter = 3
-#> section = 1
+#> section = 2
 #> order = 2
 #> title = "Spread of Covid19 and the SIR model"
 #> layout = "layout.jlhtml"
