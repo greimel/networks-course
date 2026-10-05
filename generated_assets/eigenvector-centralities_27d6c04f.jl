@@ -3,8 +3,8 @@
 
 #> [frontmatter]
 #> chapter = 2
-#> section = 4
-#> order = 4
+#> section = 2
+#> order = 2
 #> title = "Eigenvector centralities"
 #> layout = "layout.jlhtml"
 #> tags = ["networks-basics"]
@@ -36,7 +36,7 @@ using DataFrames
 
 # ╔═╡ b1e5d4b9-057b-42da-a68c-2fe0b1bfcab6
 md"
-`eigenvector-centralities.jl` | **Version 1.1** | *content updated: 6 Oct 2025, packages updated: 4 Oct 2026*
+`eigenvector-centralities.jl` | **Version 1.2** | *content updated: 5 Oct 2026, packages updated: 4 Oct 2026*
 "
 
 # ╔═╡ b620dfff-1756-48ca-a03c-883e48cc69c5
@@ -235,10 +235,10 @@ md"""
 Note that one can find two similar definitions in the literature.
 ```math
 \begin{align*}
-𝒄^\text{Katz} &= ((I - \alpha G^T)^{-1} - I) 𝜷 &&= \sum_{i = 1}^\infty (\alpha G^T)^i\\
-𝒄^\text{Bonacich} &= (I - \alpha G^T)^{-1} 𝜷 &&= \sum_{i = 0}^\infty (\alpha G^T)^i
+𝒄^\text{Katz} &= ((I - \alpha G^T)^{-1} - I) 𝜷 &&= \sum_{i = 1}^\infty (\alpha G^T)^i 𝜷\\
+𝒄^\text{Bonacich} &= (I - \alpha G^T)^{-1} 𝜷 &&= \sum_{i = 0}^\infty (\alpha G^T)^i 𝜷
 \end{align*}
-```math
+```
 
 We will use whatever definition is more convenient in our applications.
 """
@@ -335,15 +335,6 @@ end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
-[compat]
-AlgebraOfGraphics = "~0.13.2"
-CairoMakie = "~0.15.15"
-DataFrames = "~1.8.2"
-GraphMakie = "~0.6.6"
-Graphs = "~1.15.0"
-PlutoUI = "~0.7.83"
-SimpleWeightedGraphs = "~1.5.1"
-
 [deps]
 AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
@@ -353,6 +344,15 @@ Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
+
+[compat]
+AlgebraOfGraphics = "~0.13.2"
+CairoMakie = "~0.15.15"
+DataFrames = "~1.8.2"
+GraphMakie = "~0.6.6"
+Graphs = "~1.15.0"
+PlutoUI = "~0.7.83"
+SimpleWeightedGraphs = "~1.5.1"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -361,7 +361,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.9"
 manifest_format = "2.0"
-project_hash = "25559411ce3cf13e837f8db89e37a3b393cb2e1f"
+project_hash = "b29b26da44dce4b0b1401987438686a7fad6defd"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]

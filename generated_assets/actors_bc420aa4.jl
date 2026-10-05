@@ -3,9 +3,9 @@
 
 #> [frontmatter]
 #> chapter = 2
-#> section = 2
-#> order = 2
-#> title = "Exercises"
+#> section = 4
+#> order = 4
+#> title = "Assignment 2: The Movie Database"
 #> layout = "layout.jlhtml"
 #> tags = ["networks-basics"]
 #> description = ""
@@ -13,390 +13,557 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 91f4f3a7-2226-48a1-8880-25306adf95b9
-using MetaGraphs
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
 
-# ╔═╡ 923d97aa-1843-40a9-b3b0-1f33e94c07a4
-using Graphs
+# ╔═╡ 16b324c0-bae1-4d5f-873c-9ddb1572f5c8
+using HTTP: HTTP
 
-# ╔═╡ c704150e-3a59-4ea7-8e3a-809d52cc8794
-using GraphDataFrameBridge
+# ╔═╡ 15dc0fda-b534-49a2-bea1-6489f3e7ca43
+using Chain, DataFrameMacros, DataFrames
 
-# ╔═╡ 4d6a9177-36a0-4492-a1c1-6d50e51207be
-using AlgebraOfGraphics
+# ╔═╡ f14b340b-1791-43a2-a6cb-f322e811bb9d
+using CSV
 
-# ╔═╡ 428fefad-901d-4aac-83d1-4972188ae2ff
-using CairoMakie
+# ╔═╡ 63380aee-31ac-47c8-bf66-ac7a9c1901bb
+using GraphMakie, CairoMakie
 
-# ╔═╡ e5a49f36-d5ba-4a59-af93-5a9633308f40
-using GraphMakie
+# ╔═╡ e1a25a5b-7483-499a-b315-01803ec03b02
+begin
+	using Graphs
+	using SimpleWeightedGraphs
+	using Graphs: betweenness_centrality, closeness_centrality, degree_centrality,
+	              eigenvector_centrality, katz_centrality
+end
 
-# ╔═╡ 4aae7c84-a853-42a1-9c4f-4d6e22093638
+# ╔═╡ 44942067-c4a8-44c5-945e-cb0a99102624
+using SparseArrays: sparse
+
+# ╔═╡ d0a87628-f283-4d83-accf-e3c073802682
+using CategoricalArrays: categorical, levels, levelcode
+
+# ╔═╡ d687e005-7203-4a9e-b939-e73aaafaeabd
+using Combinatorics: combinations
+
+# ╔═╡ ba38875a-8526-497f-87cf-ac4cfb537453
 using NetworkLayout
 
-# ╔═╡ 947b6053-8739-4402-9d52-d02c03622826
-using DataFrames
+# ╔═╡ 99b27fd9-9a09-43ae-8e5d-15159cf6c45d
+using Dates
 
-# ╔═╡ 860a6151-ac4b-4364-a78f-1d81fcc3b472
-using CSV: CSV
-
-# ╔═╡ 49a082f3-6f27-4996-9094-8f6a17029440
-using DataFrameMacros, Chain
-
-# ╔═╡ 6c9646f7-3c33-4c87-9fa4-dabbfe896b3a
+# ╔═╡ 0137936f-b706-4a53-925a-f0054640e061
 using PlutoUI
 
-# ╔═╡ 38ee92bb-714f-4cc6-a945-21ff017edc10
-using Statistics: mean, std
+# ╔═╡ eb314a3c-f540-46e4-923a-a69786d70e12
+using MarkdownLiteral: @markdown
 
-# ╔═╡ 9009f6a9-f46f-46c9-acee-ebe02b47fea5
-using StatsBase
+# ╔═╡ d3221cd9-0c8c-42a6-a3ec-00b69e7642b7
+md"`actors.jl` | **Version 1.2** | *content updated: 5 Oct 2026, packages updated: 4 Oct 2026*"
 
-# ╔═╡ c4bc21f1-899d-48e8-9c4c-883f7608f753
+# ╔═╡ 1d0539e4-a108-4a36-b00c-e5a90943ac4f
 md"""
-`exercises-week1.jl` | **Version 1.2** | *content updated: 3 Feb 2023, packages updated: 4 Oct 2026*
+### Task 0: A movie you liked (1 point)
+
+👉 Pick a movie you liked (other than _Oppenheimer_).
 """
 
-# ╔═╡ 839922f0-97b2-4bc9-9aa9-e3e93336b7e4
+# ╔═╡ 9dec659a-e71f-4382-8a8c-9cec74036c79
 md"""
-# Exercises for week 1
+👉 Explain why you liked it.
 """
 
-# ╔═╡ b52a8fc1-551d-49a8-8c39-93ee0e600fb2
-md"""
-## Part 1: Theory exercises
-
-The first few exercises will deal with the following simple graph.
-"""
-
-# ╔═╡ 46c487fa-6732-11eb-229c-f31402dcbbe2
-md"
-### Exercise 1
-
-👉 Calculate (by hand) the betweenness centrality of node 5 in the simple network above.
-"
-
-# ╔═╡ c93b4722-6a43-49e8-bf15-89cdd5906098
-md"""
+# ╔═╡ 8784febe-b08e-4519-90a0-b5889acc5116
+answer0 = md"""
 Your answer goes here ...
 """
 
-# ╔═╡ 69083a09-9741-459e-a298-523f2b176527
+# ╔═╡ 49974268-d996-477e-a90e-25ec593f13d8
 md"""
-Check your answer by _activating_ the cell below.
+### Task 1: Analyze the network (4 points)
+👉 Describe the network in terms of the measures that are discussed in lectures 1 and 2. You can look at the notebook **first-networks.jl** and the section *Language for network analysis* for some inspiration.
+
+👉 Interpret all results that you show.
+
+👉 Be accurate but concise. Aim at no more than 300 words.
+
+You can spread your answer over multiple cells. Add code and text cells as it suits you.
 """
 
-# ╔═╡ d6557f8a-6734-11eb-0fd4-0b7b5f602bab
-# ╠═╡ disabled = true
-#=╠═╡
-betweenness_centrality(simple_graph)[5]
-  ╠═╡ =#
-
-# ╔═╡ 11e98628-6734-11eb-1b66-83663e790a78
-md"
-### Exercise 2
-
-Below you can calculate the eigenvector centrality and Katz-Bonacich centrality ``\alpha=0.2`` and exogenous factors ``e_i = 1`` for all nodes ``i``.
-
-👉 First, guess which nodes have the highest eigenvector centrality.
-"
-
-# ╔═╡ b28b095f-4829-40ef-8929-1d8b76b26d04
+# ╔═╡ 7bba7b01-ec9b-46fe-a18f-4ad29082b62c
 md"""
-Your guess goes here ...
+**NOTE:** It's ok to be below the word limit, but it's not ok to be above!
 """
 
-# ╔═╡ 6ecd8032-2ad6-4879-9cf8-5638dd47a724
-md"""
-👉 Now check your guess with the following code.
-"""
-
-# ╔═╡ 541b25de-6670-11eb-2ad1-2babaf714216
-# ╠═╡ disabled = true
-#=╠═╡
-eigenvector_centrality(simple_graph)
-  ╠═╡ =#
-
-# ╔═╡ 5b312d16-6670-11eb-2da6-976db9964456
-# ╠═╡ disabled = true
-#=╠═╡
-katz_centrality(simple_graph, 0.2)
-  ╠═╡ =#
-
-# ╔═╡ 45c86e74-6670-11eb-1acd-41f288f6de70
-# ╠═╡ disabled = true
-#=╠═╡
-betweenness_centrality(simple_graph)
-  ╠═╡ =#
-
-# ╔═╡ ff893920-6782-11eb-2728-270f9261597d
-md"
-Note that the betweenness centrality picks out nodes 5 and 6 as being most central, which corresponds to our intuition. The eigenvector centrality and Katz-Bonacich centrality fail to identify these nodes as being central. We try to obtain some insight into this by making a calculation for the Katz-Bonacich centrality.
-
-### Exercise 3
-
-👉 Write out the series representing the Katz-Bonacich centrality for general $0 < \alpha < \lambda_{\rm max}$. Explain why all nodes have the same Katz-Bonacich centrality in this case.
-"
-
-# ╔═╡ 98e5e1c9-45e6-47ab-b43a-768cbc64b6c5
-md"""
+# ╔═╡ a9a489fb-2621-4bac-8832-507629ee2c74
+answer1_1 = md"""
 Your answer goes here ...
 """
 
-# ╔═╡ 714ff2ca-fa02-4e14-b3f0-83c03dfc649b
-md"""
-## Part 2: Computational exercises
+# ╔═╡ 70b92b29-430b-489f-ae0a-25f0ba48f528
+# some
 
-The next set of exercises will analyze the co-authorship network of the Tinbergen Institute that you've seen already.
+# ╔═╡ 12376f00-726a-46b9-b82a-88808297fdb2
+# analysis
+
+# ╔═╡ d1b90055-5cf5-42a6-94d4-aecc4f17aba6
+# more
+
+# ╔═╡ 5af85400-8abd-4aee-8899-08be4bd41b40
+# analysis
+
+# ╔═╡ ee7c8a54-5656-4f47-a17a-cab1c73b0daf
+answer1_3 = md"""
+... write more ... add more cells if you need. If you want to use the word count above, adjust the cell below. 
 """
 
-# ╔═╡ 2efb4dea-2149-4588-83b4-2e2e05e71d62
+# ╔═╡ bde6f94d-ee4b-41d8-9316-56563bcc7cde
 md"""
-### Exercise 4: Connected components
+### Task 2: Looking under the hood (3 points)
 
-👉 Identify the components of this network and extract the core.
+Now look at section **Constructing the network** of this notebook.
+
+👉 What does the network show? What are the nodes? What are the edges? What are the edge weights? _Answer briefly and concisely._
 """
 
-# ╔═╡ 8c156bfb-dc75-4a32-9178-7f4006345e0d
-md"""
-### Exercise 5: Central researchers
-
-Let us now find the most central researchers of the Tinbergen institute.
+# ╔═╡ 704b0321-95b3-4a4b-ab74-eddb3a138936
+answer2 = md"""
+Your answer goes here ...
 """
 
-# ╔═╡ bb2b8184-6737-11eb-279e-6fc09622b8ca
-md"
-👉 Calculate the top 10 centralities for the largest component in this co-authorship network in terms of degree, betweenness, eigenvector centrality and Katz-Bonancich centrality with ``\alpha = 0.2``
-"
-
-# ╔═╡ bcafe43f-a38e-4824-9db4-5fec7f675e46
+# ╔═╡ f116ec36-e3be-4087-b84e-c989144be272
 md"""
-### Exercise 6: Comparing centrality measures
+### Task 3: Adding context (3 points)
 
-👉 Compare the ranks for different centrality measures.
+The network shows the following actors (in arbitrary order).
 """
 
-# ╔═╡ dc38df66-6782-11eb-2a76-af6fb73608b6
-md"
-Again we see that the ranking of the nodes in terms of the centrality depends strongly on the measure of centrality used. 
-"
-
-# ╔═╡ cfc9f604-6604-11eb-23bc-699617b17d7d
+# ╔═╡ 864e3676-3b3c-424a-a558-7f60e7e734e5
 md"""
-# Appendix
+How can you measure the importance of an actor? 
+
+👉 Adjust the code block below so that the column `importance` holds your measure of importance.
 """
 
-# ╔═╡ 135bce4d-ee2d-405c-a3c0-7e881cd64c48
+# ╔═╡ cfb2e9aa-18cf-4105-a6cd-db1dedfb13c5
 md"""
-## Construct simple network
+The most important actors according this measure will be labeled in the plot below.
 """
 
-# ╔═╡ 1d4c6d8e-666f-11eb-3c3e-bbf2737bd162
-A = [1 2; 1 3; 1 4; 2 3; 2 4; 3 5; 4 5; 5 6; 6 7; 6 8; 7 9; 7 10; 8 9; 8 10; 9 10]
+# ╔═╡ b22ff8ba-3881-43a4-8f8b-f25022cb0275
+md"""
+👉 Explain your measure of importance.
 
-# ╔═╡ ea44b5fc-666e-11eb-371f-3b1af8983ad0
-df = DataFrame(A, :auto)
+👉 Describe what you see in the plot above.
 
-# ╔═╡ b0bf3e34-666f-11eb-3126-ebbbcad4ad12
-simple_graph = MetaGraph(df, :x1, :x2)
+(both in < 250 words)
+"""
 
-# ╔═╡ d158181e-666f-11eb-2f70-9dc4b6e53b16
+# ╔═╡ 2e69bf80-e3f5-4eb0-b8d7-44441044892c
+answer3 = md"""
+Your answer goes here ...
+"""
+
+# ╔═╡ faa7afac-20de-4192-8e54-04dc4bfb27bf
+md"""
+# Constructing the network
+"""
+
+# ╔═╡ 5f4863e9-4c62-4b5a-aabd-d785a8c4baba
+md"""
+### _Step 1:_ Reading the data
+
+The data come from [The Movie Database (TMDB)](https://www.themoviedb.org/). This product uses the TMDB API but is not endorsed or certified by TMDB.
+"""
+
+# ╔═╡ 6685d43b-2b61-4ddd-a158-960b85362fe7
+url_to_data = "https://raw.githubusercontent.com/greimel/networks-course/29967411c0611c957e2c020b6982ef359dc01146/data-prep/movies/"
+
+# ╔═╡ cabcc864-48e7-4b5e-8db2-c157be49911f
+actors_df0 = CSV.read(HTTP.get(url_to_data * "actors.csv").body, DataFrame)
+
+# ╔═╡ 11c52177-5fd6-4a3d-b1da-e9e5dad1df76
+movies_df = CSV.read(HTTP.get(url_to_data * "movies.csv").body, DataFrame)
+
+# ╔═╡ 7e073380-b1de-4f8b-b89e-4043d15f656b
+md"""
+### _Step 2:_ 
+"""
+
+# ╔═╡ f8634273-58e2-4591-b790-f305db5c5fe3
+md"""
+### _Step 3:_ Creating an _edge list_
+"""
+
+# ╔═╡ 1d655b55-40c8-4435-b705-d8e1466c4f45
+"""
+    actor_pairs(df::DataFrame)
+
+Given a DataFrame with columns `:actor_id` and `:movie_id`,
+return a DataFrame with columns `:actor1`, `:actor2`, `:weight`
+where `weight` is the number of movies the two actors appeared in together.
+"""
+function actor_pairs(df::DataFrame, remove_singletons = false)
+    rows = NamedTuple[]
+    for sub in groupby(df, :movie_id)
+        actors = unique(sub.actor_id)
+        # all unordered pairs of actors in this movie
+        for (a, b) in combinations(actors, 2)
+            push!(rows, (actor1=min(a,b), actor2=max(a,b)))
+        end
+    end
+	out = @chain rows begin
+		DataFrame
+		@groupby(:actor1, :actor2)
+		@combine(:weight = length(:actor1) - 1)
+	end
+
+	if remove_singletons
+		@subset!(out, :weight > 0)
+	end
+
+	return out
+end
+
+# ╔═╡ 60a4f063-99c8-4e4a-9bcf-a2c35cb544c7
+md"""
+### _Step 4:_ Constructing the network
+"""
+
+# ╔═╡ 646dcad3-6e94-4c85-8122-b191bde8afc6
+function graph_from_edge_list(pairs, actor_id_df)
+	pool = categorical(vcat(pairs.actor1, pairs.actor2))
+	levels_pool = levels(pool)
+	n = length(levels_pool)
+	
+	# map each side to integer codes (1..n) using the same levels
+	node1 = levelcode.(categorical(pairs.actor1, levels=levels_pool))
+	node2 = levelcode.(categorical(pairs.actor2, levels=levels_pool))
+	
+	# sparse adjacency (sum duplicates automatically), then symmetrize
+	A = sparse(node1, node2, pairs.weight, n, n)
+	A = A + A' |> Matrix
+
+	graph = SimpleWeightedGraph(A)
+	
+	nodes_df = DataFrame(actor_id = levels_pool, node_id = levelcode.(levels_pool))
+	nodes_df = leftjoin(nodes_df, actor_id_df, on = :actor_id)
+
+	(; adjacency_matrix=A, nodes_df, graph)
+end
+
+# ╔═╡ 15d4c0a4-26c6-4e66-9387-ca1be622c968
+md"""
+#### _Step 5:_ Create a list of movies to pick from
+"""
+
+# ╔═╡ 2f0e3cec-e298-4a9f-a161-bfcf50f26a55
+movies_df_sub = @subset(movies_df, year(:release_date) ≥ 2020)
+
+# ╔═╡ 8df7c0c4-69be-49c1-aad1-85b5d2dac79d
+@bind selected_movie Select(movies_df_sub.movie_id .=> movies_df_sub.title, default = 872585)
+
+# ╔═╡ 2c17a693-8842-4f35-ad29-5e6c78a9e6ff
+(; actor_id_df, actor_movie_df) = let
+	actor_movie_df = @chain actors_df0 begin
+		@groupby(:actor)
+		@combine(:movie_id = [:movie_id])
+		@transform(:actor_id = @bycol 1:length(:actor))
+		@aside actor_id_df = select(_, :actor, :actor_id)
+		@subset(selected_movie ∈ :movie_id)
+		flatten(:movie_id)
+		leftjoin(movies_df, on = :movie_id)
+		@select(:actor_id, :actor, :movie_id, :title)
+	end
+
+	(; actor_id_df, actor_movie_df)
+end
+
+# ╔═╡ 7d5c699a-7106-4b19-aa38-5ee0746a6729
+@chain actor_movie_df begin
+	@subset(:movie_id == selected_movie)
+end
+
+# ╔═╡ b877d12d-33a8-465b-8f78-8712d9a9207b
+pairs = actor_pairs(actor_movie_df)
+
+# ╔═╡ 0447c192-fe19-497b-b082-528f3a873485
+(; graph, nodes_df) = graph_from_edge_list(pairs, actor_id_df)
+
+# ╔═╡ b284f332-9dc7-4230-9829-13ff6c2eab41
 let
-	fig, ax, plt = graphplot(simple_graph,
-		layout = Spring(),
-		ilabels = vertices(simple_graph),
-		edge_color = "gray",
-		edge_width = 0.5,
-		node_color = "orange",
-	)
-
+	fig, ax, _ = graphplot(graph, 
+		node_color="orange", edge_width = 0.5,
+		figure = (; size = (400, 300)))
 	hidedecorations!(ax)
 
 	fig
 end
 
-# ╔═╡ 2ca63b10-f091-4197-892d-5120027f6fd5
-graphplot(simple_graph)
+# ╔═╡ 276267fc-33b3-4020-8f33-d36c26f6b698
+# some dummy analysis
+begin
+	n_edges = ne(graph)
+	n_nodes = nv(graph)
 
-# ╔═╡ 3c946356-af84-4d81-aca2-cc29d1a4b60b
-md"""
-## Load TI data
+	(; n_edges, n_nodes)
+end
+
+# ╔═╡ fd350f95-fb25-45b8-89f3-1b76f5c813d4
+answer1_2 = md"""
+... Continue here ... This **network of actors** has $n_nodes nodes and $n_edges edges. ...
 """
 
-# ╔═╡ 45ce2bae-b2ad-4665-a8a6-86f78d7dcc2a
-node_names(metagraph) = getindex.(Ref(metagraph), 1:nv(metagraph), :name)
+# ╔═╡ 866460b7-8490-492f-98c9-c74bf124b496
+answer1 = [answer1_1, answer1_2, answer1_3];
 
-# ╔═╡ 3fee5013-2f1e-4965-90ed-d8f2c084ea79
-url_ti = "https://raw.githubusercontent.com/greimel/networks-course/main/src/assets_pub/datasets/ti_netwk0711.csv"
-
-# ╔═╡ 30bb2d4e-5dcd-4959-a1a6-dc6e1525a267
-begin
-	using DataDeps
-	ENV["DATADEPS_ALWAYS_ACCEPT"] = true
-
-	register(DataDep(
-   		"TI-network",
-		"""
-		The co-authorship network of the Tinbergen Institute 2007-2011.
-
-		Made available with the permission of Marco van der Leij.
-		""",
-		url_ti,
-		"dbb2a1d8ce1120ed274898ce76f84f7ef08f9938ad7f25f74d3b9f202dbc2137"
-	))
+# ╔═╡ 78940426-5474-4c4b-bfeb-45c2d5dced27
+actors = @chain nodes_df begin
+	# TODO: Adjust the line below!
+	@transform(:importance = @bycol rand(nv(graph)))
+	@select(:node_id, :actor, :importance)
+	sort(:importance, rev = true)
 end
 
-# ╔═╡ ee5e68e5-292d-4c89-8157-b1102a490356
-begin
-	edge_list = CSV.File(joinpath(datadep"TI-network", "ti_netwk0711.csv"))
-	edge_df = DataFrame(edge_list)
+# ╔═╡ 3652685b-8e62-4f80-85b0-5b6ee241f1c2
+let
+	layout = NetworkLayout.Spring()(graph)
+
+	important_actors = first(actors, 5)
+	
+	(; node_id, actor) = important_actors
+	
+	fig, ax, _ = graphplot(graph; layout, 
+		node_color="orange", edge_width = 0.5, node_strokewidth = [i ∈ node_id ? 1.0 : 0.0 for i ∈ 1:nv(graph)],
+		figure = (; size = (400, 300)))
+	hidedecorations!(ax)
+
+	annotation!(ax, layout[node_id], text=String.(actor))
+	
+	fig
 end
 
-# ╔═╡ 24dd4376-5e8f-11eb-02e7-f34f7c169726
-ti_graph = MetaGraph(edge_df, :from, :to)
+# ╔═╡ d866dd3a-1d0d-4a52-a83f-3bc53a254c31
+choice_set = movies_df_sub.movie_id .=> movies_df_sub.title
 
-# ╔═╡ a06b7ad2-6603-11eb-1588-195115c5f351
-graphplot(ti_graph,
-	layout = Spring(),
-	edge_color = "gray",
-	edge_width = 0.5,
-	node_size = 10,
-	node_color = "orange",
-	#nlabels = node_names(ti_graph),
-	node_attr = (strokewidth = 1, strokecolor = :black),
-)
+# ╔═╡ dddde630-90c3-4eba-85ea-74c25d421049
+md"""
+#### WIP for next year: important movies
+"""
 
-# ╔═╡ a58a3582-64a3-11eb-01e1-11f707525149
-# list of components (contains a list of nodes for each component)
-components = connected_components(ti_graph)
+# ╔═╡ 1de1d7c7-8f50-4995-a5e8-57eb879896f9
+# ╠═╡ disabled = true
+#=╠═╡
+important_movies = @chain actor_movie_df begin
+	leftjoin(actors, on = :actor)
+	@groupby(:title)
+	@combine(:importance = sum(:importance))
+	sort(:importance, rev = true)
+	last(_, size(_, 1) - 1)
+end
+  ╠═╡ =#
 
-# ╔═╡ aac6e282-6603-11eb-18bd-95a57f187167
-# nodes in first (largest) component
-core = components[1]
+# ╔═╡ 9819677f-8b60-4342-8b88-bf7ab3f48dfc
+#=╠═╡
+xxx = important_movies.title[i_movie]
+  ╠═╡ =#
 
-# ╔═╡ a860b0c8-6738-11eb-37f5-ebb8ce7b40cb
-gc = ti_graph[core]
-
-# ╔═╡ bcc6ca3a-5e95-11eb-3f13-877d22fe2ff2
-ti_plot = graphplot(gc,
-	layout = Spring(),
-	edge_color = "gray",
-	edge_width = 0.5,
-	node_size = 10,
-	node_color = "orange",
-	node_attr = (strokewidth = 1, strokecolor = :black),
-)
-
-# ╔═╡ 3432e110-673f-11eb-2275-59c3aa7df804
-competerank(eigenvector_centrality(ti_graph))
-
-# ╔═╡ 395fe4f2-42b9-48f8-a5cb-ebea288aff90
-researchers_df = let
-	df = DataFrame(name = node_names(ti_graph), index = 1:nv(ti_graph))
-	sort(df, :index)
+# ╔═╡ a28e46c2-5a8c-428d-ac40-1521617dd9af
+actors_of_important_movie = @chain actor_movie_df begin
+	leftjoin(nodes_df, on = [:actor, :actor_id])
+	@subset(:title == xxx)
 end
 
-# ╔═╡ c4319a9e-b265-4dc8-bcd7-db3afa55e102
-central_researchers = @chain researchers_df begin
-	@transform(
-		:eigenvector_centrality   = @bycol(eigenvector_centrality(ti_graph)),
-		:degree_centrality        = @bycol(degree_centrality(ti_graph)),
-		:bonacich_katz_centrality = @bycol(katz_centrality(ti_graph, 0.2)),
-	)
-	@transform(
-		:rank_eigenvector   = @bycol(competerank(:eigenvector_centrality, rev=true)),
-		:rank_degree        = @bycol(competerank(:degree_centrality, rev=true)),
-		:rank_bonacich_katz = @bycol(competerank(:bonacich_katz_centrality, rev=true))
-	)
-	select(:name, r"rank", r"centrality", :)
+# ╔═╡ 8c68c105-3a5a-4372-97b2-7f93aaa580b5
+let
+	layout = NetworkLayout.Spring()(graph)
+
+	(; node_id) = actors_of_important_movie
+	
+	fig, ax, _ = graphplot(graph; layout, 
+						   node_color = [i ∈ node_id ? :orange : :gray for i ∈ 1:nv(graph)],
+		 edge_width = 0.5, node_strokewidth = [i ∈ node_id ? 1.0 : 0.0 for i ∈ 1:nv(graph)],
+		figure = (; size = (400, 300)))
+	hidedecorations!(ax)
+
+	#annotation!(ax, layout[node_id], text=String.(actor))
+	
+	fig
 end
 
-# ╔═╡ 7966a3e2-3f7d-49b0-b7be-cefa2a99c38c
-sort(central_researchers, :rank_degree)
+# ╔═╡ b3449051-d0d5-4378-b579-57ee7cc4e1f6
+#=╠═╡
+@bind i_movie PlutoUI.Slider(1:size(important_movies, 1), default = 1, show_value = true)
+  ╠═╡ =#
 
-# ╔═╡ 4b9b4e65-c947-4ea6-b166-153cb4db57df
-graphplot(ti_graph,
-	layout = Spring(),
-	edge_color = "gray",
-	edge_width = 0.5,
-	node_size = 10,
-	nlabels = ifelse.(
-		central_researchers.rank_degree .≤ 10, # if this condition holds
-		central_researchers.name,              # then provide name as label
-		""                                     # else provide no label ("")
-	),
-	node_color = ifelse.(central_researchers.rank_degree .≤ 10, :orange, :gray),
-	node_attr = (strokewidth = 1, strokecolor = :black),
-)
+# ╔═╡ 37bf0f99-5830-4d1d-ace9-51f5f9a7e851
+md"""
+# Appendix
+"""
 
-# ╔═╡ 4c90a10c-673f-11eb-0c0e-75814d92f251
-data(central_researchers) * mapping(
-	:rank_bonacich_katz,
-	:rank_eigenvector,
-) * visual(Scatter) |> draw
+# ╔═╡ 1c5028de-46bd-4848-9afe-bf9387e15ca2
+TableOfContents()
 
-# ╔═╡ 6d4ec768-649f-11eb-1093-054ab8976450
+# ╔═╡ 5b7e2c1a-3d4f-4e6a-8b9c-0a1b2c3d4e5f
 md"""
 ## Packages
 """
 
-# ╔═╡ cb02fb71-3433-4187-84fe-94c055ea5f25
+# ╔═╡ 334c3117-20e3-4efd-8541-1511871fa1a7
 md"""
-#### Graphs
+## Assignment infrastructure
 """
 
-# ╔═╡ 30bc4c58-18d5-4265-ae4e-7cbb004c4c5e
+# ╔═╡ 8a92b975-e11f-4376-99a1-09286dd388e4
+cell_id() = "#" * (string(PlutoRunner.currently_running_cell_id[]))
+
+# ╔═╡ 7733a5c5-7076-4cc5-90c0-e1d130317d87
+group_members = ([
+	(firstname = "Ella-Louise", lastname = "Flores"),
+	(firstname = "Padraig", 	lastname = "Cope"),
+	(firstname = "Christy",  	lastname = "Denton")
+	]); cell2 = cell_id();
+
+# ╔═╡ 4ce3f909-90e3-4dc1-b640-338898a3fcfa
+if (group_members[1].firstname == "Ella-Louise" && group_members[1].lastname == "Flores")
+	@markdown("""
+!!! danger "Note!"
+    **Before you submit**, please replace the [randomly generated names in this cell]($cell2) by the names of your group.
+	""")
+end
+
+# ╔═╡ 17e9a706-ea49-4fac-a00f-019476012661
+@markdown("""
+#### Before you submit ...
+
+👉 Make sure you have added your name and names of your group members [in the cells below]($cell2).
+
+👉 Make sure that **all group members proofread** your submission (especially your little essay).
+
+👉 Go to the very top of the notebook and click on the symbol in the very top-right corner. **Export a static html file** of this notebook for submission. (The source code is embedded in the html file.)
+""")
+
+# ╔═╡ e9810378-8457-4c24-baf1-5cdcb1d1c525
+members = let
+	names = map(group_members) do (; firstname, lastname)
+		firstname * " " * lastname
+	end
+	join(names, ", ", " & ")
+end
+
+# ╔═╡ d5df2427-e347-4457-9b39-e0083c50c5cf
 md"""
-#### Plotting
+# Assignment 2: A Network of Actors
+
+*submitted by* **$members**
+
+In this assignment you will analyze a network of **actors** constructed from [**The Movie Database** (TMDB)](https://www.themoviedb.org/). TMDB is a community-driven platform that provides extensive information on movies and TV shows.
+
+Once you have run the notebook, the picture below shows a **network of selected actors**.
 """
 
-# ╔═╡ 36ff82b5-09c8-49b5-9d10-3c37ba5e3c42
-md"""
-#### Data
-"""
+# ╔═╡ a8febb10-1c73-4dc8-94cb-09315b78197c
+function wordcount(text)
+	stripped_text = strip(replace(string(text), r"\s" => " "))
+   	words = split(stripped_text, (' ', '-', '.', ',', ':', '_', '"', ';', '!', '\''))
+   	length(filter(!=(""), words))
+end
 
-# ╔═╡ ac7a38f5-a636-4956-9ca1-218253de72db
-md"""
-#### Other
-"""
+# ╔═╡ 8cf5d42e-5089-46e6-afa4-0da7a6ca6c89
+show_words(answer) = md"_approximately $(wordcount(answer)) words_"
 
-# ╔═╡ 14a046a8-7f5d-41bd-a5c5-6040c16d019f
-TableOfContents()
+# ╔═╡ 116f5410-ff41-439b-a842-852029fb39bf
+begin
+	hint(text) = Markdown.MD(Markdown.Admonition("hint", "Hint", [text]))
+	almost(text) = Markdown.MD(Markdown.Admonition("warning", "Almost there!", [text]))
+	still_missing(text=md"Replace `missing` with your answer.") = Markdown.MD(Markdown.Admonition("warning", "Here we go!", [text]))
+	keep_working(text=md"The answer is not quite right.") = Markdown.MD(Markdown.Admonition("danger", "Keep working on it!", [text]))
+	yays = [md"Great!", md"Yay ❤", md"Great! 🎉", md"Well done!", md"Keep it up!", md"Good job!", md"Awesome!", md"You got the right answer!", md"Let's move on to the next section."]
+	correct(text=rand(yays)) = Markdown.MD(Markdown.Admonition("correct", "Got it!", [text]))
+end
+
+# ╔═╡ 6451aea8-470b-42c1-8edb-edf036017bb7
+if answer0 == md"Your answer goes here ..."
+	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
+else
+	correct(md"Great, I am looking forward to reading your answer!")
+end
+
+# ╔═╡ 2748ef16-4121-4511-aece-57e507ac8e9a
+if answer3 == md"Your answer goes here ..."
+	keep_working(md"Place your cursor in the code cell and replace the dummy text, and evaluate the cell.")
+else
+	correct(md"Great, we are looking forward to reading your answer!")
+end
+
+# ╔═╡ 551b4f1b-2dba-40d0-8bc2-b31b32149aa2
+function show_words_limit(answer, limit)
+	count = wordcount(answer)
+	if count < 1.02 * limit
+		return show_words(answer)
+	else
+		return almost(md"You are at $count words. Please shorten your text a bit, to get **below $limit words**.")
+	end
+end
+
+# ╔═╡ 3b039e16-1a63-4864-b309-75390f7ae530
+show_words_limit(answer0, 50)
+
+# ╔═╡ 45af5694-96a2-4b87-a385-2b784741ca4d
+show_words_limit(join(answer1, " "), 300)
+
+# ╔═╡ 226ff98a-5d2e-4682-bee7-025b05cc9028
+show_words_limit(answer2, 250)
+
+# ╔═╡ 21297f1a-ef8c-473b-9180-136f3f8e3ef0
+show_words_limit(answer3, 250)
+
+# ╔═╡ 31a5a022-56b8-45b2-aa43-249c6ca80a01
+note(text; title="FYI") = Markdown.MD(Markdown.Admonition("note", title, [text]))
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
-[compat]
-AlgebraOfGraphics = "~0.13.2"
-CSV = "~0.10.17"
-CairoMakie = "~0.15.15"
-Chain = "~1.0.0"
-DataDeps = "~0.7.14"
-DataFrameMacros = "~0.4.1"
-DataFrames = "~1.8.2"
-GraphDataFrameBridge = "~0.3.2"
-GraphMakie = "~0.6.6"
-Graphs = "~1.15.0"
-MetaGraphs = "~0.7.2"
-NetworkLayout = "~0.4.11"
-PlutoUI = "~0.7.83"
-StatsBase = "~0.34.13"
-
 [deps]
-AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
-DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
+Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 DataFrameMacros = "75880514-38bc-4a95-a458-c2aea5a3a702"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-GraphDataFrameBridge = "3c71623a-a715-5176-9801-629b201a4880"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
-MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+MarkdownLiteral = "736d6165-7244-6769-4267-6b50796e6954"
 NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+
+[compat]
+CSV = "~0.10.17"
+CairoMakie = "~0.15.15"
+CategoricalArrays = "~1.1.1"
+Chain = "~1.0.0"
+Combinatorics = "~1.1.0"
+DataFrameMacros = "~0.4.1"
+DataFrames = "~1.8.2"
+GraphMakie = "~0.6.6"
+Graphs = "~1.15.0"
+HTTP = "~1.11.0"
+MarkdownLiteral = "~0.1.5"
+NetworkLayout = "~0.4.11"
+PlutoUI = "~0.7.83"
+SimpleWeightedGraphs = "~1.5.1"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -405,7 +572,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.9"
 manifest_format = "2.0"
-project_hash = "46cc3296788af4b8259cd600787f5efba359cab8"
+project_hash = "d643dfd6b8f2d08939fada5c48cd70ec7d2d2544"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -467,20 +634,6 @@ weakdeps = ["SparseArrays", "StaticArrays"]
 git-tree-sha1 = "7e651ea8d262d2d74ce75fdf47c4d63c07dba7a6"
 uuid = "35492f91-a3bd-45ad-95db-fcad7dcfedb7"
 version = "1.2.0"
-
-[[deps.AlgebraOfGraphics]]
-deps = ["Accessors", "Colors", "DataAPI", "Dates", "Dictionaries", "FileIO", "GLM", "GeoInterface", "GeometryBasics", "GridLayoutBase", "Isoband", "KernelDensity", "Loess", "Makie", "NaturalSort", "PlotUtils", "PolygonOps", "PooledArrays", "PrecompileTools", "RelocatableFolders", "StatsBase", "StructArrays", "Tables"]
-git-tree-sha1 = "88b1f363a4c69268ab705bcb5a049768a367bed9"
-uuid = "cbdf2221-f076-402e-a563-3d30da359d67"
-version = "0.13.2"
-
-    [deps.AlgebraOfGraphics.extensions]
-    AlgebraOfGraphicsDynamicQuantitiesExt = "DynamicQuantities"
-    AlgebraOfGraphicsUnitfulExt = "Unitful"
-
-    [deps.AlgebraOfGraphics.weakdeps]
-    DynamicQuantities = "06fc5a27-2a28-4c7c-a15d-362465fb6821"
-    Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.AliasTables]]
 deps = ["PtrArrays", "Random"]
@@ -591,6 +744,28 @@ git-tree-sha1 = "7b841680738c19948120f6e4cf8d0200518bd564"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.18.8+0"
 
+[[deps.CategoricalArrays]]
+deps = ["Compat", "DataAPI", "Future", "Missings", "Printf", "Requires", "Statistics", "Unicode"]
+git-tree-sha1 = "20ff1463035a170b25eba2ef9823bb9ad51635e4"
+uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
+version = "1.1.1"
+
+    [deps.CategoricalArrays.extensions]
+    CategoricalArraysArrowExt = "Arrow"
+    CategoricalArraysJSONExt = "JSON"
+    CategoricalArraysRecipesBaseExt = "RecipesBase"
+    CategoricalArraysSentinelArraysExt = "SentinelArrays"
+    CategoricalArraysStatsBaseExt = "StatsBase"
+    CategoricalArraysStructTypesExt = "StructTypes"
+
+    [deps.CategoricalArrays.weakdeps]
+    Arrow = "69666777-d1a9-59fb-9406-91d4454c9d45"
+    JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+    RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+    SentinelArrays = "91c51154-3ec4-41a3-a24f-3f23e20d615c"
+    StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+    StructTypes = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
+
 [[deps.Chain]]
 git-tree-sha1 = "765487f32aeece2cf28aa7038e29c31060cb5a69"
 uuid = "8be319e6-bccf-4806-a6f7-6fae938471bc"
@@ -655,6 +830,25 @@ deps = ["ColorTypes", "FixedPointNumbers", "LinearAlgebra", "Reexport"]
 git-tree-sha1 = "291665b547f137df070e4dd83e432b5fee8cc4a0"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.13.2"
+
+[[deps.Combinatorics]]
+git-tree-sha1 = "c761b00e7755700f9cdf5b02039939d1359330e1"
+uuid = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
+version = "1.1.0"
+
+[[deps.CommonMark]]
+deps = ["PrecompileTools"]
+git-tree-sha1 = "7c8fe02c7eb6fe22e89d3990123a2a931ca8fcfb"
+uuid = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
+version = "1.0.4"
+
+    [deps.CommonMark.extensions]
+    CommonMarkMarkdownASTExt = "MarkdownAST"
+    CommonMarkMarkdownExt = "Markdown"
+
+    [deps.CommonMark.weakdeps]
+    Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
+    MarkdownAST = "d0879d2d-cac2-40c8-9cee-1863dc0c7391"
 
 [[deps.CommonSolve]]
 deps = ["PrecompileTools"]
@@ -736,12 +930,6 @@ git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.16.0"
 
-[[deps.DataDeps]]
-deps = ["HTTP", "Libdl", "Reexport", "SHA", "Scratch", "p7zip_jll"]
-git-tree-sha1 = "75226661988f5b66a4c52358933eaa43b9278bb2"
-uuid = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
-version = "0.7.14"
-
 [[deps.DataFrameMacros]]
 deps = ["DataFrames", "MacroTools"]
 git-tree-sha1 = "5275530d05af21f7778e3ef8f167fb493999eea1"
@@ -775,23 +963,6 @@ deps = ["AdaptivePredicates", "EnumX", "ExactPredicates", "Random"]
 git-tree-sha1 = "4ac548adcad90c1d5d677af13568a748af4c952b"
 uuid = "927a84f5-c5f4-47a5-9785-b46e178433df"
 version = "1.6.7"
-
-[[deps.Dictionaries]]
-deps = ["Indexing", "Random", "Serialization"]
-git-tree-sha1 = "a55766a9c8f66cf19ffcdbdb1444e249bb4ace33"
-uuid = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
-version = "0.4.6"
-
-[[deps.Distances]]
-deps = ["LinearAlgebra", "Statistics", "StatsAPI"]
-git-tree-sha1 = "c7e3a542b999843086e2f29dac96a618c105be1d"
-uuid = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
-version = "0.10.12"
-weakdeps = ["ChainRulesCore", "SparseArrays"]
-
-    [deps.Distances.extensions]
-    DistancesChainRulesCoreExt = "ChainRulesCore"
-    DistancesSparseArraysExt = "SparseArrays"
 
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
@@ -854,11 +1025,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "2bfb1e047e2ad0a5ca94365340bde8005d637568"
 uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
 version = "2.8.4+0"
-
-[[deps.Extents]]
-git-tree-sha1 = "b309b36a9e02fe7be71270dd8c0fd873625332b4"
-uuid = "411431e0-e8b7-467b-b5e0-f676ba4f2910"
-version = "0.1.6"
 
 [[deps.FFMPEG_jll]]
 deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers", "LAME_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "PCRE2_jll", "Zlib_jll", "libaom_jll", "libass_jll", "libfdk_aac_jll", "libva_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
@@ -972,49 +1138,27 @@ deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 version = "1.11.0"
 
-[[deps.GLM]]
-deps = ["Distributions", "LinearAlgebra", "LogExpFunctions", "Printf", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsModels"]
-git-tree-sha1 = "c963639ae5b9aab54f543bdc7504f42f59880bec"
-uuid = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
-version = "1.9.5"
-
 [[deps.Gamma]]
 deps = ["LogExpFunctions"]
 git-tree-sha1 = "becc397f7cfb06e343496ae6ffb04818a851da51"
 uuid = "a0844989-3bd2-4988-8bea-c9407ab0941b"
 version = "1.2.0"
 
-[[deps.GeoFormatTypes]]
-git-tree-sha1 = "7528a7956248c723d01a0a9b0447bf254bf4da52"
-uuid = "68eda718-8dee-11e9-39e7-89f7f65f511f"
-version = "0.4.5"
-
-[[deps.GeoInterface]]
-deps = ["DataAPI", "Extents", "GeoFormatTypes"]
-git-tree-sha1 = "20f6b13b28c6304104968374f38c24ef71a8ea16"
-uuid = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
-version = "1.6.2"
-
-    [deps.GeoInterface.extensions]
-    GeoInterfaceMakieExt = ["Makie", "GeometryBasics"]
-    GeoInterfaceRecipesBaseExt = "RecipesBase"
-
-    [deps.GeoInterface.weakdeps]
-    GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
-    Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-    RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
-
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "LinearAlgebra", "PrecompileTools", "Random", "StaticArrays"]
 git-tree-sha1 = "ec46c5825710fa1a15d468acb2d93cc939a7a5fe"
 uuid = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 version = "0.5.13"
-weakdeps = ["Extents", "GeoInterface", "IntervalSets"]
 
     [deps.GeometryBasics.extensions]
     ExtentsExt = "Extents"
     GeometryBasicsGeoInterfaceExt = "GeoInterface"
     IntervalSetsExt = "IntervalSets"
+
+    [deps.GeometryBasics.weakdeps]
+    Extents = "411431e0-e8b7-467b-b5e0-f676ba4f2910"
+    GeoInterface = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
+    IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
 
 [[deps.GettextRuntime_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll"]
@@ -1033,12 +1177,6 @@ deps = ["Artifacts", "GettextRuntime_jll", "JLLWrappers", "Libdl", "Libffi_jll",
 git-tree-sha1 = "090526e65de8f69648ac156daae153de8b56df62"
 uuid = "7746bdde-850d-59dc-9ae8-88ece973131d"
 version = "2.88.3+0"
-
-[[deps.GraphDataFrameBridge]]
-deps = ["DataFrames", "Graphs", "MetaGraphs"]
-git-tree-sha1 = "a30c641b706ff6843a1909f92106e02b9dae0985"
-uuid = "3c71623a-a715-5176-9801-629b201a4880"
-version = "0.3.2"
 
 [[deps.GraphMakie]]
 deps = ["DataStructures", "GeometryBasics", "Graphs", "LinearAlgebra", "Makie", "NetworkLayout", "PolynomialRoots", "SimpleTraits", "StaticArrays"]
@@ -1145,11 +1283,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "dcc8d0cd653e55213df9b75ebc6fe4a8d3254c65"
 uuid = "905a6f67-0a94-5f89-b386-d35d92009cd1"
 version = "3.2.2+0"
-
-[[deps.Indexing]]
-git-tree-sha1 = "ce1566720fd6b19ff3411404d4b977acd4814f9f"
-uuid = "313cdc1a-70c2-5d6a-ae34-0150d3930a38"
-version = "1.1.1"
 
 [[deps.IndirectArrays]]
 git-tree-sha1 = "012e604e1c7458645cb8b436f8fba789a51b257f"
@@ -1274,12 +1407,6 @@ version = "1.10.0"
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
 version = "1.0.0"
-
-[[deps.JLD2]]
-deps = ["FileIO", "MacroTools", "Mmap", "OrderedCollections", "PrecompileTools", "Requires", "TranscodingStreams"]
-git-tree-sha1 = "d2091f3a374453c3873940dc1594417e6a5ebec6"
-uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-version = "0.4.55"
 
 [[deps.JLLWrappers]]
 deps = ["Artifacts", "Preferences"]
@@ -1415,12 +1542,6 @@ deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 version = "1.11.0"
 
-[[deps.Loess]]
-deps = ["Distances", "LinearAlgebra", "Statistics", "StatsAPI", "StatsFuns"]
-git-tree-sha1 = "aac61f60ed2b1561ae1bbef4e6d7b75c27f1f9e3"
-uuid = "4345ca2d-374a-55d4-8d30-97f9976e7612"
-version = "0.6.6"
-
 [[deps.LogExpFunctions]]
 deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
 git-tree-sha1 = "b85e2797b2409570e84c4de46238c0ed5f6476ae"
@@ -1479,6 +1600,12 @@ deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 version = "1.11.0"
 
+[[deps.MarkdownLiteral]]
+deps = ["CommonMark", "HypertextLiteral"]
+git-tree-sha1 = "e88f9af659a0cc9326fa464427f71ae6c9a83381"
+uuid = "736d6165-7244-6769-4267-6b50796e6954"
+version = "0.1.5"
+
 [[deps.MathTeXEngine]]
 deps = ["AbstractTrees", "Automa", "DataStructures", "FreeTypeAbstraction", "GeometryBasics", "LaTeXStrings", "REPL", "RelocatableFolders", "UnicodeFun"]
 git-tree-sha1 = "aa1078778be5a8e5259ff04fbc3d258b3e78d464"
@@ -1495,12 +1622,6 @@ version = "1.1.10"
 deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.28.6+0"
-
-[[deps.MetaGraphs]]
-deps = ["Graphs", "JLD2", "Random"]
-git-tree-sha1 = "1130dbe1d5276cb656f6e1094ce97466ed700e5a"
-uuid = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
-version = "0.7.2"
 
 [[deps.Missings]]
 deps = ["DataAPI"]
@@ -1533,11 +1654,6 @@ deps = ["OpenLibm_jll"]
 git-tree-sha1 = "dbd2e8cd2c1c27f0b584f6661b4309609c5a685e"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "1.1.4"
-
-[[deps.NaturalSort]]
-git-tree-sha1 = "eda490d06b9f7c00752ee81cfa451efe55521e21"
-uuid = "c020b1a1-e9b0-503a-9c33-f039bfc54a85"
-version = "1.0.0"
 
 [[deps.Netpbm]]
 deps = ["FileIO", "ImageCore", "ImageMetadata"]
@@ -1912,11 +2028,6 @@ deps = ["Distributed", "Mmap", "Random", "Serialization"]
 uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
 version = "1.11.0"
 
-[[deps.ShiftedArrays]]
-git-tree-sha1 = "503688b59397b3307443af35cd953a13e8005c16"
-uuid = "1277b4bf-5013-50f5-be3d-901d8477a67a"
-version = "2.0.0"
-
 [[deps.SignedDistanceFields]]
 deps = ["Statistics"]
 git-tree-sha1 = "3949ad92e1c9d2ff0cd4a1317d5ecbba682f4b92"
@@ -1933,6 +2044,12 @@ deps = ["InteractiveUtils", "MacroTools"]
 git-tree-sha1 = "7ddb0b49c109481b046972c0e4ab02b2127d6a75"
 uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 version = "0.9.6"
+
+[[deps.SimpleWeightedGraphs]]
+deps = ["Graphs", "LinearAlgebra", "Markdown", "SparseArrays"]
+git-tree-sha1 = "749a2b719ec7f34f280c0d97ac3dab5c89818631"
+uuid = "47aef6b3-ad0c-573a-a1e2-d07658019622"
+version = "1.5.1"
 
 [[deps.Sixel]]
 deps = ["Dates", "FileIO", "ImageCore", "IndirectArrays", "OffsetArrays", "REPL", "libsixel_jll"]
@@ -2019,12 +2136,6 @@ weakdeps = ["ChainRulesCore", "InverseFunctions"]
     [deps.StatsFuns.extensions]
     StatsFunsChainRulesCoreExt = "ChainRulesCore"
     StatsFunsInverseFunctionsExt = "InverseFunctions"
-
-[[deps.StatsModels]]
-deps = ["DataAPI", "DataStructures", "LinearAlgebra", "Printf", "REPL", "ShiftedArrays", "SparseArrays", "StatsAPI", "StatsBase", "StatsFuns", "Tables"]
-git-tree-sha1 = "0db41c4e0d9f3fa195395a6401a8290752c9cd3d"
-uuid = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
-version = "0.7.10"
 
 [[deps.StringManipulation]]
 deps = ["PrecompileTools"]
@@ -2364,69 +2475,87 @@ version = "4.1.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─c4bc21f1-899d-48e8-9c4c-883f7608f753
-# ╟─839922f0-97b2-4bc9-9aa9-e3e93336b7e4
-# ╟─b52a8fc1-551d-49a8-8c39-93ee0e600fb2
-# ╟─d158181e-666f-11eb-2f70-9dc4b6e53b16
-# ╟─46c487fa-6732-11eb-229c-f31402dcbbe2
-# ╠═c93b4722-6a43-49e8-bf15-89cdd5906098
-# ╟─69083a09-9741-459e-a298-523f2b176527
-# ╠═d6557f8a-6734-11eb-0fd4-0b7b5f602bab
-# ╟─11e98628-6734-11eb-1b66-83663e790a78
-# ╠═b28b095f-4829-40ef-8929-1d8b76b26d04
-# ╟─6ecd8032-2ad6-4879-9cf8-5638dd47a724
-# ╠═541b25de-6670-11eb-2ad1-2babaf714216
-# ╠═5b312d16-6670-11eb-2da6-976db9964456
-# ╠═45c86e74-6670-11eb-1acd-41f288f6de70
-# ╟─ff893920-6782-11eb-2728-270f9261597d
-# ╠═98e5e1c9-45e6-47ab-b43a-768cbc64b6c5
-# ╟─714ff2ca-fa02-4e14-b3f0-83c03dfc649b
-# ╟─a06b7ad2-6603-11eb-1588-195115c5f351
-# ╟─2efb4dea-2149-4588-83b4-2e2e05e71d62
-# ╠═a58a3582-64a3-11eb-01e1-11f707525149
-# ╠═aac6e282-6603-11eb-18bd-95a57f187167
-# ╠═a860b0c8-6738-11eb-37f5-ebb8ce7b40cb
-# ╠═bcc6ca3a-5e95-11eb-3f13-877d22fe2ff2
-# ╟─8c156bfb-dc75-4a32-9178-7f4006345e0d
-# ╟─bb2b8184-6737-11eb-279e-6fc09622b8ca
-# ╠═3432e110-673f-11eb-2275-59c3aa7df804
-# ╟─c4319a9e-b265-4dc8-bcd7-db3afa55e102
-# ╠═7966a3e2-3f7d-49b0-b7be-cefa2a99c38c
-# ╟─4b9b4e65-c947-4ea6-b166-153cb4db57df
-# ╟─bcafe43f-a38e-4824-9db4-5fec7f675e46
-# ╟─dc38df66-6782-11eb-2a76-af6fb73608b6
-# ╠═4c90a10c-673f-11eb-0c0e-75814d92f251
-# ╟─cfc9f604-6604-11eb-23bc-699617b17d7d
-# ╟─135bce4d-ee2d-405c-a3c0-7e881cd64c48
-# ╠═1d4c6d8e-666f-11eb-3c3e-bbf2737bd162
-# ╠═ea44b5fc-666e-11eb-371f-3b1af8983ad0
-# ╠═b0bf3e34-666f-11eb-3126-ebbbcad4ad12
-# ╠═2ca63b10-f091-4197-892d-5120027f6fd5
-# ╟─3c946356-af84-4d81-aca2-cc29d1a4b60b
-# ╠═24dd4376-5e8f-11eb-02e7-f34f7c169726
-# ╠═395fe4f2-42b9-48f8-a5cb-ebea288aff90
-# ╠═45ce2bae-b2ad-4665-a8a6-86f78d7dcc2a
-# ╠═91f4f3a7-2226-48a1-8880-25306adf95b9
-# ╠═3fee5013-2f1e-4965-90ed-d8f2c084ea79
-# ╠═30bb2d4e-5dcd-4959-a1a6-dc6e1525a267
-# ╠═ee5e68e5-292d-4c89-8157-b1102a490356
-# ╟─6d4ec768-649f-11eb-1093-054ab8976450
-# ╟─cb02fb71-3433-4187-84fe-94c055ea5f25
-# ╠═923d97aa-1843-40a9-b3b0-1f33e94c07a4
-# ╠═c704150e-3a59-4ea7-8e3a-809d52cc8794
-# ╟─30bc4c58-18d5-4265-ae4e-7cbb004c4c5e
-# ╠═4d6a9177-36a0-4492-a1c1-6d50e51207be
-# ╠═428fefad-901d-4aac-83d1-4972188ae2ff
-# ╠═e5a49f36-d5ba-4a59-af93-5a9633308f40
-# ╠═4aae7c84-a853-42a1-9c4f-4d6e22093638
-# ╟─36ff82b5-09c8-49b5-9d10-3c37ba5e3c42
-# ╠═947b6053-8739-4402-9d52-d02c03622826
-# ╠═860a6151-ac4b-4364-a78f-1d81fcc3b472
-# ╠═49a082f3-6f27-4996-9094-8f6a17029440
-# ╟─ac7a38f5-a636-4956-9ca1-218253de72db
-# ╠═6c9646f7-3c33-4c87-9fa4-dabbfe896b3a
-# ╠═38ee92bb-714f-4cc6-a945-21ff017edc10
-# ╠═9009f6a9-f46f-46c9-acee-ebe02b47fea5
-# ╠═14a046a8-7f5d-41bd-a5c5-6040c16d019f
+# ╟─d3221cd9-0c8c-42a6-a3ec-00b69e7642b7
+# ╟─4ce3f909-90e3-4dc1-b640-338898a3fcfa
+# ╟─d5df2427-e347-4457-9b39-e0083c50c5cf
+# ╟─b284f332-9dc7-4230-9829-13ff6c2eab41
+# ╟─1d0539e4-a108-4a36-b00c-e5a90943ac4f
+# ╟─8df7c0c4-69be-49c1-aad1-85b5d2dac79d
+# ╟─9dec659a-e71f-4382-8a8c-9cec74036c79
+# ╠═8784febe-b08e-4519-90a0-b5889acc5116
+# ╟─3b039e16-1a63-4864-b309-75390f7ae530
+# ╟─6451aea8-470b-42c1-8edb-edf036017bb7
+# ╟─49974268-d996-477e-a90e-25ec593f13d8
+# ╟─7bba7b01-ec9b-46fe-a18f-4ad29082b62c
+# ╠═a9a489fb-2621-4bac-8832-507629ee2c74
+# ╠═276267fc-33b3-4020-8f33-d36c26f6b698
+# ╠═70b92b29-430b-489f-ae0a-25f0ba48f528
+# ╠═12376f00-726a-46b9-b82a-88808297fdb2
+# ╠═fd350f95-fb25-45b8-89f3-1b76f5c813d4
+# ╠═d1b90055-5cf5-42a6-94d4-aecc4f17aba6
+# ╠═5af85400-8abd-4aee-8899-08be4bd41b40
+# ╠═ee7c8a54-5656-4f47-a17a-cab1c73b0daf
+# ╟─45af5694-96a2-4b87-a385-2b784741ca4d
+# ╟─866460b7-8490-492f-98c9-c74bf124b496
+# ╟─bde6f94d-ee4b-41d8-9316-56563bcc7cde
+# ╠═704b0321-95b3-4a4b-ab74-eddb3a138936
+# ╟─226ff98a-5d2e-4682-bee7-025b05cc9028
+# ╟─f116ec36-e3be-4087-b84e-c989144be272
+# ╟─7d5c699a-7106-4b19-aa38-5ee0746a6729
+# ╟─864e3676-3b3c-424a-a558-7f60e7e734e5
+# ╠═78940426-5474-4c4b-bfeb-45c2d5dced27
+# ╟─cfb2e9aa-18cf-4105-a6cd-db1dedfb13c5
+# ╟─3652685b-8e62-4f80-85b0-5b6ee241f1c2
+# ╟─b22ff8ba-3881-43a4-8f8b-f25022cb0275
+# ╠═2e69bf80-e3f5-4eb0-b8d7-44441044892c
+# ╟─21297f1a-ef8c-473b-9180-136f3f8e3ef0
+# ╟─2748ef16-4121-4511-aece-57e507ac8e9a
+# ╟─17e9a706-ea49-4fac-a00f-019476012661
+# ╠═7733a5c5-7076-4cc5-90c0-e1d130317d87
+# ╟─faa7afac-20de-4192-8e54-04dc4bfb27bf
+# ╟─5f4863e9-4c62-4b5a-aabd-d785a8c4baba
+# ╠═6685d43b-2b61-4ddd-a158-960b85362fe7
+# ╠═cabcc864-48e7-4b5e-8db2-c157be49911f
+# ╠═11c52177-5fd6-4a3d-b1da-e9e5dad1df76
+# ╟─7e073380-b1de-4f8b-b89e-4043d15f656b
+# ╠═2c17a693-8842-4f35-ad29-5e6c78a9e6ff
+# ╟─f8634273-58e2-4591-b790-f305db5c5fe3
+# ╠═1d655b55-40c8-4435-b705-d8e1466c4f45
+# ╠═b877d12d-33a8-465b-8f78-8712d9a9207b
+# ╟─60a4f063-99c8-4e4a-9bcf-a2c35cb544c7
+# ╠═646dcad3-6e94-4c85-8122-b191bde8afc6
+# ╠═0447c192-fe19-497b-b082-528f3a873485
+# ╟─15d4c0a4-26c6-4e66-9387-ca1be622c968
+# ╠═2f0e3cec-e298-4a9f-a161-bfcf50f26a55
+# ╠═d866dd3a-1d0d-4a52-a83f-3bc53a254c31
+# ╟─dddde630-90c3-4eba-85ea-74c25d421049
+# ╠═1de1d7c7-8f50-4995-a5e8-57eb879896f9
+# ╠═9819677f-8b60-4342-8b88-bf7ab3f48dfc
+# ╠═a28e46c2-5a8c-428d-ac40-1521617dd9af
+# ╟─8c68c105-3a5a-4372-97b2-7f93aaa580b5
+# ╟─b3449051-d0d5-4378-b579-57ee7cc4e1f6
+# ╟─37bf0f99-5830-4d1d-ace9-51f5f9a7e851
+# ╠═1c5028de-46bd-4848-9afe-bf9387e15ca2
+# ╟─5b7e2c1a-3d4f-4e6a-8b9c-0a1b2c3d4e5f
+# ╠═16b324c0-bae1-4d5f-873c-9ddb1572f5c8
+# ╠═15dc0fda-b534-49a2-bea1-6489f3e7ca43
+# ╠═f14b340b-1791-43a2-a6cb-f322e811bb9d
+# ╠═63380aee-31ac-47c8-bf66-ac7a9c1901bb
+# ╠═e1a25a5b-7483-499a-b315-01803ec03b02
+# ╠═44942067-c4a8-44c5-945e-cb0a99102624
+# ╠═d0a87628-f283-4d83-accf-e3c073802682
+# ╠═d687e005-7203-4a9e-b939-e73aaafaeabd
+# ╠═ba38875a-8526-497f-87cf-ac4cfb537453
+# ╠═99b27fd9-9a09-43ae-8e5d-15159cf6c45d
+# ╠═0137936f-b706-4a53-925a-f0054640e061
+# ╠═eb314a3c-f540-46e4-923a-a69786d70e12
+# ╟─334c3117-20e3-4efd-8541-1511871fa1a7
+# ╠═8a92b975-e11f-4376-99a1-09286dd388e4
+# ╠═e9810378-8457-4c24-baf1-5cdcb1d1c525
+# ╠═a8febb10-1c73-4dc8-94cb-09315b78197c
+# ╠═8cf5d42e-5089-46e6-afa4-0da7a6ca6c89
+# ╠═551b4f1b-2dba-40d0-8bc2-b31b32149aa2
+# ╠═116f5410-ff41-439b-a842-852029fb39bf
+# ╠═31a5a022-56b8-45b2-aa43-249c6ca80a01
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

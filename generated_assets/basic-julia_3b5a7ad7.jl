@@ -18,7 +18,7 @@ using PlutoUI
 
 # ╔═╡ 8501e2eb-4616-4cc8-a5b5-dfcd546c6ff3
 md"""
-`basic-julia.jl` | **Version 1.2** | *content updated: 3 Feb 2022, packages updated: 4 Oct 2026*
+`basic-julia.jl` | **Version 1.3** | *content updated: 5 Oct 2026, packages updated: 4 Oct 2026*
 """
 
 # ╔═╡ 0d3aec92-edeb-11ea-3adb-cd0dc17cbdab
@@ -120,7 +120,7 @@ function mysum(n)
 	s = 0
 	
 	for i in 1:n
-		s = s + 1    
+		s = s + i
 	end
 	
 	return s
@@ -240,11 +240,11 @@ TableOfContents()
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
-[compat]
-PlutoUI = "~0.7.83"
-
 [deps]
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+
+[compat]
+PlutoUI = "~0.7.83"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -253,7 +253,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.9"
 manifest_format = "2.0"
-project_hash = "502a5e5263da26fcd619b7b7033f402a42a81ffc"
+project_hash = "01d002f6131385ada4aff8f81afe1c79bdb483e7"
 
 [[deps.AbstractPlutoDingetjes]]
 git-tree-sha1 = "e71ee7b4aa06b045259a7d6101e1cb45ad140bce"
