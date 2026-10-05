@@ -183,16 +183,18 @@ md"""
 # ╔═╡ 5f4863e9-4c62-4b5a-aabd-d785a8c4baba
 md"""
 ### _Step 1:_ Reading the data
+
+The data come from [The Movie Database (TMDB)](https://www.themoviedb.org/). This product uses the TMDB API but is not endorsed or certified by TMDB.
 """
 
 # ╔═╡ 6685d43b-2b61-4ddd-a158-960b85362fe7
-url_to_data_gist = "https://gist.githubusercontent.com/greimel/def8e0bc5c39a06925fb9921cd7a780c/raw/a86a6fefaae0b4769e9aada075c9546746d85bdb/"
+url_to_data = "https://raw.githubusercontent.com/greimel/networks-course/29967411c0611c957e2c020b6982ef359dc01146/data-prep/movies/"
 
 # ╔═╡ cabcc864-48e7-4b5e-8db2-c157be49911f
-actors_df0 = CSV.read(HTTP.get(url_to_data_gist * "actors.csv").body, DataFrame)
+actors_df0 = CSV.read(HTTP.get(url_to_data * "actors.csv").body, DataFrame)
 
 # ╔═╡ 11c52177-5fd6-4a3d-b1da-e9e5dad1df76
-movies_df = CSV.read(HTTP.get(url_to_data_gist * "movies.csv").body, DataFrame)
+movies_df = CSV.read(HTTP.get(url_to_data * "movies.csv").body, DataFrame)
 
 # ╔═╡ 7e073380-b1de-4f8b-b89e-4043d15f656b
 md"""
