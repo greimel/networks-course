@@ -67,7 +67,7 @@ using PlutoUI
 using MarkdownLiteral: @markdown
 
 # ╔═╡ d3221cd9-0c8c-42a6-a3ec-00b69e7642b7
-md"`actors.jl` | **Version 1.2** | *content updated: 5 Oct 2026, packages updated: 4 Oct 2026*"
+md"`actors.jl` | **Version 1.2+** | *content updated: 5 Oct 2026, packages updated: 4 Oct 2026*"
 
 # ╔═╡ 1d0539e4-a108-4a36-b00c-e5a90943ac4f
 md"""
@@ -377,12 +377,17 @@ xxx = important_movies.title[i_movie]
   ╠═╡ =#
 
 # ╔═╡ a28e46c2-5a8c-428d-ac40-1521617dd9af
-actors_of_important_movie = @chain actor_movie_df begin
-	leftjoin(nodes_df, on = [:actor, :actor_id])
-	@subset(:title == xxx)
+#=╠═╡
+actors_of_important_movie = let title = xxx
+	@chain actor_movie_df begin
+		leftjoin(nodes_df, on = [:actor, :actor_id])
+		@subset(:title == title)
+	end
 end
+  ╠═╡ =#
 
 # ╔═╡ 8c68c105-3a5a-4372-97b2-7f93aaa580b5
+#=╠═╡
 let
 	layout = NetworkLayout.Spring()(graph)
 
@@ -398,6 +403,7 @@ let
 	
 	fig
 end
+  ╠═╡ =#
 
 # ╔═╡ b3449051-d0d5-4378-b579-57ee7cc4e1f6
 #=╠═╡
