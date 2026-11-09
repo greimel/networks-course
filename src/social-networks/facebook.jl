@@ -511,8 +511,8 @@ md"""
 
 # ╔═╡ ca92332e-6c80-11eb-3b62-41f0301d6330
 function make_sci_graph(df_sci)
-	# get the list of nodes
-	node_names = unique([df_sci.user_loc; df_sci.fr_loc])
+	# get the list of nodes, sorted (county FIPS codes: grouped by state)
+	node_names = sort(unique([df_sci.user_loc; df_sci.fr_loc]))
 	# enumerate the nodes (node_id == index)
 	node_dict = Dict(n => i for (i,n) in enumerate(node_names))
 	# add columns with node_id
