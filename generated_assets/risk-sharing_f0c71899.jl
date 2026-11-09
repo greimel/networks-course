@@ -471,7 +471,7 @@ Your answer goes here ...
 
 # ╔═╡ 327c8f09-0b55-4008-88db-b69932f50b4b
 md"""
-👉 **(c)** Assume that your minimal network from **(a)** has _uniform weights_. What is the lower bound ``y_\text{min}`` for that weight that will allow the socially optimal allocation in all states?
+👉 **(c)** Assume that your minimal network from **(b)** has _uniform weights_. What is the lower bound ``y_\text{min}`` for that weight that will allow the socially optimal allocation in all states?
 """
 
 # ╔═╡ 475ae5ca-af74-47c5-a2ee-0a1aa41d4100
@@ -509,7 +509,7 @@ exX = let
 	S = states[i_state]
 	n = length(S)
 
-	node_styles = (title = "shock", df = DataFrame(label = string.([:early, :late, :none]), color = ["lightgreen", "tomato", "lightgray"]))
+	node_styles = (title = "shock", df = DataFrame(label = string.([:early, :late, :none]), color = ["tomato", "lightgreen", "lightgray"]))
 
 	df = @chain begin
 		DataFrame(bank = 1:n, label = string.(S))
